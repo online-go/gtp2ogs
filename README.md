@@ -7,7 +7,9 @@ with OGS (Online-Go.com Server)
 Basic usage
 ===========
 
+```
 gtp2ogs --botid <id> --apikey <apikey> <command> <arguments>
+```
 
 Dependencies
 ============
