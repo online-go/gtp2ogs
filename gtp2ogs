@@ -232,10 +232,6 @@ class GTP2OGS: # {{{
     def run(self):
         while True:
             self.socket.wait(seconds=0.5)
-            if self.socket._listenerThread.done.is_set():
-                print("Disconnected");
-                self.connectLoop()
-
 
     def connectLoop(self):
         while True:
@@ -255,14 +251,11 @@ class GTP2OGS: # {{{
 
     def _connect(self):
         print("Connecting to %s:%d" % (self.ggshost, self.port))
-        self.registered_games = {}
-
         socket = self.socket = SocketIO(self.ggshost, self.port)
+        self.socket = socket;
         socket.on('connect', self.onConnect)
         socket.on('error', self.onError)
         socket.on('notification', self.onNotification)
-        socket.emit('botGetID', {'id': self.bot_id}, self.setBotId);
-        socket.emit('connectToNotifications', self.genAuth({}))
 
 
     def genAuth(self, obj):
@@ -273,6 +266,10 @@ class GTP2OGS: # {{{
 
     def onConnect(self):
         print("Connection established");
+        socket = self.socket
+        self.registered_games = {}
+        socket.emit('botGetID', {'id': self.bot_id}, self.setBotId);
+        socket.emit('connectToNotifications', self.genAuth({}))
 
     def onGameData(self, gamedata):
         game = Game(gamedata)
