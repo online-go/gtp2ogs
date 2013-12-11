@@ -84,10 +84,10 @@ def gtpEncodeMove(move):
         return "pass";
     return gtpnum2char(move['x']) + gtpnum2char(move['y'])
 
-def move2gtpvertex(move):
+def move2gtpvertex(move, board_height):
     if move['x'] < 0:
         return "pass"
-    return "%s%d" % (num2gtpchar(move['x']), 19-move['y'])
+    return "%s%d" % (num2gtpchar(move['x']), board_height-move['y'])
 
 # }}}
 
@@ -166,11 +166,11 @@ class Game: # {{{
             if len(self.initial_state['black']) > 0:
                 s = ""
                 for move in self.initial_state['black']:
-                    s += " %s" % move2gtpvertex(move)
+                    s += " %s" % move2gtpvertex(move, self.height)
                 gtp.command("set_free_handicap %s" % s.strip())
 
             for move in self.initial_state['white']: # white doesn't have a handicap placement, so we just do moves instead
-                gtp.command("play white %s" % move2gtpvertex(move))
+                gtp.command("play white %s" % move2gtpvertex(move, self.height))
 
             # Replay moves made
             color = self.initial_player
@@ -184,7 +184,7 @@ class Game: # {{{
                         handicaps_left-=1
                     else:
                         color = 2 if color == 1 else 1
-                gtp.command("play %s %s" % ('black' if c == 1 else 'white', move2gtpvertex(move)))
+                gtp.command("play %s %s" % ('black' if c == 1 else 'white', move2gtpvertex(move, self.height)))
 
             # Ask the engine to give us a new move
             m = gtp.command("genmove %s" % ('black' if color == 1 else 'white'))
@@ -199,7 +199,7 @@ class Game: # {{{
                 y = -1
             else:
                 x = gtpchar2num(coords[0])
-                y = 19-int(coords[1:])
+                y = self.height-int(coords[1:])
         except Exception, e:
             print("Exception caught:");
             print(e)
