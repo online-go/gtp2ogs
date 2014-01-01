@@ -33,8 +33,6 @@ from socketIO_client import SocketIO
 
 VERSION="0.1"
 DEBUG=False
-GGSHOST='ggs.online-go.com' # set by CLI parameters
-RESTHOST='online-go.com'    # set by CLI parameters
 
 ignorable_notifications = [
     'gameStarted',
@@ -46,14 +44,6 @@ ignorable_notifications = [
 ]
 
 # Utility code {{{
-def post(path, obj):
-    arr = [] 
-    for k in obj.keys():
-        arr.append((k, obj[k]))
-    req = urllib2.Request('http://' + RESTHOST + ('/' if path[0] != '/' else '') + path, urllib.urlencode(arr))
-    handle = urllib2.urlopen(req)
-    ret =handle.read()
-    return ret
 
 def char2num(ch):
     if ch == ".":
@@ -319,6 +309,16 @@ class GTP2OGS: # {{{
     def nop(self, data):
         pass
 
+    def post(self, path, obj):
+        arr = [] 
+        for k in obj.keys():
+            arr.append((k, obj[k]))
+        req = urllib2.Request('http://' + self.resthost + ('/' if path[0] != '/' else '') + path, urllib.urlencode(arr))
+        print("Request: ", 'http://' + self.resthost + ('/' if path[0] != '/' else '') + path);
+        handle = urllib2.urlopen(req)
+        ret =handle.read()
+        return ret
+
     def onNotification(self, notification):
         socket = self.socket
         if notification['type'] == 'challenge':
@@ -333,12 +333,12 @@ class GTP2OGS: # {{{
 
             if not reject:
                 print("Accepting challenge %d"  % notification['game_id'])
-                ret = post('/bot/acceptGame', self.genAuth({
+                ret = self.post('/bot/acceptGame', self.genAuth({
                     'game_id': notification['game_id'],
                 }))
             else:
                 print("Rejecting challenge %d because %s"  % (notification['game_id'], reject))
-                ret = post('/bot/declineGame', self.genAuth({
+                ret = self.post('/bot/declineGame', self.genAuth({
                     'game_id': notification['game_id'],
                 }))
         elif notification['type'] == 'yourMove':
@@ -413,8 +413,6 @@ if __name__=='__main__': # {{{
         args.ggshost = 'ggsbeta.online-go.com'
         args.resthost = 'beta.online-go.com'
 
-    GGSHOST=args.ggshost
-    RESTHOST=args.resthost
 
     if not args.apikey:
         print("Missing --apikey argument")
