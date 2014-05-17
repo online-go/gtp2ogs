@@ -16,7 +16,7 @@
 import os, sys, re, subprocess
 import traceback
 import argparse
-import urllib, urllib2
+import requests, json
 import json
 import hashlib
 import time
@@ -310,14 +310,16 @@ class GTP2OGS: # {{{
         pass
 
     def post(self, path, obj):
-        arr = [] 
-        for k in obj.keys():
-            arr.append((k, obj[k]))
-        req = urllib2.Request('http://' + self.resthost + ('/' if path[0] != '/' else '') + path, urllib.urlencode(arr))
-        print("Request: ", 'http://' + self.resthost + ('/' if path[0] != '/' else '') + path);
-        handle = urllib2.urlopen(req)
-        ret =handle.read()
-        return ret
+        url = 'http://' + self.resthost + ('/' if path[0] != '/' else '') + path
+        #print("url: ", url)
+        r = requests.post(url, data=obj)
+        return r.text
+
+    def delete(self, path, obj):
+        url = 'http://' + self.resthost + ('/' if path[0] != '/' else '') + path
+        #print("url: ", url)
+        r = requests.delete(url, data=obj)
+        return r.text
 
     def onNotification(self, notification):
         socket = self.socket
@@ -333,14 +335,12 @@ class GTP2OGS: # {{{
 
             if not reject:
                 print("Accepting challenge %d"  % notification['game_id'])
-                ret = self.post('/bot/acceptGame', self.genAuth({
-                    'game_id': notification['game_id'],
-                }))
+                ret = self.post('/api/v1/me/challenges/%d/accept' % notification['challenge_id'], self.genAuth({ }))
+                #print(ret)
             else:
                 print("Rejecting challenge %d because %s"  % (notification['game_id'], reject))
-                ret = self.post('/bot/declineGame', self.genAuth({
-                    'game_id': notification['game_id'],
-                }))
+                ret = self.delete('/api/v1/me/challenges/%d' % notification['challenge_id'], self.genAuth({ }))
+                #print(ret)
         elif notification['type'] == 'yourMove':
             #print("Turn notification for game %d" % notification['game_id'])
             game_id = notification['game_id']
