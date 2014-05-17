@@ -23,6 +23,7 @@ import time
 import random
 import logging
 import signal
+import time
 
 iolog = logging.getLogger("socketIO_client")
 iolog.setLevel(logging.WARNING) # The socket io library is really noisy
@@ -221,7 +222,14 @@ class GTP2OGS: # {{{
 
 
     def run(self):
+        last_time = 0
         while True:
+            t = time.time()
+            if t - last_time > 60:
+                ret = self.post('/api/v1/ui/bot/online', self.genAuth({ }))
+                print(ret);
+                last_time = t;
+
             self.socket.wait(seconds=0.5)
 
     def connectLoop(self):
@@ -311,7 +319,7 @@ class GTP2OGS: # {{{
 
     def post(self, path, obj):
         url = 'http://' + self.resthost + ('/' if path[0] != '/' else '') + path
-        #print("url: ", url)
+        #print("url: ", url, obj)
         r = requests.post(url, data=obj)
         return r.text
 
