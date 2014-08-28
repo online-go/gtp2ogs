@@ -209,7 +209,7 @@ class GTP2OGS: # {{{
     def __init__(self, ggshost, resthost, bot_id, apikey,  command, arguments):
         self.ggshost = ggshost
         self.resthost = resthost
-        self.port = 3080
+        self.port = 80
         self.bot_id = bot_id
         self.apikey = apikey
         self.command = command
