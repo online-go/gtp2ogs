@@ -153,7 +153,7 @@ class Game: # {{{
         try:
             gtp.command("boardsize %d" % self.width)
             gtp.command("clear_board")
-
+	    gtp.command("komi %f" % self.komi)
             # Setup handicap / initial state
             if len(self.initial_state['black']) > 0:
                 s = ""
