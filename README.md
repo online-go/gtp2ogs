@@ -10,7 +10,7 @@ Installation
   1. Use your systems package manager or otherwise install `node.js` from http://nodejs.org/
   2. Run
     ```
-    npm install gtp2ogs
+    npm install -g gtp2ogs
     ```
 
 

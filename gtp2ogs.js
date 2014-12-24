@@ -1,5 +1,8 @@
-"use strict";
+#!/usr/bin/env node
 
+'use strict';
+
+process.title = 'gtp2ogs';
 var DEBUG = false;
 
 /**************************/
@@ -59,6 +62,7 @@ if (argv.debug) {
 var bot_command = argv._;
 
 
+process.title = 'gtp2ogs ' + bot_command.join(' ');
 
 
 
