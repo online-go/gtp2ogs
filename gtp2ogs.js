@@ -147,7 +147,7 @@ Bot.prototype.loadState = function(state, cb) { /* {{{ */
         if (black.length) {
             var s = "";
             for (var i=0; i < black.length; ++i) {
-                s += move2gtpvertex(move, state.width);
+                s += move2gtpvertex(black[i], state.width);
             }
             this.command("set_free_handicap " + s);
         }
@@ -155,7 +155,7 @@ Bot.prototype.loadState = function(state, cb) { /* {{{ */
         if (white.length) {
             /* no analagous command for white stones, so we just do moves instead */
             for (var i=0; i < white.length; ++i) {
-                this.command("play white " + move2gtpvertex(move, state.width));
+                this.command("play white " + move2gtpvertex(white[i], state.width));
             }
         }
     }
