@@ -18,5 +18,5 @@ Basic usage
 ===========
 
 ```
-gtp2ogs --botid <id> --apikey <apikey> <command> <arguments>
+gtp2ogs --botid <id> --apikey <apikey> -- <command> <arguments>
 ```
