@@ -92,7 +92,7 @@ function Bot(cmd) { /* {{{ */
     this.proc.stdout.on('data', function(data) {
         stdout_buffer += data.toString();
         if (stdout_buffer[stdout_buffer.length-1] != '\n') {
-            self.log("Partial result received, buffering until the output ends with a newline");
+            //self.log("Partial result received, buffering until the output ends with a newline");
             return;
         }
         if (DEBUG) {
@@ -189,7 +189,7 @@ Bot.prototype.command = function(str, cb) { /* {{{ */
     if (DEBUG) {
         this.log(">>>", str);
     }
-    this.proc.stdin.write(str + "\n");
+    this.proc.stdin.write(str + "\r\n");
 } /* }}} */
 Bot.prototype.genmove = function(state, cb) { /* {{{ */
     this.command("genmove " + (this.last_color == 1 ? 'black' : 'white'), 
