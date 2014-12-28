@@ -305,7 +305,7 @@ Game.prototype.makeMove = function() { /* {{{ */
             if (move.resign) {
                 self.log("Resigning");
                 self.socket.emit('game/resign', self.auth({
-                    'game_id': state.game_id
+                    'game_id': self.state.game_id
                 }));
             }
             else {
