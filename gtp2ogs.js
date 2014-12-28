@@ -128,7 +128,8 @@ function Bot(cmd) { /* {{{ */
                 }
             }
             else {
-                throw new Error("Unexpected output: " + line);
+                self.log("Unexpected output: ", line);
+                //throw new Error("Unexpected output: " + line);
             }
         }
     });
