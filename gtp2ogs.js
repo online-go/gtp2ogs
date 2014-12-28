@@ -39,6 +39,8 @@ var optimist = require("optimist")
     .describe('restport', 'REST Port')
     .default('restport', 80)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
+    .describe('insecureggs', "Don't use ssl to connect to the ggs servers [false]")
+    .describe('insecurerest', "Don't use ssl to connect to the rest servers [false]")
     //.describe('concurrency', 'Number of instances of your bot to concurrently handle requests [1]')
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
@@ -52,6 +54,11 @@ if (!argv._ || argv._.length == 0) {
 
 if (!argv.concurrency || argv.concurrency <= 0) {
     argv.concurrency = 1;
+}
+
+if (argv.insecure) {
+    argv.insecureggs = 1;
+    argv.insecurerest = 1;
 }
 
 if (argv.beta) {
@@ -366,7 +373,7 @@ var ignorable_notifications = {
 function Connection() { /* {{{ */
     var self = this;
     self.log("Connecting..");
-    var socket = this.socket = io((argv.insecure ? 'http://' : 'https://') + argv.ggshost + ':' + argv.ggsport, { });
+    var socket = this.socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.ggshost + ':' + argv.ggsport, { });
 
     this.connected_games = {};
     this.connected_game_timeouts = {};
@@ -561,7 +568,7 @@ function request(method, host, port, path, data, cb, eb) { /* {{{ */
         }
     }
 
-    var req = (argv.insecure ? http : https).request(options, function(res) {
+    var req = (argv.insecurerest ? http : https).request(options, function(res) {
         res.setEncoding('utf8');
         var body = "";
         res.on('data', function(chunk) {
