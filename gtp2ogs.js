@@ -30,12 +30,16 @@ var optimist = require("optimist")
     .demand('apikey')
     .describe('botid', 'Specify the username of the bot')
     .describe('apikey', 'Specify the API key for the bot')
-    .describe('ggshost', 'GGS Hostname [ggs.online-go.com]')
-    .describe('ggsport', 'GGS Port [80]')
-    .describe('resthost', 'REST Hostname [online-go.com]')
-    .describe('restport', 'REST Port [80]')
+    .describe('ggshost', 'GGS Hostname')
+    .default('ggshost', 'ggs.online-go.com')
+    .describe('ggsport', 'GGS Port')
+    .default('ggsport', 80)
+    .describe('resthost', 'REST Hostname')
+    .default('resthost', 'online-go.com')
+    .describe('restport', 'REST Port')
+    .default('restport', 80)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
-    .describe('concurrency', 'Number of instances of your bot to concurrently handle requests [1] (DOES NOT DO ANYTHING GOOD YET)')
+    //.describe('concurrency', 'Number of instances of your bot to concurrently handle requests [1]')
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
 ;
@@ -53,6 +57,8 @@ if (!argv.concurrency || argv.concurrency <= 0) {
 if (argv.beta) {
     argv.ggshost = 'ggsbeta.online-go.com';
     argv.ggsport = 80;
+    argv.resthost = 'beta.online-go.com';
+    argv.restport = 80;
 }
 
 if (argv.debug) {
@@ -63,7 +69,6 @@ var bot_command = argv._;
 
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
-
 
 
 
@@ -107,6 +112,13 @@ function Bot(cmd) { /* {{{ */
                 }
                 var cb = self.command_callbacks.shift();
                 if (cb) cb(line.substr(1).trim());
+            }
+            else if (line.trim()[0] == '?') {
+                self.log(line);
+                while (lines[i].trim() != "") {
+                    ++i;
+                    self.log(lines[i]);
+                }
             }
             else {
                 throw new Error("Unexpected output: " + line);
@@ -506,6 +518,11 @@ function put(path, data, cb, eb) { request("PUT", argv.resthost, argv.restport, 
 function del(path, data, cb, eb) { request("DELETE", argv.resthost, argv.restport, path, data, cb, eb); }
 function request(method, host, port, path, data, cb, eb) { /* {{{ */
     console.log(method, host, port, path, data);
+    if (!eb) {
+        eb = function(_, err) {
+            console.log("ERROR: ", err);
+        };
+    }
 
     var enc_data_type = "application/x-www-form-urlencoded";
     for (var k in data) {
