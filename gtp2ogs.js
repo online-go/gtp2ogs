@@ -155,7 +155,7 @@ Bot.prototype.loadState = function(state, cb) { /* {{{ */
         if (black.length) {
             var s = "";
             for (var i=0; i < black.length; ++i) {
-                s += move2gtpvertex(black[i], state.width);
+                s += " " + move2gtpvertex(black[i], state.width);
             }
             this.command("set_free_handicap " + s);
         }
