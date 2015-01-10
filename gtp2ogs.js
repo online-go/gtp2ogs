@@ -143,7 +143,7 @@ Bot.prototype.log = function(str) { /* {{{ */
 
     console.log.apply(null, arr);
 } /* }}} */
-Bot.prototype.loadState = function(state, cb) { /* {{{ */
+Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
     this.command("boardsize " + state.width);
     this.command("clear_board");
     this.command("komi " + state.komi);
@@ -190,14 +190,20 @@ Bot.prototype.loadState = function(state, cb) { /* {{{ */
     }
     this.last_color = color;
 
-    this.command("showboard", cb);
+    this.command("showboard", cb, eb);
 } /* }}} */
-Bot.prototype.command = function(str, cb) { /* {{{ */
+Bot.prototype.command = function(str, cb, eb) { /* {{{ */
     this.command_callbacks.push(cb);
     if (DEBUG) {
         this.log(">>>", str);
     }
-    this.proc.stdin.write(str + "\r\n");
+    try {
+        this.proc.stdin.write(str + "\r\n");
+    } catch (e) {
+        this.log("Failed to send command: ", str);
+        this.log(e);
+        if (eb) eb(e);
+    }
 } /* }}} */
 Bot.prototype.genmove = function(state, cb) { /* {{{ */
     this.command("genmove " + (this.last_color == 1 ? 'black' : 'white'), 
@@ -300,24 +306,43 @@ Game.prototype.makeMove = function() { /* {{{ */
         return;
     }
 
+    var passed = false;
+    function passAndRestart() {
+        if (!passed) {
+            self.log("Bot process crashed, restarting in 50ms");
+            self.log("State was")
+            self.log(self.state);
+            self.socket.emit('game/move', self.auth({
+                'game_id': self.state.game_id,
+                'move': ".."
+            }));
+            setTimeout(function() {
+                self.log("Restarting bot");
+                bot_instances[0] = new Bot(bot_command);
+            }, 50);
+        }
+    }
+
     bot_instances[0].log("Generating move for game ", this.game_id);
     bot_instances[0].loadState(self.state, function() {
-        bot_instances[0].genmove(self.state, function(move) {
-            if (move.resign) {
-                self.log("Resigning");
-                self.socket.emit('game/resign', self.auth({
-                    'game_id': self.state.game_id
-                }));
-            }
-            else {
-                self.log("Playing " + move.text);
-                self.socket.emit('game/move', self.auth({
-                    'game_id': self.state.game_id,
-                    'move': encodeMove(move)
-                }));
-            }
-        });
-    });
+        self.log("State loaded");
+    }, passAndRestart);
+
+    bot_instances[0].genmove(self.state, function(move) {
+        if (move.resign) {
+            self.log("Resigning");
+            self.socket.emit('game/resign', self.auth({
+                'game_id': self.state.game_id
+            }));
+        }
+        else {
+            self.log("Playing " + move.text);
+            self.socket.emit('game/move', self.auth({
+                'game_id': self.state.game_id,
+                'move': encodeMove(move)
+            }));
+        }
+    }, passAndRestart);
 
     
 } /* }}} */
@@ -378,8 +403,10 @@ function Connection() { /* {{{ */
 
     this.connected_games = {};
     this.connected_game_timeouts = {};
+    this.connected = false;
 
     socket.on('connect', function() {
+        self.connected = true;
         self.log("Connected");
 
         socket.emit('bot/id', {'id': argv.botid}, function(id) {
@@ -397,10 +424,18 @@ function Connection() { /* {{{ */
             })
         });
     });
+
+    setInterval(function() {
+        //console.log("Resync of notifications");
+        socket.emit('notification/connect', self.auth({}), function(x) {
+            self.log(x);
+        })
+    }, 10000);
     socket.on('event', function(data) {
         self.log(data);
     });
     socket.on('disconnect', function() {
+        self.connected = false;
         self.log("Disconnected");
         for (var game_id in self.connected_games) {
             self.disconnectFromGame(game_id);
@@ -433,6 +468,7 @@ Connection.prototype.auth = function (obj) { /* {{{ */
 } /* }}} */
 Connection.prototype.connectToGame = function(game_id) { /* {{{ */
     var self = this;
+    this.log("Connecting to game", game_id);
 
     if (game_id in self.connected_games) {
         clearInterval(self.connected_game_timeouts[game_id])
@@ -447,6 +483,7 @@ Connection.prototype.connectToGame = function(game_id) { /* {{{ */
     return self.connected_games[game_id] = new Game(this, game_id);;
 }; /* }}} */
 Connection.prototype.disconnectFromGame = function(game_id) { /* {{{ */
+    this.log("Disconnected from game", game_id);
     if (game_id in this.connected_games) {
         clearInterval(this.connected_game_timeouts[game_id])
         this.connected_games[game_id].disconnect();
@@ -454,6 +491,12 @@ Connection.prototype.disconnectFromGame = function(game_id) { /* {{{ */
 
     delete this.connected_games[game_id];
     delete this.connected_game_timeouts[game_id];
+}; /* }}} */
+Connection.prototype.deleteNotification = function(notification) { /* {{{ */
+    var self = this;
+    this.socket.emit('notification/delete', self.auth({notification_id: notification.id}), function(x) {
+        self.log("Deleted notification ", notification.id);
+    });
 }; /* }}} */
 Connection.prototype.connection_reset = function() { /* {{{ */
     for (var game_id in this.connected_games) {
@@ -487,7 +530,12 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
 
     if (!reject) {
         self.log("Accepting challenge, game_id = "  + notification.game_id);
-        post('/api/v1/me/challenges/' + notification.challenge_id+'/accept', self.auth({ }))
+        post('/api/v1/me/challenges/' + notification.challenge_id+'/accept', self.auth({ }),
+            null, function(err) {
+                self.log("Error accepting challenge, declining it");
+                del('/api/v1/me/challenges/' + notification.challenge_id, self.auth({ }))
+                self.deleteNotification(notification);
+            })
     } else {
         del('/api/v1/me/challenges/' + notification.challenge_id, self.auth({ }))
     }
@@ -495,8 +543,10 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
 Connection.prototype.on_yourMove = function(notification) { /* {{{ */
     //console.log("Making move", notification);
     //this.log("Got yourMove");
+    this.log("yourMove received", notification.game_id);
     var game = this.connectToGame(notification.game_id)
     game.makeMove(function() {
+        this.log("Move made", notification.game_id);
         /* TODO: There's no real reason to do this other than to keep the work flow
          * really simple for these bots. When we add support for keeping state and
          * having multiple instances going at the same time, we need to not just disconnect,
