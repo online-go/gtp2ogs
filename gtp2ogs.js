@@ -426,10 +426,16 @@ function Connection() { /* {{{ */
     });
 
     setInterval(function() {
-        //console.log("Resync of notifications");
-        socket.emit('notification/connect', self.auth({}), function(x) {
-            self.log(x);
-        })
+        /* if we're sitting there bored, make sure we don't have any move
+         * notifications that got lost in the shuffle... and maybe someday
+         * we'll get it figured out how this happens in the first place. */
+        if (bot_instances[0].command_callbacks.length == 0) {
+            
+            //console.log("Resync of notifications");
+            socket.emit('notification/connect', self.auth({}), function(x) {
+                self.log(x);
+            })
+        }
     }, 10000);
     socket.on('event', function(data) {
         self.log(data);
