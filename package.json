@@ -1,6 +1,6 @@
 {
   "name": "gtp2ogs",
-  "version": "4.2.10",
+  "version": "4.2.11",
   "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
   "main": "gtp2ogs.js",
   "files": [ "gtp2ogs.js" ],

@@ -206,15 +206,21 @@ Bot.prototype.command = function(str, cb, eb) { /* {{{ */
     }
 } /* }}} */
 Bot.prototype.genmove = function(state, cb) { /* {{{ */
+    var self = this;
     this.command("genmove " + (this.last_color == 1 ? 'black' : 'white'), 
         function(move) {
-            move = move.toLowerCase();
+            move = typeof(move) == "string" ? move.toLowerCase() : null;
             var resign = move == 'resign';
             var pass = move == 'pass';
             var x=-1, y=-1;
             if (!resign && !pass) {
-                x = gtpchar2num(move[0]);
-                y = state.width - parseInt(move.substr(1))
+                if (move && move[0]) {
+                    x = gtpchar2num(move[0]);
+                    y = state.width - parseInt(move.substr(1))
+                } else {
+                    self.log("genmove failed, resigning");
+                    resign = true;
+                }
             }
             cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
         }
@@ -732,7 +738,7 @@ function move2gtpvertex(move, board_size) { /* {{{ */
     return num2gtpchar(move['x']) + (board_size-move['y'])
 } /* }}} */
 function gtpchar2num(ch) { /* {{{ */
-    if (ch == ".")
+    if (ch == "." || !ch)
         return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 } /* }}} */
