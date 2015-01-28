@@ -24,7 +24,7 @@ var optimist = require("optimist")
     .alias('ggs-host', 'ggshost')
     .alias('ggs-port', 'ggsport')
     .alias('rest-host', 'resthost')
-    .alias('concurrency', 'c')
+    //.alias('concurrency', 'c')
     .alias('debug', 'd')
     .demand('botid')
     .demand('apikey')
@@ -52,9 +52,11 @@ if (!argv._ || argv._.length == 0) {
     process.exit();
 }
 
+/*
 if (!argv.concurrency || argv.concurrency <= 0) {
     argv.concurrency = 1;
 }
+*/
 
 if (argv.insecure) {
     argv.insecureggs = 1;
@@ -79,10 +81,13 @@ process.title = 'gtp2ogs ' + bot_command.join(' ');
 
 
 
+var moves_processing = 0;
+
 /*********/
 /** Bot **/
 /*********/
-var bot_instances = []
+//var bot_instances = []
+
 
 function Bot(cmd) { /* {{{ */
     var self = this;
@@ -228,6 +233,9 @@ Bot.prototype.genmove = function(state, cb) { /* {{{ */
 
     this.last_color = this.last_color == 1 ? 2 : 1;
 } /* }}} */
+Bot.prototype.kill = function() { /* {{{ */
+    this.proc.kill();
+} /* }}} */
 
 
 
@@ -312,29 +320,31 @@ Game.prototype.makeMove = function() { /* {{{ */
         return;
     }
 
+    var bot = new Bot(bot_command);
+    ++moves_processing;
+
     var passed = false;
     function passAndRestart() {
         if (!passed) {
-            self.log("Bot process crashed, restarting in 50ms");
-            self.log("State was")
+            passed = true;
+            self.log("Bot process crashed, state was");
             self.log(self.state);
             self.socket.emit('game/move', self.auth({
                 'game_id': self.state.game_id,
                 'move': ".."
             }));
-            setTimeout(function() {
-                self.log("Restarting bot");
-                bot_instances[0] = new Bot(bot_command);
-            }, 50);
+            --moves_processing;
+            bot.kill();
         }
     }
 
-    bot_instances[0].log("Generating move for game ", this.game_id);
-    bot_instances[0].loadState(self.state, function() {
+    bot.log("Generating move for game ", this.game_id);
+    bot.loadState(self.state, function() {
         self.log("State loaded");
     }, passAndRestart);
 
-    bot_instances[0].genmove(self.state, function(move) {
+    bot.genmove(self.state, function(move) {
+        --moves_processing;
         if (move.resign) {
             self.log("Resigning");
             self.socket.emit('game/resign', self.auth({
@@ -348,6 +358,7 @@ Game.prototype.makeMove = function() { /* {{{ */
                 'move': encodeMove(move)
             }));
         }
+        bot.kill();
     }, passAndRestart);
 
     
@@ -435,8 +446,7 @@ function Connection() { /* {{{ */
         /* if we're sitting there bored, make sure we don't have any move
          * notifications that got lost in the shuffle... and maybe someday
          * we'll get it figured out how this happens in the first place. */
-        if (bot_instances[0].command_callbacks.length == 0) {
-            
+        if (moves_processing == 0) {
             //console.log("Resync of notifications");
             socket.emit('notification/connect', self.auth({}), function(x) {
                 self.log(x);
@@ -756,6 +766,7 @@ function num2gtpchar(num) { /* {{{ */
 /** Initialize instances **/
 /**************************/
 
+/*
 for (var i=0; i < argv.concurrency; ++i) {
     bot_instances.push(new Bot(bot_command));
 }
@@ -763,5 +774,6 @@ if (!bot_instances)  {
     optimist.showHelp();
     process.exit();
 }
+*/
 
 var conn = new Connection();
