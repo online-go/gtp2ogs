@@ -22,7 +22,7 @@ var exec = require('child_process').exec;
 //var assert = require('assert');
 
 var optimist = require("optimist")
-    .usage("Usage: $0 --botid <bot-username> --apikey <apikey> [options] -- <botcommand> [bot arguments]\r\nBe aware of the space in front of botcommand.  Options are in the format '--option option_value --nextoption option_value'.")
+    .usage("Usage: $0 --botname <bot-username> --apikey <apikey> [options] -- <botcommand> [bot arguments]\r\nBe aware of the space in front of botcommand.  Options are in the format '--option option_value --nextoption option_value'.")
     .alias('botid', 'bot')
     .alias('botid', 'id')
     .alias('ggs-host', 'ggshost')
@@ -30,7 +30,7 @@ var optimist = require("optimist")
     .alias('rest-host', 'resthost')
     //.alias('concurrency', 'c')
     .alias('debug', 'd')
-    .demand('botid')
+    .demand('botname')
     .demand('apikey')
     .describe('botid', 'Specify the username of the bot')
     .describe('apikey', 'Specify the API key for the bot')
