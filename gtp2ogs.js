@@ -21,7 +21,7 @@ var exec = require('child_process').exec;
 //var fork = require('child_process').fork;
 //var assert = require('assert');
 
-var argv = require("optimist")
+var optimist = require("optimist")
     .usage("Usage: $0 --botid <bot-username> --apikey <apikey> [options] -- <botcommand> [bot arguments]\r\nBe aware of the space in front of botcommand.  Options are in the format '--option option_value --nextoption option_value'.")
     .alias('botid', 'bot')
     .alias('botid', 'id')
@@ -46,21 +46,15 @@ var argv = require("optimist")
     .default('mintime', 30)
     .describe('maxtime', 'Maximum time per move in seconds.')
     .default('maxtime', 300)
-    .describe('abuser1', 'Bot will refuse challenge from the user named.')
-    .describe('abuser2', 'Bot will refuse challenge from the user named.')
-    .describe('abuser3', 'Bot will refuse challenge from the user named.')
-    .describe('abuser4', 'Bot will refuse challenge from the user named.')
-    .describe('abuser5', 'Bot will refuse challenge from the user named.')
-    .describe('abuser6', 'Bot will refuse challenge from the user named.')
+    .describe('abusers', "A list of abuser separated by commas. Bot will refuse challenge from a user found on this list")
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('insecureggs', "Don't use ssl to connect to the ggs servers [false]")
     .describe('insecurerest', "Don't use ssl to connect to the rest servers [false]")
     //.describe('concurrency', 'Number of instances of your bot to concurrently handle requests [1]')
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
-    .describe('debug', 'Output GTP command and responses from your Go engine')
-    .argv
-;
-//var argv = optimist.argv;
+    .describe('debug', 'Output GTP command and responses from your Go engine');
+
+var argv = optimist.argv;
 
 if (!argv._ || argv._.length == 0) {
     optimist.showHelp();
@@ -764,17 +758,17 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
         reject = true;
       }
     }
-    if ((challenger == argv.abuser1)||(challenger == argv.abuser2)) {
-         self.log(challenger, "is an abuser, rejecting challenge");
-         reject = true;
-    }
-    if ((challenger == argv.abuser3)||(challenger == argv.abuser4)) {
-         self.log(challenger, "is an abuser, rejecting challenge");
-         reject = true;
-    }
-    if ((challenger == argv.abuser5)||(challenger == argv.abuser6)) {
-         self.log(challenger, "is an abuser, rejecting challenge");
-         reject = true;
+
+    /* Check that the challenger is not one of known abusers. */
+    if (argv.abusers !== undefined && argv.abusers !== "") {
+        var abusers = argv.abusers.split(",");
+	var isAbuser = function(abuser) {
+		return abuser === challenger;
+	}
+        if (abusers.filter(isAbuser).length() > 0 ) {
+                self.log(challenger, "is an abuser, rejecting challenge");
+		reject = true;
+	}
     }
       /* tk: temp solution, remember to remove */
     if ((self.connected_games.length > 0)||(active_games.length >= 1)) {
