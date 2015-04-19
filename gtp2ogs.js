@@ -23,8 +23,8 @@ var exec = require('child_process').exec;
 
 var optimist = require("optimist")
     .usage("Usage: $0 --botname <bot-username> --apikey <apikey> [options] -- <botcommand> [bot arguments]\r\nBe aware of the space in front of botcommand.  Options are in the format '--option option_value --nextoption option_value'.")
-    .alias('botid', 'bot')
-    .alias('botid', 'id')
+    .alias('botname', 'bot')
+    .alias('botname', 'id')
     .alias('ggs-host', 'ggshost')
     .alias('ggs-port', 'ggsport')
     .alias('rest-host', 'resthost')
@@ -32,7 +32,7 @@ var optimist = require("optimist")
     .alias('debug', 'd')
     .demand('botname')
     .demand('apikey')
-    .describe('botid', 'Specify the username of the bot')
+    .describe('botname', 'Specify the username of the bot')
     .describe('apikey', 'Specify the API key for the bot')
     .describe('ggshost', 'GGS Hostname')
     .default('ggshost', 'ggs.online-go.com')
@@ -85,7 +85,7 @@ var min_time = argv.mintime;
 var max_time = argv.maxtime;
 
 //process.title = 'gtp2ogs ' + bot_command.join(' ');
-process.title = 'gtp2ogs ' + argv.botid;
+process.title = 'gtp2ogs ' + argv.botname;
 
 var moves_processing = 0;
 var active_games = {};
@@ -531,13 +531,18 @@ function Connection() { /* {{{ */
     this.connected_game_timeouts = {};
     this.connected = false;
 
+    socket.on('connect_error', function(error) {
+	console.log(error)
+	process.exit();
+    });
+
     socket.on('connect', function() {
         self.connected = true;
         self.log("Connected");
-        socket.emit('bot/id', {'id': argv.botid}, function(id) {
+        socket.emit('bot/id', {'id': argv.botname}, function(id) {
             bot_id = id;
             if (!bot_id) {
-                console.error("ERROR: Bot account is unknown to the system: " + argv.botid);
+                console.error("ERROR: Bot account is unknown to the system: " + argv.botname);
                 process.exit();
             }
             self.log("Bot is user id:", bot_id);
@@ -587,6 +592,7 @@ function Connection() { /* {{{ */
             console.log("Unhandled notification type: ", notification.type, notification);
         }
     });
+
 } /* }}} */
 
 Connection.prototype.log = function(str) { /* {{{ */
@@ -765,7 +771,7 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
 	var isAbuser = function(abuser) {
 		return abuser === challenger;
 	}
-        if (abusers.filter(isAbuser).length() > 0 ) {
+        if (abusers.filter(isAbuser).length > 0 ) {
                 self.log(challenger, "is an abuser, rejecting challenge");
 		reject = true;
 	}
@@ -779,7 +785,6 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
     if ((self.moves_processing > 0)||(this.waiting_on_gamedata_to_make_move)) {
          self.log("I'm busy, rejecting challenge from ", challenger);
          reject = true;
-        
     }
     /* tk: temp solution, remember to remove */
     //if (Bot.proc.pid) {
@@ -790,7 +795,7 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
 
     if (!reject) {
         self.log("Accepting challenge, game_id = "  + notification.game_id, challenger);
-        post('/api/v1/me/challenges/' + notification.challenge_id+'/accept', self.auth({ }),
+        post(api1('me/challenges/') + notification.challenge_id+'/accept', self.auth({ }),
             null, function(err) {
                 self.log("Error accepting challenge, declining it");
                 del('/api/v1/me/challenges/' + notification.challenge_id, self.auth({ }))
