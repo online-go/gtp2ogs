@@ -263,10 +263,6 @@ function Game(conn, game_id) { /* {{{ */
                 self.makeMove();
             }
         }
-        else if (self.state.phase == 'stone removal') {
-            self.log("Game is in the stone removal phase");
-            self.setAndAcceptRemovedStones(self.state);
-        }
         else if (self.state.phase == 'finished') {
             self.log("Game is finished");
         }
@@ -277,9 +273,6 @@ function Game(conn, game_id) { /* {{{ */
 
         //self.log("Move: ", move);
         self.state.phase = phase;
-        if (phase == 'stone removal') {
-            self.setAndAcceptRemovedStones();
-        }
         if (phase == 'play') {
             /* FIXME: This is pretty stupid.. we know what state we're in to
              * see if it's our move or not, but it's late and blindly sending
@@ -299,11 +292,6 @@ function Game(conn, game_id) { /* {{{ */
         if (self.bot) {
             self.bot.sendMove(decodeMoves(move.move, self.state.width)[0]);
         }
-    });
-    self.socket.on('game/' + game_id + '/removed_stones', function(move) {
-        if (!self.connected) return;
-
-        self.setAndAcceptRemovedStones(self.state);
     });
 
     self.socket.emit('game/connect', self.auth({
@@ -381,22 +369,6 @@ Game.prototype.log = function(str) { /* {{{ */
     }
 
     console.log.apply(null, arr);
-} /* }}} */
-Game.prototype.setAndAcceptRemovedStones = function() { /* {{{ */
-    /* TODO: We should add a flag that if set, tells us to ask the go engine
-     * what it thinks dead stones are. Not all engines support this, so if not
-     * set we should probably just keep accepting whatever the human thinks is
-     * right. 
-     *
-     * See http://ogs.readme.io/v4.2/docs/real-time-api for the api endpoints
-     * necessary to make this happen
-     */
-
-    this.log("Accepting any stones the human says are dead");
-    this.socket.emit('game/removed_stones/accept', this.auth({
-        'game_id': this.state['game_id'],
-        'stones': '--accept-any--'
-    }))
 } /* }}} */
 
 
