@@ -477,7 +477,7 @@ Connection.prototype.connectToGame = function(game_id) { /* {{{ */
     return self.connected_games[game_id] = new Game(this, game_id);;
 }; /* }}} */
 Connection.prototype.disconnectFromGame = function(game_id) { /* {{{ */
-    this.log("Disconnected from game", game_id);
+    //this.log("Disconnected from game", game_id);
     if (game_id in this.connected_games) {
         clearInterval(this.connected_game_timeouts[game_id])
         this.connected_games[game_id].disconnect();
