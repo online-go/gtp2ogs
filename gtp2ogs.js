@@ -41,7 +41,6 @@ var optimist = require("optimist")
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('insecureggs', "Don't use ssl to connect to the ggs servers [false]")
     .describe('insecurerest', "Don't use ssl to connect to the rest servers [false]")
-    //.describe('concurrency', 'Number of instances of your bot to concurrently handle requests [1]')
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
 ;
@@ -86,9 +85,6 @@ var moves_processing = 0;
 /*********/
 /** Bot **/
 /*********/
-//var bot_instances = []
-
-
 function Bot(cmd) { /* {{{ */
     var self = this;
     this.proc = spawn(cmd[0], cmd.slice(1));
@@ -288,7 +284,7 @@ function Game(conn, game_id) { /* {{{ */
         if (!self.connected) return;
         //self.log("move")
         //self.log("Move: ", move);
-        self.state.moves += move.move;
+        self.state.moves.push(move.move);
         if (self.bot) {
             self.bot.sendMove(decodeMoves(move.move, self.state.width)[0]);
         }
@@ -313,6 +309,7 @@ Game.prototype.makeMove = function() { /* {{{ */
 
     var passed = false;
     function passAndRestart() {
+        printf("pass and restart called");
         if (!passed) {
             passed = true;
             self.log("Bot process crashed, state was");
@@ -340,7 +337,7 @@ Game.prototype.makeMove = function() { /* {{{ */
             }));
         }
         else {
-            self.log("Playing " + move.text);
+            self.log("Playing " + move.text, move);
             self.socket.emit('game/move', self.auth({
                 'game_id': self.state.game_id,
                 'move': encodeMove(move)
@@ -634,14 +631,45 @@ function request(method, host, port, path, data, cb, eb) { /* {{{ */
     req.write(enc_data);
     req.end();
 } /* }}} */
+
+
 function decodeMoves(move_obj, board_size) { /* {{{ */
     var ret = [];
     var width = board_size;
     var height = board_size;
 
+    if (DEBUG) {
+        console.log("Decoding ", move_obj);
+    }
+
+    function decodeSingleMoveArray(arr) {
+        var obj = {
+            x         : arr[0],
+            y         : arr[1],
+            timedelta : arr.length > 2 ? arr[2] : -1,
+            color     : arr.length > 3 ? arr[3] : 0,
+        }
+        var extra = arr.length > 4 ? arr[4] : {};
+        for (var k in extra) {
+            obj[k] = extra[k];
+        }
+        return obj;
+    }
+
     if (move_obj instanceof Array) {
-        for (var i=0; i < move_obj.length; ++i) {
-            ret = ret.concat(decodeMoves(move_obj, board_size));
+        if (move_obj.length && typeof(move_obj[0]) == 'number') {
+            ret.push(decodeSingleMoveArray(move_obj));
+        }
+        else {
+            for (var i=0; i < move_obj.length; ++i) {
+                var mv = move_obj[i];
+                if (mv instanceof Array) {
+                    ret.push(decodeSingleMoveArray(mv));
+                }
+                else { 
+                    throw new Error("Unrecognized move format: ", mv);
+                }
+            }
         }
     } 
     else if (typeof(move_obj) == "string") {
@@ -657,7 +685,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
                     var y = height-parseInt(moves[i].substring(1));
                     if ((width && x >= width) || x < 0) x = y= -1;
                     if ((height && y >= height) || y < 0) x = y = -1;
-                    ret.push({"x": x, "y": y, "special": false, "edited": false, "color": 0});
+                    ret.push({"x": x, "y": y, "edited": false, "color": 0});
                 } else {
                     if (moves[i] != "") { 
                         throw "Unparsed move input: " + moves[i];
@@ -671,12 +699,10 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             for (var i=0; i < move_string.length-1; i += 2) {
                 var edited = false;
                 var color = 0;
-                var special = false;
                 if (move_string[i+0] == '!') {
                     edited = true;
                     color = parseInt(move_string[i+1]);
                     i += 2;
-                    special = true;
                 }
 
 
@@ -684,18 +710,19 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
                 var y = char2num(move_string[i+1]);
                 if (width && x >= width) x = y= -1;
                 if (height && y >= height) x = y = -1;
-                ret.push({"x": x, "y": y, "special": special, "edited": edited, "color": color});
+                ret.push({"x": x, "y": y, "edited": edited, "color": color});
             }
         }
     } 
     else {
-        return {
-            "special": true
-        };
+        throw new Error("Invalid move format: ", move_obj);
     }
 
     return ret;
 }; /* }}} */
+
+
+
 function char2num(ch) { /* {{{ */
     if (ch == ".") return -1;
     return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
@@ -730,22 +757,5 @@ function num2gtpchar(num) { /* {{{ */
     return "abcdefghjklmnopqrstuvwxyz"[num];
 } /* }}} */
 
-
-
-
-
-/**************************/
-/** Initialize instances **/
-/**************************/
-
-/*
-for (var i=0; i < argv.concurrency; ++i) {
-    bot_instances.push(new Bot(bot_command));
-}
-if (!bot_instances)  {
-    optimist.showHelp();
-    process.exit();
-}
-*/
 
 var conn = new Connection();
