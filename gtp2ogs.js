@@ -179,31 +179,32 @@ Bot.prototype.log = function(str) { /* {{{ */
 } /* }}} */
 
 Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
-    var color = 1;
     this.command("boardsize " + state.width);
     this.command("clear_board");
     this.command("komi " + state.komi);
 
-    if (state.initial_state.black) {
+    if (state.initial_state) {
         var black = decodeMoves(state.initial_state.black, state.width);
-        var s = "";
-        for (var i=0; i < black.length; ++i) {
-            s += " " + move2gtpvertex(black[i], state.width);
-        }
-        this.command("set_free_handicap " + s); 
-    }
-    if (state.initial_state.white) {
         var white = decodeMoves(state.initial_state.white, state.width);
-        /* no analagous command for white stones, so we just do moves instead */
-        for (var i=0; i < white.length; ++i) {
-            this.command("play white " + move2gtpvertex(white[i], state.width));
+
+        if (black.length) {
+            var s = "";
+            for (var i=0; i < black.length; ++i) {
+                s += " " + move2gtpvertex(black[i], state.width);
+            }
+            this.command("set_free_handicap " + s); 
+    }
+
+        if (white.length) {
+            /* no analagous command for white stones, so we just do moves instead */
+            for (var i=0; i < white.length; ++i) {
+                this.command("play white " + move2gtpvertex(white[i], state.width));
+            }
         }
     }
 
     // Replay moves made
-    if (state.initial_player == 'white') {
-        var color = 2;
-    }
+    var color = state.initial_player;
     var handicaps_left = state.handicap;
     var moves = decodeMoves(state.moves, state.width);
     for (var i=0; i < moves.length; ++i) {
@@ -220,7 +221,7 @@ Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
                 color = color == 1 ? 2 : 1;
             }
         }
-        this.command("play " + (c == 1 ?  'black' : 'white') + ' ' + move2gtpvertex(move, state.width))
+        this.command("play " + (c == 1 ?  'black' : 'white') + ' ' + move2gtpvertex(move, state.width));
     }
     this.last_color = color;
     //this.command("showboard", cb, eb);
@@ -297,8 +298,8 @@ Bot.prototype.genmove = function(state, cb) { /* {{{ */
                  self.log("genmove failed, resigning");
                      resign = true;
             }
-	    }
-            cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
+        }
+        cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
     })
     this.last_color = this.last_color == 1 ? 2 : 1;
 } /* }}} */
@@ -331,19 +332,22 @@ function Game(conn, game_id) { /* {{{ */
         self.state = gamedata;
         this.state = gamedata;
         if (self.state.phase == 'play') {
-	        if (self.state.clock.current_player == self.bot_id) {
+	  if (self.state.clock.current_player == self.bot_id) {
                if (self.waiting_on_gamedata_to_make_move) {
                   self.waiting_on_gamedata_to_make_move = false;
-		          self.makeMove();
-	           }
+	         self.makeMove();
+	     }
             }
         }
+/*
         else if (self.state.phase == 'stone removal') {
             self.log("Game is in the stone removal phase");
             self.setAndAcceptRemovedStones(self.state);
         }
+*/
         else if (self.state.phase == 'finished') {
             delete active_games[this.game_id];
+            //self.deleteNotification(notification);
             self.log("Game is finished");
         }
     });
@@ -354,9 +358,11 @@ function Game(conn, game_id) { /* {{{ */
         }
         self.state.phase = phase;
         //this.state.phase = phase;
+/*
         if (phase == 'stone removal') {
             self.setAndAcceptRemovedStones();
         }
+*/
         if (phase == 'play') {
             /* FIXME: This is pretty stupid.. we know what state we're in to
              * see if it's our move or not, but it's late and blindly sending
@@ -388,17 +394,18 @@ function Game(conn, game_id) { /* {{{ */
         if (!self.state) return;
         //self.log("move")
         //self.log("Move: ", move);
-        self.state.moves += move.move;
-        //this.state.moves += move.move;
+        self.state.moves.push(move.move);
+        //self.state.moves += move.move;
         if (self.bot) {
             self.bot.sendMove(decodeMoves(move.move, self.state.width)[0]);
         }
     });
+/*
     self.socket.on('game/' + game_id + '/removed_stones', function(move) {
         if (!self.connected) return;
         self.setAndAcceptRemovedStones(self.state);
     });
-
+*/
     self.socket.emit('bot/connect', self.auth({}), function() {
     });
     self.socket.emit('game/connect', self.auth({
@@ -452,7 +459,7 @@ Game.prototype.makeMove = function() { /* {{{ */
             }));
         }
         else {
-            self.log("Playing " + move.text);
+            self.log("Playing " + move.text, move);
             self.socket.emit('bot/connect', self.auth({}), function() {
             });
             self.socket.emit('game/move', self.auth({
@@ -494,6 +501,7 @@ Game.prototype.log = function(str) { /* {{{ */
     console.log.apply(null, arr);
 } /* }}} */
 
+/*
 Game.prototype.setAndAcceptRemovedStones = function() { /* {{{ */
     /* TODO: We should add a flag that if set, tells us to ask the go engine
      * what it thinks dead stones are. Not all engines support this, so if not
@@ -503,7 +511,7 @@ Game.prototype.setAndAcceptRemovedStones = function() { /* {{{ */
      * See http://ogs.readme.io/v4.2/docs/real-time-api for the api endpoints
      * necessary to make this happen
      */
-
+/*
     this.log("Accepting any stones the human says are dead");
     this.socket.emit('bot/connect', this.auth({}), function() {
     });
@@ -512,7 +520,6 @@ Game.prototype.setAndAcceptRemovedStones = function() { /* {{{ */
         'stones': '--accept-any--'
     }))
 } /* }}} */
-
 
 
 /****************/
@@ -580,9 +587,10 @@ function Connection() { /* {{{ */
         for (var game_id in self.connected_games) {
             self.disconnectFromGame(game_id);
         }
-        if (moves_processing > 0) {
+/*        if (moves_processing > 0) {
             Bot.prototype.kill();
         }
+*/
     });
 
     socket.on('notification', function(notification) {
@@ -622,7 +630,7 @@ Connection.prototype.connectToGame = function(game_id) { /* {{{ */
     self.connected_game_timeouts[game_id] = setTimeout(function() {
         self.disconnectFromGame(game_id);
         delete active_games[game_id];
-    }, 10*60*1000); /* forget about game after 10 mins */
+    }, 30*60*1000); /* forget about game after 10 mins  Experimenting 30 min */
 
     if (game_id in self.connected_games) {
         return self.connected_games[game_id];
@@ -714,11 +722,11 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
     }
     if ((time_param.time_control == "byoyomi")||(time_param.time_control == "canadian")){
       if (time_param.main_time < min_time * 20) {
-        self.log(time_param.main_time/60, "min Byoyomi/Canadian, rejecting challenge from ", challenger);
+        self.log(time_param.main_time/60, "min Byoyomi or Canadian, rejecting challenge from ", challenger);
         reject = true;
       }
       else if (time_param.main_time > max_time * 12) {
-        self.log(time_param.main_time/60, "min Byoyomi/Canadian, rejecting challenge from ", challenger);
+        self.log(time_param.main_time/60, "min Byoyomi or Canadian, rejecting challenge from ", challenger);
         reject = true;
       }
       if (time_param.period_time > max_time * 8) {
@@ -865,7 +873,7 @@ function request(method, host, port, path, data, cb, eb) { /* {{{ */
 
     var headers = null;
     if (data._headers) {
-        data = dup(data)
+        data = dup(data);
         headers = data._headers;
         delete data._headers;
     }
@@ -920,9 +928,39 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     var width = board_size;
     var height = board_size;
 
+        if (DEBUG) {
+        console.log("Decoding ", move_obj);
+    }
+    
+    function decodeSingleMoveArray(arr) {
+        var obj = {
+            x         : arr[0],
+            y         : arr[1],
+            timedelta : arr.length > 2 ? arr[2] : -1,
+            color     : arr.length > 3 ? arr[3] : 0,
+        }
+        var extra = arr.length > 4 ? arr[4] : {};
+        for (var k in extra) {
+            obj[k] = extra[k];
+        }
+        return obj;
+    }
+
+
     if (move_obj instanceof Array) {
-        for (var i=0; i < move_obj.length; ++i) {
-            ret = ret.concat(decodeMoves(move_obj, board_size));
+        if (move_obj.length && typeof(move_obj[0]) == 'number') {
+            ret.push(decodeSingleMoveArray(move_obj));
+        }
+        else {
+            for (var i=0; i < move_obj.length; ++i) {
+                var mv = move_obj[i];
+                if (mv instanceof Array) {
+                    ret.push(decodeSingleMoveArray(mv));
+                }
+                else { 
+                    throw new Error("Unrecognized move format: ", mv);
+                }
+            }
         }
     } 
     else if (typeof(move_obj) == "string") {
@@ -938,7 +976,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
                     var y = height-parseInt(moves[i].substring(1));
                     if ((width && x >= width) || x < 0) x = y= -1;
                     if ((height && y >= height) || y < 0) x = y = -1;
-                    ret.push({"x": x, "y": y, "special": false, "edited": false, "color": 0});
+                    ret.push({"x": x, "y": y, "edited": false, "color": 0});
                 } else {
                     if (moves[i] != "") { 
                         throw "Unparsed move input: " + moves[i];
@@ -949,29 +987,28 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             /* Pure letter encoded form, used for all records */
             var move_string = move_obj;
 
-            for (var i=0; i < move_string.length-1; i += 2) {
+            for (var i=0; i < move_string.length-1; i += 2)  {
                 var edited = false;
                 var color = 0;
-                var special = false;
                 if (move_string[i+0] == '!') {
                     edited = true;
                     color = parseInt(move_string[i+1]);
                     i += 2;
-                    special = true;
                 }
+                
+                
                 var x = char2num(move_string[i]);
                 var y = char2num(move_string[i+1]);
                 if (width && x >= width) x = y= -1;
                 if (height && y >= height) x = y = -1;
-                ret.push({"x": x, "y": y, "special": special, "edited": edited, "color": color});
+                ret.push({"x": x, "y": y, "edited": edited, "color": color});
             }
         }
     } 
     else {
-        return {
-            "special": true
-        };
+        throw new Error("Invalid move format: ", move_obj);
     }
+
     return ret;
 }; /* }}} */
 
@@ -1015,19 +1052,5 @@ function num2gtpchar(num) { /* {{{ */
     return "abcdefghjklmnopqrstuvwxyz"[num];
 }; /* }}} */
 
-
-/**************************/
-/** Initialize instances **/
-/**************************/
-
-/*
-for (var i=0; i < argv.concurrency; ++i) {
-    bot_instances.push(new Bot(bot_command));
-}
-if (!bot_instances)  {
-    optimist.showHelp();
-    process.exit();
-}
-*/
 
 var conn = new Connection();
