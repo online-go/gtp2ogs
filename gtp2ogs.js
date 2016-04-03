@@ -11,7 +11,6 @@ var DEBUG = false;
 var spawn = require('child_process').spawn;
 var os = require('os')
 var io = require('socket.io-client');
-var sys = require('sys')
 var querystring = require('querystring');
 var http = require('http');
 var https = require('https');
@@ -21,8 +20,10 @@ var optimist = require("optimist")
     .usage("Usage: $0 --botid <bot-username> --apikey <apikey> command [arguments]")
     .alias('botid', 'bot')
     .alias('botid', 'id')
-    .alias('ggs-host', 'ggshost')
-    .alias('ggs-port', 'ggsport')
+    .alias('comm-host', 'commhost')
+    .alias('comm-port', 'commport')
+    .alias('game-host', 'gamehost')
+    .alias('game-port', 'gameport')
     .alias('rest-host', 'resthost')
     //.alias('concurrency', 'c')
     .alias('debug', 'd')
@@ -30,10 +31,14 @@ var optimist = require("optimist")
     .demand('apikey')
     .describe('botid', 'Specify the username of the bot')
     .describe('apikey', 'Specify the API key for the bot')
-    .describe('ggshost', 'GGS Hostname')
-    .default('ggshost', 'ggs.online-go.com')
-    .describe('ggsport', 'GGS Port')
-    .default('ggsport', 80)
+    .describe('commhost', 'OGS Communciation Service Hostname')
+    .default('commhost', 'ggs.online-go.com')
+    .describe('gamehost', 'OGS Game Service Hostname')
+    .default('gamehost', 'ggs.online-go.com')
+    .describe('commport', 'OGS Communication Service  Port')
+    .default('commport', 80)
+    .describe('gameport', 'OGS Game Service Port')
+    .default('gameport', 80)
     .describe('resthost', 'REST Hostname')
     .default('resthost', 'online-go.com')
     .describe('restport', 'REST Port')
@@ -63,8 +68,10 @@ if (argv.insecure) {
 }
 
 if (argv.beta) {
-    argv.ggshost = 'ggsbeta.online-go.com';
-    argv.ggsport = 80;
+    argv.commhost = 'ggsbeta.online-go.com';
+    argv.commport = 80;
+    argv.gamehost = 'ggsbeta.online-go.com';
+    argv.gameport = 80;
     argv.resthost = 'beta.online-go.com';
     argv.restport = 80;
 }
@@ -143,6 +150,14 @@ Bot.prototype.log = function(str) { /* {{{ */
     }
 
     console.log.apply(null, arr);
+} /* }}} */
+Bot.prototype.verbose = function(str) { /* {{{ */
+    var arr = ["[" + this.proc.pid + "]"];
+    for (var i=0; i < arguments.length; ++i) {
+        arr.push(arguments[i]);
+    }
+
+    console.verbose.apply(null, arr);
 } /* }}} */
 Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
     this.command("boardsize " + state.width);
@@ -242,12 +257,13 @@ function Game(conn, game_id) { /* {{{ */
     var self = this;
     this.conn = conn;
     this.game_id = game_id;
-    this.socket = conn.socket;
+    this.game_socket = conn.game_socket;
+    this.comm_socket = conn.comm_socket;
     this.state = null;
     this.waiting_on_gamedata_to_make_move = false;
     this.connected = true;
 
-    self.socket.on('game/' + game_id + '/gamedata', function(gamedata) {
+    self.game_socket.on('game/' + game_id + '/gamedata', function(gamedata) {
         if (!self.connected) return;
         self.log("gamedata")
 
@@ -263,7 +279,7 @@ function Game(conn, game_id) { /* {{{ */
             self.log("Game is finished");
         }
     });
-    self.socket.on('game/' + game_id + '/phase', function(phase) {
+    self.game_socket.on('game/' + game_id + '/phase', function(phase) {
         if (!self.connected) return;
         self.log("phase ", phase)
 
@@ -274,13 +290,13 @@ function Game(conn, game_id) { /* {{{ */
              * see if it's our move or not, but it's late and blindly sending
              * this out works as the server will reject bad moves */
             self.log("Game play resumed, sending pass because we're too lazy to check the state right now to see what we should do");
-            self.socket.emit('game/move', self.auth({
+            self.game_socket.emit('game/move', self.auth({
                 'game_id': self.state.game_id,
                 'move': '..'
             }));
         }
     });
-    self.socket.on('game/' + game_id + '/move', function(move) {
+    self.game_socket.on('game/' + game_id + '/move', function(move) {
         if (!self.connected) return;
         //self.log("move")
         //self.log("Move: ", move);
@@ -290,7 +306,7 @@ function Game(conn, game_id) { /* {{{ */
         }
     });
 
-    self.socket.emit('game/connect', self.auth({
+    self.game_socket.emit('game/connect', self.auth({
         'game_id': game_id
     }));
 } /* }}} */
@@ -314,7 +330,7 @@ Game.prototype.makeMove = function() { /* {{{ */
             passed = true;
             self.log("Bot process crashed, state was");
             self.log(self.state);
-            self.socket.emit('game/move', self.auth({
+            self.game_socket.emit('game/move', self.auth({
                 'game_id': self.state.game_id,
                 'move': ".."
             }));
@@ -332,13 +348,13 @@ Game.prototype.makeMove = function() { /* {{{ */
         --moves_processing;
         if (move.resign) {
             self.log("Resigning");
-            self.socket.emit('game/resign', self.auth({
+            self.game_socket.emit('game/resign', self.auth({
                 'game_id': self.state.game_id
             }));
         }
         else {
             self.log("Playing " + move.text, move);
-            self.socket.emit('game/move', self.auth({
+            self.game_socket.emit('game/move', self.auth({
                 'game_id': self.state.game_id,
                 'move': encodeMove(move)
             }));
@@ -355,7 +371,7 @@ Game.prototype.disconnect = function() { /* {{{ */
     this.log("Disconnecting");
 
     this.connected = false;
-    this.socket.emit('game/disconnect', this.auth({
+    this.game_socket.emit('game/disconnect', this.auth({
         'game_id': this.game_id
     }));
 }; /* }}} */
@@ -385,28 +401,30 @@ var ignorable_notifications = {
 function Connection() { /* {{{ */
     var self = this;
     self.log("Connecting..");
-    var socket = this.socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.ggshost + ':' + argv.ggsport, { });
+    var game_socket = this.game_socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.gamehost + ':' + argv.gameport, { });
+    var comm_socket = this.comm_socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.commhost + ':' + argv.commport, { });
 
     this.connected_games = {};
     this.connected_game_timeouts = {};
     this.connected = false;
 
-    socket.on('connect', function() {
+    comm_socket.on('connect', function() {
         self.connected = true;
         self.log("Connected");
 
-        socket.emit('bot/id', {'id': argv.botid}, function(id) {
-            self.bot_id = id;
+        comm_socket.emit('bot/id', {'id': argv.botid}, function(obj) {
+            self.bot_id = obj.id;
+            self.jwt = obj.jwt;
+            console.log("JWT: ", self.jwt)
             if (!self.bot_id) {
                 console.error("ERROR: Bot account is unknown to the system: " +   argv.botid);
                 process.exit();
             }
             self.log("Bot is user id:", self.bot_id);
-            self.auth({})
-            socket.emit('notification/connect', self.auth({}), function(x) {
+            comm_socket.emit('notification/connect', self.auth({}), function(x) {
                 self.log(x);
             })
-            socket.emit('bot/connect', self.auth({ }), function() {
+            comm_socket.emit('bot/connect', self.auth({ }), function() {
             })
         });
     });
@@ -417,15 +435,18 @@ function Connection() { /* {{{ */
          * we'll get it figured out how this happens in the first place. */
         if (moves_processing == 0) {
             //console.log("Resync of notifications");
-            socket.emit('notification/connect', self.auth({}), function(x) {
+            comm_socket.emit('notification/connect', self.auth({}), function(x) {
                 self.log(x);
             })
         }
     }, 10000);
-    socket.on('event', function(data) {
-        self.log(data);
+    comm_socket.on('event', function(data) {
+        self.verbose(data);
     });
-    socket.on('disconnect', function() {
+    game_socket.on('event', function(data) {
+        self.verbose(data);
+    });
+    game_socket.on('disconnect', function() {
         self.connected = false;
         self.log("Disconnected");
         for (var game_id in self.connected_games) {
@@ -435,7 +456,7 @@ function Connection() { /* {{{ */
 
 
 
-    socket.on('notification', function(notification) {
+    comm_socket.on('notification', function(notification) {
         if (self['on_' + notification.type]) {
             self['on_' + notification.type](notification);
         }
@@ -445,7 +466,7 @@ function Connection() { /* {{{ */
     });
 } /* }}} */
 Connection.prototype.log = function(str) { /* {{{ */
-    var arr = ["[" + argv.ggshost + "]"];
+    var arr = ["# "];
     for (var i=0; i < arguments.length; ++i) {
         arr.push(arguments[i]);
     }
@@ -455,6 +476,10 @@ Connection.prototype.log = function(str) { /* {{{ */
 Connection.prototype.auth = function (obj) { /* {{{ */
     obj.apikey = argv.apikey;
     obj.bot_id = this.bot_id;
+    obj.player_id = this.bot_id;
+    if (this.jwt) {
+        obj.jwt = this.jwt;
+    }
     return obj;
 } /* }}} */
 Connection.prototype.connectToGame = function(game_id) { /* {{{ */
@@ -485,7 +510,7 @@ Connection.prototype.disconnectFromGame = function(game_id) { /* {{{ */
 }; /* }}} */
 Connection.prototype.deleteNotification = function(notification) { /* {{{ */
     var self = this;
-    this.socket.emit('notification/delete', self.auth({notification_id: notification.id}), function(x) {
+    this.comm_socket.emit('notification/delete', self.auth({notification_id: notification.id}), function(x) {
         self.log("Deleted notification ", notification.id);
     });
 }; /* }}} */
