@@ -300,7 +300,13 @@ function Game(conn, game_id) { /* {{{ */
         if (!self.connected) return;
         //self.log("move")
         //self.log("Move: ", move);
-        self.state.moves.push(move.move);
+        try {
+            self.state.moves.push(move.move);
+        } catch (e) {
+            console.error(self.state)
+            console.error(self.state.moves)
+            console.error(e)
+        }
         if (self.bot) {
             self.bot.sendMove(decodeMoves(move.move, self.state.width)[0]);
         }
@@ -464,6 +470,18 @@ function Connection() { /* {{{ */
             console.log("Unhandled notification type: ", notification.type, notification);
         }
     });
+
+    comm_socket.on('active_game', function(gamedata) {
+        if (gamedata.phase == 'stone removal'
+            && ((!gamedata.black.accepted && gamedata.black.id == self.bot_id)
+            ||  (!gamedata.white.accepted && gamedata.white.id == self.bot_id))
+           ) {
+            self.processMove(gamedata);
+        }
+        if (gamedata.phase == "play" && gamedata.player_to_move == self.bot_id) {
+            self.processMove(gamedata);
+        }
+    });
 } /* }}} */
 Connection.prototype.log = function(str) { /* {{{ */
     var arr = ["# "];
@@ -556,13 +574,10 @@ Connection.prototype.on_challenge = function(notification) { /* {{{ */
         del('/api/v1/me/challenges/' + notification.challenge_id, self.auth({ }))
     }
 }; /* }}} */
-Connection.prototype.on_yourMove = function(notification) { /* {{{ */
-    //console.log("Making move", notification);
-    //this.log("Got yourMove");
-    this.log("yourMove received", notification.game_id);
-    var game = this.connectToGame(notification.game_id)
+Connection.prototype.processMove = function(gamedata) { /* {{{ */
+    var game = this.connectToGame(gamedata.id)
     game.makeMove(function() {
-        this.log("Move made", notification.game_id);
+        this.log("Move made", gamedata.id);
         /* TODO: There's no real reason to do this other than to keep the work flow
          * really simple for these bots. When we add support for keeping state and
          * having multiple instances going at the same time, we need to not just disconnect,
@@ -570,6 +585,9 @@ Connection.prototype.on_yourMove = function(notification) { /* {{{ */
          * elapsed or the game is finished. */
         game.disconnect();
     });
+}; /* }}} */
+Connection.prototype.processStoneRemoval = function(gamedata) { /* {{{ */
+    return this.processMove(gamedata);
 }; /* }}} */
 Connection.prototype.on_delete = function(notification) { /* {{{ */
     /* don't care about delete notifications */
