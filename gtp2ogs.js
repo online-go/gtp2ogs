@@ -178,19 +178,18 @@ Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
         var c = color
         if (move.edited) {
             c = move['color']
-        } 
-        else {
+        }
+        this.last_color = c;
+        this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+        if (! move.edited) {
             if (state.free_handicap_placement && handicaps_left > 1) {
                 handicaps_left-=1
             } 
             else {
-                color = color == 1 ? 2 : 1;
+                color = color == 'black' ? 'white' : 'black';
             }
         }
-        this.command("play " + (c == 1 ?  'black' : 'white') + ' ' + move2gtpvertex(move, state.width))
     }
-    this.last_color = color;
-
     this.command("showboard", cb, eb);
 } /* }}} */
 Bot.prototype.command = function(str, cb, eb) { /* {{{ */
@@ -208,7 +207,7 @@ Bot.prototype.command = function(str, cb, eb) { /* {{{ */
 } /* }}} */
 Bot.prototype.genmove = function(state, cb) { /* {{{ */
     var self = this;
-    this.command("genmove " + (this.last_color == 1 ? 'black' : 'white'), 
+    this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
         function(move) {
             move = typeof(move) == "string" ? move.toLowerCase() : null;
             var resign = move == 'resign';
@@ -226,8 +225,6 @@ Bot.prototype.genmove = function(state, cb) { /* {{{ */
             cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
         }
     )
-
-    this.last_color = this.last_color == 1 ? 2 : 1;
 } /* }}} */
 Bot.prototype.kill = function() { /* {{{ */
     this.proc.kill();
@@ -384,7 +381,7 @@ var ignorable_notifications = {
 
 function Connection() { /* {{{ */
     var self = this;
-    self.log("Connecting..");
+    self.log("Connecting.."+(argv.insecureggs ? 'http://' : 'https://') + argv.ggshost + ':' + argv.ggsport);
     var socket = this.socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.ggshost + ':' + argv.ggsport, { });
 
     this.connected_games = {};
@@ -445,7 +442,7 @@ function Connection() { /* {{{ */
     });
 } /* }}} */
 Connection.prototype.log = function(str) { /* {{{ */
-    var arr = ["[" + argv.ggshost + "]"];
+    var arr = ["[" + argv.ggshost + argv.ggsport + "]"];
     for (var i=0; i < arguments.length; ++i) {
         arr.push(arguments[i]);
     }
