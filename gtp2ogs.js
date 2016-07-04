@@ -193,19 +193,18 @@ Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
         var c = color
         if (move.edited) {
             c = move['color']
-        } 
-        else {
+        }
+        this.last_color = c;
+        this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+        if (! move.edited) {
             if (state.free_handicap_placement && handicaps_left > 1) {
                 handicaps_left-=1
             } 
             else {
-                color = color == 1 ? 2 : 1;
+                color = color == 'black' ? 'white' : 'black';
             }
         }
-        this.command("play " + (c == 1 ?  'black' : 'white') + ' ' + move2gtpvertex(move, state.width))
     }
-    this.last_color = color;
-
     this.command("showboard", cb, eb);
 } /* }}} */
 Bot.prototype.command = function(str, cb, eb) { /* {{{ */
@@ -223,7 +222,7 @@ Bot.prototype.command = function(str, cb, eb) { /* {{{ */
 } /* }}} */
 Bot.prototype.genmove = function(state, cb) { /* {{{ */
     var self = this;
-    this.command("genmove " + (this.last_color == 1 ? 'black' : 'white'), 
+    this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
         function(move) {
             move = typeof(move) == "string" ? move.toLowerCase() : null;
             var resign = move == 'resign';
@@ -241,8 +240,6 @@ Bot.prototype.genmove = function(state, cb) { /* {{{ */
             cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
         }
     )
-
-    this.last_color = this.last_color == 1 ? 2 : 1;
 } /* }}} */
 Bot.prototype.kill = function() { /* {{{ */
     this.proc.kill();
@@ -406,9 +403,12 @@ var ignorable_notifications = {
 
 function Connection() { /* {{{ */
     var self = this;
-    self.log("Connecting..");
-    var game_socket = this.game_socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.gamehost + ':' + argv.gameport, { });
-    var comm_socket = this.comm_socket = io((argv.insecureggs ? 'http://' : 'https://') + argv.commhost + ':' + argv.commport, { });
+    let game_host = (argv.insecureggs ? 'http://' : 'https://') + argv.gamehost + ':' + argv.gameport;
+    let comm_host = (argv.insecureggs ? 'http://' : 'https://') + argv.commhost + ':' + argv.commport;
+
+    self.log(`Connecting term: ${game_host} / comm: ${comm_host}`);
+    var game_socket = this.game_socket = io(game_host, { });
+    var comm_socket = this.comm_socket = io(comm_host, { });
 
     this.connected_games = {};
     this.connected_game_timeouts = {};
