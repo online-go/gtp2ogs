@@ -26,6 +26,7 @@ var optimist = require("optimist")
     .alias('rest-host', 'resthost')
     //.alias('concurrency', 'c')
     .alias('debug', 'd')
+    .alias('json', 'j')
     .demand('botid')
     .demand('apikey')
     .describe('botid', 'Specify the username of the bot')
@@ -43,6 +44,7 @@ var optimist = require("optimist")
     .describe('insecurerest', "Don't use ssl to connect to the rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
+    .describe('json', 'Send and receive GTP commands in a JSON encoded format')
 ;
 var argv = optimist.argv;
 
@@ -99,6 +101,16 @@ function Bot(cmd) { /* {{{ */
     var stdout_buffer = "";
     this.proc.stdout.on('data', function(data) {
         stdout_buffer += data.toString();
+
+        if (argv.json) {
+            try {
+                stdout_buffer = JSON.parse(stdout_buffer);
+            } catch (e) {
+                // Partial result received, wait until we can parse the result
+                return;
+            }
+        }
+
         if (stdout_buffer[stdout_buffer.length-1] != '\n') {
             //self.log("Partial result received, buffering until the output ends with a newline");
             return;
@@ -192,13 +204,27 @@ Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
     }
     this.command("showboard", cb, eb);
 } /* }}} */
-Bot.prototype.command = function(str, cb, eb) { /* {{{ */
+Bot.prototype.command = function(str, cb, eb, final_command) { /* {{{ */
     this.command_callbacks.push(cb);
     if (DEBUG) {
         this.log(">>>", str);
     }
     try {
-        this.proc.stdin.write(str + "\r\n");
+        if (argv.json) {
+            if (!this.json_initialized) {
+                this.proc.stdin.write(`{"gtp_commands": [`);
+                this.json_initialized = true;
+            } else {
+                this.proc.stdin.write(",");
+            }
+            this.proc.stdin.write(JSON.stringify(str));
+            if (final_command) {
+                this.proc.stdin.write("]}");
+                this.proc.stdin.end()
+            }
+        } else {
+            this.proc.stdin.write(str + "\r\n");
+        }
     } catch (e) {
         this.log("Failed to send command: ", str);
         this.log(e);
@@ -223,7 +249,9 @@ Bot.prototype.genmove = function(state, cb) { /* {{{ */
                 }
             }
             cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
-        }
+        },
+        null,
+        true /* final command */
     )
 } /* }}} */
 Bot.prototype.kill = function() { /* {{{ */
