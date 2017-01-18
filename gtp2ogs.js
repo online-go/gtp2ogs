@@ -3,274 +3,259 @@
 'use strict';
 
 process.title = 'gtp2ogs';
-var DEBUG = false;
+let DEBUG = false;
 
-/**************************/
-/** Command line parsing **/ 
-/**************************/
-var spawn = require('child_process').spawn;
-var os = require('os')
-var io = require('socket.io-client');
-var querystring = require('querystring');
-var http = require('http');
-var https = require('https');
-var crypto = require('crypto');
 
-var optimist = require("optimist")
-    .usage("Usage: $0 --botid <bot-username> --apikey <apikey> command [arguments]")
-    .alias('botid', 'bot')
-    .alias('botid', 'id')
-    .alias('comm-host', 'commhost')
-    .alias('comm-port', 'commport')
-    .alias('game-host', 'gamehost')
-    .alias('game-port', 'gameport')
-    .alias('rest-host', 'resthost')
-    //.alias('concurrency', 'c')
+
+let spawn = require('child_process').spawn;
+let os = require('os')
+let io = require('socket.io-client');
+let querystring = require('querystring');
+let http = require('http');
+let https = require('https');
+let crypto = require('crypto');
+let console = require('tracer').colorConsole({
+    format : [
+        "{{title}} {{file}}:{{line}}{{space}} {{message}}" //default format
+    ],
+    preprocess :  function(data){
+        switch (data.title) {
+            case 'debug': data.title = ' '; break;
+            case 'log': data.title = ' '; break;
+            case 'info': data.title = ' '; break;
+            case 'warn': data.title = '!'; break;
+            case 'error': data.title = '!!!!!'; break;
+        }
+        data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
+    }
+});
+
+
+let optimist = require("optimist")
+    .usage("Usage: $0 --username <bot-username> --apikey <apikey> command [arguments]")
+    .alias('username', 'botid')
+    .alias('username', 'bot')
+    .alias('username', 'id')
     .alias('debug', 'd')
     .alias('json', 'j')
-    .demand('botid')
+    .demand('username')
     .demand('apikey')
-    .describe('botid', 'Specify the username of the bot')
+    .describe('username', 'Specify the username of the bot')
     .describe('apikey', 'Specify the API key for the bot')
-    .describe('commhost', 'OGS Communciation Service Hostname')
-    .default('commhost', 'ggs.online-go.com')
-    .describe('gamehost', 'OGS Game Service Hostname')
-    .default('gamehost', 'ggs.online-go.com')
-    .describe('commport', 'OGS Communication Service  Port')
-    .default('commport', 80)
-    .describe('gameport', 'OGS Game Service Port')
-    .default('gameport', 80)
-    .describe('resthost', 'REST Hostname')
-    .default('resthost', 'online-go.com')
-    .describe('restport', 'REST Port')
-    .default('restport', 80)
+    .describe('host', 'OGS Host to connect to')
+    .default('host', 'online-go.com')
+    .describe('port', 'OGS Port to connect to')
+    .default('port', 80)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
-    .describe('insecureggs', "Don't use ssl to connect to the ggs servers [false]")
-    .describe('insecurerest', "Don't use ssl to connect to the rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
 ;
-var argv = optimist.argv;
+let argv = optimist.argv;
 
 if (!argv._ || argv._.length == 0) {
     optimist.showHelp();
     process.exit();
 }
 
-/*
-if (!argv.concurrency || argv.concurrency <= 0) {
-    argv.concurrency = 1;
-}
-*/
-
-if (argv.insecure) {
-    argv.insecureggs = 1;
-    argv.insecurerest = 1;
-}
 
 if (argv.beta) {
-    argv.commhost = 'ggsbeta.online-go.com';
-    argv.commport = 80;
-    argv.gamehost = 'ggsbeta.online-go.com';
-    argv.gameport = 80;
-    argv.resthost = 'beta.online-go.com';
-    argv.restport = 80;
+    argv.host = 'beta.online-go.com';
+    argv.port = 80;
 }
 
 if (argv.debug) {
     DEBUG = true;
 }
 
-var bot_command = argv._;
-
+let bot_command = argv._;
+let moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
-
-
-
-var moves_processing = 0;
 
 /*********/
 /** Bot **/
 /*********/
-function Bot(cmd) { /* {{{ */
-    var self = this;
-    this.proc = spawn(cmd[0], cmd.slice(1));
-    this.commands_sent = 0;
-    this.command_callbacks = [];
+class Bot {
+    constructor(cmd) {{{
+        this.proc = spawn(cmd[0], cmd.slice(1));
+        this.commands_sent = 0;
+        this.command_callbacks = [];
 
-    this.log("Starting ", cmd.join(' '));
+        if (DEBUG) {
+            this.log("Starting ", cmd.join(' '));
+        }
 
-    this.proc.stderr.on('data', function(data) {
-        self.log("stderr: " + data);
-    });
-    var stdout_buffer = "";
-    this.proc.stdout.on('data', function(data) {
-        stdout_buffer += data.toString();
+        this.proc.stderr.on('data', (data) => {
+            this.log("stderr: " + data);
+        });
+        let stdout_buffer = "";
+        this.proc.stdout.on('data', (data) => {
+            stdout_buffer += data.toString();
 
-        if (argv.json) {
-            try {
-                stdout_buffer = JSON.parse(stdout_buffer);
-            } catch (e) {
-                // Partial result received, wait until we can parse the result
+            if (argv.json) {
+                try {
+                    stdout_buffer = JSON.parse(stdout_buffer);
+                } catch (e) {
+                    // Partial result received, wait until we can parse the result
+                    return;
+                }
+            }
+
+            if (stdout_buffer[stdout_buffer.length-1] != '\n') {
+                //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
+            if (DEBUG) {
+                this.log(stdout_buffer);
+            }
+
+            let lines = stdout_buffer.split("\n");
+            stdout_buffer = "";
+            for (let i=0; i < lines.length; ++i) {
+                let line = lines[i];
+                if (line.trim() == "") {
+                    continue;
+                }
+                if (line[0] == '=') {
+                    while (lines[i].trim() != "") {
+                        ++i;
+                    }
+                    let cb = this.command_callbacks.shift();
+                    if (cb) cb(line.substr(1).trim());
+                }
+                else if (line.trim()[0] == '?') {
+                    this.log(line);
+                    while (lines[i].trim() != "") {
+                        ++i;
+                        this.log(lines[i]);
+                    }
+                }
+                else {
+                    this.log("Unexpected output: ", line);
+                    //throw new Error("Unexpected output: " + line);
+                }
+            }
+        });
+    }}}
+
+    log(str) { /* {{{ */
+        let arr = ["[" + this.proc.pid + "]"];
+        for (let i=0; i < arguments.length; ++i) {
+            arr.push(arguments[i]);
         }
 
-        if (stdout_buffer[stdout_buffer.length-1] != '\n') {
-            //self.log("Partial result received, buffering until the output ends with a newline");
-            return;
+        console.log.apply(null, arr);
+    } /* }}} */
+    verbose(str) { /* {{{ */
+        let arr = ["[" + this.proc.pid + "]"];
+        for (let i=0; i < arguments.length; ++i) {
+            arr.push(arguments[i]);
         }
+
+        console.verbose.apply(null, arr);
+    } /* }}} */
+    loadState(state, cb, eb) { /* {{{ */
+        this.command("boardsize " + state.width);
+        this.command("clear_board");
+        this.command("komi " + state.komi);
+
+        if (state.initial_state) {
+            let black = decodeMoves(state.initial_state.black, state.width);
+            let white = decodeMoves(state.initial_state.white, state.width);
+
+            if (black.length) {
+                let s = "";
+                for (let i=0; i < black.length; ++i) {
+                    s += " " + move2gtpvertex(black[i], state.width);
+                }
+                this.command("set_free_handicap " + s);
+            }
+
+            if (white.length) {
+                /* no analagous command for white stones, so we just do moves instead */
+                for (let i=0; i < white.length; ++i) {
+                    this.command("play white " + move2gtpvertex(white[i], state.width));
+                }
+            }
+        }
+
+        // Replay moves made
+        let color = state.initial_player
+        let handicaps_left = state.handicap
+        let moves = decodeMoves(state.moves, state.width) 
+        for (let i=0; i < moves.length; ++i) {
+            let move = moves[i];
+            let c = color
+            if (move.edited) {
+                c = move['color']
+            }
+            this.last_color = c;
+            this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+            if (! move.edited) {
+                if (state.free_handicap_placement && handicaps_left > 1) {
+                    handicaps_left-=1
+                } 
+                else {
+                    color = color == 'black' ? 'white' : 'black';
+                }
+            }
+        }
+        this.command("showboard", cb, eb);
+    } /* }}} */
+    command(str, cb, eb, final_command) { /* {{{ */
+        this.command_callbacks.push(cb);
         if (DEBUG) {
-            self.log(stdout_buffer);
+            this.log(">>>", str);
         }
-
-        var lines = stdout_buffer.split("\n");
-        stdout_buffer = "";
-        for (var i=0; i < lines.length; ++i) {
-            var line = lines[i];
-            if (line.trim() == "") {
-                continue;
-            }
-            if (line[0] == '=') {
-                while (lines[i].trim() != "") {
-                    ++i;
-                }
-                var cb = self.command_callbacks.shift();
-                if (cb) cb(line.substr(1).trim());
-            }
-            else if (line.trim()[0] == '?') {
-                self.log(line);
-                while (lines[i].trim() != "") {
-                    ++i;
-                    self.log(lines[i]);
-                }
-            }
-            else {
-                self.log("Unexpected output: ", line);
-                //throw new Error("Unexpected output: " + line);
-            }
-        }
-    });
-
-} /* }}} */
-Bot.prototype.log = function(str) { /* {{{ */
-    var arr = ["[" + this.proc.pid + "]"];
-    for (var i=0; i < arguments.length; ++i) {
-        arr.push(arguments[i]);
-    }
-
-    console.log.apply(null, arr);
-} /* }}} */
-Bot.prototype.verbose = function(str) { /* {{{ */
-    var arr = ["[" + this.proc.pid + "]"];
-    for (var i=0; i < arguments.length; ++i) {
-        arr.push(arguments[i]);
-    }
-
-    console.verbose.apply(null, arr);
-} /* }}} */
-Bot.prototype.loadState = function(state, cb, eb) { /* {{{ */
-    this.command("boardsize " + state.width);
-    this.command("clear_board");
-    this.command("komi " + state.komi);
-
-    if (state.initial_state) {
-        var black = decodeMoves(state.initial_state.black, state.width);
-        var white = decodeMoves(state.initial_state.white, state.width);
-
-        if (black.length) {
-            var s = "";
-            for (var i=0; i < black.length; ++i) {
-                s += " " + move2gtpvertex(black[i], state.width);
-            }
-            this.command("set_free_handicap " + s);
-        }
-
-        if (white.length) {
-            /* no analagous command for white stones, so we just do moves instead */
-            for (var i=0; i < white.length; ++i) {
-                this.command("play white " + move2gtpvertex(white[i], state.width));
-            }
-        }
-    }
-
-    // Replay moves made
-    var color = state.initial_player
-    var handicaps_left = state.handicap
-    var moves = decodeMoves(state.moves, state.width) 
-    for (var i=0; i < moves.length; ++i) {
-        var move = moves[i];
-        var c = color
-        if (move.edited) {
-            c = move['color']
-        }
-        this.last_color = c;
-        this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
-        if (! move.edited) {
-            if (state.free_handicap_placement && handicaps_left > 1) {
-                handicaps_left-=1
-            } 
-            else {
-                color = color == 'black' ? 'white' : 'black';
-            }
-        }
-    }
-    this.command("showboard", cb, eb);
-} /* }}} */
-Bot.prototype.command = function(str, cb, eb, final_command) { /* {{{ */
-    this.command_callbacks.push(cb);
-    if (DEBUG) {
-        this.log(">>>", str);
-    }
-    try {
-        if (argv.json) {
-            if (!this.json_initialized) {
-                this.proc.stdin.write(`{"gtp_commands": [`);
-                this.json_initialized = true;
-            } else {
-                this.proc.stdin.write(",");
-            }
-            this.proc.stdin.write(JSON.stringify(str));
-            if (final_command) {
-                this.proc.stdin.write("]}");
-                this.proc.stdin.end()
-            }
-        } else {
-            this.proc.stdin.write(str + "\r\n");
-        }
-    } catch (e) {
-        this.log("Failed to send command: ", str);
-        this.log(e);
-        if (eb) eb(e);
-    }
-} /* }}} */
-Bot.prototype.genmove = function(state, cb) { /* {{{ */
-    var self = this;
-    this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
-        function(move) {
-            move = typeof(move) == "string" ? move.toLowerCase() : null;
-            var resign = move == 'resign';
-            var pass = move == 'pass';
-            var x=-1, y=-1;
-            if (!resign && !pass) {
-                if (move && move[0]) {
-                    x = gtpchar2num(move[0]);
-                    y = state.width - parseInt(move.substr(1))
+        try {
+            if (argv.json) {
+                if (!this.json_initialized) {
+                    this.proc.stdin.write(`{"gtp_commands": [`);
+                    this.json_initialized = true;
                 } else {
-                    self.log("genmove failed, resigning");
-                    resign = true;
+                    this.proc.stdin.write(",");
                 }
+                this.proc.stdin.write(JSON.stringify(str));
+                if (final_command) {
+                    this.proc.stdin.write("]}");
+                    this.proc.stdin.end()
+                }
+            } else {
+                this.proc.stdin.write(str + "\r\n");
             }
-            cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
-        },
-        null,
-        true /* final command */
-    )
-} /* }}} */
-Bot.prototype.kill = function() { /* {{{ */
-    this.proc.kill();
+        } catch (e) {
+            this.log("Failed to send command: ", str);
+            this.log(e);
+            if (eb) eb(e);
+        }
+    } /* }}} */
+    genmove(state, cb) { /* {{{ */
+        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
+            (move) => {
+                move = typeof(move) == "string" ? move.toLowerCase() : null;
+                let resign = move == 'resign';
+                let pass = move == 'pass';
+                let x=-1, y=-1;
+                if (!resign && !pass) {
+                    if (move && move[0]) {
+                        x = gtpchar2num(move[0]);
+                        y = state.width - parseInt(move.substr(1))
+                    } else {
+                        this.log("genmove failed, resigning");
+                        resign = true;
+                    }
+                }
+                cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
+            },
+            null,
+            true /* final command */
+        )
+    } /* }}} */
+    kill() { /* {{{ */
+        this.proc.kill();
+    } /* }}} */
+
 } /* }}} */
 
 
@@ -278,149 +263,148 @@ Bot.prototype.kill = function() { /* {{{ */
 /**********/
 /** Game **/
 /**********/
-function Game(conn, game_id) { /* {{{ */
-    var self = this;
-    this.conn = conn;
-    this.game_id = game_id;
-    this.game_socket = conn.game_socket;
-    this.comm_socket = conn.comm_socket;
-    this.state = null;
-    this.waiting_on_gamedata_to_make_move = false;
-    this.connected = true;
+class Game {
+    constructor(conn, game_id) { /* {{{ */
+        this.conn = conn;
+        this.game_id = game_id;
+        this.socket = conn.socket;
+        this.state = null;
+        this.waiting_on_gamedata_to_make_move = false;
+        this.connected = true;
 
-    self.game_socket.on('game/' + game_id + '/gamedata', function(gamedata) {
-        if (!self.connected) return;
-        self.log("gamedata")
+        this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
+            if (!this.connected) return;
+            this.log("gamedata")
 
-        //self.log("Gamedata: ", gamedata);
-        self.state = gamedata;
-        if (self.state.phase == 'play') {
-            if (self.waiting_on_gamedata_to_make_move) {
-                self.waiting_on_gamedata_to_make_move = false;
-                self.makeMove();
+            //this.log("Gamedata: ", gamedata);
+            this.state = gamedata;
+            if (this.state.phase == 'play') {
+                if (this.waiting_on_gamedata_to_make_move) {
+                    this.waiting_on_gamedata_to_make_move = false;
+                    this.makeMove();
+                }
+            }
+            else if (this.state.phase == 'finished') {
+                this.log("Game is finished");
+            }
+        });
+        this.socket.on('game/' + game_id + '/phase', (phase) => {
+            if (!this.connected) return;
+            this.log("phase ", phase)
+
+            //this.log("Move: ", move);
+            this.state.phase = phase;
+            if (phase == 'play') {
+                /* FIXME: This is pretty stupid.. we know what state we're in to
+                 * see if it's our move or not, but it's late and blindly sending
+                 * this out works as the server will reject bad moves */
+                this.log("Game play resumed, sending pass because we're too lazy to check the state right now to see what we should do");
+                this.socket.emit('game/move', this.auth({
+                    'game_id': this.state.game_id,
+                    'move': '..'
+                }));
+            }
+        });
+        this.socket.on('game/' + game_id + '/move', (move) => {
+            if (!this.connected) return;
+            //this.log("move")
+            //this.log("Move: ", move);
+            try {
+                this.state.moves.push(move.move);
+            } catch (e) {
+                console.error(this.state)
+                console.error(this.state.moves)
+                console.error(e)
+            }
+            if (this.bot) {
+                this.bot.sendMove(decodeMoves(move.move, this.state.width)[0]);
+            }
+        });
+
+        this.socket.emit('game/connect', this.auth({
+            'game_id': game_id
+        }));
+    } /* }}} */
+    makeMove() { /* {{{ */
+        if (!this.state) {
+            this.waiting_on_gamedata_to_make_move = true;
+            return;
+        }
+        if (this.state.phase != 'play') {
+            return;
+        }
+
+        let bot = new Bot(bot_command);
+        ++moves_processing;
+
+        let passed = false;
+        let passAndRestart = () => {
+            printf("pass and restart called");
+            if (!passed) {
+                passed = true;
+                this.log("Bot process crashed, state was");
+                this.log(this.state);
+                this.socket.emit('game/move', this.auth({
+                    'game_id': this.state.game_id,
+                    'move': ".."
+                }));
+                --moves_processing;
+                bot.kill();
             }
         }
-        else if (self.state.phase == 'finished') {
-            self.log("Game is finished");
-        }
-    });
-    self.game_socket.on('game/' + game_id + '/phase', function(phase) {
-        if (!self.connected) return;
-        self.log("phase ", phase)
 
-        //self.log("Move: ", move);
-        self.state.phase = phase;
-        if (phase == 'play') {
-            /* FIXME: This is pretty stupid.. we know what state we're in to
-             * see if it's our move or not, but it's late and blindly sending
-             * this out works as the server will reject bad moves */
-            self.log("Game play resumed, sending pass because we're too lazy to check the state right now to see what we should do");
-            self.game_socket.emit('game/move', self.auth({
-                'game_id': self.state.game_id,
-                'move': '..'
-            }));
-        }
-    });
-    self.game_socket.on('game/' + game_id + '/move', function(move) {
-        if (!self.connected) return;
-        //self.log("move")
-        //self.log("Move: ", move);
-        try {
-            self.state.moves.push(move.move);
-        } catch (e) {
-            console.error(self.state)
-            console.error(self.state.moves)
-            console.error(e)
-        }
-        if (self.bot) {
-            self.bot.sendMove(decodeMoves(move.move, self.state.width)[0]);
-        }
-    });
+        bot.log("Generating move for game ", this.game_id);
+        bot.loadState(this.state, () => {
+            if (DEBUG) {
+                this.log("State loaded");
+            }
+        }, passAndRestart);
 
-    self.game_socket.emit('game/connect', self.auth({
-        'game_id': game_id
-    }));
-} /* }}} */
-Game.prototype.makeMove = function() { /* {{{ */
-    var self = this;
-    if (!this.state) {
-        this.waiting_on_gamedata_to_make_move = true;
-        return;
-    }
-    if (this.state.phase != 'play') {
-        return;
-    }
-
-    var bot = new Bot(bot_command);
-    ++moves_processing;
-
-    var passed = false;
-    function passAndRestart() {
-        printf("pass and restart called");
-        if (!passed) {
-            passed = true;
-            self.log("Bot process crashed, state was");
-            self.log(self.state);
-            self.game_socket.emit('game/move', self.auth({
-                'game_id': self.state.game_id,
-                'move': ".."
-            }));
+        bot.genmove(this.state, (move) => {
             --moves_processing;
+            if (move.resign) {
+                this.log("Resigning");
+                this.socket.emit('game/resign', this.auth({
+                    'game_id': this.state.game_id
+                }));
+            }
+            else {
+                this.log("Playing " + move.text, move);
+                this.socket.emit('game/move', this.auth({
+                    'game_id': this.state.game_id,
+                    'move': encodeMove(move)
+                }));
+            }
             bot.kill();
+        }, passAndRestart);
+    } /* }}} */
+    auth(obj) { /* {{{ */
+        return this.conn.auth(obj);
+    }; /* }}} */
+    disconnect() { /* {{{ */
+        this.log("Disconnecting");
+
+        this.connected = false;
+        this.socket.emit('game/disconnect', this.auth({
+            'game_id': this.game_id
+        }));
+    }; /* }}} */
+    log(str) { /* {{{ */
+        let arr = ["[Game " + this.game_id + "]"];
+        for (let i=0; i < arguments.length; ++i) {
+            arr.push(arguments[i]);
         }
-    }
 
-    bot.log("Generating move for game ", this.game_id);
-    bot.loadState(self.state, function() {
-        self.log("State loaded");
-    }, passAndRestart);
-
-    bot.genmove(self.state, function(move) {
-        --moves_processing;
-        if (move.resign) {
-            self.log("Resigning");
-            self.game_socket.emit('game/resign', self.auth({
-                'game_id': self.state.game_id
-            }));
-        }
-        else {
-            self.log("Playing " + move.text, move);
-            self.game_socket.emit('game/move', self.auth({
-                'game_id': self.state.game_id,
-                'move': encodeMove(move)
-            }));
-        }
-        bot.kill();
-    }, passAndRestart);
-
-    
-} /* }}} */
-Game.prototype.auth = function(obj) { /* {{{ */
-    return this.conn.auth(obj);
-}; /* }}} */
-Game.prototype.disconnect = function() { /* {{{ */
-    this.log("Disconnecting");
-
-    this.connected = false;
-    this.game_socket.emit('game/disconnect', this.auth({
-        'game_id': this.game_id
-    }));
-}; /* }}} */
-Game.prototype.log = function(str) { /* {{{ */
-    var arr = ["[Game " + this.game_id + "]"];
-    for (var i=0; i < arguments.length; ++i) {
-        arr.push(arguments[i]);
-    }
-
-    console.log.apply(null, arr);
-} /* }}} */
+        console.log.apply(null, arr);
+    } /* }}} */
+}
 
 
 
 /****************/
 /** Connection **/
 /****************/
-var ignorable_notifications = {
+let ignorable_notifications = {
     'gameStarted': true,
     'gameEnded': true,
     'gameDeclined': true,
@@ -429,299 +413,302 @@ var ignorable_notifications = {
     'tournamentEnded': true,
 };
 
-function Connection() { /* {{{ */
-    var self = this;
-    let game_host = (argv.insecureggs ? 'http://' : 'https://') + argv.gamehost + ':' + argv.gameport;
-    let comm_host = (argv.insecureggs ? 'http://' : 'https://') + argv.commhost + ':' + argv.commport;
+class Connection {
+    constructor() {{{
+        let prefix = (argv.insecure ? 'http://' : 'https://') + argv.host + ':' + argv.port;
 
-    self.log(`Connecting term: ${game_host} / comm: ${comm_host}`);
-    var game_socket = this.game_socket = io(game_host, { });
-    var comm_socket = this.comm_socket = io(comm_host, { });
-
-    this.connected_games = {};
-    this.connected_game_timeouts = {};
-    this.connected = false;
-
-    comm_socket.on('connect', function() {
-        self.connected = true;
-        self.log("Connected");
-
-        comm_socket.emit('bot/id', {'id': argv.botid}, function(obj) {
-            self.bot_id = obj.id;
-            self.jwt = obj.jwt;
-            console.log("JWT: ", self.jwt)
-            if (!self.bot_id) {
-                console.error("ERROR: Bot account is unknown to the system: " +   argv.botid);
-                process.exit();
-            }
-            self.log("Bot is user id:", self.bot_id);
-            comm_socket.emit('notification/connect', self.auth({}), function(x) {
-                self.log(x);
-            })
-            comm_socket.emit('bot/connect', self.auth({ }), function() {
-            })
+        conn_log(`Connecting to ${prefix}`);
+        let socket = this.socket = io(prefix, {
+            reconection: true,
+            reconnectionDelay: 500,
+            reconnectionDelayMax: 60000,
+            transports: ['websocket'],
         });
-    });
 
-    setInterval(function() {
-        /* if we're sitting there bored, make sure we don't have any move
-         * notifications that got lost in the shuffle... and maybe someday
-         * we'll get it figured out how this happens in the first place. */
-        if (moves_processing == 0) {
-            //console.log("Resync of notifications");
-            comm_socket.emit('notification/connect', self.auth({}), function(x) {
-                self.log(x);
+        this.connected_games = {};
+        this.connected_game_timeouts = {};
+        this.connected = false;
+
+        setTimeout(()=>{
+            if (!this.connected) {
+                console.error(`Failed to connect to ${prefix}`);
+                process.exit(-1);
+            }
+        }, (/'online-go.com$'/.test(argv.host)) ? 5000 : 500);
+
+        socket.on('connect', () => {
+            this.connected = true;
+            conn_log("Connected");
+
+            socket.emit('bot/id', {'id': argv.username}, (obj) => {
+                this.bot_id = obj.id;
+                this.jwt = obj.jwt;
+                //console.log("JWT: ", this.jwt)
+                if (!this.bot_id) {
+                    console.error("ERROR: Bot account is unknown to the system: " +   argv.username);
+                    process.exit();
+                }
+                conn_log("Bot is user id:", this.bot_id);
+                socket.emit('notification/connect', this.auth({}), (x) => {
+                    conn_log(x);
+                })
+                socket.emit('bot/connect', this.auth({ }), () => {
+                })
+            });
+        });
+
+        setInterval(() => {
+            /* if we're sitting there bored, make sure we don't have any move
+             * notifications that got lost in the shuffle... and maybe someday
+             * we'll get it figured out how this happens in the first place. */
+            if (moves_processing == 0) {
+                //console.log("Resync of notifications");
+                socket.emit('notification/connect', this.auth({}), (x) => {
+                    conn_log(x);
+                })
+            }
+        }, 10000);
+        socket.on('event', (data) => {
+            this.verbose(data);
+        });
+        socket.on('event', (data) => {
+            this.verbose(data);
+        });
+        socket.on('disconnect', () => {
+            this.connected = false;
+            conn_log("Disconnected");
+            for (let game_id in this.connected_games) {
+                this.disconnectFromGame(game_id);
+            }
+        });
+
+
+
+        socket.on('notification', (notification) => {
+            if (this['on_' + notification.type]) {
+                this['on_' + notification.type](notification);
+            }
+            else if (!(notification.type in ignorable_notifications)) {
+                console.log("Unhandled notification type: ", notification.type, notification);
+            }
+        });
+
+        socket.on('active_game', (gamedata) => {
+            if (gamedata.phase == 'stone removal'
+                && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
+                ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
+               ) {
+                this.processMove(gamedata);
+            }
+            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
+                this.processMove(gamedata);
+            }
+        });
+    }}}
+    auth(obj) { /* {{{ */
+        obj.apikey = argv.apikey;
+        obj.bot_id = this.bot_id;
+        obj.player_id = this.bot_id;
+        if (this.jwt) {
+            obj.jwt = this.jwt;
+        }
+        return obj;
+    } /* }}} */
+    connectToGame(game_id) { /* {{{ */
+        if (DEBUG) {
+            conn_log("Connecting to game", game_id);
+        }
+
+        if (game_id in this.connected_games) {
+            clearInterval(this.connected_game_timeouts[game_id])
+        }
+        this.connected_game_timeouts[game_id] = setTimeout(() => {
+            this.disconnectFromGame(game_id);
+        }, 10*60*1000); /* forget about game after 10 mins */
+
+        if (game_id in this.connected_games) {
+            return this.connected_games[game_id];
+        }
+        return this.connected_games[game_id] = new Game(this, game_id);;
+    }; /* }}} */
+    disconnectFromGame(game_id) { /* {{{ */
+        //conn_log("Disconnected from game", game_id);
+        if (game_id in this.connected_games) {
+            clearInterval(this.connected_game_timeouts[game_id])
+            this.connected_games[game_id].disconnect();
+        }
+
+        delete this.connected_games[game_id];
+        delete this.connected_game_timeouts[game_id];
+    }; /* }}} */
+    deleteNotification(notification) { /* {{{ */
+        this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
+            conn_log("Deleted notification ", notification.id);
+        });
+    }; /* }}} */
+    connection_reset() { /* {{{ */
+        for (let game_id in this.connected_games) {
+            this.disconnectFromGame(game_id);
+        }
+    }; /* }}} */
+    on_friendRequest(notification) { /* {{{ */
+        console.log("Friend request from ", notification.user.username);
+        post(api1("me/friends/invitations"), this.auth({ 'from_user': notification.user.id }))
+        .then((obj)=> conn_log(obj.body))
+        .catch(conn_log);
+    }; /* }}} */
+    on_challenge(notification) { /* {{{ */
+        let reject = false;
+        if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
+            conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
+            reject = true;
+        }
+
+        if (notification.width != notification.height) {
+            conn_log("board was not square, rejecting challenge");
+            reject = true;
+        }
+
+        if (!reject) {
+            conn_log("Accepting challenge, game_id = "  + notification.game_id);
+            post(api1('me/challenges/' + notification.challenge_id+'/accept'), this.auth({ }))
+            .then(ignore)
+            .catch((err) => {
+                conn_log("Error accepting challenge, declining it");
+                del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
+                .then(ignore)
+                .catch(conn_log)
+                this.deleteNotification(notification);
             })
+        } else {
+            del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
+            .then(ignore)
+            .catch(conn_log)
         }
-    }, 10000);
-    comm_socket.on('event', function(data) {
-        self.verbose(data);
-    });
-    game_socket.on('event', function(data) {
-        self.verbose(data);
-    });
-    game_socket.on('disconnect', function() {
-        self.connected = false;
-        self.log("Disconnected");
-        for (var game_id in self.connected_games) {
-            self.disconnectFromGame(game_id);
-        }
-    });
-
-
-
-    comm_socket.on('notification', function(notification) {
-        if (self['on_' + notification.type]) {
-            self['on_' + notification.type](notification);
-        }
-        else if (!(notification.type in ignorable_notifications)) {
-            console.log("Unhandled notification type: ", notification.type, notification);
-        }
-    });
-
-    comm_socket.on('active_game', function(gamedata) {
-        if (gamedata.phase == 'stone removal'
-            && ((!gamedata.black.accepted && gamedata.black.id == self.bot_id)
-            ||  (!gamedata.white.accepted && gamedata.white.id == self.bot_id))
-           ) {
-            self.processMove(gamedata);
-        }
-        if (gamedata.phase == "play" && gamedata.player_to_move == self.bot_id) {
-            self.processMove(gamedata);
-        }
-    });
-} /* }}} */
-Connection.prototype.log = function(str) { /* {{{ */
-    var arr = ["# "];
-    for (var i=0; i < arguments.length; ++i) {
-        arr.push(arguments[i]);
-    }
-
-    console.log.apply(null, arr);
-} /* }}} */
-Connection.prototype.auth = function (obj) { /* {{{ */
-    obj.apikey = argv.apikey;
-    obj.bot_id = this.bot_id;
-    obj.player_id = this.bot_id;
-    if (this.jwt) {
-        obj.jwt = this.jwt;
-    }
-    return obj;
-} /* }}} */
-Connection.prototype.connectToGame = function(game_id) { /* {{{ */
-    var self = this;
-    this.log("Connecting to game", game_id);
-
-    if (game_id in self.connected_games) {
-        clearInterval(self.connected_game_timeouts[game_id])
-    }
-    self.connected_game_timeouts[game_id] = setTimeout(function() {
-        self.disconnectFromGame(game_id);
-    }, 10*60*1000); /* forget about game after 10 mins */
-
-    if (game_id in self.connected_games) {
-        return self.connected_games[game_id];
-    }
-    return self.connected_games[game_id] = new Game(this, game_id);;
-}; /* }}} */
-Connection.prototype.disconnectFromGame = function(game_id) { /* {{{ */
-    //this.log("Disconnected from game", game_id);
-    if (game_id in this.connected_games) {
-        clearInterval(this.connected_game_timeouts[game_id])
-        this.connected_games[game_id].disconnect();
-    }
-
-    delete this.connected_games[game_id];
-    delete this.connected_game_timeouts[game_id];
-}; /* }}} */
-Connection.prototype.deleteNotification = function(notification) { /* {{{ */
-    var self = this;
-    this.comm_socket.emit('notification/delete', self.auth({notification_id: notification.id}), function(x) {
-        self.log("Deleted notification ", notification.id);
-    });
-}; /* }}} */
-Connection.prototype.connection_reset = function() { /* {{{ */
-    for (var game_id in this.connected_games) {
-        this.disconnectFromGame(game_id);
-    }
-}; /* }}} */
-Connection.prototype.on_friendRequest = function(notification) { /* {{{ */
-    var self = this;
-    console.log("Friend request from ", notification.user.username);
-    post(api1("me/friends/invitations"), 
-        self.auth({ 'from_user': notification.user.id }),
-        function(res) { self.log(res); }, 
-        function(_, res) { self.log("ERROR", res); }
-        )
-        
-    
-}; /* }}} */
-Connection.prototype.on_challenge = function(notification) { /* {{{ */
-    var self = this;
-
-    var reject = false;
-    if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
-        self.log("Unhandled rules: " + notification.rules + ", rejecting challenge");
-        reject = true;
-    }
-
-    if (notification.width != notification.height) {
-        self.log("board was not square, rejecting challenge");
-        reject = true;
-    }
-
-    if (!reject) {
-        self.log("Accepting challenge, game_id = "  + notification.game_id);
-        post('/api/v1/me/challenges/' + notification.challenge_id+'/accept', self.auth({ }),
-            null, function(err) {
-                self.log("Error accepting challenge, declining it");
-                del('/api/v1/me/challenges/' + notification.challenge_id, self.auth({ }))
-                self.deleteNotification(notification);
-            })
-    } else {
-        del('/api/v1/me/challenges/' + notification.challenge_id, self.auth({ }))
-    }
-}; /* }}} */
-Connection.prototype.processMove = function(gamedata) { /* {{{ */
-    var game = this.connectToGame(gamedata.id)
-    game.makeMove(function() {
-        this.log("Move made", gamedata.id);
-        /* TODO: There's no real reason to do this other than to keep the work flow
-         * really simple for these bots. When we add support for keeping state and
-         * having multiple instances going at the same time, we need to not just disconnect,
-         * but rather keep track of our state and only disconnect after some time has
-         * elapsed or the game is finished. */
-        game.disconnect();
-    });
-}; /* }}} */
-Connection.prototype.processStoneRemoval = function(gamedata) { /* {{{ */
-    return this.processMove(gamedata);
-}; /* }}} */
-Connection.prototype.on_delete = function(notification) { /* {{{ */
-    /* don't care about delete notifications */
-}; /* }}} */
-Connection.prototype.on_gameStarted = function(notification) { /* {{{ */
-    /* don't care about gameStarted notifications */
-}; /* }}} */
-Connection.prototype.ok = function (str) { this.log(str); }
-Connection.prototype.err = function (str) { this.log("ERROR: ", str); }
-
+    }; /* }}} */
+    processMove(gamedata) { /* {{{ */
+        let game = this.connectToGame(gamedata.id)
+        game.makeMove(() => {
+            conn_log("Move made", gamedata.id);
+            /* TODO: There's no real reason to do this other than to keep the work flow
+             * really simple for these bots. When we add support for keeping state and
+             * having multiple instances going at the same time, we need to not just disconnect,
+             * but rather keep track of our state and only disconnect after some time has
+             * elapsed or the game is finished. */
+            game.disconnect();
+        });
+    }; /* }}} */
+    processStoneRemoval(gamedata) { /* {{{ */
+        return this.processMove(gamedata);
+    }; /* }}} */
+    on_delete(notification) { /* {{{ */
+        /* don't care about delete notifications */
+    }; /* }}} */
+    on_gameStarted(notification) { /* {{{ */
+        /* don't care about gameStarted notifications */
+    }; /* }}} */
+    ok (str) {{{
+        conn_log(str); 
+    }}}
+    err (str) {{{
+        conn_log("ERROR: ", str); 
+    }}}
+}
 
 
 /**********/
 /** Util **/
 /**********/
+function ignore() {}
 function api1(str) { return "/api/v1/" + str; }
-function post(path, data, cb, eb) { request("POST", argv.resthost, argv.restport, path, data, cb, eb); }
-function get(path, data, cb, eb) { request("GET", argv.resthost, argv.restport, path, data, cb, eb); }
-function put(path, data, cb, eb) { request("PUT", argv.resthost, argv.restport, path, data, cb, eb); }
-function del(path, data, cb, eb) { request("DELETE", argv.resthost, argv.restport, path, data, cb, eb); }
-function request(method, host, port, path, data, cb, eb) { /* {{{ */
-    console.log(method, host, port, path, data);
-    if (!eb) {
-        eb = function(_, err) {
-            console.log("ERROR: ", err);
-        };
-    }
-
-    var enc_data_type = "application/x-www-form-urlencoded";
-    for (var k in data) {
-        if (typeof(data[k]) == "object") {
-            enc_data_type = "application/json";
+function post(path, data, cb, eb) { return request("POST", argv.host, argv.port, path, data, cb, eb); }
+function get(path, data, cb, eb) { return request("GET", argv.host, argv.port, path, data, cb, eb); }
+function put(path, data, cb, eb) { return request("PUT", argv.host, argv.port, path, data, cb, eb); }
+function del(path, data, cb, eb) { return request("DELETE", argv.host, argv.port, path, data, cb, eb); }
+function request(method, host, port, path, data) { /* {{{ */
+    return new Promise((resolve, reject) => {
+        if (DEBUG) {
+            console.debug(method, host, port, path, data);
         }
-    }
 
-    var headers = null;
-    if (data._headers) {
-        data = dup(data)
-        headers = data._headers;
-        delete data._headers;
-    }
-
-    var enc_data = null;
-    if (enc_data_type == "application/json") {
-        enc_data = JSON.stringify(data);
-    } else {
-        enc_data = querystring.stringify(data);
-    }
-
-    var options = {
-        host: host,
-        port: port,
-        path: path,
-        method: method,
-        headers: {
-            'Content-Type': enc_data_type,
-            'Content-Length': enc_data.length
-        }
-    };
-    if (headers) {
-        for (var k in headers) {
-            options.headers[k] = headers[k];
-        }
-    }
-
-    var req = (argv.insecurerest ? http : https).request(options, function(res) {
-        res.setEncoding('utf8');
-        var body = "";
-        res.on('data', function(chunk) {
-            body += chunk;
-        });
-        res.on('end', function() {
-            if (res.statusCode < 200 || res.statusCode > 299) {
-                if (eb) eb(res, body);
-                return;
+        let enc_data_type = "application/x-www-form-urlencoded";
+        for (let k in data) {
+            if (typeof(data[k]) == "object") {
+                enc_data_type = "application/json";
             }
-            if (cb) cb(res, body);
-        });
-    });
-    req.on('error', function(a,b) {
-        if (eb) eb(a,b);
-    });
+        }
 
-    req.write(enc_data);
-    req.end();
+        let headers = null;
+        if (data._headers) {
+            data = dup(data)
+            headers = data._headers;
+            delete data._headers;
+        }
+
+        let enc_data = null;
+        if (enc_data_type == "application/json") {
+            enc_data = JSON.stringify(data);
+        } else {
+            enc_data = querystring.stringify(data);
+        }
+
+        let options = {
+            host: host,
+            port: port,
+            path: path,
+            method: method,
+            headers: {
+                'Content-Type': enc_data_type,
+                'Content-Length': enc_data.length
+            }
+        };
+        if (headers) {
+            for (let k in headers) {
+                options.headers[k] = headers[k];
+            }
+        }
+
+        let req = (argv.insecure ? http : https).request(options, (res) => {
+            res.setEncoding('utf8');
+            let body = "";
+            res.on('data', (chunk) => {
+                body += chunk;
+            });
+            res.on('end', () => {
+                if (res.statusCode < 200 || res.statusCode > 299) {
+                    reject({'error': `${res.statusCode} - ${body}`, 'response': res, 'body': body})
+                    return;
+                }
+                resolve({'response': res, 'body': body});
+            });
+        });
+        req.on('error', (e) => {
+            reject({'error': e.message})
+        });
+
+        req.write(enc_data);
+        req.end();
+    });
 } /* }}} */
 
-
 function decodeMoves(move_obj, board_size) { /* {{{ */
-    var ret = [];
-    var width = board_size;
-    var height = board_size;
+    let ret = [];
+    let width = board_size;
+    let height = board_size;
 
     if (DEBUG) {
         console.log("Decoding ", move_obj);
     }
 
-    function decodeSingleMoveArray(arr) {
-        var obj = {
+    let decodeSingleMoveArray = (arr) => {
+        let obj = {
             x         : arr[0],
             y         : arr[1],
             timedelta : arr.length > 2 ? arr[2] : -1,
             color     : arr.length > 3 ? arr[3] : 0,
         }
-        var extra = arr.length > 4 ? arr[4] : {};
-        for (var k in extra) {
+        let extra = arr.length > 4 ? arr[4] : {};
+        for (let k in extra) {
             obj[k] = extra[k];
         }
         return obj;
@@ -732,8 +719,8 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             ret.push(decodeSingleMoveArray(move_obj));
         }
         else {
-            for (var i=0; i < move_obj.length; ++i) {
-                var mv = move_obj[i];
+            for (let i=0; i < move_obj.length; ++i) {
+                let mv = move_obj[i];
                 if (mv instanceof Array) {
                     ret.push(decodeSingleMoveArray(mv));
                 }
@@ -747,13 +734,13 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
 
         if (/[a-zA-Z][0-9]/.test(move_obj)) {
             /* coordinate form, used from human input. */
-            var move_string = move_obj;
+            let move_string = move_obj;
 
-            var moves = move_string.split(/([a-zA-Z][0-9]+|[.][.])/);
-            for (var i=0; i < moves.length; ++i) {
+            let moves = move_string.split(/([a-zA-Z][0-9]+|[.][.])/);
+            for (let i=0; i < moves.length; ++i) {
                 if (i%2) { /* even are the 'splits', which should always be blank unless there is an error */
-                    var x = pretty_char2num(moves[i][0]);
-                    var y = height-parseInt(moves[i].substring(1));
+                    let x = pretty_char2num(moves[i][0]);
+                    let y = height-parseInt(moves[i].substring(1));
                     if ((width && x >= width) || x < 0) x = y= -1;
                     if ((height && y >= height) || y < 0) x = y = -1;
                     ret.push({"x": x, "y": y, "edited": false, "color": 0});
@@ -765,11 +752,11 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             }
         } else {
             /* Pure letter encoded form, used for all records */
-            var move_string = move_obj;
+            let move_string = move_obj;
 
-            for (var i=0; i < move_string.length-1; i += 2) {
-                var edited = false;
-                var color = 0;
+            for (let i=0; i < move_string.length-1; i += 2) {
+                let edited = false;
+                let color = 0;
                 if (move_string[i+0] == '!') {
                     edited = true;
                     color = parseInt(move_string[i+1]);
@@ -777,8 +764,8 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
                 }
 
 
-                var x = char2num(move_string[i]);
-                var y = char2num(move_string[i+1]);
+                let x = char2num(move_string[i]);
+                let y = char2num(move_string[i+1]);
                 if (width && x >= width) x = y= -1;
                 if (height && y >= height) x = y = -1;
                 ret.push({"x": x, "y": y, "edited": edited, "color": color});
@@ -791,9 +778,6 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
 
     return ret;
 }; /* }}} */
-
-
-
 function char2num(ch) { /* {{{ */
     if (ch == ".") return -1;
     return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
@@ -828,5 +812,25 @@ function num2gtpchar(num) { /* {{{ */
     return "abcdefghjklmnopqrstuvwxyz"[num];
 } /* }}} */
 
+function conn_log() { /* {{{ */
+    let arr = ["# "];
+    let errlog = false;
+    for (let i=0; i < arguments.length; ++i) {
+        let param = arguments[i];
+        if (typeof(param) == 'object' && 'error' in param) {
+            errlog = true;
+            arr.push(param.error);
+        } else {
+            arr.push(param);
+        }
+    }
 
-var conn = new Connection();
+    if (errlog) {
+        console.error.apply(null, arr);
+        console.error(new Error().stack);
+    } else {
+        console.log.apply(null, arr);
+    }
+} /* }}} */
+
+let conn = new Connection();
