@@ -307,13 +307,9 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/move', (move) => {
             if (!this.connected) return;
-            //this.log("move")
-            //this.log("Move: ", move);
             try {
                 this.state.moves.push(move.move);
             } catch (e) {
-                console.error(this.state)
-                console.error(this.state.moves)
                 console.error(e)
             }
             if (this.bot) {
