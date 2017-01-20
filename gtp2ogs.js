@@ -486,6 +486,7 @@ class Connection {
             }
             else if (!(notification.type in ignorable_notifications)) {
                 console.log("Unhandled notification type: ", notification.type, notification);
+                this.deleteNotification(notification);
             }
         });
 
