@@ -506,6 +506,14 @@ class Connection {
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
+
+
+            if (this.connected_game_timeouts[gamedata.game_id]) {
+                clearTimeout(this.connected_game_timeouts[gamedata.game_id])
+            }
+            this.connected_game_timeouts[gamedata.game_id] = setTimeout(() => {
+                this.disconnectFromGame(gamedata.game_id);
+            }, 10*60*1000); /* forget about game after 10 mins */
         });
     }}}
     auth(obj) { /* {{{ */
