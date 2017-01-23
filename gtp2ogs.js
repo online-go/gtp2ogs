@@ -270,7 +270,21 @@ class Game {
         this.socket = conn.socket;
         this.state = null;
         this.waiting_on_gamedata_to_make_move = false;
+        this.move_number_were_waiting_for = -1;
         this.connected = true;
+
+        let check_for_move = () => {
+            if (this.state.phase == 'play') {
+                if (this.waiting_on_gamedata_to_make_move && this.state.moves.length == this.move_number_were_waiting_for) {
+                    this.makeMove(this.move_number_were_waiting_for);
+                    this.waiting_on_gamedata_to_make_move = false;
+                    this.move_number_were_waiting_for = -1;
+                }
+            }
+            else if (this.state.phase == 'finished') {
+                this.log("Game is finished");
+            }
+        }
 
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
@@ -278,15 +292,7 @@ class Game {
 
             //this.log("Gamedata: ", gamedata);
             this.state = gamedata;
-            if (this.state.phase == 'play') {
-                if (this.waiting_on_gamedata_to_make_move) {
-                    this.waiting_on_gamedata_to_make_move = false;
-                    this.makeMove();
-                }
-            }
-            else if (this.state.phase == 'finished') {
-                this.log("Game is finished");
-            }
+            check_for_move();
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
@@ -315,15 +321,17 @@ class Game {
             if (this.bot) {
                 this.bot.sendMove(decodeMoves(move.move, this.state.width)[0]);
             }
+            check_for_move();
         });
 
         this.socket.emit('game/connect', this.auth({
             'game_id': game_id
         }));
     } /* }}} */
-    makeMove() { /* {{{ */
-        if (!this.state) {
+    makeMove(move_number) { /* {{{ */
+        if (!this.state || this.state.moves.length != move_number) {
             this.waiting_on_gamedata_to_make_move = true;
+            this.move_number_were_waiting_for = move_number;
             return;
         }
         if (this.state.phase != 'play') {
@@ -439,7 +447,6 @@ class Connection {
             socket.emit('bot/id', {'id': argv.username}, (obj) => {
                 this.bot_id = obj.id;
                 this.jwt = obj.jwt;
-                //console.log("JWT: ", this.jwt)
                 if (!this.bot_id) {
                     console.error("ERROR: Bot account is unknown to the system: " +   argv.username);
                     process.exit();
@@ -458,7 +465,6 @@ class Connection {
              * notifications that got lost in the shuffle... and maybe someday
              * we'll get it figured out how this happens in the first place. */
             if (moves_processing == 0) {
-                //console.log("Resync of notifications");
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
@@ -585,15 +591,7 @@ class Connection {
     }; /* }}} */
     processMove(gamedata) { /* {{{ */
         let game = this.connectToGame(gamedata.id)
-        game.makeMove(() => {
-            conn_log("Move made", gamedata.id);
-            /* TODO: There's no real reason to do this other than to keep the work flow
-             * really simple for these bots. When we add support for keeping state and
-             * having multiple instances going at the same time, we need to not just disconnect,
-             * but rather keep track of our state and only disconnect after some time has
-             * elapsed or the game is finished. */
-            game.disconnect();
-        });
+        game.makeMove(gamedata.move_number);
     }; /* }}} */
     processStoneRemoval(gamedata) { /* {{{ */
         return this.processMove(gamedata);
