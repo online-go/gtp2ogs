@@ -45,7 +45,7 @@ let optimist = require("optimist")
     .describe('host', 'OGS Host to connect to')
     .default('host', 'online-go.com')
     .describe('port', 'OGS Port to connect to')
-    .default('port', 80)
+    .default('port', 443)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
@@ -61,7 +61,6 @@ if (!argv._ || argv._.length == 0) {
 
 if (argv.beta) {
     argv.host = 'beta.online-go.com';
-    argv.port = 80;
 }
 
 if (argv.debug) {
@@ -87,7 +86,7 @@ class Bot {
         }
 
         this.proc.stderr.on('data', (data) => {
-            this.log("stderr: " + data);
+            this.error("stderr: " + data);
         });
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
@@ -107,7 +106,7 @@ class Bot {
                 return;
             }
             if (DEBUG) {
-                this.log(stdout_buffer);
+                this.log("<<<", stdout_buffer);
             }
 
             let lines = stdout_buffer.split("\n");
@@ -146,6 +145,14 @@ class Bot {
         }
 
         console.log.apply(null, arr);
+    } /* }}} */
+    error(str) { /* {{{ */
+        let arr = ["[" + this.proc.pid + "]"];
+        for (let i=0; i < arguments.length; ++i) {
+            arr.push(arguments[i]);
+        }
+
+        console.error.apply(null, arr);
     } /* }}} */
     verbose(str) { /* {{{ */
         let arr = ["[" + this.proc.pid + "]"];
@@ -438,7 +445,7 @@ class Connection {
                 console.error(`Failed to connect to ${prefix}`);
                 process.exit(-1);
             }
-        }, (/'online-go.com$'/.test(argv.host)) ? 5000 : 500);
+        }, (/online-go.com$/.test(argv.host)) ? 5000 : 500);
 
         socket.on('connect', () => {
             this.connected = true;
@@ -699,9 +706,11 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     let width = board_size;
     let height = board_size;
 
+    /*
     if (DEBUG) {
         console.log("Decoding ", move_obj);
     }
+    */
 
     let decodeSingleMoveArray = (arr) => {
         let obj = {
