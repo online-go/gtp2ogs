@@ -480,9 +480,6 @@ class Connection {
         socket.on('event', (data) => {
             this.verbose(data);
         });
-        socket.on('event', (data) => {
-            this.verbose(data);
-        });
         socket.on('disconnect', () => {
             this.connected = false;
             conn_log("Disconnected");
