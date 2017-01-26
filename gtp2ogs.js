@@ -281,6 +281,10 @@ class Game {
         this.connected = true;
 
         let check_for_move = () => {
+            if (!this.state) {
+                console.error('Gamedata not received yet for game, but check_for_move has been called');
+                return;
+            }
             if (this.state.phase == 'play') {
                 if (this.waiting_on_gamedata_to_make_move && this.state.moves.length == this.move_number_were_waiting_for) {
                     this.makeMove(this.move_number_were_waiting_for);
