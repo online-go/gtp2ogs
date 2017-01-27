@@ -202,9 +202,9 @@ class Bot {
         this.command("clear_board");
         this.command("komi " + state.komi);
 
-		// this.log(state);
-		
-		this.loadClock(state);
+        // this.log(state);
+
+        this.loadClock(state);
 
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
