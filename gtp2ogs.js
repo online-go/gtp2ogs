@@ -163,8 +163,12 @@ class Bot {
         console.verbose.apply(null, arr);
     } /* }}} */
     loadClock(state) {
+        // References:
+        // http://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#sec:time-handling
+        // http://www.weddslist.com/kgs/how/kgsGtp.html
+        //
         // GTP doesn't support information on number of byoyomi periods remaining as I understand it, just
-        // the numebr of stones for Canadian. Bot-specific rules might want to be added by bot admin in how to 
+        // the number of stones for Canadian. Bot-specific rules might want to be added by bot admin in how to
         // work around that. Perhaps add all the period times together as a total time left to keep thinking.
         // Perhaps use Max(timeleft vs byoyomi period) for bots that don't understand byoyomi time controls.
         // Still, bots without time control awareness would play too quickly if it thouoght the period time was
@@ -181,13 +185,11 @@ class Bot {
 
         if (state.time_control.system == 'byoyomi') {
             this.command("time_settings " + state.time_control.main_time + " " 
-                + state.time_control.period_time + " 0");
-            this.command("time_left black " + Math.floor(state.clock.black_time.thinking_time + black_offset) + " 0");
-            this.command("time_left white " + Math.floor(state.clock.white_time.thinking_time + white_offset) + " 0");
+                + state.time_control.period_time + " 1");
+            this.command("time_left black " + Math.floor(state.clock.black_time.thinking_time + black_offset) + " 1");
+            this.command("time_left white " + Math.floor(state.clock.white_time.thinking_time + white_offset) + " 1");
         } else if (state.time_control.system == 'canadian') {
-            // Canadian block_time not supported by GTP per se. What to do should maybe be bot specific. For now
-            // consider this a placeholder more than anything else. But at least if a human wants Canadian, the bot
-            // will try to play within basic time provided (if it even cares about timing out).
+            // Canadian is the only time system GTP officially supports.
             // 
             this.command("time_settings " + state.time_control.main_time + " "
                 + state.time_control.period_time + " " + state.time_control.stones_per_period);
@@ -202,7 +204,7 @@ class Bot {
         this.command("clear_board");
         this.command("komi " + state.komi);
 
-        // this.log(state);
+        //this.log(state);
 
         this.loadClock(state);
 
@@ -350,9 +352,9 @@ class Game {
 
             // this.log("Clock: ", clock);
             this.state.clock = clock;
-            if (this.bot) {	
-                this.bot.loadClock(state);
-            }
+            /* if (this.bot) {
+            //    this.bot.loadClock(state);
+            } */
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
@@ -540,7 +542,22 @@ class Connection {
             }
         });
 
+        //socket.on('game/' + game_id + '/clock', (clock) => {
+        /* 
+        socket.on('clock', (clock) => {
+            this.log("clock for " + clock.game_id);
+            this.log("current clock: " + this.connected_games[clock.game_id].clock);
+            if (this.connected_games[clock.game_id]) {
+                this.connected_games[clock.game_id].clock = clock;
+            }
+            this.log("new clock: " + this.connected_games[clock.game_id].clock);
 
+            // this.log("Clock: ", clock);
+            if (this.bot) {
+                this.bot.loadClock(connected_games[clock.game_id].state);
+            }
+        }); 
+        */
 
         socket.on('notification', (notification) => {
             if (this['on_' + notification.type]) {
