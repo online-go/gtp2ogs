@@ -403,7 +403,6 @@ class Game {
 
         let passed = false;
         let passAndRestart = () => {
-            printf("pass and restart called");
             if (!passed) {
                 passed = true;
                 this.log("Bot process crashed, state was");
