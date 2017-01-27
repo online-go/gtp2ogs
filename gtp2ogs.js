@@ -320,7 +320,7 @@ class Game {
         this.connected = true;
 
         let check_for_move = () => {
-		if (!this.state) {
+	if (!this.state) {
                 console.error('Gamedata not received yet for game, but check_for_move has been called');
                 return;
             }
