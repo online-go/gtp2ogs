@@ -176,9 +176,9 @@ class Bot {
         //
         // GTP v2 only supports Canadian byoyomi, no timer (see spec above), and absolute (period time zero).
         //
-        // kgs-time_settings adds support for Japanese byoyomi. 
+        // kgs-time_settings adds support for Japanese byoyomi.
         //
-        // TODO: Use known_commands to check for kgs-time_settings support automatically. 
+        // TODO: Use known_commands to check for kgs-time_settings support automatically.
         //
         // The kgsGtp interface (http://www.weddslist.com/kgs/how/kgsGtp.html) converts byoyomi to absolute time
         // for bots that don't support kgs-time_settings by using main_time plus periods * period_time. But then the bot
@@ -188,34 +188,34 @@ class Bot {
         //
         let black_offset = 0;
         let white_offset = 0;
-        
+
         let now = state.clock.now ? state.clock.now : Date.now();
 
         if (state.clock.current_player == state.clock.black_player_id) {
-            black_offset = (state.clock.last_move - now) / 1000;
+            black_offset = (now - state.clock.last_move) / 1000;
         } else {
-            white_offset = (state.clock.last_move - now) / 1000;
+            white_offset = (now - state.clock.last_move) / 1000;
         }
 
         if (state.time_control.system == 'byoyomi') {
             // GTP spec says time_left should have 0 for stones until main_time has run out.
             //
             if (KGSTIME) {
-                let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time + black_offset), 0);
-                let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time + white_offset), 0);
+                let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+                let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
                 this.command("kgs-time_settings byoyomi " + state.time_control.main_time
                     + " " + state.time_control.period_time + " " + state.time_control.periods);
                 this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
                 this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
             } else {
-                // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone. 
+                // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
                 // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
                 //
                 let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
-                    + black_offset + (state.clock.black_time.periods - 1) * state.time_control.periods), 0);
+                    - black_offset + (state.clock.black_time.periods - 1) * state.time_control.periods), 0);
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
-                    + white_offset + (state.clock.white_time.periods - 1) * state.time_control.periods), 0);
+                    - white_offset + (state.clock.white_time.periods - 1) * state.time_control.periods), 0);
 
                 this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time)
                     + " " + state.time_control.period_time + " 1");
@@ -225,8 +225,8 @@ class Bot {
         } else if (state.time_control.system == 'canadian') {
             // Canadian Byoyomi is the only time controls GTP v2 officially supports.
             // 
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time + black_offset), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time + white_offset), 0);
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             if (KGSTIME) {
                 this.command("kgs-time_settings canadian " + state.time_control.main_time + " "
@@ -237,16 +237,16 @@ class Bot {
             }
 
             this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0"
-                : Math.floor(state.clock.black_time.block_time + black_offset) + " " + state.clock.black_time.moves_left));
+                : Math.floor(state.clock.black_time.block_time - black_offset) + " " + state.clock.black_time.moves_left));
             this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
-                : Math.floor(state.clock.white_time.block_time + white_offset) + " " + state.clock.white_time.moves_left));
+                : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
         } else if (state.time_control.system == 'fischer') {
             // Not supported by kgs-time_settings and I assume most bots. So lets just handle it like absolute time. A bot may move quicker
             // than it needs to when low on time, thinking this is total time left for whole game, but since time is added
             // each move it should be somewhat self-correcting.
-            // 
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time + black_offset), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time + white_offset), 0);
+            //
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             if (KGSTIME) {
                 this.command("kgs-time_settings absolute " + state.time_control.initial_time);
@@ -266,12 +266,12 @@ class Bot {
                 // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
                 //
                 this.command("time_settings 0 " + state.time_control.per_move + " 1");
-                this.command("time_left black " + Math.floor(state.time.control.per_move + black_offset) + " 1");
-                this.command("time_left white " + Math.floor(state.time.control.per_move + white_offset) + " 1");
+                this.command("time_left black " + Math.floor(state.time.control.per_move - black_offset) + " 1");
+                this.command("time_left white " + Math.floor(state.time.control.per_move - white_offset) + " 1");
             }
         } else if (state.time_control.system == 'absolute') {
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time + black_offset), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time + white_offset), 0);
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             if (KGSTIME) {
                 this.command("kgs-time_settings absolute " + state.time_control.total_time);
@@ -444,7 +444,7 @@ class Game {
             if (!this.connected) return;
             this.log("clock")
 
-            this.log("Clock: ", clock);
+            //this.log("Clock: ", clock);
             this.state.clock = clock;
 
             if (this.bot) {
