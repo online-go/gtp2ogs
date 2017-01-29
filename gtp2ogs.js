@@ -200,12 +200,22 @@ class Bot {
         if (state.time_control.system == 'byoyomi') {
             // GTP spec says time_left should have 0 for stones until main_time has run out.
             //
+            // If the bot connects in the middle of a byoyomi period, it won't know how much time it has left before the period expires.
+            // When restarting the bot mid-match during testing, it sometimes lost on timeout because of this. To work around it, we can
+            // reduce the byoyomi period size by the offset. Not strictly accurate but GTP protocol provides nothing better. Once bot moves
+            // again, the next state setup should have this corrected. This problem would happen if a bot were to crash and re-start during
+            // a period. This is only an issue if it is our turn, and our main time left is 0.
+            //
+            // TODO: If I add support for a persistant bot connection (not restarting process each move), be sure to think about mid-match
+            // reconnect time settings in more depth.
+            //
             if (KGSTIME) {
                 let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-                this.command("kgs-time_settings byoyomi " + state.time_control.main_time
-                    + " " + state.time_control.period_time + " " + state.time_control.periods);
+                this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
+                    + Math.floor(state.time_control.period_time - (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset))
+                    + " " + state.time_control.periods);
                 this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
                 this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
             } else {
@@ -217,8 +227,13 @@ class Bot {
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
                     - white_offset + (state.clock.white_time.periods - 1) * state.time_control.periods), 0);
 
-                this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time)
-                    + " " + state.time_control.period_time + " 1");
+                this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " " + 
+                    Math.floor(state.time_control.period_time -
+                        (state.clock.current_player == state.clock.black_player_id
+                            ? (black_timeleft > 0 ? 0 : black_offset) : (white_timeleft > 0 ? 0 : white_offset)
+                        )
+                    )
+                    + " 1");
                 this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0" : state.time_control.period_time + " 1") );
                 this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0" : state.time_control.period_time + " 1") );
             }
