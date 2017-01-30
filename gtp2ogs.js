@@ -214,7 +214,9 @@ class Bot {
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
                 this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
-                    + Math.floor(state.time_control.period_time - (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset))
+                    + Math.floor(state.time_control.period_time -
+                        (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset)
+                    )
                     + " " + state.time_control.periods);
                 this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
                 this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
@@ -227,8 +229,8 @@ class Bot {
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
                     - white_offset + (state.clock.white_time.periods - 1) * state.time_control.periods), 0);
 
-                this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " " + 
-                    Math.floor(state.time_control.period_time -
+                this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
+                    + Math.floor(state.time_control.period_time -
                         (state.clock.current_player == state.clock.black_player_id
                             ? (black_timeleft > 0 ? 0 : black_offset) : (white_timeleft > 0 ? 0 : white_offset)
                         )
