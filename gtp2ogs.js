@@ -236,8 +236,12 @@ class Bot {
                         )
                     )
                     + " 1");
-                this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0" : state.time_control.period_time + " 1") );
-                this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0" : state.time_control.period_time + " 1") );
+                // Since we're faking byoyomi using Canadian, time_left actually does mean the time left to play our 1 stone.
+                //
+                this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0"
+                    : Math.floor(state.time_control.period_time - black_offset) + " 1") );
+                this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
+                    : Math.floor(state.time_control.period_time - white_offset) + " 1") );
             }
         } else if (state.time_control.system == 'canadian') {
             // Canadian Byoyomi is the only time controls GTP v2 officially supports.
