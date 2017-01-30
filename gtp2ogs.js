@@ -538,7 +538,7 @@ class Connection {
         }
 
         if (game_id in this.connected_games) {
-            clearInterval(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id])
         }
         this.connected_game_timeouts[game_id] = setTimeout(() => {
             this.disconnectFromGame(game_id);
@@ -552,7 +552,7 @@ class Connection {
     disconnectFromGame(game_id) { /* {{{ */
         //conn_log("Disconnected from game", game_id);
         if (game_id in this.connected_games) {
-            clearInterval(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
         }
 
