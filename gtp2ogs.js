@@ -5,7 +5,7 @@
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let KGSTIME = false;
-
+let NOCLOCK = false;
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -51,6 +51,7 @@ let optimist = require("optimist")
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
     .describe('kgstime', 'Send time data to bot using kgs-time_settings command')
+    .describe('noclock', 'Do not send any clock/time data to the bot')
 ;
 let argv = optimist.argv;
 
@@ -71,6 +72,10 @@ if (argv.debug) {
 // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
 if (argv.kgstime) {
     KGSTIME = true;
+}
+
+if (argv.noclock) {
+    NOCLOCK = true;
 }
 
 let bot_command = argv._;
@@ -186,6 +191,8 @@ class Bot {
         //
         // Japanese byoyomi with one period left could be viewed as a special case of Canadian byoyomi where the number of stones is always = 1
         //
+        if (NOCLOCK) return;
+
         let black_offset = 0;
         let white_offset = 0;
 
