@@ -46,6 +46,8 @@ let optimist = require("optimist")
     .default('host', 'online-go.com')
     .describe('port', 'OGS Port to connect to')
     .default('port', 443)
+    .describe('timeout', 'Disconnect from a game after this many seconds')
+    .default('timeout', 10*60)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
@@ -60,6 +62,11 @@ if (!argv._ || argv._.length == 0) {
     process.exit();
 }
 
+// Convert timeout to microseconds once here so we don't need to do it each time it is used later.
+//
+if (argv.timeout) {
+    argv.timeout = argv.timeout * 1000;
+}
 
 if (argv.beta) {
     argv.host = 'beta.online-go.com';
@@ -709,7 +716,7 @@ class Connection {
             }
             this.connected_game_timeouts[gamedata.game_id] = setTimeout(() => {
                 this.disconnectFromGame(gamedata.game_id);
-            }, 10*60*1000); /* forget about game after 10 mins */
+            }, argv.timeout); /* forget about game after --timeout seconds */
         });
     }}}
     auth(obj) { /* {{{ */
@@ -727,11 +734,11 @@ class Connection {
         }
 
         if (game_id in this.connected_games) {
-            clearInterval(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id])
         }
         this.connected_game_timeouts[game_id] = setTimeout(() => {
             this.disconnectFromGame(game_id);
-        }, 10*60*1000); /* forget about game after 10 mins */
+        }, argv.timeout); /* forget about game after --timeout seconds */
 
         if (game_id in this.connected_games) {
             return this.connected_games[game_id];
@@ -741,7 +748,7 @@ class Connection {
     disconnectFromGame(game_id) { /* {{{ */
         //conn_log("Disconnected from game", game_id);
         if (game_id in this.connected_games) {
-            clearInterval(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
         }
 
