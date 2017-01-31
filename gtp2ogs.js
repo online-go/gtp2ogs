@@ -427,6 +427,7 @@ class Bot {
         )
     } /* }}} */
     kill() { /* {{{ */
+        this.log("Killing process ");
         this.proc.kill();
     } /* }}} */
 
