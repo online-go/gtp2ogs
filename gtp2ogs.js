@@ -314,7 +314,7 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
-            this.log("phase ", phase)
+            this.log("phase", phase)
 
             //this.log("Move: ", move);
             this.state.phase = phase;
@@ -511,12 +511,14 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (gamedata.phase == 'stone removal'
+            // OGS auto scores bot games now, no removal processing is needed by the bot.
+            //
+            /* if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
                ) {
                 this.processMove(gamedata);
-            }
+            } */
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
