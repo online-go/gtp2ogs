@@ -314,7 +314,7 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
-            this.log("phase ", phase)
+            this.log("phase", phase)
 
             //this.log("Move: ", move);
             this.state.phase = phase;
@@ -395,6 +395,7 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
+                //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
             bot.kill();
         }, passAndRestart);
@@ -418,6 +419,18 @@ class Game {
 
         console.log.apply(null, arr);
     } /* }}} */
+    sendChat(str, move_number, type = "discussion") {
+        if (!this.connected) return;
+
+        this.socket.emit('game/chat', this.auth({
+            'game_id': this.state.game_id,
+            'player_id': this.conn.user_id,
+            'body': str,
+            'move_number': move_number,
+            'type': type,
+            'username': argv.username
+        }));
+    }
 }
 
 
@@ -514,12 +527,14 @@ class Connection {
             if (DEBUG) {
                 //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
             }
-            if (gamedata.phase == 'stone removal'
+            // OGS auto scores bot games now, no removal processing is needed by the bot.
+            //
+            /* if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
                ) {
                 this.processMove(gamedata);
-            }
+            } */
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
