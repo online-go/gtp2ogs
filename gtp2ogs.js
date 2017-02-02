@@ -395,14 +395,7 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
-                this.socket.emit('game/chat', this.auth({
-                    'game_id': this.state.game_id,
-                    'player_id': this.conn.user_id,
-                    'body': "Test chat message, my move #" + (move_number+1) + " is: " + move.text,
-                    'type': "discussion",
-                    'move_number': move_number,
-                    'username': argv.username
-                }));
+                //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
             bot.kill();
         }, passAndRestart);
@@ -426,6 +419,18 @@ class Game {
 
         console.log.apply(null, arr);
     } /* }}} */
+    sendChat(str, move_number, type = "discussion") {
+        if (!this.connected) return;
+
+        this.socket.emit('game/chat', this.auth({
+            'game_id': this.state.game_id,
+            'player_id': this.conn.user_id,
+            'body': str,
+            'move_number': move_number,
+            'type': type,
+            'username': argv.username
+        }));
+    }
 }
 
 
