@@ -308,7 +308,7 @@ class Game {
             if (!this.connected) return;
             this.log("gamedata")
 
-            //this.log("Gamedata: ", gamedata);
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             check_for_move();
         });
@@ -524,6 +524,9 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
+            if (DEBUG) {
+                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
+            }
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
             /* if (gamedata.phase == 'stone removal'
@@ -535,14 +538,17 @@ class Connection {
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
-
-
-            if (this.connected_game_timeouts[gamedata.game_id]) {
-                clearTimeout(this.connected_game_timeouts[gamedata.game_id])
+            if (gamedata.phase == "finished") {
+                this.disconnectFromGame(gamedata.id);
+            } else {
+                if (this.connected_game_timeouts[gamedata.id]) {
+                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                }
+                conn_log("Setting timeout for", gamedata.id);
+                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                    this.disconnectFromGame(gamedata.id);
+                }, argv.timeout); /* forget about game after --timeout seconds */
             }
-            this.connected_game_timeouts[gamedata.game_id] = setTimeout(() => {
-                this.disconnectFromGame(gamedata.game_id);
-            }, argv.timeout); /* forget about game after --timeout seconds */
         });
     }}}
     auth(obj) { /* {{{ */
@@ -572,7 +578,9 @@ class Connection {
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
-        //conn_log("Disconnected from game", game_id);
+        if (DEBUG) {
+            conn_log("Disconnected from game", game_id);
+        }
         if (game_id in this.connected_games) {
             clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
