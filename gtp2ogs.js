@@ -279,9 +279,8 @@ class Bot {
                 : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
         } else if (state.time_control.system == 'fischer') {
             // Not supported by kgs-time_settings and I assume most bots. A better way than absolute is to handle this with
-            // a fake Canadian byoyomi. Let's use time remaining less Fisher period as main time left, and Canadian byoyomi
-            // time set to the Fisher time to play 1 stone. This should let the bot know a good approximation of how to handle
-            // it's time remaining.
+            // a fake Canadian byoyomi. This should let the bot know a good approximation of how to handle
+            // the time remaining.
             //
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
