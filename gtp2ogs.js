@@ -645,9 +645,16 @@ class Connection {
             }
         }, (/online-go.com$/.test(argv.host)) ? 5000 : 500);
 
+
+        this.clock_drift = 0;
+        this.network_latency = 0;
+        setInterval(this.ping.bind(this), 10000);
+        socket.on('net/pong', this.handlePong.bind(this));
+
         socket.on('connect', () => {
             this.connected = true;
             conn_log("Connected");
+            this.ping();
 
             socket.emit('bot/id', {'id': argv.username}, (obj) => {
                 this.bot_id = obj.id;
@@ -842,6 +849,16 @@ class Connection {
     }}}
     err (str) {{{
         conn_log("ERROR: ", str); 
+    }}}
+    ping() {{{
+        this.socket.emit('net/ping', {client: (new Date()).getTime()});
+    }}}
+    handlePong(data) {{{
+        let now = (new Date()).getTime();
+        let latency = now - data.client;
+        let drift = ((now-latency/2) - data.server);
+        this.network_latency = latency;
+        this.clock_drift = drift;
     }}}
 }
 
