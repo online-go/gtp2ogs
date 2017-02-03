@@ -241,9 +241,9 @@ class Bot {
                 // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
                 //
                 let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
-                    - black_offset + (state.clock.black_time.periods - 1) * state.time_control.periods), 0);
+                    - black_offset + (state.clock.black_time.periods - 1) * state.time_control.period_time), 0);
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
-                    - white_offset + (state.clock.white_time.periods - 1) * state.time_control.periods), 0);
+                    - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
 
                 this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
                     + Math.floor(state.time_control.period_time -
