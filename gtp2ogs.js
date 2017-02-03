@@ -94,7 +94,8 @@ process.title = 'gtp2ogs ' + bot_command.join(' ');
 /** Bot **/
 /*********/
 class Bot {
-    constructor(cmd) {{{
+    constructor(conn, cmd) {{{
+        this.conn = conn;
         this.proc = spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
@@ -203,7 +204,8 @@ class Bot {
         let black_offset = 0;
         let white_offset = 0;
 
-        let now = state.clock.now ? state.clock.now : Date.now();
+        //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
+        let now = Date.now() - this.conn.clock_drift;
 
         if (state.clock.current_player == state.clock.black_player_id) {
             black_offset = (now - state.clock.last_move) / 1000;
@@ -531,7 +533,7 @@ class Game {
             return;
         }
 
-        let bot = new Bot(bot_command);
+        let bot = new Bot(conn, bot_command);
         ++moves_processing;
 
         let passed = false;
@@ -854,7 +856,7 @@ class Connection {
         this.socket.emit('net/ping', {client: (new Date()).getTime()});
     }}}
     handlePong(data) {{{
-        let now = (new Date()).getTime();
+        let now = Date.now();
         let latency = now - data.client;
         let drift = ((now-latency/2) - data.server);
         this.network_latency = latency;
