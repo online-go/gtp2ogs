@@ -536,7 +536,9 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            //if (DEBUG) console.log("active_game:", JSON.stringify(gamedata));
+            if (DEBUG) {
+                conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
+            }
             if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
