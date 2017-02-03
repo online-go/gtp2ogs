@@ -278,20 +278,24 @@ class Bot {
             this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
                 : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
         } else if (state.time_control.system == 'fischer') {
-            // Not supported by kgs-time_settings and I assume most bots. So lets just handle it like absolute time. A bot may move quicker
-            // than it needs to when low on time, thinking this is total time left for whole game, but since time is added
-            // each move it should be somewhat self-correcting.
+            // Not supported by kgs-time_settings and I assume most bots. A better way than absolute is to handle this with
+            // a fake Canadian byoyomi. Let's use time remaining less Fisher period as main time left, and Canadian byoyomi
+            // time set to the Fisher time to play 1 stone. This should let the bot know a good approximation of how to handle
+            // it's time remaining.
             //
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             if (KGSTIME) {
-                this.command("kgs-time_settings absolute " + state.time_control.initial_time);
+                this.command("kgs-time_settings canadian " + (state.time_control.initial_time - state.time_control.time_increment)
+                    + " " + state.time_control.time_increment + " 1");
             } else {
-                this.command("time_settings " + state.time_control.initial_time + " 0 0");
+                this.command("time_settings " + (state.time_control.initial_time - state.time_control.time_increment)
+                    + " " + state.time_control.time_increment + " 1");
             }
-            this.command("time_left black " + black_timeleft + " 0");
-            this.command("time_left white " + white_timeleft + " 0");
+
+            this.command("time_left black " + black_timeleft + " 1");
+            this.command("time_left white " + white_timeleft + " 1");
         } else if (state.time_control.system == 'simple') {
             if (KGSTIME) {
                 // Simple is just a 1 period Japanese byomoyi that starts immediately
