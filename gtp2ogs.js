@@ -4,7 +4,7 @@
 
 process.title = 'gtp2ogs';
 let DEBUG = false;
-
+let PERSIST = false;
 
 
 let spawn = require('child_process').spawn;
@@ -50,6 +50,7 @@ let optimist = require("optimist")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
+    .describe('persist', 'Bot process remains running between moves')
 ;
 let argv = optimist.argv;
 
@@ -65,6 +66,10 @@ if (argv.beta) {
 
 if (argv.debug) {
     DEBUG = true;
+}
+
+if (argv.persist) {
+    PERSIST = true;
 }
 
 let bot_command = argv._;
@@ -238,7 +243,7 @@ class Bot {
         }
     } /* }}} */
     genmove(state, cb) { /* {{{ */
-        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
+        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
@@ -262,7 +267,10 @@ class Bot {
     kill() { /* {{{ */
         this.proc.kill();
     } /* }}} */
-
+    sendMove(move, width, color){
+        if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
+        this.command("play " + color + " " + move2gtpvertex(move, width));
+    }
 } /* }}} */
 
 
@@ -279,6 +287,8 @@ class Game {
         this.waiting_on_gamedata_to_make_move = false;
         this.move_number_were_waiting_for = -1;
         this.connected = true;
+        this.bot = null;
+        this.my_color = null;
 
         let check_for_move = () => {
             if (!this.state) {
@@ -304,7 +314,10 @@ class Game {
             //this.log("Gamedata: ", gamedata);
             this.state = gamedata;
             check_for_move();
+
+            this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
         });
+
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
             this.log("phase ", phase)
@@ -329,8 +342,17 @@ class Game {
             } catch (e) {
                 console.error(e)
             }
-            if (this.bot) {
-                this.bot.sendMove(decodeMoves(move.move, this.state.width)[0]);
+            // this.bot will always be null if PERSIST is false, but lets check just in case
+            //
+            if (this.bot && PERSIST) {
+                // Since the bot isn't restarting each move, we need to tell it about opponent moves
+                //
+                if (this.move_number_were_waiting_for == move.move_number) {
+                    //if (DEBUG) this.log("Received raw move", JSON.stringify(move) );
+                    //if (DEBUG) this.log("Received decoded move", decodeMoves(move.move, this.state.width)[0] );
+                    //if (DEBUG) this.log("Waiting for move", this.move_number_were_waiting_for);
+                    this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                }
             }
             check_for_move();
         });
@@ -340,6 +362,7 @@ class Game {
         }));
     } /* }}} */
     makeMove(move_number) { /* {{{ */
+        if (DEBUG) { this.log("makeMove", move_number); }
         if (!this.state || this.state.moves.length != move_number) {
             this.waiting_on_gamedata_to_make_move = true;
             this.move_number_were_waiting_for = move_number;
@@ -349,7 +372,6 @@ class Game {
             return;
         }
 
-        let bot = new Bot(bot_command);
         ++moves_processing;
 
         let passed = false;
@@ -363,18 +385,25 @@ class Game {
                     'move': ".."
                 }));
                 --moves_processing;
-                bot.kill();
+                this.bot.kill();
             }
         }
 
-        bot.log("Generating move for game ", this.game_id);
-        bot.loadState(this.state, () => {
-            if (DEBUG) {
-                this.log("State loaded");
-            }
-        }, passAndRestart);
+        if (!this.bot) {
+            this.log("Starting new bot process");
+            this.bot = new Bot(bot_command);
 
-        bot.genmove(this.state, (move) => {
+            this.log("State loading for new bot");
+            this.bot.loadState(this.state, () => {
+                if (DEBUG) {
+                    this.log("State loaded for new bot");
+                }
+            }, passAndRestart);
+        }
+
+        this.bot.log("Generating move for game", this.game_id);
+
+        this.bot.genmove(this.state, (move) => {
             --moves_processing;
             if (move.resign) {
                 this.log("Resigning");
@@ -389,7 +418,10 @@ class Game {
                     'move': encodeMove(move)
                 }));
             }
-            bot.kill();
+            if (!PERSIST) {
+                this.bot.kill();
+                this.bot = null;
+            }
         }, passAndRestart);
     } /* }}} */
     auth(obj) { /* {{{ */
@@ -504,6 +536,7 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
+            //if (DEBUG) console.log("active_game:", JSON.stringify(gamedata));
             if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
@@ -533,10 +566,6 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (DEBUG) {
-            conn_log("Connecting to game", game_id);
-        }
-
         if (game_id in this.connected_games) {
             clearInterval(this.connected_game_timeouts[game_id])
         }
@@ -545,8 +574,11 @@ class Connection {
         }, 10*60*1000); /* forget about game after 10 mins */
 
         if (game_id in this.connected_games) {
+            if (DEBUG) conn_log("Connected to game", game_id, "already");
             return this.connected_games[game_id];
         }
+
+        if (DEBUG) conn_log("Connecting to game", game_id);
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
