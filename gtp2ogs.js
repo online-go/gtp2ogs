@@ -46,6 +46,8 @@ let optimist = require("optimist")
     .default('host', 'online-go.com')
     .describe('port', 'OGS Port to connect to')
     .default('port', 443)
+    .describe('timeout', 'Disconnect from a game after this many seconds')
+    .default('timeout', 10*60)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
@@ -59,6 +61,11 @@ if (!argv._ || argv._.length == 0) {
     process.exit();
 }
 
+// Convert timeout to microseconds once here so we don't need to do it each time it is used later.
+//
+if (argv.timeout) {
+    argv.timeout = argv.timeout * 1000;
+}
 
 if (argv.beta) {
     argv.host = 'beta.online-go.com';
@@ -311,7 +318,7 @@ class Game {
             if (!this.connected) return;
             this.log("gamedata")
 
-            //this.log("Gamedata: ", gamedata);
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             check_for_move();
 
@@ -320,7 +327,7 @@ class Game {
 
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
-            this.log("phase ", phase)
+            this.log("phase", phase)
 
             //this.log("Move: ", move);
             this.state.phase = phase;
@@ -417,6 +424,7 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
+                //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
             if (!PERSIST) {
                 this.bot.kill();
@@ -443,6 +451,18 @@ class Game {
 
         console.log.apply(null, arr);
     } /* }}} */
+    sendChat(str, move_number, type = "discussion") {
+        if (!this.connected) return;
+
+        this.socket.emit('game/chat', this.auth({
+            'game_id': this.state.game_id,
+            'player_id': this.conn.user_id,
+            'body': str,
+            'move_number': move_number,
+            'type': type,
+            'username': argv.username
+        }));
+    }
 }
 
 
@@ -482,9 +502,16 @@ class Connection {
             }
         }, (/online-go.com$/.test(argv.host)) ? 5000 : 500);
 
+
+        this.clock_drift = 0;
+        this.network_latency = 0;
+        setInterval(this.ping.bind(this), 10000);
+        socket.on('net/pong', this.handlePong.bind(this));
+
         socket.on('connect', () => {
             this.connected = true;
             conn_log("Connected");
+            this.ping();
 
             socket.emit('bot/id', {'id': argv.username}, (obj) => {
                 this.bot_id = obj.id;
@@ -536,24 +563,31 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            //if (DEBUG) console.log("active_game:", JSON.stringify(gamedata));
-            if (gamedata.phase == 'stone removal'
+            if (DEBUG) {
+                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
+            }
+            // OGS auto scores bot games now, no removal processing is needed by the bot.
+            //
+            /* if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
                ) {
                 this.processMove(gamedata);
-            }
+            } */
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
-
-
-            if (this.connected_game_timeouts[gamedata.game_id]) {
-                clearTimeout(this.connected_game_timeouts[gamedata.game_id])
+            if (gamedata.phase == "finished") {
+                this.disconnectFromGame(gamedata.id);
+            } else {
+                if (this.connected_game_timeouts[gamedata.id]) {
+                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                }
+                conn_log("Setting timeout for", gamedata.id);
+                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                    this.disconnectFromGame(gamedata.id);
+                }, argv.timeout); /* forget about game after --timeout seconds */
             }
-            this.connected_game_timeouts[gamedata.game_id] = setTimeout(() => {
-                this.disconnectFromGame(gamedata.game_id);
-            }, 10*60*1000); /* forget about game after 10 mins */
         });
     }}}
     auth(obj) { /* {{{ */
@@ -567,11 +601,11 @@ class Connection {
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
         if (game_id in this.connected_games) {
-            clearInterval(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id])
         }
         this.connected_game_timeouts[game_id] = setTimeout(() => {
             this.disconnectFromGame(game_id);
-        }, 10*60*1000); /* forget about game after 10 mins */
+        }, argv.timeout); /* forget about game after --timeout seconds */
 
         if (game_id in this.connected_games) {
             if (DEBUG) conn_log("Connected to game", game_id, "already");
@@ -582,9 +616,11 @@ class Connection {
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
-        //conn_log("Disconnected from game", game_id);
+        if (DEBUG) {
+            conn_log("Disconnected from game", game_id);
+        }
         if (game_id in this.connected_games) {
-            clearInterval(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
         }
 
@@ -654,6 +690,16 @@ class Connection {
     }}}
     err (str) {{{
         conn_log("ERROR: ", str); 
+    }}}
+    ping() {{{
+        this.socket.emit('net/ping', {client: (new Date()).getTime()});
+    }}}
+    handlePong(data) {{{
+        let now = (new Date()).getTime();
+        let latency = now - data.client;
+        let drift = ((now-latency/2) - data.server);
+        this.network_latency = latency;
+        this.clock_drift = drift;
     }}}
 }
 
