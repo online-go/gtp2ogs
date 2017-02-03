@@ -317,7 +317,10 @@ class Bot {
             }
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
-        } /* else if (state.time_control.system == 'none') {
+        }
+        // OGS doesn't actually send  'none' time control type
+        //
+        /* else if (state.time_control.system == 'none') {
             if (KGSTIME) {
                 this.command("kgs-time_settings none");
             } else {
