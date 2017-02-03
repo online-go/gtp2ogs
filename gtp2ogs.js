@@ -94,7 +94,8 @@ process.title = 'gtp2ogs ' + bot_command.join(' ');
 /** Bot **/
 /*********/
 class Bot {
-    constructor(cmd) {{{
+    constructor(conn, cmd) {{{
+        this.conn = conn;
         this.proc = spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
@@ -203,7 +204,8 @@ class Bot {
         let black_offset = 0;
         let white_offset = 0;
 
-        let now = state.clock.now ? state.clock.now : Date.now();
+        //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
+        let now = Date.now() - this.conn.clock_drift;
 
         if (state.clock.current_player == state.clock.black_player_id) {
             black_offset = (now - state.clock.last_move) / 1000;
@@ -239,9 +241,9 @@ class Bot {
                 // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
                 //
                 let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
-                    - black_offset + (state.clock.black_time.periods - 1) * state.time_control.periods), 0);
+                    - black_offset + (state.clock.black_time.periods - 1) * state.time_control.period_time), 0);
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
-                    - white_offset + (state.clock.white_time.periods - 1) * state.time_control.periods), 0);
+                    - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
 
                 this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
                     + Math.floor(state.time_control.period_time -
@@ -315,7 +317,10 @@ class Bot {
             }
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
-        } /* else if (state.time_control.system == 'none') {
+        }
+        // OGS doesn't actually send  'none' time control type
+        //
+        /* else if (state.time_control.system == 'none') {
             if (KGSTIME) {
                 this.command("kgs-time_settings none");
             } else {
@@ -531,7 +536,7 @@ class Game {
             return;
         }
 
-        let bot = new Bot(bot_command);
+        let bot = new Bot(conn, bot_command);
         ++moves_processing;
 
         let passed = false;
@@ -854,7 +859,7 @@ class Connection {
         this.socket.emit('net/ping', {client: (new Date()).getTime()});
     }}}
     handlePong(data) {{{
-        let now = (new Date()).getTime();
+        let now = Date.now();
         let latency = now - data.client;
         let drift = ((now-latency/2) - data.server);
         this.network_latency = latency;
