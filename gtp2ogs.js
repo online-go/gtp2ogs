@@ -537,7 +537,7 @@ class Connection {
 
         socket.on('active_game', (gamedata) => {
             if (DEBUG) {
-                conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
+                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
             }
             if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
