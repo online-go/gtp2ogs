@@ -469,7 +469,7 @@ class Game {
             if (!this.connected) return;
             this.log("gamedata")
 
-            //this.log("Gamedata: ", gamedata);
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             check_for_move();
         });
@@ -489,7 +489,7 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
-            this.log("phase ", phase)
+            this.log("phase", phase)
 
             //this.log("Move: ", move);
             this.state.phase = phase;
@@ -570,6 +570,7 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
+                //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
             bot.kill();
         }, passAndRestart);
@@ -593,6 +594,18 @@ class Game {
 
         console.log.apply(null, arr);
     } /* }}} */
+    sendChat(str, move_number, type = "discussion") {
+        if (!this.connected) return;
+
+        this.socket.emit('game/chat', this.auth({
+            'game_id': this.state.game_id,
+            'player_id': this.conn.user_id,
+            'body': str,
+            'move_number': move_number,
+            'type': type,
+            'username': argv.username
+        }));
+    }
 }
 
 
@@ -632,9 +645,16 @@ class Connection {
             }
         }, (/online-go.com$/.test(argv.host)) ? 5000 : 500);
 
+
+        this.clock_drift = 0;
+        this.network_latency = 0;
+        setInterval(this.ping.bind(this), 10000);
+        socket.on('net/pong', this.handlePong.bind(this));
+
         socket.on('connect', () => {
             this.connected = true;
             conn_log("Connected");
+            this.ping();
 
             socket.emit('bot/id', {'id': argv.username}, (obj) => {
                 this.bot_id = obj.id;
@@ -701,23 +721,31 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (gamedata.phase == 'stone removal'
+            if (DEBUG) {
+                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
+            }
+            // OGS auto scores bot games now, no removal processing is needed by the bot.
+            //
+            /* if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
                ) {
                 this.processMove(gamedata);
-            }
+            } */
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
-
-
-            if (this.connected_game_timeouts[gamedata.game_id]) {
-                clearTimeout(this.connected_game_timeouts[gamedata.game_id])
+            if (gamedata.phase == "finished") {
+                this.disconnectFromGame(gamedata.id);
+            } else {
+                if (this.connected_game_timeouts[gamedata.id]) {
+                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                }
+                conn_log("Setting timeout for", gamedata.id);
+                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                    this.disconnectFromGame(gamedata.id);
+                }, argv.timeout); /* forget about game after --timeout seconds */
             }
-            this.connected_game_timeouts[gamedata.game_id] = setTimeout(() => {
-                this.disconnectFromGame(gamedata.game_id);
-            }, argv.timeout); /* forget about game after --timeout seconds */
         });
     }}}
     auth(obj) { /* {{{ */
@@ -747,7 +775,9 @@ class Connection {
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
-        //conn_log("Disconnected from game", game_id);
+        if (DEBUG) {
+            conn_log("Disconnected from game", game_id);
+        }
         if (game_id in this.connected_games) {
             clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
@@ -819,6 +849,16 @@ class Connection {
     }}}
     err (str) {{{
         conn_log("ERROR: ", str); 
+    }}}
+    ping() {{{
+        this.socket.emit('net/ping', {client: (new Date()).getTime()});
+    }}}
+    handlePong(data) {{{
+        let now = (new Date()).getTime();
+        let latency = now - data.client;
+        let drift = ((now-latency/2) - data.server);
+        this.network_latency = latency;
+        this.clock_drift = drift;
     }}}
 }
 
