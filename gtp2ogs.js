@@ -498,7 +498,7 @@ class Game {
             this.state.clock = clock;
 
             if (this.bot) {
-                this.bot.loadClock(state);
+                this.bot.loadClock(this.state);
             }
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
