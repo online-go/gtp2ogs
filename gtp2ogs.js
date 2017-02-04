@@ -360,6 +360,12 @@ class Bot {
                     this.command("play white " + move2gtpvertex(white[i], state.width));
                 }
             }
+
+            // last_color is used in genmove() to know whose move we are making. Perhaps we should store and only genmove
+            // our own color, but for now this will fix the situation where there are handicap stones and it is white's turn
+            // even with no black moves recorded.
+            //
+            this.last_color = state.clock.current_player == state.clock.black_player_id ? "white" : "black";
         }
 
         // Replay moves made
