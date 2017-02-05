@@ -311,6 +311,9 @@ class Game {
             }
             else if (this.state.phase == 'finished') {
                 this.log("Game is finished");
+                if (DEBUG) this.log("Killing bot process");
+                this.bot.kill();
+                this.bot = null;
             }
         }
 
@@ -393,6 +396,7 @@ class Game {
                 }));
                 --moves_processing;
                 this.bot.kill();
+                this.bot = null;
             }
         }
 
@@ -436,7 +440,7 @@ class Game {
         return this.conn.auth(obj);
     }; /* }}} */
     disconnect() { /* {{{ */
-        this.log("Disconnecting");
+        this.log("Disconnecting from game #", this.game_id);
 
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
@@ -544,7 +548,7 @@ class Connection {
         });
         socket.on('disconnect', () => {
             this.connected = false;
-            conn_log("Disconnected");
+            conn_log("Disconnected from server");
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
             }
@@ -586,7 +590,7 @@ class Connection {
                 if (this.connected_game_timeouts[gamedata.id]) {
                     clearTimeout(this.connected_game_timeouts[gamedata.id])
                 }
-                conn_log("Setting timeout for", gamedata.id);
+                if (DEBUG) conn_log("Setting timeout for", gamedata.id);
                 this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
                     this.disconnectFromGame(gamedata.id);
                 }, argv.timeout); /* forget about game after --timeout seconds */
