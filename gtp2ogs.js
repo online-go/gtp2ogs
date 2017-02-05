@@ -577,6 +577,9 @@ class Connection {
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
             }
+            // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
+            // longer active.
+            //
             if (gamedata.phase == "finished") {
                 this.disconnectFromGame(gamedata.id);
             } else {
