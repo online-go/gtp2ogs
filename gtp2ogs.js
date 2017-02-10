@@ -513,6 +513,11 @@ class Connection {
         socket.on('disconnect', () => {
             this.connected = false;
             conn_log("Disconnected");
+            for (let game_id in this.connected_game_timeouts)
+            {
+                if (DEBUG) conn_log("clearTimeout because disconnect from server", game_id);
+                clearTimeout(this.connected_game_timeouts[game_id]);
+            }
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
             }
@@ -598,8 +603,12 @@ class Connection {
         if (DEBUG) {
             conn_log("Disconnected from game", game_id);
         }
+        if (game_id in this.connected_game_timeouts)
+        {
+            if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
+            clearTimeout(this.connected_game_timeouts[game_id]);
+        }
         if (game_id in this.connected_games) {
-            clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
         }
 
