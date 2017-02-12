@@ -244,6 +244,8 @@ class Bot {
             if (eb) eb(e);
         }
     } /* }}} */
+    // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
+    //
     genmove(state, cb) { /* {{{ */
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
             (move) => {
