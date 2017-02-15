@@ -307,18 +307,19 @@ class Bot {
             this.command("time_left black " + black_timeleft + " 1");
             this.command("time_left white " + white_timeleft + " 1");
         } else if (state.time_control.system == 'simple') {
-            if (KGSTIME) {
-                // Simple is just a 1 period Japanese byomoyi that starts immediately
-                //
-                this.command("kgs-time_settings byoyomi 0 " + state.time_control.per_move + " 1");
-                this.command("time_left black 0 1");
-                this.command("time_left white 0 1");
+            // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
+            //
+            this.command("time_settings 0 " + state.time_control.per_move + " 1");
+
+            if (state.clock.black_time)
+            {
+                let black_timeleft = Math.max( Math.floor((state.clock.black_time - now)/1000 - black_offset), 0);
+                this.command("time_left black " + black_timeleft + " 1");
+                this.command("time_left white 1 1");
             } else {
-                // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
-                //
-                this.command("time_settings 0 " + state.time_control.per_move + " 1");
-                this.command("time_left black " + Math.floor(state.time.control.per_move - black_offset) + " 1");
-                this.command("time_left white " + Math.floor(state.time.control.per_move - white_offset) + " 1");
+                let white_timeleft = Math.max( Math.floor((state.clock.white_time - now)/1000 - white_offset), 0);
+                this.command("time_left black 1 1");
+                this.command("time_left white " + white_timeleft + " 1");
             }
         } else if (state.time_control.system == 'absolute') {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
