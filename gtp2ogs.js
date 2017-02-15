@@ -306,7 +306,6 @@ class Game {
                 if (this.waiting_on_gamedata_to_make_move && this.state.moves.length == this.move_number_were_waiting_for) {
                     this.makeMove(this.move_number_were_waiting_for);
                     this.waiting_on_gamedata_to_make_move = false;
-                    this.move_number_were_waiting_for += 2;
                 }
             }
             else if (this.state.phase == 'finished') {
@@ -381,6 +380,7 @@ class Game {
         if (this.state.phase != 'play') {
             return;
         }
+        this.move_number_were_waiting_for = move_number + 2;
 
         ++moves_processing;
 
