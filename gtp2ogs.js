@@ -491,6 +491,8 @@ class Game {
         this.bot = null;
         this.my_color = null;
 
+        // check_for_move is no longer called anywhere, now that moves are processed after gamedata and move messages from server
+        //
         let check_for_move = () => {
             if (!this.state) {
                 console.error('Gamedata not received yet for game, but check_for_move has been called');
@@ -505,17 +507,24 @@ class Game {
             else if (this.state.phase == 'finished') {
                 this.log("Game is finished");
                 if (DEBUG) this.log("Killing bot process");
-                this.bot.kill();
+                if (this.bot) this.bot.kill();
                 this.bot = null;
             }
         }
 
+        // TODO: Command line options to allow undo?
+        //
+        this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
+            this.log("Undo requested", JSON.stringify(undodata, null, 4));
+        });
+
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
-            this.log("gamedata")
+            this.log("gamedata");
 
-            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
+            this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
+            this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
             // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
@@ -528,18 +537,22 @@ class Game {
                 this.bot = null;
             }
 
-            check_for_move();
+            // active_game isn't handling this for us any more. If it is our move, call makeMove.
+            //
+            if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
+                this.makeMove(this.state.moves.length);
+            }
 
-            this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
+            //check_for_move();
         });
         // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
         // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
         //
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
-            this.log("clock")
+            if (DEBUG) this.log("clock");
 
-            //this.log("Clock: ", clock);
+            //this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
 
             if (this.bot) {
@@ -565,6 +578,7 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/move', (move) => {
             if (!this.connected) return;
+            if (DEBUG) this.log("game/" + game_id + "/move:", move);
             try {
                 this.state.moves.push(move.move);
             } catch (e) {
@@ -582,9 +596,16 @@ class Game {
                 //if (this.move_number_were_waiting_for == move.move_number) {
                 if (move.move_number % 2 == this.opponent_evenodd) {
                     this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                } else {
+                    if (DEBUG) this.log("Ignoring our own move", move.move_number);
                 }
             }
-            check_for_move();
+            if (move.move_number % 2 == this.opponent_evenodd) {
+                // We just got a move from the opponent, so we can move immediately.
+                //
+                this.makeMove(this.state.moves.length);
+            }
+            //check_for_move();
         });
 
         this.socket.emit('game/connect', this.auth({
@@ -592,7 +613,7 @@ class Game {
         }));
     } /* }}} */
     makeMove(move_number) { /* {{{ */
-        if (DEBUG) { this.log("makeMove", move_number); }
+        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
         if (!this.state || this.state.moves.length != move_number) {
             this.waiting_on_gamedata_to_make_move = true;
             this.move_number_were_waiting_for = move_number;
@@ -602,8 +623,6 @@ class Game {
             return;
         }
         this.move_number_were_waiting_for = move_number + 2;
-
-        let bot = new Bot(conn, bot_command);
 
         ++moves_processing;
 
@@ -618,7 +637,7 @@ class Game {
                     'move': ".."
                 }));
                 --moves_processing;
-                this.bot.kill();
+                if (this.bot) this.bot.kill();
                 this.bot = null;
             }
         }
@@ -815,9 +834,8 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (DEBUG) {
-                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
-            }
+            if (DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
+
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
             // Eventually might want OGS to not auto score, or make it bot-optional to enforce.
@@ -834,6 +852,8 @@ class Connection {
             //
             let game = this.connectToGame(gamedata.id);
 
+            // We set this in gamedata now, so maybe it isn't needed at all here since active_game no longer calls makeMove()?
+            //
             if (gamedata.player_to_move == this.bot_id) {
                 game.opponent_evenodd = gamedata.move_number % 2;
             } else {
@@ -841,7 +861,8 @@ class Connection {
             }
 
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
-                this.processMove(gamedata);
+                // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
+                // game.makeMove(gamedata.move_number);
 
                 if (argv.timeout)
                 {
@@ -860,6 +881,7 @@ class Connection {
             // longer active.
             //
             if (gamedata.phase == "finished") {
+                if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
                 this.disconnectFromGame(gamedata.id);
             } else {
                 if (argv.timeout)
@@ -872,11 +894,6 @@ class Connection {
                         this.disconnectFromGame(gamedata.id);
                     }, argv.timeout); /* forget about game after --timeout seconds */
                 }
-
-                if (DEBUG) conn_log("Setting timeout for", gamedata.id);
-                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
-                    this.disconnectFromGame(gamedata.id);
-                }, argv.timeout); /* forget about game after --timeout seconds */
             }
         });
     }}}
