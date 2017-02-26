@@ -86,6 +86,7 @@ if (argv.debug) {
 
 if (argv.persist) {
     PERSIST = true;
+}
 
 // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
 if (argv.kgstime) {
