@@ -516,6 +516,18 @@ class Game {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
+
+            // If server has issues it might send us a new gamedata packet and not a move event. We could try to
+            // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
+            // restart the bot by killing it here if another gamedata comes in. There normally should only be one
+            // before we process any moves, and makeMove() is where a new Bot is created.
+            //
+            if (this.bot) {
+                this.log("Killing bot because of gamedata packet after bot was started");
+                this.bot.kill();
+                this.bot = null;
+            }
+
             check_for_move();
 
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
