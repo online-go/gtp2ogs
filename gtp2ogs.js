@@ -5,7 +5,8 @@
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let PERSIST = false;
-
+let KGSTIME = false;
+let NOCLOCK = false;
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -46,13 +47,17 @@ let optimist = require("optimist")
     .default('host', 'online-go.com')
     .describe('port', 'OGS Port to connect to')
     .default('port', 443)
-    .describe('timeout', 'Disconnect from a game after this many seconds')
-    .default('timeout', 10*60)
+    .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
+    .default('timeout', 0)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
     .describe('persist', 'Bot process remains running between moves')
+    .describe('kgstime', 'Send time data to bot using kgs-time_settings command')
+    .describe('noclock', 'Do not send any clock/time data to the bot')
+    .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
+    .default('startupbuffer', 5)
 ;
 let argv = optimist.argv;
 
@@ -67,6 +72,10 @@ if (argv.timeout) {
     argv.timeout = argv.timeout * 1000;
 }
 
+if (argv.startupbuffer) {
+    argv.startupbuffer = argv.startupbuffer * 1000;
+}
+
 if (argv.beta) {
     argv.host = 'beta.online-go.com';
 }
@@ -77,6 +86,14 @@ if (argv.debug) {
 
 if (argv.persist) {
     PERSIST = true;
+
+// TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
+if (argv.kgstime) {
+    KGSTIME = true;
+}
+
+if (argv.noclock) {
+    NOCLOCK = true;
 }
 
 let bot_command = argv._;
@@ -94,6 +111,7 @@ class Bot {
         this.proc = spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
+        this.firstmove = true;
 
         if (DEBUG) {
             this.log("Starting ", cmd.join(' '));
@@ -176,12 +194,168 @@ class Bot {
 
         console.verbose.apply(null, arr);
     } /* }}} */
+    loadClock(state) {
+        //
+        // References:
+        // http://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#sec:time-handling
+        // http://www.weddslist.com/kgs/how/kgsGtp.html
+        //
+        // GTP v2 only supports Canadian byoyomi, no timer (see spec above), and absolute (period time zero).
+        //
+        // kgs-time_settings adds support for Japanese byoyomi.
+        //
+        // TODO: Use known_commands to check for kgs-time_settings support automatically.
+        //
+        // The kgsGtp interface (http://www.weddslist.com/kgs/how/kgsGtp.html) converts byoyomi to absolute time
+        // for bots that don't support kgs-time_settings by using main_time plus periods * period_time. But then the bot
+        // would view that as the total time left for entire rest of game...
+        //
+        // Japanese byoyomi with one period left could be viewed as a special case of Canadian byoyomi where the number of stones is always = 1
+        //
+        if (NOCLOCK) return;
+
+        let black_offset = 0;
+        let white_offset = 0;
+
+        //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
+        let now = Date.now() - this.conn.clock_drift;
+
+        if (state.clock.current_player == state.clock.black_player_id) {
+            black_offset = ((this.firstmove==true ? argv.startupbuffer : 0) + now - state.clock.last_move) / 1000;
+        } else {
+            white_offset = ((this.firstmove==true ? argv.startupbuffer : 0) + now - state.clock.last_move) / 1000;
+        }
+
+        if (state.time_control.system == 'byoyomi') {
+            // GTP spec says time_left should have 0 for stones until main_time has run out.
+            //
+            // If the bot connects in the middle of a byoyomi period, it won't know how much time it has left before the period expires.
+            // When restarting the bot mid-match during testing, it sometimes lost on timeout because of this. To work around it, we can
+            // reduce the byoyomi period size by the offset. Not strictly accurate but GTP protocol provides nothing better. Once bot moves
+            // again, the next state setup should have this corrected. This problem would happen if a bot were to crash and re-start during
+            // a period. This is only an issue if it is our turn, and our main time left is 0.
+            //
+            // TODO: If I add support for a persistant bot connection (not restarting process each move), be sure to think about mid-match
+            // reconnect time settings in more depth.
+            //
+            if (KGSTIME) {
+                let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+                let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+
+                this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
+                    + Math.floor(state.time_control.period_time -
+                        (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset)
+                    )
+                    + " " + state.time_control.periods);
+                this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
+                this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
+            } else {
+                // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
+                // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
+                //
+                let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
+                    - black_offset + (state.clock.black_time.periods - 1) * state.time_control.period_time), 0);
+                let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
+                    - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
+
+                this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
+                    + Math.floor(state.time_control.period_time -
+                        (state.clock.current_player == state.clock.black_player_id
+                            ? (black_timeleft > 0 ? 0 : black_offset) : (white_timeleft > 0 ? 0 : white_offset)
+                        )
+                    )
+                    + " 1");
+                // Since we're faking byoyomi using Canadian, time_left actually does mean the time left to play our 1 stone.
+                //
+                this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0"
+                    : Math.floor(state.time_control.period_time - black_offset) + " 1") );
+                this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
+                    : Math.floor(state.time_control.period_time - white_offset) + " 1") );
+            }
+        } else if (state.time_control.system == 'canadian') {
+            // Canadian Byoyomi is the only time controls GTP v2 officially supports.
+            // 
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+
+            if (KGSTIME) {
+                this.command("kgs-time_settings canadian " + state.time_control.main_time + " "
+                    + state.time_control.period_time + " " + state.time_control.stones_per_period);
+            } else {
+                this.command("time_settings " + state.time_control.main_time + " "
+                    + state.time_control.period_time + " " + state.time_control.stones_per_period);
+            }
+
+            this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0"
+                : Math.floor(state.clock.black_time.block_time - black_offset) + " " + state.clock.black_time.moves_left));
+            this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
+                : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
+        } else if (state.time_control.system == 'fischer') {
+            // Not supported by kgs-time_settings and I assume most bots. A better way than absolute is to handle this with
+            // a fake Canadian byoyomi. This should let the bot know a good approximation of how to handle
+            // the time remaining.
+            //
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+
+            if (KGSTIME) {
+                this.command("kgs-time_settings canadian " + (state.time_control.initial_time - state.time_control.time_increment)
+                    + " " + state.time_control.time_increment + " 1");
+            } else {
+                this.command("time_settings " + (state.time_control.initial_time - state.time_control.time_increment)
+                    + " " + state.time_control.time_increment + " 1");
+            }
+
+            this.command("time_left black " + black_timeleft + " 1");
+            this.command("time_left white " + white_timeleft + " 1");
+        } else if (state.time_control.system == 'simple') {
+            // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
+            //
+            this.command("time_settings 0 " + state.time_control.per_move + " 1");
+
+            if (state.clock.black_time)
+            {
+                let black_timeleft = Math.max( Math.floor((state.clock.black_time - now)/1000 - black_offset), 0);
+                this.command("time_left black " + black_timeleft + " 1");
+                this.command("time_left white 1 1");
+            } else {
+                let white_timeleft = Math.max( Math.floor((state.clock.white_time - now)/1000 - white_offset), 0);
+                this.command("time_left black 1 1");
+                this.command("time_left white " + white_timeleft + " 1");
+            }
+        } else if (state.time_control.system == 'absolute') {
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+
+            if (KGSTIME) {
+                this.command("kgs-time_settings absolute " + state.time_control.total_time);
+            } else {
+                this.command("time_settings " + state.time_control.total_time + " 0 0");
+            }
+            this.command("time_left black " + black_timeleft + " 0");
+            this.command("time_left white " + white_timeleft + " 0");
+        }
+        // OGS doesn't actually send  'none' time control type
+        //
+        /* else if (state.time_control.system == 'none') {
+            if (KGSTIME) {
+                this.command("kgs-time_settings none");
+            } else {
+                // GTP v2 says byoyomi time > 0 and stones = 0 means no time limits
+                //
+                this.command("time_settings 0 1 0");
+            }
+        } */
+    }
     loadState(state, cb, eb) { /* {{{ */
         this.command("boardsize " + state.width);
         this.command("clear_board");
         this.command("komi " + state.komi);
 
         this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
+        //this.log(state);
+
+        this.loadClock(state);
 
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
@@ -201,6 +375,12 @@ class Bot {
                     this.command("play white " + move2gtpvertex(white[i], state.width));
                 }
             }
+
+            // last_color is used in genmove() to know whose move we are making. Perhaps we should store and only genmove
+            // our own color, but for now this will fix the situation where there are handicap stones and it is white's turn
+            // even with no black moves recorded.
+            //
+            this.last_color = state.clock.current_player == state.clock.black_player_id ? "white" : "black";
         }
 
         // Replay moves made
@@ -253,10 +433,16 @@ class Bot {
             if (eb) eb(e);
         }
     } /* }}} */
+    // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
+    //
     genmove(state, cb) { /* {{{ */
-        //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
+        // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
+        //
+        this.firstmove = false;
+
+        //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
         this.command("genmove " + this.game.my_color,
-            (move) => {
+             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
                 let pass = move == 'pass';
@@ -277,6 +463,7 @@ class Bot {
         )
     } /* }}} */
     kill() { /* {{{ */
+        this.log("Killing process ");
         this.proc.kill();
     } /* }}} */
     sendMove(move, width, color){
@@ -332,7 +519,21 @@ class Game {
 
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
         });
+        // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
+        // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
+        //
+        this.socket.on('game/' + game_id + '/clock', (clock) => {
+            if (!this.connected) return;
+            this.log("clock")
 
+            //this.log("Clock: ", clock);
+            this.state.clock = clock;
+
+            if (this.bot) {
+                this.bot.loadClock(this.state);
+            }
+        });
+>>>>>>> 867a841a66d2320fd3775a5921f2e5ee4e3fd50e
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
             this.log("phase", phase)
@@ -389,6 +590,8 @@ class Game {
             return;
         }
         this.move_number_were_waiting_for = move_number + 2;
+
+        let bot = new Bot(conn, bot_command);
 
         ++moves_processing;
 
@@ -556,13 +759,38 @@ class Connection {
         });
         socket.on('disconnect', () => {
             this.connected = false;
+
             conn_log("Disconnected from server");
+            if (argv.timeout)
+            {
+                for (let game_id in this.connected_game_timeouts)
+                {
+                    if (DEBUG) conn_log("clearTimeout because disconnect from server", game_id);
+                    clearTimeout(this.connected_game_timeouts[game_id]);
+                }
+            }
+
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
             }
         });
 
+        //socket.on('game/' + game_id + '/clock', (clock) => {
+        /* 
+        socket.on('clock', (clock) => {
+            this.log("clock for " + clock.game_id);
+            this.log("current clock: " + this.connected_games[clock.game_id].clock);
+            if (this.connected_games[clock.game_id]) {
+                this.connected_games[clock.game_id].clock = clock;
+            }
+            this.log("new clock: " + this.connected_games[clock.game_id].clock);
 
+            // this.log("Clock: ", clock);
+            if (this.bot) {
+                this.bot.loadClock(connected_games[clock.game_id].state);
+            }
+        }); 
+        */
 
         socket.on('notification', (notification) => {
             if (this['on_' + notification.type]) {
@@ -602,16 +830,37 @@ class Connection {
 
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
+
+                if (argv.timeout)
+                {
+                    if (this.connected_game_timeouts[gamedata.id]) {
+                        clearTimeout(this.connected_game_timeouts[gamedata.id])
+                    }
+                    if (DEBUG) conn_log("Setting timeout for", gamedata.id);
+                    this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                        if (DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
+                        this.disconnectFromGame(gamedata.id);
+                    }, argv.timeout); /* forget about game after --timeout seconds */
+                }
             }
+
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
             // longer active.
             //
             if (gamedata.phase == "finished") {
                 this.disconnectFromGame(gamedata.id);
             } else {
-                if (this.connected_game_timeouts[gamedata.id]) {
-                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                if (argv.timeout)
+                {
+                    if (this.connected_game_timeouts[gamedata.id]) {
+                        clearTimeout(this.connected_game_timeouts[gamedata.id])
+                    }
+                    conn_log("Setting timeout for", gamedata.id);
+                    this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                        this.disconnectFromGame(gamedata.id);
+                    }, argv.timeout); /* forget about game after --timeout seconds */
                 }
+
                 if (DEBUG) conn_log("Setting timeout for", gamedata.id);
                 this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
                     this.disconnectFromGame(gamedata.id);
@@ -629,12 +878,19 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (game_id in this.connected_games) {
-            clearTimeout(this.connected_game_timeouts[game_id])
+        if (DEBUG) {
+            conn_log("Connecting to game", game_id);
         }
-        this.connected_game_timeouts[game_id] = setTimeout(() => {
-            this.disconnectFromGame(game_id);
-        }, argv.timeout); /* forget about game after --timeout seconds */
+
+        if (argv.timeout)
+        {
+            if (game_id in this.connected_games) {
+                clearTimeout(this.connected_game_timeouts[game_id])
+            }
+            this.connected_game_timeouts[game_id] = setTimeout(() => {
+                this.disconnectFromGame(game_id);
+            }, argv.timeout); /* forget about game after --timeout seconds */
+        }
 
         if (game_id in this.connected_games) {
             if (DEBUG) conn_log("Connected to game", game_id, "already");
@@ -648,8 +904,15 @@ class Connection {
         if (DEBUG) {
             conn_log("disconnectFromGame", game_id);
         }
+        if (argv.timeout)
+        {
+            if (game_id in this.connected_game_timeouts)
+            {
+                if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
+                clearTimeout(this.connected_game_timeouts[game_id]);
+            }
+        }
         if (game_id in this.connected_games) {
-            clearTimeout(this.connected_game_timeouts[game_id])
             this.connected_games[game_id].disconnect();
             if (this.connected_games[game_id].bot) {
                 this.connected_games[game_id].bot.kill();
@@ -658,6 +921,9 @@ class Connection {
             delete this.connected_games[game_id];
             delete this.connected_game_timeouts[game_id];
         }
+
+        delete this.connected_games[game_id];
+        if (argv.timeout) delete this.connected_game_timeouts[game_id];
     }; /* }}} */
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
@@ -727,7 +993,7 @@ class Connection {
         this.socket.emit('net/ping', {client: (new Date()).getTime()});
     }}}
     handlePong(data) {{{
-        let now = (new Date()).getTime();
+        let now = Date.now();
         let latency = now - data.client;
         let drift = ((now-latency/2) - data.server);
         this.network_latency = latency;
