@@ -534,7 +534,6 @@ class Game {
                 this.bot.loadClock(this.state);
             }
         });
->>>>>>> 867a841a66d2320fd3775a5921f2e5ee4e3fd50e
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
             this.log("phase", phase)
