@@ -443,7 +443,7 @@ class Bot {
 
         //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
         this.command("genmove " + this.game.my_color,
-             (move) => {
+            (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
                 let pass = move == 'pass';
