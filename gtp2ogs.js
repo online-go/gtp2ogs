@@ -522,7 +522,7 @@ class Game {
             if (!this.connected) return;
             this.log("gamedata");
 
-            this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
 
