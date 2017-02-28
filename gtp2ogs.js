@@ -692,6 +692,7 @@ class Connection {
                     process.exit();
                 }
                 conn_log("Bot is user id:", this.bot_id);
+                socket.emit('authenticate', this.auth({}))
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
