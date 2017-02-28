@@ -169,10 +169,49 @@ class Bot {
 
         console.verbose.apply(null, arr);
     } /* }}} */
+	loadClock(state) {
+		// GTP doesn't support information on number of byoyomi periods remaining as I understand it, just
+		// the numebr of stones for Canadian. Bot-specific rules might want to be added by bot admin in how to 
+		// work around that. Perhaps add all the period times together as a total time left to keep thinking.
+		// Perhaps use Max(timeleft vs byoyomi period) for bots that don't understand byoyomi time controls.
+		// Still, bots without time control awareness would play too quickly if it thouoght the period time was
+		// the total time left for entire match.
+		//
+		let black_offset = 0;
+		let white_offset = 0;
+		
+		if (state.clock.current_player == state.clock.black_player_id) {
+			black_offset = (state.clock.last_move - Date.now()) / 1000; 
+		} else {
+			white_offset = (state.clock.last_move - Date.now()) / 1000; 
+		}
+		
+		if (state.time_control.system == 'byoyomi') {
+			this.command("time_settings " + state.time_control.main_time + " " 
+				+ state.time_control.period_time + " 0");
+			this.command("time_left black " + Math.floor(state.clock.black_time.thinking_time + black_offset) + " 0");
+			this.command("time_left white " + Math.floor(state.clock.white_time.thinking_time + white_offset) + " 0");
+		} else if (state.time_control.system == 'canadian') {
+			// Canadian block_time not supported by GTP per se. What to do should maybe be bot specific. For now
+			// consider this a placeholder more than anything else. But at least if a human wants Canadian, the bot
+			// will try to play within basic time provided (if it even cares about timing out).
+			// 
+			this.command("time_settings " + state.time_control.main_time + " "
+				+ state.time_control.period_time + " " + state.time_control.stones_per_period);
+			this.command("time_left black " + Math.floor(state.clock.black_time.thinking_time + black_offset)
+				+ " " + state.clock.black_time.moves_left);
+			this.command("time_left white " + Math.floor(state.clock.white_time.thinking_time + white_offset) 
+				+ " " + state.clock.white_time.moves_left);
+		}
+	}
     loadState(state, cb, eb) { /* {{{ */
         this.command("boardsize " + state.width);
         this.command("clear_board");
         this.command("komi " + state.komi);
+
+		// this.log(state);
+		
+		this.loadClock(state);
 
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
@@ -288,7 +327,7 @@ class Game {
         this.connected = true;
 
         let check_for_move = () => {
-            if (!this.state) {
+			if (!this.state) {
                 console.error('Gamedata not received yet for game, but check_for_move has been called');
                 return;
             }
@@ -311,6 +350,16 @@ class Game {
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             check_for_move();
+        });
+        this.socket.on('game/' + game_id + '/clock', (clock) => {
+            if (!this.connected) return;
+            this.log("clock")
+
+            // this.log("Clock: ", clock);
+            this.state.clock = clock;
+			if (this.bot) {
+				this.bot.loadClock(state);
+			}
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
