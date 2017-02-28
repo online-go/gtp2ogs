@@ -4,6 +4,7 @@
 
 process.title = 'gtp2ogs';
 let DEBUG = false;
+let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
 
@@ -52,6 +53,7 @@ let optimist = require("optimist")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
+    .describe('persist', 'Bot process remains running between moves')
     .describe('kgstime', 'Send time data to bot using kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
@@ -82,6 +84,10 @@ if (argv.debug) {
     DEBUG = true;
 }
 
+if (argv.persist) {
+    PERSIST = true;
+}
+
 // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
 if (argv.kgstime) {
     KGSTIME = true;
@@ -100,8 +106,9 @@ process.title = 'gtp2ogs ' + bot_command.join(' ');
 /** Bot **/
 /*********/
 class Bot {
-    constructor(conn, cmd) {{{
+    constructor(conn, game, cmd) {{{
         this.conn = conn;
+        this.game = game;
         this.proc = spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
@@ -346,6 +353,7 @@ class Bot {
         this.command("clear_board");
         this.command("komi " + state.komi);
 
+        this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
         //this.log(state);
 
         this.loadClock(state);
@@ -368,25 +376,18 @@ class Bot {
                     this.command("play white " + move2gtpvertex(white[i], state.width));
                 }
             }
-
-            // last_color is used in genmove() to know whose move we are making. Perhaps we should store and only genmove
-            // our own color, but for now this will fix the situation where there are handicap stones and it is white's turn
-            // even with no black moves recorded.
-            //
-            this.last_color = state.clock.current_player == state.clock.black_player_id ? "white" : "black";
         }
 
         // Replay moves made
-        let color = state.initial_player
-        let handicaps_left = state.handicap
-        let moves = decodeMoves(state.moves, state.width) 
+        let color = state.initial_player;
+        let handicaps_left = state.handicap;
+        let moves = decodeMoves(state.moves, state.width);
         for (let i=0; i < moves.length; ++i) {
             let move = moves[i];
             let c = color
             if (move.edited) {
                 c = move['color']
             }
-            this.last_color = c;
             this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
             if (! move.edited) {
                 if (state.free_handicap_placement && handicaps_left > 1) {
@@ -433,7 +434,7 @@ class Bot {
         //
         this.firstmove = false;
 
-        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
+        this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
@@ -458,7 +459,10 @@ class Bot {
         this.log("Killing process ");
         this.proc.kill();
     } /* }}} */
-
+    sendMove(move, width, color){
+        if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
+        this.command("play " + color + " " + move2gtpvertex(move, width));
+    }
 } /* }}} */
 
 
@@ -472,43 +476,53 @@ class Game {
         this.game_id = game_id;
         this.socket = conn.socket;
         this.state = null;
-        this.waiting_on_gamedata_to_make_move = false;
-        this.move_number_were_waiting_for = -1;
+        this.opponent_evenodd = null;
         this.connected = true;
+        this.bot = null;
+        this.my_color = null;
 
-        let check_for_move = () => {
-            if (!this.state) {
-                console.error('Gamedata not received yet for game, but check_for_move has been called');
-                return;
-            }
-            if (this.state.phase == 'play') {
-                if (this.waiting_on_gamedata_to_make_move && this.state.moves.length == this.move_number_were_waiting_for) {
-                    this.makeMove(this.move_number_were_waiting_for);
-                    this.waiting_on_gamedata_to_make_move = false;
-                    this.move_number_were_waiting_for = -1;
-                }
-            }
-            else if (this.state.phase == 'finished') {
-                this.log("Game is finished");
-            }
-        }
+        // TODO: Command line options to allow undo?
+        //
+        this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
+            this.log("Undo requested", JSON.stringify(undodata, null, 4));
+        });
 
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
-            this.log("gamedata")
+            this.log("gamedata");
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
-            check_for_move();
+            this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
+
+            // If server has issues it might send us a new gamedata packet and not a move event. We could try to
+            // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
+            // restart the bot by killing it here if another gamedata comes in. There normally should only be one
+            // before we process any moves, and makeMove() is where a new Bot is created.
+            //
+            if (this.bot) {
+                this.log("Killing bot because of gamedata packet after bot was started");
+                this.bot.kill();
+                this.bot = null;
+            }
+
+            // active_game isn't handling this for us any more. If it is our move, call makeMove.
+            //
+            if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
+                this.makeMove(this.state.moves.length);
+            }
         });
         // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
         // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
         //
+        // TODO: Update clock information each time we get it, but only send it immediately before a genmove instead of each time.
+        // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
+        //
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
-            this.log("clock")
+            if (DEBUG) this.log("clock");
 
-            //this.log("Clock: ", clock);
+            //this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
 
             if (this.bot) {
@@ -534,15 +548,29 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/move', (move) => {
             if (!this.connected) return;
+            if (DEBUG) this.log("game/" + game_id + "/move:", move);
             try {
                 this.state.moves.push(move.move);
             } catch (e) {
                 console.error(e)
             }
-            if (this.bot) {
-                this.bot.sendMove(decodeMoves(move.move, this.state.width)[0]);
+            // this.bot will always be null if PERSIST is false, but lets check just in case
+            //
+            if (this.bot && PERSIST) {
+                // Since the bot isn't restarting each move, we need to tell it about opponent moves
+                // Track and send each opponent move by tracking player colors.
+                //
+                if (move.move_number % 2 == this.opponent_evenodd) {
+                    this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                } else {
+                    if (DEBUG) this.log("Ignoring our own move", move.move_number);
+                }
             }
-            check_for_move();
+            if (move.move_number % 2 == this.opponent_evenodd) {
+                // We just got a move from the opponent, so we can move immediately.
+                //
+                this.makeMove(this.state.moves.length);
+            }
         });
 
         this.socket.emit('game/connect', this.auth({
@@ -550,16 +578,14 @@ class Game {
         }));
     } /* }}} */
     makeMove(move_number) { /* {{{ */
+        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
         if (!this.state || this.state.moves.length != move_number) {
-            this.waiting_on_gamedata_to_make_move = true;
-            this.move_number_were_waiting_for = move_number;
             return;
         }
         if (this.state.phase != 'play') {
             return;
         }
 
-        let bot = new Bot(conn, bot_command);
         ++moves_processing;
 
         let passed = false;
@@ -573,18 +599,26 @@ class Game {
                     'move': ".."
                 }));
                 --moves_processing;
-                bot.kill();
+                if (this.bot) this.bot.kill();
+                this.bot = null;
             }
         }
 
-        bot.log("Generating move for game ", this.game_id);
-        bot.loadState(this.state, () => {
-            if (DEBUG) {
-                this.log("State loaded");
-            }
-        }, passAndRestart);
+        if (!this.bot) {
+            this.log("Starting new bot process");
+            this.bot = new Bot(this.conn, this, bot_command);
 
-        bot.genmove(this.state, (move) => {
+            this.log("State loading for new bot");
+            this.bot.loadState(this.state, () => {
+                if (DEBUG) {
+                    this.log("State loaded for new bot");
+                }
+            }, passAndRestart);
+        }
+
+        this.bot.log("Generating move for game", this.game_id);
+
+        this.bot.genmove(this.state, (move) => {
             --moves_processing;
             if (move.resign) {
                 this.log("Resigning");
@@ -600,14 +634,17 @@ class Game {
                 }));
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
-            bot.kill();
+            if (!PERSIST) {
+                this.bot.kill();
+                this.bot = null;
+            }
         }, passAndRestart);
     } /* }}} */
     auth(obj) { /* {{{ */
         return this.conn.auth(obj);
     }; /* }}} */
     disconnect() { /* {{{ */
-        this.log("Disconnecting");
+        this.log("Disconnecting from game #", this.game_id);
 
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
@@ -716,7 +753,8 @@ class Connection {
         });
         socket.on('disconnect', () => {
             this.connected = false;
-            conn_log("Disconnected");
+
+            conn_log("Disconnected from server");
             if (argv.timeout)
             {
                 for (let game_id in this.connected_game_timeouts)
@@ -725,27 +763,11 @@ class Connection {
                     clearTimeout(this.connected_game_timeouts[game_id]);
                 }
             }
+
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
             }
         });
-
-        //socket.on('game/' + game_id + '/clock', (clock) => {
-        /* 
-        socket.on('clock', (clock) => {
-            this.log("clock for " + clock.game_id);
-            this.log("current clock: " + this.connected_games[clock.game_id].clock);
-            if (this.connected_games[clock.game_id]) {
-                this.connected_games[clock.game_id].clock = clock;
-            }
-            this.log("new clock: " + this.connected_games[clock.game_id].clock);
-
-            // this.log("Clock: ", clock);
-            if (this.bot) {
-                this.bot.loadClock(connected_games[clock.game_id].state);
-            }
-        }); 
-        */
 
         socket.on('notification', (notification) => {
             if (this['on_' + notification.type]) {
@@ -758,10 +780,12 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (DEBUG) {
-                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
-            }
+            if (DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
+
             // OGS auto scores bot games now, no removal processing is needed by the bot.
+            //
+            // Eventually might want OGS to not auto score, or make it bot-optional to enforce.
+            // Some bots can handle stone removal process.
             //
             /* if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
@@ -769,8 +793,22 @@ class Connection {
                ) {
                 this.processMove(gamedata);
             } */
+            // Create the game object so we can set opponent_evenodd. Difficult to set in loadState since
+            // state date doesn't clearly know whose turn it is? (Update: state.clock might tell us)
+            //
+            let game = this.connectToGame(gamedata.id);
+
+            // We set this in gamedata now, so maybe it isn't needed at all here since active_game no longer calls makeMove()?
+            //
+            if (gamedata.player_to_move == this.bot_id) {
+                game.opponent_evenodd = gamedata.move_number % 2;
+            } else {
+                game.opponent_evenodd = (gamedata.move_number + 1) % 2;
+            }
+
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
-                this.processMove(gamedata);
+                // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
+                // game.makeMove(gamedata.move_number);
 
                 if (argv.timeout)
                 {
@@ -785,7 +823,11 @@ class Connection {
                 }
             }
 
+            // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
+            // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
+            //
             if (gamedata.phase == "finished") {
+                if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
                 this.disconnectFromGame(gamedata.id);
             } else {
                 if (argv.timeout)
@@ -811,10 +853,6 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (DEBUG) {
-            conn_log("Connecting to game", game_id);
-        }
-
         if (argv.timeout)
         {
             if (game_id in this.connected_games) {
@@ -826,13 +864,16 @@ class Connection {
         }
 
         if (game_id in this.connected_games) {
+            if (DEBUG) conn_log("Connected to game", game_id, "already");
             return this.connected_games[game_id];
         }
+
+        if (DEBUG) conn_log("Connecting to game", game_id);
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
         if (DEBUG) {
-            conn_log("Disconnected from game", game_id);
+            conn_log("disconnectFromGame", game_id);
         }
         if (argv.timeout)
         {
@@ -844,6 +885,12 @@ class Connection {
         }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
+            if (this.connected_games[game_id].bot) {
+                this.connected_games[game_id].bot.kill();
+                this.connected_games[game_id].bot = null;
+            }
+            delete this.connected_games[game_id];
+            delete this.connected_game_timeouts[game_id];
         }
 
         delete this.connected_games[game_id];
