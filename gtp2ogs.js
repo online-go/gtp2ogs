@@ -568,7 +568,6 @@ class Game {
             //
             // If handicap >= 1, we don't check for opponent_evenodd to move on our turns until handicaps are finished.
             //
-            this.log(this.state.free_handicap_placement, this.state.handicap, this.state.moves.length);
             if (this.state.free_handicap_placement && (this.state.handicap) > this.state.moves.length) {
                 if (this.my_color == "black") {
                     // If we are black, we make extra moves.
