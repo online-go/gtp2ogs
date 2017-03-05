@@ -497,7 +497,13 @@ class Game {
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
             if (this.state.free_handicap_placement && this.state.handicap > 1) {
+                //In Chinese, black makes multiple free moves.
+                //
                 this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
+            } else if (this.state.handicap > 1) {
+                // In Japanese, white makes the first move.
+                //
+                this.opponent_evenodd = this.my_color == "black" ? 1 : 0;
             }
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
