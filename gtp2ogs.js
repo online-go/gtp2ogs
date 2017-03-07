@@ -352,8 +352,6 @@ class Bot {
         this.command("boardsize " + state.width);
         this.command("clear_board");
         this.command("komi " + state.komi);
-
-        this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
         //this.log(state);
 
         this.loadClock(state);
@@ -494,6 +492,19 @@ class Game {
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
+            this.opponent_evenodd = this.my_color == "black" ? 0 : 1;
+
+            // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
+            //
+            if (this.state.free_handicap_placement && this.state.handicap > 1) {
+                //In Chinese, black makes multiple free moves.
+                //
+                this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
+            } else if (this.state.handicap > 1) {
+                // In Japanese, white makes the first move.
+                //
+                this.opponent_evenodd = this.my_color == "black" ? 1 : 0;
+            }
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
             // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
@@ -554,22 +565,34 @@ class Game {
             } catch (e) {
                 console.error(e)
             }
-            // this.bot will always be null if PERSIST is false, but lets check just in case
+
+            // If we're in free placement handicap phase of the game, make extra moves or wait it out, as appropriate.
             //
-            if (this.bot && PERSIST) {
-                // Since the bot isn't restarting each move, we need to tell it about opponent moves
-                // Track and send each opponent move by tracking player colors.
-                //
+            // If handicap == 1, no extra stones are played.
+            // If we are black, we played after initial gamedata and so handicap is not < length.
+            // If we are white, this.state.moves.length will be 1 and handicap is not < length.
+            //
+            // If handicap >= 1, we don't check for opponent_evenodd to move on our turns until handicaps are finished.
+            //
+            if (this.state.free_handicap_placement && (this.state.handicap) > this.state.moves.length) {
+                if (this.my_color == "black") {
+                    // If we are black, we make extra moves.
+                    //
+                    this.makeMove(this.state.moves.length);
+                } else {
+                    // If we are white, we wait for opponent to make extra moves.
+                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    if (DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
+                }
+            } else {
                 if (move.move_number % 2 == this.opponent_evenodd) {
-                    this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    // We just got a move from the opponent, so we can move immediately.
+                    //
+                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    this.makeMove(this.state.moves.length);
                 } else {
                     if (DEBUG) this.log("Ignoring our own move", move.move_number);
                 }
-            }
-            if (move.move_number % 2 == this.opponent_evenodd) {
-                // We just got a move from the opponent, so we can move immediately.
-                //
-                this.makeMove(this.state.moves.length);
             }
         });
 
@@ -793,18 +816,10 @@ class Connection {
                ) {
                 this.processMove(gamedata);
             } */
-            // Create the game object so we can set opponent_evenodd. Difficult to set in loadState since
-            // state date doesn't clearly know whose turn it is? (Update: state.clock might tell us)
+
+            // Set up the game so it can listen for events.
             //
             let game = this.connectToGame(gamedata.id);
-
-            // We set this in gamedata now, so maybe it isn't needed at all here since active_game no longer calls makeMove()?
-            //
-            if (gamedata.player_to_move == this.bot_id) {
-                game.opponent_evenodd = gamedata.move_number % 2;
-            } else {
-                game.opponent_evenodd = (gamedata.move_number + 1) % 2;
-            }
 
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
