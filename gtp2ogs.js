@@ -354,7 +354,7 @@ class Bot {
         this.command("komi " + state.komi);
         //this.log(state);
 
-        this.loadClock(state);
+        //this.loadClock(state);
 
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
@@ -431,6 +431,11 @@ class Bot {
         // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
         //
         this.firstmove = false;
+
+        // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
+        // subtract that missing time from what we tell the bot.
+        //
+        this.loadClock(state);
 
         this.command("genmove " + this.game.my_color,
             (move) => {
@@ -523,12 +528,7 @@ class Game {
                 this.makeMove(this.state.moves.length);
             }
         });
-        // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
-        // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
-        //
-        // TODO: Update clock information each time we get it, but only send it immediately before a genmove instead of each time.
-        // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
-        //
+
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
             if (DEBUG) this.log("clock");
@@ -536,9 +536,10 @@ class Game {
             //this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
 
-            if (this.bot) {
-                this.bot.loadClock(this.state);
-            }
+            // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
+            //if (this.bot) {
+            //    this.bot.loadClock(this.state);
+            //}
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
