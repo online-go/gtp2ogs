@@ -7,7 +7,7 @@ let DEBUG = false;
 let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
-let REJECTALL = false;
+let REJECTNEW = false;
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -58,7 +58,7 @@ let optimist = require("optimist")
     .describe('noclock', 'Do not send any clock/time data to the bot')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
-    .describe('rejectall', 'Reject all new challenges')
+    .describe('rejectnew', 'Reject all new challenges')
     .describe('boardsize', 'Board size(s) to play on')
     .string('boardsize')
     .default('boardsize', '9,13,19')
@@ -101,8 +101,8 @@ if (argv.noclock) {
     NOCLOCK = true;
 }
 
-if (argv.rejectall) {
-    REJECTALL = true;
+if (argv.rejectnew) {
+    REJECTNEW = true;
 }
 
 let allowed_sizes = [];
@@ -929,7 +929,7 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-        let reject = REJECTALL;
+        let reject = REJECTNEW;
 
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
