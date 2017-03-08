@@ -7,6 +7,7 @@ let DEBUG = false;
 let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
+let REJECTALL = false;
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -58,6 +59,7 @@ let optimist = require("optimist")
     .describe('noclock', 'Do not send any clock/time data to the bot')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
+    .describe('rejectall', 'Reject all new challenges')
 ;
 let argv = optimist.argv;
 
@@ -95,6 +97,10 @@ if (argv.kgstime) {
 
 if (argv.noclock) {
     NOCLOCK = true;
+}
+
+if (argv.rejectall) {
+    REJECTALL = true;
 }
 
 let bot_command = argv._;
@@ -913,7 +919,8 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-        let reject = false;
+        let reject = REJECTALL;
+
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
