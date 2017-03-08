@@ -32,7 +32,6 @@ let console = require('tracer').colorConsole({
     }
 });
 
-
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> command [arguments]")
     .alias('username', 'botid')
@@ -50,7 +49,7 @@ let optimist = require("optimist")
     .default('port', 443)
     .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
     .default('timeout', 0)
-    .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
+    .describe('insecure', "Don't use ssl to connect to the ggs/rest servers")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
@@ -60,6 +59,9 @@ let optimist = require("optimist")
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectall', 'Reject all new challenges')
+    .describe('boardsize', 'Board size(s) to play on')
+    .string('boardsize')
+    .default('boardsize', '9,13,19')
 ;
 let argv = optimist.argv;
 
@@ -101,6 +103,14 @@ if (argv.noclock) {
 
 if (argv.rejectall) {
     REJECTALL = true;
+}
+
+let allowed_sizes = [];
+
+if (argv.boardsize) {
+    for (let i of argv.boardsize.split(',')) {
+        allowed_sizes[i] = true;
+    }
 }
 
 let bot_command = argv._;
@@ -928,6 +938,11 @@ class Connection {
 
         if (notification.width != notification.height) {
             conn_log("board was not square, rejecting challenge");
+            reject = true;
+        }
+
+        if( !allowed_sizes[notification.width] ) {
+            conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
             reject = true;
         }
 
