@@ -62,6 +62,8 @@ let optimist = require("optimist")
     .describe('boardsize', 'Board size(s) to play on')
     .string('boardsize')
     .default('boardsize', '9,13,19')
+    .describe('ban', 'Comma separated list of user names or IDs')
+    .string('ban')
 ;
 let argv = optimist.argv;
 
@@ -112,6 +114,15 @@ if (argv.boardsize) {
         allowed_sizes[i] = true;
     }
 }
+
+let banned_users = {};
+
+if (argv.ban) {
+    for (let i of argv.ban.split(',')) {
+        banned_users[i] = true;
+    }
+}
+
 
 let bot_command = argv._;
 let moves_processing = 0;
@@ -943,6 +954,13 @@ class Connection {
 
         if( !allowed_sizes[notification.width] ) {
             conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
+            reject = true;
+        }
+
+        // Check that the challenger is not banned
+        //
+        if ( banned_users[notification.user.username] || banned_users[notification.user.id] ) {
+                conn_log(notification.user.username + " (" + notification.user.id + ") is banned, rejecting challenge");
             reject = true;
         }
 
