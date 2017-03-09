@@ -68,6 +68,10 @@ let optimist = require("optimist")
     .default('speed', 'blitz,live,correspondence')
     .describe('timecontrol', 'Time control(s) to accept')
     .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
+    .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
+    .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
+    .describe('minperiods', 'Minimum number of periods')
+    .describe('maxperiods', 'Maximum number of periods')
 ;
 let argv = optimist.argv;
 
@@ -991,6 +995,40 @@ class Connection {
 
         if ( !allowed_timecontrols[notification.time_control.time_control] ) {
             conn_log(notification.user.username + " wanted time control " + notification.time_control.time_control + ", not in: " + argv.timecontrol);
+            reject = true;
+        }
+
+        if ( argv.minperiodtime &&
+            (      (notification.time_control.period_time && notification.time_control.period_time < argv.minperiodtime)
+                || (notification.time_control.time_increment && notification.time_control.time_increment < argv.minperiodtime)
+                || (notification.time_control.per_move && notification.time_control.per_move < argv.minperiodtime)
+                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime)
+            ))
+        {
+            conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time);
+            reject = true;
+        }
+
+        if ( argv.maxperiodtime &&
+            (      (notification.time_control.period_time && notification.time_control.period_time > argv.maxperiodtime)
+                || (notification.time_control.time_increment && notification.time_control.time_increment > argv.maxperiodtime)
+                || (notification.time_control.per_move && notification.time_control.per_move > argv.maxperiodtime)
+                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime)
+            ))
+        {
+            conn_log(notification.user.username + " wanted period too long: " + notification.time_control.period_time);
+            reject = true;
+        }
+
+        if ( argv.minperiods && (notification.time_control.periods < argv.minperiods) ) {
+            conn_log(notification.user.username + " wanted too few periods: " + notification.time_control.periods);
+            reject = true;
+        }
+
+        // We might specify maxperiods=0, so need to check if the variable exists. Although why use byoyomi only with zero periods?
+        //
+        if ( (argv.maxperiods !== undefined ) && (notification.time_control.periods > argv.maxperiods) ) {
+            conn_log(notification.user.username + " wanted too many periods: " + notification.time_control.periods);
             reject = true;
         }
 
