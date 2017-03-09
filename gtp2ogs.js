@@ -64,6 +64,9 @@ let optimist = require("optimist")
     .default('boardsize', '9,13,19')
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
+    .describe('speed', 'Game speed(s) to accept')
+    .string('speed')
+    .default('speed', 'blitz,live,correspondence')
 ;
 let argv = optimist.argv;
 
@@ -112,6 +115,14 @@ let allowed_sizes = [];
 if (argv.boardsize) {
     for (let i of argv.boardsize.split(',')) {
         allowed_sizes[i] = true;
+    }
+}
+
+let allowed_speeds = {};
+
+if (argv.speed) {
+    for (let i of argv.speed.split(',')) {
+        allowed_speeds[i] = true;
     }
 }
 
@@ -961,6 +972,11 @@ class Connection {
         //
         if ( banned_users[notification.user.username] || banned_users[notification.user.id] ) {
                 conn_log(notification.user.username + " (" + notification.user.id + ") is banned, rejecting challenge");
+            reject = true;
+        }
+
+        if ( !allowed_speeds[notification.time_control.speed] ) {
+            conn_log(notification.user.username + " wanted speed " + notification.time_control.speed + ", not in: " + argv.speed);
             reject = true;
         }
 
