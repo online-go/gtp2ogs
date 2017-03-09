@@ -72,6 +72,11 @@ let optimist = require("optimist")
     .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
     .describe('minperiods', 'Minimum number of periods')
     .describe('maxperiods', 'Maximum number of periods')
+    .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
+    .string('minrank')
+    .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
+    .string('maxrank')
+    .describe('pro', 'Only accept matches from professionals')
 ;
 let argv = optimist.argv;
 
@@ -147,6 +152,48 @@ if (argv.ban) {
     }
 }
 
+if (argv.minrank) {
+    let re = /(\d+)([kdp])/;
+    let results = argv.minrank.toLowerCase().match(re);
+
+    if (results) {
+        if (results[2] == "k") {
+            argv.minrank = 30 - parseInt(results[1]);
+        } else if (results[2] == "d") {
+            argv.minrank = 30 - 1 + parseInt(results[1]);
+        } else if (results[2] == "p") {
+            argv.minrank = 36 + parseInt(results[1]);
+            argv.pro = true;
+        } else {
+            console.error("Invalid minrank " + argv.minrank);
+            process.exit();
+        }
+    } else {
+        console.error("Could not parse minrank " + argv.minrank);
+        process.exit();
+    }
+}
+
+if (argv.maxrank) {
+    let re = /(\d+)([kdp])/;
+    let results = argv.maxrank.toLowerCase().match(re);
+
+    if (results) {
+        if (results[2] == "k") {
+            argv.maxrank = 30 - parseInt(results[1]);
+        } else if (results[2] == "d") {
+            argv.maxrank = 30 - 1 + parseInt(results[1]);
+        } else if (results[2] == "p") {
+            argv.maxrank = 36 + parseInt(results[1]);
+        } else {
+            console.error("Invalid maxrank " + argv.maxrank);
+            process.exit();
+        }
+    } else {
+        console.error("Could not parse maxrank " + argv.maxrank);
+        process.exit();
+    }
+}
 
 let bot_command = argv._;
 let moves_processing = 0;
@@ -1029,6 +1076,21 @@ class Connection {
         //
         if ( (argv.maxperiods !== undefined ) && (notification.time_control.periods > argv.maxperiods) ) {
             conn_log(notification.user.username + " wanted too many periods: " + notification.time_control.periods);
+            reject = true;
+        }
+
+        if ( argv.minrank && notification.user.ranking < argv.minrank ) {
+            conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
+            reject = true;
+        }
+
+        if ( argv.maxrank && notification.user.ranking > argv.maxrank ) {
+            conn_log(notification.user.username + " ranking too high: " + notification.user.ranking);
+            reject = true;
+        }
+
+        if ( argv.pro && !notification.user.professional ) {
+            conn_log(notification.user.username + " is not a professional");
             reject = true;
         }
 
