@@ -59,14 +59,15 @@ let optimist = require("optimist")
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
-    .describe('boardsize', 'Board size(s) to play on')
+    .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
     .default('boardsize', '9,13,19')
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('speed', 'Game speed(s) to accept')
-    .string('speed')
     .default('speed', 'blitz,live,correspondence')
+    .describe('timecontrol', 'Time control(s) to accept')
+    .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
 ;
 let argv = optimist.argv;
 
@@ -123,6 +124,14 @@ let allowed_speeds = {};
 if (argv.speed) {
     for (let i of argv.speed.split(',')) {
         allowed_speeds[i] = true;
+    }
+}
+
+let allowed_timecontrols = {};
+
+if (argv.timecontrol) {
+    for (let i of argv.timecontrol.split(',')) {
+        allowed_timecontrols[i] = true;
     }
 }
 
@@ -374,7 +383,7 @@ class Bot {
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
         }
-        // OGS doesn't actually send  'none' time control type
+        // OGS doesn't actually send 'none' time control type
         //
         /* else if (state.time_control.system == 'none') {
             if (KGSTIME) {
@@ -977,6 +986,11 @@ class Connection {
 
         if ( !allowed_speeds[notification.time_control.speed] ) {
             conn_log(notification.user.username + " wanted speed " + notification.time_control.speed + ", not in: " + argv.speed);
+            reject = true;
+        }
+
+        if ( !allowed_timecontrols[notification.time_control.time_control] ) {
+            conn_log(notification.user.username + " wanted time control " + notification.time_control.time_control + ", not in: " + argv.timecontrol);
             reject = true;
         }
 
