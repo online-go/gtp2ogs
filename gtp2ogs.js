@@ -76,7 +76,7 @@ let optimist = require("optimist")
     .string('minrank')
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
     .string('maxrank')
-    .describe('pro', 'Only accept matches from professionals')
+    .describe('proonly', 'Only accept matches from professionals')
 ;
 let argv = optimist.argv;
 
@@ -163,7 +163,7 @@ if (argv.minrank) {
             argv.minrank = 30 - 1 + parseInt(results[1]);
         } else if (results[2] == "p") {
             argv.minrank = 36 + parseInt(results[1]);
-            argv.pro = true;
+            argv.proonly = true;
         } else {
             console.error("Invalid minrank " + argv.minrank);
             process.exit();
@@ -1089,7 +1089,7 @@ class Connection {
             reject = true;
         }
 
-        if ( argv.pro && !notification.user.professional ) {
+        if ( argv.proonly && !notification.user.professional ) {
             conn_log(notification.user.username + " is not a professional");
             reject = true;
         }
