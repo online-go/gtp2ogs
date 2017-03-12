@@ -68,6 +68,8 @@ let optimist = require("optimist")
     .default('speed', 'blitz,live,correspondence')
     .describe('timecontrol', 'Time control(s) to accept')
     .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
+    .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
+    .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
     .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
     .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
     .describe('minperiods', 'Minimum number of periods')
@@ -1064,6 +1066,32 @@ class Connection {
         if ( !allowed_timecontrols[notification.time_control.time_control] ) {
             conn_log(notification.user.username + " wanted time control " + notification.time_control.time_control + ", not in: " + argv.timecontrol);
             reject = true;
+        }
+
+        if ( argv.minmaintime ) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
+                conn_log("Minimum main time not supported in time control: " + notification.time_control.time_control);
+                reject = true;
+            } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time < argv.minmaintime ) {
+                conn_log(notification.user.username + " wanted absolute time, but total_time shorter than minmaintime");
+                reject = true;
+            } else if ( notification.time_control.main_time < argv.minmaintime ) {
+                conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", below minmaintime " + argv.minmaintime);
+                reject = true;
+            }
+        }
+
+        if ( argv.maxmaintime ) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
+                conn_log("Maximum main time not supported in time control: " + notification.time_control.time_control);
+                reject = true;
+            } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time > argv.maxmaintime ) {
+                conn_log(notification.user.username + " wanted absolute time, but total_time longer than maxmaintime");
+                reject = true;
+            } else if ( notification.time_control.main_time > argv.maxmaintime ) {
+                conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", above maxmaintime " + argv.maxmaintime);
+                reject = true;
+            }
         }
 
         if ( argv.minperiodtime &&
