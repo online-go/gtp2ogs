@@ -77,6 +77,11 @@ let optimist = require("optimist")
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
     .string('maxrank')
     .describe('proonly', 'Only accept matches from professionals')
+    .describe('rankedonly', 'Only accept ranked matches')
+    .describe('unrankedonly', 'Only accept unranked matches')
+    .describe('maxhandicap', 'Max handicap for all games')
+    .describe('maxrankedhandicap', 'Max handicap for ranked games')
+    .describe('maxunrankedhandicap', 'Max handicap for unranked games')
 ;
 let argv = optimist.argv;
 
@@ -1107,6 +1112,31 @@ class Connection {
 
         if ( argv.proonly && !notification.user.professional ) {
             conn_log(notification.user.username + " is not a professional");
+            reject = true;
+        }
+
+        if ( argv.rankedonly && !notification.ranked ) {
+            conn_log("Ranked games only");
+            reject = true;
+        }
+
+        if ( argv.unrankedonly && notification.ranked ) {
+            conn_log("Unranked games only");
+            reject = true;
+        }
+
+        if ( (argv.maxhandicap !== undefined) && (notification.handicap > argv.maxhandicap) ) {
+            conn_log("Max handicap is " + argv.maxhandicap);
+            reject = true;
+        }
+
+        if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
+            conn_log("Max ranked handicap is " + argv.maxhandicap);
+            reject = true;
+        }
+
+        if ( (argv.maxunrankedhandicap !== undefined) && !notification.ranked && (notification.handicap > argv.maxunrankedhandicap) ) {
+            conn_log("Max unranked handicap is " + argv.maxhandicap);
             reject = true;
         }
 
