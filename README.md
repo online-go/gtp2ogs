@@ -8,14 +8,14 @@ Installation
 ============
 
   1. Use your systems package manager or otherwise install `node.js` from http://nodejs.org/
-  2. Install any missing node.js packages, such as:
+  2. Run
+    ```
+    npm install -g gtp2ogs
+    ```
+  3. Install any missing node.js packages if basic usage below fails, such as:
     ```
     npm install optimist
     npm install socket.io-client
-    ```
-  3. Run
-    ```
-    npm install -g gtp2ogs
     ```
 
 
