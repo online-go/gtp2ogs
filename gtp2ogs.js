@@ -1158,8 +1158,8 @@ class Connection {
             reject = true;
         }
 
-        if ( (argv.minrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.minrankedhandicap) ) {
-            conn_log("Min ranked handicap is " + argv.minrankedhandicap);
+        if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
+            conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
             reject = true;
         }
 
