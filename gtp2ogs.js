@@ -1164,7 +1164,7 @@ class Connection {
         }
 
         if ( (argv.maxunrankedhandicap !== undefined) && !notification.ranked && (notification.handicap > argv.maxunrankedhandicap) ) {
-            conn_log("Max unranked handicap is " + argv.maxrankedhandicap);
+            conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
             reject = true;
         }
 
