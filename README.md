@@ -12,11 +12,16 @@ Installation
     ```
     npm install -g gtp2ogs
     ```
+  3. Install any missing node.js packages if basic usage below fails, such as:
+    ```
+    npm install optimist
+    npm install socket.io-client
+    ```
 
 
 Basic usage
 ===========
 
 ```
-gtp2ogs --botid <id> --apikey <apikey> -- <command> <arguments>
+gtp2ogs --botid <id> --apikey <apikey> <arguments> -- <bot command> <bot arguments>
 ```
