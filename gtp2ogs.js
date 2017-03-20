@@ -239,7 +239,7 @@ class Bot {
                 }
             }
 
-            if (stdout_buffer[stdout_buffer.length-1] != '\n') {
+            if (!stdout_buffer || stdout_buffer[stdout_buffer.length-1] != '\n') {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
