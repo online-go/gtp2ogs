@@ -639,7 +639,11 @@ class Game {
             if (DEBUG) this.log("clock");
 
             //this.log("Clock: ", JSON.stringify(clock));
-            this.state.clock = clock;
+            if (this.state) {
+                this.state.clock = clock;
+            } else {
+                if (DEBUG) console.error("Received clock for " + this.game_id + "but no state exists");
+            }
 
             // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
             //if (this.bot) {
@@ -651,7 +655,12 @@ class Game {
             this.log("phase", phase)
 
             //this.log("Move: ", move);
-            this.state.phase = phase;
+            if (this.state) {
+                this.state.phase = phase;
+            } else {
+                if (DEBUG) console.error("Received phase for " + this.game_id + "but no state exists");
+            }
+
             if (phase == 'play') {
                 /* FIXME: This is pretty stupid.. we know what state we're in to
                  * see if it's our move or not, but it's late and blindly sending
