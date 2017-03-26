@@ -84,6 +84,7 @@ let optimist = require("optimist")
     .describe('maxhandicap', 'Max handicap for all games')
     .describe('maxrankedhandicap', 'Max handicap for ranked games')
     .describe('maxunrankedhandicap', 'Max handicap for unranked games')
+    .describe('nopause', 'Do not allow games to be paused')
 ;
 let argv = optimist.argv;
 
@@ -636,7 +637,14 @@ class Game {
 
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
-            if (DEBUG) this.log("clock");
+            if (DEBUG) this.log("clock:", JSON.stringify(clock));
+
+            if (argv.nopause && clock.pause && clock.pause.paused && clock.pause.pause_control
+                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
+                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
+                if (DEBUG) this.log("Pausing not allowed. Resuming game.");
+                this.resumeGame();
+            }
 
             //this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
@@ -798,6 +806,12 @@ class Game {
             'move_number': move_number,
             'type': type,
             'username': argv.username
+        }));
+    }
+    resumeGame() {
+        this.socket.emit('game/resume', this.auth({
+            'game_id': this.state.game_id,
+            'player_id': this.conn.bot_id
         }));
     }
 }
