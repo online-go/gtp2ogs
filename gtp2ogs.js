@@ -342,20 +342,34 @@ class Bot {
             // again, the next state setup should have this corrected. This problem would happen if a bot were to crash and re-start during
             // a period. This is only an issue if it is our turn, and our main time left is 0.
             //
-            // TODO: If I add support for a persistant bot connection (not restarting process each move), be sure to think about mid-match
-            // reconnect time settings in more depth.
-            //
             if (KGSTIME) {
                 let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+
+                // Restarting the bot can make a time left so small the bot makes a rushed terrible move. If we have less than half a period
+                // to think and extra periods left, lets go ahead and use the period up.
+                //
+                if (state.clock.black_time.thinking_time == 0 && state.clock.black_time.periods > 1 && black_timeleft < state.time_control.period_time / 2) {
+                    black_timeleft = Math.floor(state.clock.black_time.thinking_time - black_offset) + state.time_control.period_time;
+                    state.clock.black_time.periods--;
+                }
+
+                if (state.clock.white_time.thinking_time == 0 && state.clock.white_time.periods > 1 && white_timeleft < state.time_control.period_time / 2) {
+                    white_timeleft = Math.floor(state.clock.white_time.thinking_time - white_offset) + state.time_control.period_time;
+                    state.clock.white_time.periods--;
+                }
 
                 this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
                     + Math.floor(state.time_control.period_time -
                         (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset)
                     )
                     + " " + state.time_control.periods);
-                this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
-                this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
+
+                // Turns out in Japanese byoyomi mode, for Leela and pacci, they expect time left in the current byoyomi period on time_left
+                //
+
+                this.command("time_left black " + black_timeleft + " " + (state.clock.black_time.thinking_time > 0 ? "0" : state.clock.black_time.periods));
+                this.command("time_left white " + white_timeleft + " " + (state.clock.white_time.thinking_time > 0 ? "0" : state.clock.white_time.periods));
             } else {
                 // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
                 // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
