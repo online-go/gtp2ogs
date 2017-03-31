@@ -343,19 +343,31 @@ class Bot {
             // a period. This is only an issue if it is our turn, and our main time left is 0.
             //
             if (KGSTIME) {
-                let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
-                let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+                let black_timeleft = 0;
+                let white_timeleft = 0;
+
+                if (state.clock.black_time.thinking_time > 0) {
+                    black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+                } else {
+                    black_timeleft = Math.max( Math.floor(state.time_control.period_time - black_offset), 0);
+                }
+
+                if (state.clock.white_time.thinking_time > 0) {
+                    white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+                } else {
+                    white_timeleft = Math.max( Math.floor(state.time_control.period_time - white_offset), 0);
+                }
 
                 // Restarting the bot can make a time left so small the bot makes a rushed terrible move. If we have less than half a period
                 // to think and extra periods left, lets go ahead and use the period up.
                 //
                 if (state.clock.black_time.thinking_time == 0 && state.clock.black_time.periods > 1 && black_timeleft < state.time_control.period_time / 2) {
-                    black_timeleft = Math.floor(state.clock.black_time.thinking_time - black_offset) + state.time_control.period_time;
+                    black_timeleft = Math.max( Math.floor(state.time_control.period_time - black_offset) + state.time_control.period_time, 0 );
                     state.clock.black_time.periods--;
                 }
 
                 if (state.clock.white_time.thinking_time == 0 && state.clock.white_time.periods > 1 && white_timeleft < state.time_control.period_time / 2) {
-                    white_timeleft = Math.floor(state.clock.white_time.thinking_time - white_offset) + state.time_control.period_time;
+                    white_timeleft = Math.max( Math.floor(state.time_control.period_time - white_offset) + state.time_control.period_time, 0 );
                     state.clock.white_time.periods--;
                 }
 
