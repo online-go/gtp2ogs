@@ -85,6 +85,8 @@ let optimist = require("optimist")
     .describe('maxrankedhandicap', 'Max handicap for ranked games')
     .describe('maxunrankedhandicap', 'Max handicap for unranked games')
     .describe('nopause', 'Do not allow games to be paused')
+    .describe('nopauseranked', 'Do not allow ranked games to be paused')
+    .describe('nopauseunranked', 'Do not allow unranked games to be paused')
 ;
 let argv = optimist.argv;
 
@@ -665,7 +667,8 @@ class Game {
             if (!this.connected) return;
             if (DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            if (argv.nopause && clock.pause && clock.pause.paused && clock.pause.pause_control
+            if ((argv.nopause || (argv.nopauseranked && state.ranked) || (argv.nopauseunranked && state.ranked == false))
+                && clock.pause && clock.pause.paused && clock.pause.pause_control
                 && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
                 && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
                 if (DEBUG) this.log("Pausing not allowed. Resuming game.");
