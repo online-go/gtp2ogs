@@ -73,7 +73,11 @@ let optimist = require("optimist")
     .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
     .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
     .describe('minperiods', 'Minimum number of periods')
+    .describe('minperiodsranked', 'Minimum number of ranked periods')
+    .describe('minperiodsunranked', 'Minimum number of unranked periods')
     .describe('maxperiods', 'Maximum number of periods')
+    .describe('maxperiodsranked', 'Maximum number of ranked periods')
+    .describe('maxperiodsunranked', 'Maximum number of unranked periods')
     .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
     .string('minrank')
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
@@ -85,6 +89,8 @@ let optimist = require("optimist")
     .describe('maxrankedhandicap', 'Max handicap for ranked games')
     .describe('maxunrankedhandicap', 'Max handicap for unranked games')
     .describe('nopause', 'Do not allow games to be paused')
+    .describe('nopauseranked', 'Do not allow ranked games to be paused')
+    .describe('nopauseunranked', 'Do not allow unranked games to be paused')
 ;
 let argv = optimist.argv;
 
@@ -665,7 +671,8 @@ class Game {
             if (!this.connected) return;
             if (DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            if (argv.nopause && clock.pause && clock.pause.paused && clock.pause.pause_control
+            if ((argv.nopause || (argv.nopauseranked && state.ranked) || (argv.nopauseunranked && state.ranked == false))
+                && clock.pause && clock.pause.paused && clock.pause.pause_control
                 && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
                 && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
                 if (DEBUG) this.log("Pausing not allowed. Resuming game.");
@@ -1170,10 +1177,30 @@ class Connection {
             reject = true;
         }
 
+        if ( argv.minperiodsranked && notification.ranked && (notification.time_control.periods < argv.minperiodsranked) ) {
+            conn_log(notification.user.username + " wanted too few ranked periods: " + notification.time_control.periods);
+            reject = true;
+        }
+
+        if ( argv.minperiodsunranked && !notification.ranked && (notification.time_control.periods < argv.minperiodsunranked) ) {
+            conn_log(notification.user.username + " wanted too few unranked periods: " + notification.time_control.periods);
+            reject = true;
+        }
+
         // We might specify maxperiods=0, so need to check if the variable exists. Although why use byoyomi only with zero periods?
         //
         if ( (argv.maxperiods !== undefined ) && (notification.time_control.periods > argv.maxperiods) ) {
             conn_log(notification.user.username + " wanted too many periods: " + notification.time_control.periods);
+            reject = true;
+        }
+
+        if ( (argv.maxperiodsranked !== undefined ) && notification.ranked && (notification.time_control.periods > argv.maxperiodsranked) ) {
+            conn_log(notification.user.username + " wanted too many ranked periods: " + notification.time_control.periods);
+            reject = true;
+        }
+
+        if ( (argv.maxperiodsunranked !== undefined ) && !notification.ranked && (notification.time_control.periods > argv.maxperiodsunranked) ) {
+            conn_log(notification.user.username + " wanted too many unranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
