@@ -64,6 +64,10 @@ let optimist = require("optimist")
     .default('boardsize', '9,13,19')
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
+    .describe('banranked', 'Comma separated list of user names or IDs')
+    .string('banranked')
+    .describe('banunranked', 'Comma separated list of user names or IDs')
+    .string('banunranked')
     .describe('speed', 'Game speed(s) to accept')
     .default('speed', 'blitz,live,correspondence')
     .describe('timecontrol', 'Time control(s) to accept')
@@ -163,6 +167,22 @@ let banned_users = {};
 if (argv.ban) {
     for (let i of argv.ban.split(',')) {
         banned_users[i] = true;
+    }
+}
+
+let banned_ranked_users = {};
+
+if (argv.banranked) {
+    for (let i of argv.banranked.split(',')) {
+        banned_ranked_users[i] = true;
+    }
+}
+
+let banned_unranked_users = {};
+
+if (argv.banunranked) {
+    for (let i of argv.banunranked.split(',')) {
+        banned_unranked_users[i] = true;
     }
 }
 
@@ -1110,7 +1130,13 @@ class Connection {
         // Check that the challenger is not banned
         //
         if ( banned_users[notification.user.username] || banned_users[notification.user.id] ) {
-                conn_log(notification.user.username + " (" + notification.user.id + ") is banned, rejecting challenge");
+            conn_log(notification.user.username + " (" + notification.user.id + ") is banned, rejecting challenge");
+            reject = true;
+        } else if ( notification.ranked && (banned_ranked_users[notification.user.username] || banned_ranked_users[notification.user.id]) ) {
+            conn_log(notification.user.username + " (" + notification.user.id + ") is banned from ranked, rejecting challenge");
+            reject = true;
+        } else if ( !notification.ranked && (banned_unranked_users[notification.user.username] || banned_unranked_users[notification.user.id]) ) {
+            conn_log(notification.user.username + " (" + notification.user.id + ") is banned from unranked, rejecting challenge");
             reject = true;
         }
 
