@@ -2,6 +2,12 @@
 
 'use strict';
 
+process.on('uncaughtException', function (er) {
+  console.trace("ERROR: Uncaught exception");
+  console.error("ERROR: " + er.stack);
+  conn.connection_reset();
+})
+
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let PERSIST = false;
