@@ -56,6 +56,7 @@ let optimist = require("optimist")
     .describe('persist', 'Bot process remains running between moves')
     .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
+    .describe('corrqueue', 'Process correspondence games one at a time')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
@@ -231,6 +232,7 @@ if (argv.maxrank) {
 
 let bot_command = argv._;
 let moves_processing = 0;
+let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
 
@@ -641,6 +643,7 @@ class Game {
         this.connected = true;
         this.bot = null;
         this.my_color = null;
+        this.corr_move_pending = false;
 
         // TODO: Command line options to allow undo?
         //
@@ -683,7 +686,11 @@ class Game {
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
-                this.makeMove(this.state.moves.length);
+                if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
+                    this.corr_move_pending = true;
+                } else {
+                    this.makeMove(this.state.moves.length);
+                }
             }
         });
 
@@ -786,6 +793,9 @@ class Game {
         }
 
         ++moves_processing;
+        if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+            ++corr_moves_processing;
+        }
 
         let passed = false;
         let passAndRestart = () => {
@@ -798,6 +808,10 @@ class Game {
                     'move': ".."
                 }));
                 --moves_processing;
+                if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                   this.corr_move_pending = false;
+                    --corr_moves_processing;
+                }
                 if (this.bot) this.bot.kill();
                 this.bot = null;
             }
@@ -819,6 +833,10 @@ class Game {
 
         this.bot.genmove(this.state, (move) => {
             --moves_processing;
+            if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                this.corr_move_pending = false;
+                --corr_moves_processing;
+            }
             if (move.resign) {
                 this.log("Resigning");
                 this.socket.emit('game/resign', this.auth({
@@ -942,6 +960,26 @@ class Connection {
                 })
             });
         });
+
+        if (argv.corrqueue) {
+            // Check every so often if we have correspondence games that need moves
+            //
+            setInterval(() => {
+                // If a game needs a move and we aren't already working on one, make a move
+                //
+                if (corr_moves_processing == 0) {
+                    // Choose a corr game to make a move
+                    // TODO: Choose the game with least time remaining
+                    //
+                    for (let game_id in this.connected_games) {
+                        if (this.connected_games[game_id].corr_move_pending) {
+                            this.connected_games[game_id].makeMove(this.state.moves.length);
+                            break;
+                        }
+                    }
+                }
+            }, 10000);
+        }
 
         setInterval(() => {
             /* if we're sitting there bored, make sure we don't have any move
