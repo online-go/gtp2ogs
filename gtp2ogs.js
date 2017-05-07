@@ -771,7 +771,9 @@ class Game {
                 if (move.move_number % 2 == this.opponent_evenodd) {
                     // We just got a move from the opponent, so we can move immediately.
                     //
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    if (this.bot) {
+                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    }
 
                     if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
                         this.corr_move_pending = true;
