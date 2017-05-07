@@ -670,7 +670,7 @@ class Game {
             }
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
-            // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
+            // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
