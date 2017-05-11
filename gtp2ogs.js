@@ -406,8 +406,8 @@ class Bot {
                 // Turns out in Japanese byoyomi mode, for Leela and pacci, they expect time left in the current byoyomi period on time_left
                 //
 
-                this.command("time_left black " + black_timeleft + " " + (state.clock.black_time.thinking_time > 0 ? "0" : state.clock.black_time.periods));
-                this.command("time_left white " + white_timeleft + " " + (state.clock.white_time.thinking_time > 0 ? "0" : state.clock.white_time.periods));
+                this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
+                this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
             } else {
                 // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
                 // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
@@ -670,7 +670,7 @@ class Game {
             }
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
-            // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
+            // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
