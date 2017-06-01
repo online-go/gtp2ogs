@@ -406,8 +406,8 @@ class Bot {
                 // Turns out in Japanese byoyomi mode, for Leela and pacci, they expect time left in the current byoyomi period on time_left
                 //
 
-                this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
-                this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
+                this.command("time_left black " + black_timeleft + " " + (state.clock.black_time.thinking_time > 0 ? "0" : state.clock.black_time.periods));
+                this.command("time_left white " + white_timeleft + " " + (state.clock.white_time.thinking_time > 0 ? "0" : state.clock.white_time.periods));
             } else {
                 // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
                 // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
