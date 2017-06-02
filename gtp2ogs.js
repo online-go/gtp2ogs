@@ -5,8 +5,11 @@
 process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
   console.error("ERROR: " + er.stack);
-  if (conn) conn.connection_reset();
-  if (!conn || !conn.socket) conn = new Connection();
+  if (!conn || !conn.socket) {
+    conn = new Connection();
+  } else {
+    conn.connection_reset();
+  }
 })
 
 process.title = 'gtp2ogs';
