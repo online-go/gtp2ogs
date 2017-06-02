@@ -1112,7 +1112,7 @@ class Connection {
         for (let game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
-        if (socket) socket.emit('notification/connect', this.auth({}), (x) => {
+        if (this.socket) this.socket.emit('notification/connect', this.auth({}), (x) => {
             conn_log(x);
         });
     }; /* }}} */
