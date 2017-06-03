@@ -8,7 +8,7 @@ process.on('uncaughtException', function (er) {
   if (!conn || !conn.socket) {
     conn = new Connection();
   } else {
-    conn.connection_reset();
+    //conn.connection_reset();
   }
 })
 
