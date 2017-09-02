@@ -682,6 +682,13 @@ class Game {
                 this.log("Killing bot because of gamedata packet after bot was started");
                 this.bot.kill();
                 this.bot = null;
+
+                if (this.processing) {
+                    --moves_processing;
+                    if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                        --corr_moves_processing;
+                    }
+                }
             }
 
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
