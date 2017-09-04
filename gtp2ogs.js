@@ -655,18 +655,30 @@ class Game {
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
-            this.opponent_evenodd = this.my_color == "black" ? 0 : 1;
 
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
             if (this.state.free_handicap_placement && this.state.handicap > 1) {
                 //In Chinese, black makes multiple free moves.
                 //
+                this.opponent_evenodd = this.my_color == "black" ? 0 : 1;
                 this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
             } else if (this.state.handicap > 1) {
                 // In Japanese, white makes the first move.
                 //
                 this.opponent_evenodd = this.my_color == "black" ? 1 : 0;
+            } else {
+                // If the game has a handicap, it can't be a fork and the above code works fine.
+                // If the game has no handicap, it's either a normal game or a fork. Forks may have reversed turn ordering.
+                //
+                // this.opponent_evenodd = this.state.moves.length % 2;
+                this.opponent_evenodd = this.my_color == "black" ? 0 : 1;
+
+                if (this.state.clock.current_player == this.conn.bot_id) {
+                    this.opponent_evenodd = this.state.moves.length % 2;
+                } else {
+                    this.opponent_evenodd = (this.state.moves.length + 1) % 2;
+                }
             }
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
