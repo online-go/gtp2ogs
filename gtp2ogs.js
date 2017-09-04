@@ -671,9 +671,6 @@ class Game {
                 // If the game has a handicap, it can't be a fork and the above code works fine.
                 // If the game has no handicap, it's either a normal game or a fork. Forks may have reversed turn ordering.
                 //
-                // this.opponent_evenodd = this.state.moves.length % 2;
-                this.opponent_evenodd = this.my_color == "black" ? 0 : 1;
-
                 if (this.state.clock.current_player == this.conn.bot_id) {
                     this.opponent_evenodd = this.state.moves.length % 2;
                 } else {
