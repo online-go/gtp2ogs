@@ -684,6 +684,7 @@ class Game {
                 this.bot = null;
 
                 if (this.processing) {
+                    this.processing = false;
                     --moves_processing;
                     if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                         --corr_moves_processing;
@@ -824,8 +825,8 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': ".."
                 }));
-                --moves_processing;
                 this.procesing = false;
+                --moves_processing;
                 if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                    this.corr_move_pending = false;
                     --corr_moves_processing;
@@ -850,8 +851,8 @@ class Game {
         this.bot.log("Generating move for game", this.game_id);
 
         this.bot.genmove(this.state, (move) => {
-            --moves_processing;
             this.processing = false;
+            --moves_processing;
             if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                 this.corr_move_pending = false;
                 --corr_moves_processing;
@@ -883,6 +884,7 @@ class Game {
         this.log("Disconnecting from game #", this.game_id);
 
         if (this.processing) {
+            this.processing = false;
             --moves_processing;
             if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                 --corr_moves_processing;
