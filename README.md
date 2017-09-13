@@ -67,3 +67,4 @@ Options
   ```--nopause```  Do not allow games to be paused
   ```--nopauseranked```  Do not allow ranked games to be paused
   ```--nopauseunranked```  Do not allow unranked games to be paused
+  
