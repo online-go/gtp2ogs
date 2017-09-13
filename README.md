@@ -26,7 +26,7 @@ Basic usage
 ```
 gtp2ogs --botid <id> --apikey <apikey> <arguments> -- <bot command> <bot arguments>
 ```
- (The space in front of '<bot command>' is important)
+ The space in front of "<bot command>" is important
 
 Options
 =======
