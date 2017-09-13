@@ -10,7 +10,7 @@ Installation
   1. Use your systems package manager or otherwise install `node.js` from http://nodejs.org/
   2. Run
     ```
-    npm install -g gtp2ogs
+    npm install gtp2ogs
     ```
   3. Install any missing node.js packages if basic usage below fails, such as:
     ```
@@ -30,6 +30,9 @@ gtp2ogs --botid <id> --apikey <apikey> <arguments> -- <bot command> <bot argumen
 
 Options
 =======
+The following options are placed in the above ```<arguments>``` section.  Put a space in between options when there are more than one.  Also put a space in between the option and the parameter like:
+```--startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
+
   ```--insecure```  Don't use ssl to connect to the ggs/rest servers
   
   ```--beta```  Connect to the beta server (sets ggs/rest hosts to the beta server)
