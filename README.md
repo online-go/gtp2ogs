@@ -30,7 +30,7 @@ gtp2ogs --botid <id> --apikey <apikey> <arguments> -- <bot command> <bot argumen
 
 Options
 =======
-    ```--insecure```  Don't use ssl to connect to the ggs/rest servers```
+    ```--insecure```  Don't use ssl to connect to the ggs/rest servers
     ```--beta```  Connect to the beta server (sets ggs/rest hosts to the beta server)
     ```--debug```  Output GTP command and responses from your Go engine to the log
     ```--json```  Send and receive GTP commands in a JSON encoded format
