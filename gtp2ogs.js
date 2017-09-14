@@ -1136,6 +1136,7 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
+    //    conn_log("challenge notification received", notification);
         let reject = REJECTNEW;
 
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
@@ -1177,10 +1178,11 @@ class Connection {
         }
 
         if ( argv.minmaintime ) {
-            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
+            //if ( //["simple","none"].indexOf(notification.time_control.time//_control) < 0 ) {
+            if ((notification.time_control.time_control == "simple") || (notification.time_control.time_control == "none")) {
                 conn_log("Minimum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
-            } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time < argv.minmaintime ) {
+            } else if ( notification.time_control.time_control == "absolute" && (notification.time_control.total_time < argv.minmaintime )) {
                 conn_log(notification.user.username + " wanted absolute time, but total_time shorter than minmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time < argv.minmaintime ) {
@@ -1190,10 +1192,11 @@ class Connection {
         }
 
         if ( argv.maxmaintime ) {
-            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
+            //if ( //["simple","none"].indexOf(notification.time_control.time//_control) < 0 ) {
+            if ((notification.time_control.time_control == "simple") || (notification.time_control.time_control == "none")) {
                 conn_log("Maximum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
-            } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time > argv.maxmaintime ) {
+            } else if ( notification.time_control.time_control == "absolute" && (notification.time_control.total_time > argv.maxmaintime )) {
                 conn_log(notification.user.username + " wanted absolute time, but total_time longer than maxmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time > argv.maxmaintime ) {
@@ -1203,21 +1206,21 @@ class Connection {
         }
 
         if ( argv.minperiodtime &&
-            (      (notification.time_control.period_time && notification.time_control.period_time < argv.minperiodtime)
-                || (notification.time_control.time_increment && notification.time_control.time_increment < argv.minperiodtime)
-                || (notification.time_control.per_move && notification.time_control.per_move < argv.minperiodtime)
-                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime)
+            (      (notification.time_control.period_time && (notification.time_control.period_time < argv.minperiodtime))
+                || (notification.time_control.time_increment && (notification.time_control.time_increment < argv.minperiodtime))
+                || (notification.time_control.per_move && (notification.time_control.per_move < argv.minperiodtime))
+                || (notification.time_control.stones_per_period && ((notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime))
             ))
         {
-            conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time);
+            conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time + " seconds, while I need: " + argv.minperiodtime + " seconds");
             reject = true;
         }
 
         if ( argv.maxperiodtime &&
-            (      (notification.time_control.period_time && notification.time_control.period_time > argv.maxperiodtime)
-                || (notification.time_control.time_increment && notification.time_control.time_increment > argv.maxperiodtime)
-                || (notification.time_control.per_move && notification.time_control.per_move > argv.maxperiodtime)
-                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime)
+            (      (notification.time_control.period_time && (notification.time_control.period_time > argv.maxperiodtime))
+                || (notification.time_control.time_increment && (notification.time_control.time_increment > argv.maxperiodtime))
+                || (notification.time_control.per_move && (notification.time_control.per_move > argv.maxperiodtime))
+                || (notification.time_control.stones_per_period && ((notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime))
             ))
         {
             conn_log(notification.user.username + " wanted period too long: " + notification.time_control.period_time);
@@ -1310,7 +1313,7 @@ class Connection {
         } else {
             del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
             .then(ignore)
-            .catch(conn_log)
+            .catch(conn_log);
         }
     }; /* }}} */
     processMove(gamedata) { /* {{{ */
