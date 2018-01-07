@@ -652,7 +652,7 @@ class Game {
         this.socket = conn.socket;
         this.state = null;
         this.opponent_evenodd = null;
-    this.greeted = false;
+        this.greeted = false;
         this.connected = true;
         this.bot = null;
         this.my_color = null;
@@ -670,6 +670,7 @@ class Game {
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
+            this.opponent_evenodd = this.my_color == "black" ? 0 : 1;
 
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
@@ -1182,7 +1183,7 @@ class Connection {
         }
 
         if ( argv.minmaintime ) {
-            if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
                 conn_log("Minimum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
             } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time < argv.minmaintime ) {
@@ -1195,7 +1196,7 @@ class Connection {
         }
 
         if ( argv.maxmaintime ) {
-            if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
                 conn_log("Maximum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
             } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time > argv.maxmaintime ) {
