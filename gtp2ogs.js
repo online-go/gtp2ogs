@@ -873,7 +873,7 @@ class Game {
     disconnect() { /* {{{ */
         this.log("Disconnecting from game #", this.game_id);
 
-        if (argv.farewell && this.state.game_id != null) {
+        if (argv.farewell && this.state != null && this.state.game_id != null) {
             this.sendChat(FAREWELL, "discussion");
         }
 
@@ -1122,6 +1122,7 @@ class Connection {
             delete this.connected_game_timeouts[game_id];
         }
 
+        // TODO Following 2 lines seem duplicate of above? Safe to remove?
         delete this.connected_games[game_id];
         if (argv.timeout) delete this.connected_game_timeouts[game_id];
     }; /* }}} */
