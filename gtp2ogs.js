@@ -1235,7 +1235,7 @@ class Connection {
         }
 
         if (notification.width != notification.height) {
-            rejectmsg + ="Board was not square. ";
+            rejectmsg += "Board was not square. ";
             conn_log("board was not square, rejecting challenge");
             reject = true;
         }
