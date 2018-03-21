@@ -1224,17 +1224,24 @@ class Connection {
     on_challenge(notification) { /* {{{ */
         let reject = REJECTNEW;
 
+        let rejectmsg = "";
+
+        if (REJECTNEW) rejectmsg = "Not accepting new games at this time. ";
+
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
+            rejectmsg += "Unhandled rules: " + notification.rules + ". ";
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
         }
 
         if (notification.width != notification.height) {
+            rejectmsg + ="Board was not square. ";
             conn_log("board was not square, rejecting challenge");
             reject = true;
         }
 
         if( !allowed_sizes[notification.width] ) {
+            rejectmsg += "Board width " + notification.width + " not an allowed size. ";
             conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
             reject = true;
         }
@@ -1253,23 +1260,28 @@ class Connection {
         }
 
         if ( !allowed_speeds[notification.time_control.speed] ) {
+            rejectmsg += "Allowed speeds are: " + argv.speed + ". ";
             conn_log(notification.user.username + " wanted speed " + notification.time_control.speed + ", not in: " + argv.speed);
             reject = true;
         }
 
         if ( !allowed_timecontrols[notification.time_control.time_control] ) {
+            rejectmsg += "Allowed time controls: " + argv.timecontrol + ". ";
             conn_log(notification.user.username + " wanted time control " + notification.time_control.time_control + ", not in: " + argv.timecontrol);
             reject = true;
         }
 
         if ( argv.minmaintime ) {
             if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
+                rejectmsg += "Minimum main time not supported in time control " + notification.time_control.time_control + ". ";
                 conn_log("Minimum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
             } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time < argv.minmaintime ) {
+                rejectmsg += "Total time shorter than minimum main time (" + argv.minmaintime + "). ";
                 conn_log(notification.user.username + " wanted absolute time, but total_time shorter than minmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time < argv.minmaintime ) {
+                rejectmsg += "Minimum main time is (" + argv.minmaintime + "). ";
                 conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", below minmaintime " + argv.minmaintime);
                 reject = true;
             }
@@ -1277,12 +1289,15 @@ class Connection {
 
         if ( argv.maxmaintime ) {
             if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
+                rejectmsg += "Maximum main time not supported in time control " + notification.time_control.time_control + ". ";
                 conn_log("Maximum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
             } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time > argv.maxmaintime ) {
+                rejectmsg += "Total time shorter than maximum main time (" + argv.maxmaintime + "). ";
                 conn_log(notification.user.username + " wanted absolute time, but total_time longer than maxmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time > argv.maxmaintime ) {
+                rejectmsg += "Maximum main time is (" + argv.maxmaintime + "). ";
                 conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", above maxmaintime " + argv.maxmaintime);
                 reject = true;
             }
@@ -1295,6 +1310,7 @@ class Connection {
                 || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime)
             ))
         {
+            rejectmsg += "Minimum period length (per stone in period) is " + argv.minperiodtime + ". ";
             conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time);
             reject = true;
         }
@@ -1306,21 +1322,25 @@ class Connection {
                 || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime)
             ))
         {
+            rejectmsg += "Maximum period length (per stone in period) is " + argv.maxperiodtime + ". ";
             conn_log(notification.user.username + " wanted period too long: " + notification.time_control.period_time);
             reject = true;
         }
 
         if ( argv.minperiods && (notification.time_control.periods < argv.minperiods) ) {
+            rejectmsg += "Minimum # of periods is " + argv.minperiods + ". ";
             conn_log(notification.user.username + " wanted too few periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( argv.minperiodsranked && notification.ranked && (notification.time_control.periods < argv.minperiodsranked) ) {
+            rejectmsg += "Minimum # of ranked periods is " + argv.minperiodsranked + ". ";
             conn_log(notification.user.username + " wanted too few ranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( argv.minperiodsunranked && !notification.ranked && (notification.time_control.periods < argv.minperiodsunranked) ) {
+            rejectmsg += "Minimum # of unranked periods is " + argv.minperiodsunranked + ". ";
             conn_log(notification.user.username + " wanted too few unranked periods: " + notification.time_control.periods);
             reject = true;
         }
@@ -1328,56 +1348,67 @@ class Connection {
         // We might specify maxperiods=0, so need to check if the variable exists. Although why use byoyomi only with zero periods?
         //
         if ( (argv.maxperiods !== undefined ) && (notification.time_control.periods > argv.maxperiods) ) {
+            rejectmsg += "Maximum # of periods is " + argv.maxperiods + ". ";
             conn_log(notification.user.username + " wanted too many periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( (argv.maxperiodsranked !== undefined ) && notification.ranked && (notification.time_control.periods > argv.maxperiodsranked) ) {
+            rejectmsg += "Maximum # of periods is " + argv.maxperiodsranked + ". ";
             conn_log(notification.user.username + " wanted too many ranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( (argv.maxperiodsunranked !== undefined ) && !notification.ranked && (notification.time_control.periods > argv.maxperiodsunranked) ) {
+            rejectmsg += "Maximum # of periods is " + argv.maxperiodsunranked + ". ";
             conn_log(notification.user.username + " wanted too many unranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( argv.minrank && notification.user.ranking < argv.minrank ) {
+            rejectmsg += "Your ranking is too low. ";
             conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
             reject = true;
         }
 
         if ( argv.maxrank && notification.user.ranking > argv.maxrank ) {
+            rejectmsg += "Your ranking is too high. ";
             conn_log(notification.user.username + " ranking too high: " + notification.user.ranking);
             reject = true;
         }
 
         if ( argv.proonly && !notification.user.professional ) {
+            rejectmsg += "Games vs professionals only. ";
             conn_log(notification.user.username + " is not a professional");
             reject = true;
         }
 
         if ( argv.rankedonly && !notification.ranked ) {
+            rejectmsg += "Ranked games only. ";
             conn_log("Ranked games only");
             reject = true;
         }
 
         if ( argv.unrankedonly && notification.ranked ) {
+            rejectmsg += "Unranked games only. ";
             conn_log("Unranked games only");
             reject = true;
         }
 
         if ( (argv.maxhandicap !== undefined) && (notification.handicap > argv.maxhandicap) ) {
+            rejectmsg += "Max handicap is " + argv.maxhandicap + ". ";
             conn_log("Max handicap is " + argv.maxhandicap);
             reject = true;
         }
 
         if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
+            rejectmsg += "Max ranked handicap is " + argv.maxrankedhandicap + ". ";
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
             reject = true;
         }
 
         if ( (argv.maxunrankedhandicap !== undefined) && !notification.ranked && (notification.handicap > argv.maxunrankedhandicap) ) {
+            rejectmsg += "Max unranked handicap is " + argv.maxunrankedhandicap + ". ";
             conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
             reject = true;
         }
@@ -1399,7 +1430,7 @@ class Connection {
         } else {
             post(api1('me/challenges/' + notification.challenge_id), this.auth({
                 'delete': true,
-                'message': "The AI you've challenged has rejected this game.",
+                'message': rejectmsg || "The AI you've challenged has rejected this game.",
             }))
             .then(ignore)
             .catch(conn_log)
