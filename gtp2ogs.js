@@ -2,6 +2,16 @@
 
 'use strict';
 
+process.on('uncaughtException', function (er) {
+  console.trace("ERROR: Uncaught exception");
+  console.error("ERROR: " + er.stack);
+  if (!conn || !conn.socket) {
+    conn = new Connection();
+  } else {
+    //conn.connection_reset();
+  }
+})
+
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let PERSIST = false;
@@ -1201,6 +1211,9 @@ class Connection {
         for (let game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
+        if (this.socket) this.socket.emit('notification/connect', this.auth({}), (x) => {
+            conn_log(x);
+        });
     }; /* }}} */
     on_friendRequest(notification) { /* {{{ */
         console.log("Friend request from ", notification.user.username);
