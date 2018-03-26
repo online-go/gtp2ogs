@@ -112,6 +112,7 @@ let optimist = require("optimist")
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
+    .describe('hidden', 'Don\'t list the bot in the public challenge list')
 ;
 let argv = optimist.argv;
 
@@ -1026,8 +1027,8 @@ class Connection {
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
-                socket.emit('bot/connect', this.auth({ }), () => {
-                })
+                socket.emit('bot/connect', this.auth({ }));
+                socket.emit('bot/hidden', !!argv.hidden);
             });
         });
 
