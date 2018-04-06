@@ -537,6 +537,7 @@ class Bot {
             }
         } */
     }
+    
     loadState(state, cb, eb) { /* {{{ */
         this.command("boardsize " + state.width);
         this.command("clear_board");
@@ -544,49 +545,48 @@ class Bot {
         //this.log(state);
 
         //this.loadClock(state);
-
+	
+	let have_initial_state = false;
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
             let white = decodeMoves(state.initial_state.white, state.width);
+	    have_initial_state = (black.length || white.length);
 
-            if (black.length) {
-                let s = "";
-                for (let i=0; i < black.length; ++i) {
-                    s += " " + move2gtpvertex(black[i], state.width);
-                }
-                this.command("set_free_handicap " + s);
-            }
-
-            if (white.length) {
-                /* no analagous command for white stones, so we just do moves instead */
-                for (let i=0; i < white.length; ++i) {
-                    this.command("play white " + move2gtpvertex(white[i], state.width));
-                }
-            }
+            for (let i=0; i < black.length; ++i)
+                    this.command("play black " + move2gtpvertex(black[i], state.width));	    
+            for (let i=0; i < white.length; ++i)
+                    this.command("play white " + move2gtpvertex(white[i], state.width));	    
         }
 
         // Replay moves made
         let color = state.initial_player;
-        let handicaps_left = state.handicap;
+	let doing_handicap = (!have_initial_state && state.free_handicap_placement && state.handicap > 1);
+	let handicap_moves = [];
         let moves = decodeMoves(state.moves, state.width);
         for (let i=0; i < moves.length; ++i) {
             let move = moves[i];
             let c = color
+	    
             if (move.edited) {
                 c = move['color']
-            }
-            this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
-            if (! move.edited) {
-                if (state.free_handicap_placement && handicaps_left > 1) {
-                    handicaps_left-=1
-                } 
-                else {
-                    color = color == 'black' ? 'white' : 'black';
-                }
-            }
+		this.command("play " + c + ' ' + move2gtpvertex(move, state.width));
+		continue;
+	    }
+	    
+	    // Use set_free_handicap for handicap stones, play otherwise.
+            if (doing_handicap && handicap_moves.length < state.handicap) {
+		handicap_moves.push(move);
+		if (handicap_moves.length == state.handicap)
+		    this.sendHandicapMoves(handicap_moves, state.width);
+		else continue;  // don't switch color.
+	    } else
+		this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+
+            color = color == 'black' ? 'white' : 'black';
         }
         this.command("showboard", cb, eb);
     } /* }}} */
+    
     command(str, cb, eb, final_command) { /* {{{ */
         this.command_callbacks.push(cb);
         if (DEBUG) {
@@ -655,7 +655,13 @@ class Bot {
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
         this.command("play " + color + " " + move2gtpvertex(move, width));
     }
-} /* }}} */
+    sendHandicapMoves(moves, width) { /* {{{ */
+        let cmd = "set_free_handicap";
+        for (let i = 0; i < moves.length; i++)
+            cmd += " " + move2gtpvertex(moves[i], width);
+        this.command(cmd);
+    } /* }}} */
+}
 
 
 
