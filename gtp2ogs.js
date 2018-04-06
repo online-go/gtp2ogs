@@ -17,12 +17,12 @@ let DEBUG = false;
 let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
-let REJECTNEW = false;
 let GREETING = "";
 let FAREWELL = "";
 
 let spawn = require('child_process').spawn;
 let os = require('os')
+let fs = require('fs')
 let io = require('socket.io-client');
 let querystring = require('querystring');
 let http = require('http');
@@ -72,6 +72,7 @@ let optimist = require("optimist")
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
+    .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
     .default('boardsize', '9,13,19')
@@ -152,8 +153,11 @@ if (argv.noclock) {
     NOCLOCK = true;
 }
 
-if (argv.rejectnew) {
-    REJECTNEW = true;
+function check_rejectnew()
+{
+    if (argv.rejectnew)  return true;
+    if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
+    return false;
 }
 
 let allowed_sizes = [];
@@ -1223,11 +1227,11 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-        let reject = REJECTNEW;
+        let reject = check_rejectnew();
 
         let rejectmsg = "";
 
-        if (REJECTNEW) rejectmsg = "Not accepting new games at this time. ";
+        if (reject) rejectmsg = "Not accepting new games at this time. ";
 
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             rejectmsg += "Unhandled rules: " + notification.rules + ". ";
