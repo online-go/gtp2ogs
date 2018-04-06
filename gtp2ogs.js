@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 
-/* This is a version 20170911 for OGS ver.5
- * for bots who speak GTP in the format "play B q16"
- * without recognizing the proper "play black q16"
- */
-
 'use strict';
+
+process.on('uncaughtException', function (er) {
+  console.trace("ERROR: Uncaught exception");
+  console.error("ERROR: " + er.stack);
+  if (!conn || !conn.socket) {
+    conn = new Connection();
+  } else {
+    //conn.connection_reset();
+  }
+})
 
 process.title = 'gtp2ogs';
 let DEBUG = false;
@@ -13,8 +18,10 @@ let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
 let REJECTNEW = false;
+let GREETING = "";
+let FAREWELL = "";
 
-let exec = require('child_process').exec;
+let spawn = require('child_process').spawn;
 let os = require('os')
 let io = require('socket.io-client');
 let querystring = require('querystring');
@@ -61,6 +68,7 @@ let optimist = require("optimist")
     .describe('persist', 'Bot process remains running between moves')
     .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
+    .describe('corrqueue', 'Process correspondence games one at a time')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
@@ -91,6 +99,10 @@ let optimist = require("optimist")
     .string('minrank')
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
     .string('maxrank')
+    .describe('greeting', 'Greeting message to appear in chat at first move (ex: "Hello, have a nice game")')
+    .string('greeting')
+    .describe('farewell', 'Thank you message to appear in chat at end of game (ex: "Thank you for playing")')
+    .string('farewell')
     .describe('proonly', 'Only accept matches from professionals')
     .describe('rankedonly', 'Only accept ranked matches')
     .describe('unrankedonly', 'Only accept unranked matches')
@@ -100,6 +112,7 @@ let optimist = require("optimist")
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
+    .describe('hidden', 'Don\'t list the bot in the public challenge list')
 ;
 let argv = optimist.argv;
 
@@ -234,8 +247,17 @@ if (argv.maxrank) {
     }
 }
 
+if (argv.greeting) {
+    GREETING = argv.greeting;
+}
+if (argv.farewell) {
+    FAREWELL = argv.farewell;
+}
+
+
 let bot_command = argv._;
 let moves_processing = 0;
+let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
 
@@ -246,7 +268,7 @@ class Bot {
     constructor(conn, game, cmd) {{{
         this.conn = conn;
         this.game = game;
-        this.proc = exec(cmd[0], cmd.slice(1));
+        this.proc = spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.firstmove = true;
@@ -534,7 +556,7 @@ class Bot {
             if (white.length) {
                 /* no analagous command for white stones, so we just do moves instead */
                 for (let i=0; i < white.length; ++i) {
-                    this.command("PLAY W " + move2gtpvertex(white[i], state.width));
+                    this.command("play white " + move2gtpvertex(white[i], state.width));
                 }
             }
         }
@@ -549,9 +571,6 @@ class Bot {
             if (move.edited) {
                 c = move['color']
             }
-                //Adding 2 lines for BIFRON TEST
-                if (c=="black") c="B";
-                if (c=="white") c="W";
             this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
             if (! move.edited) {
                 if (state.free_handicap_placement && handicaps_left > 1) {
@@ -603,12 +622,7 @@ class Bot {
         //
         this.loadClock(state);
 
-        //Added for BIFRON TEST
-        var cl = this.game.my_color;
-        if (cl == "white") cl = 'W';
-        if (cl == "black") cl = 'B';
-        //this.command("genmove " + this.game.my_color,
-        this.command("genmove " + cl,
+        this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
@@ -635,10 +649,6 @@ class Bot {
     } /* }}} */
     sendMove(move, width, color){
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
-        
-                //Adding 2 lines for BIFRON TEST
-                if (color=="black") color="B";
-                if (color=="white") color="W";
         this.command("play " + color + " " + move2gtpvertex(move, width));
     }
 } /* }}} */
@@ -655,9 +665,12 @@ class Game {
         this.socket = conn.socket;
         this.state = null;
         this.opponent_evenodd = null;
+        this.greeted = false;
         this.connected = true;
         this.bot = null;
         this.my_color = null;
+        this.corr_move_pending = false;
+        this.processing = false;
 
         // TODO: Command line options to allow undo?
         //
@@ -700,16 +713,28 @@ class Game {
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
-             if (this.bot) {
-                  this.log("Killing bot because of gamedata packet after bot was started");
-                  this.bot.kill();
-                 this.bot = null;
-             }
+            if (this.bot) {
+                this.log("Killing bot because of gamedata packet after bot was started");
+                this.bot.kill();
+                this.bot = null;
+
+                if (this.processing) {
+                    this.processing = false;
+                    --moves_processing;
+                    if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                        --corr_moves_processing;
+                    }
+                }
+            }
 
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
-                this.makeMove(this.state.moves.length);
+                if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
+                    this.corr_move_pending = true;
+                } else {
+                    this.makeMove(this.state.moves.length);
+                }
             }
         });
 
@@ -790,8 +815,16 @@ class Game {
                 if (move.move_number % 2 == this.opponent_evenodd) {
                     // We just got a move from the opponent, so we can move immediately.
                     //
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
-                    this.makeMove(this.state.moves.length);
+                    if (this.bot) {
+                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    }
+
+                    if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
+                        this.corr_move_pending = true;
+                    } else {
+                        this.makeMove(this.state.moves.length);
+                    }
+                    //this.makeMove(this.state.moves.length);
                 } else {
                     if (DEBUG) this.log("Ignoring our own move", move.move_number);
                 }
@@ -812,6 +845,10 @@ class Game {
         }
 
         ++moves_processing;
+        this.processing = true;
+        if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+            ++corr_moves_processing;
+        }
 
         let passed = false;
         let passAndRestart = () => {
@@ -823,7 +860,12 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': ".."
                 }));
+                this.procesing = false;
                 --moves_processing;
+                if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                   this.corr_move_pending = false;
+                    --corr_moves_processing;
+                }
                 if (this.bot) this.bot.kill();
                 this.bot = null;
             }
@@ -844,7 +886,12 @@ class Game {
         this.bot.log("Generating move for game", this.game_id);
 
         this.bot.genmove(this.state, (move) => {
+            this.processing = false;
             --moves_processing;
+            if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                this.corr_move_pending = false;
+                --corr_moves_processing;
+            }
             if (move.resign) {
                 this.log("Resigning");
                 this.socket.emit('game/resign', this.auth({
@@ -858,8 +905,12 @@ class Game {
                     'move': encodeMove(move)
                 }));
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
+        if( argv.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
+                  this.sendChat( GREETING, "discussion");
+                  this.greeted = true;
+        }
             }
-            if (!PERSIST) {
+            if (!PERSIST && this.bot != null) {
                 this.bot.kill();
                 this.bot = null;
             }
@@ -870,6 +921,18 @@ class Game {
     }; /* }}} */
     disconnect() { /* {{{ */
         this.log("Disconnecting from game #", this.game_id);
+
+        if (this.processing) {
+            this.processing = false;
+            --moves_processing;
+            if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                --corr_moves_processing;
+            }
+        }
+
+        if (argv.farewell && this.state != null && this.state.game_id != null) {
+            this.sendChat(FAREWELL, "discussion");
+        }
 
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
@@ -964,10 +1027,30 @@ class Connection {
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
-                socket.emit('bot/connect', this.auth({ }), () => {
-                })
+                socket.emit('bot/connect', this.auth({ }));
+                socket.emit('bot/hidden', !!argv.hidden);
             });
         });
+
+        if (argv.corrqueue) {
+            // Check every so often if we have correspondence games that need moves
+            //
+            setInterval(() => {
+                // If a game needs a move and we aren't already working on one, make a move
+                //
+                if (corr_moves_processing == 0) {
+                    // Choose a corr game to make a move
+                    // TODO: Choose the game with least time remaining
+                    //
+                    for (let game_id in this.connected_games) {
+                        if (this.connected_games[game_id].corr_move_pending) {
+                            this.connected_games[game_id].makeMove(this.state.moves.length);
+                            break;
+                        }
+                    }
+                }
+            }, 10000);
+        }
 
         setInterval(() => {
             /* if we're sitting there bored, make sure we don't have any move
@@ -1116,6 +1199,7 @@ class Connection {
             delete this.connected_game_timeouts[game_id];
         }
 
+        // TODO Following 2 lines seem duplicate of above? Safe to remove?
         delete this.connected_games[game_id];
         if (argv.timeout) delete this.connected_game_timeouts[game_id];
     }; /* }}} */
@@ -1128,6 +1212,9 @@ class Connection {
         for (let game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
+        if (this.socket) this.socket.emit('notification/connect', this.auth({}), (x) => {
+            conn_log(x);
+        });
     }; /* }}} */
     on_friendRequest(notification) { /* {{{ */
         console.log("Friend request from ", notification.user.username);
@@ -1136,20 +1223,26 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-    //    conn_log("challenge notification received", notification);
         let reject = REJECTNEW;
 
+        let rejectmsg = "";
+
+        if (REJECTNEW) rejectmsg = "Not accepting new games at this time. ";
+
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
+            rejectmsg += "Unhandled rules: " + notification.rules + ". ";
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
         }
 
         if (notification.width != notification.height) {
+            rejectmsg += "Board was not square. ";
             conn_log("board was not square, rejecting challenge");
             reject = true;
         }
 
         if( !allowed_sizes[notification.width] ) {
+            rejectmsg += "Board width " + notification.width + " not an allowed size. ";
             conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
             reject = true;
         }
@@ -1168,76 +1261,87 @@ class Connection {
         }
 
         if ( !allowed_speeds[notification.time_control.speed] ) {
+            rejectmsg += "Allowed speeds are: " + argv.speed + ". ";
             conn_log(notification.user.username + " wanted speed " + notification.time_control.speed + ", not in: " + argv.speed);
             reject = true;
         }
 
         if ( !allowed_timecontrols[notification.time_control.time_control] ) {
+            rejectmsg += "Allowed time controls: " + argv.timecontrol + ". ";
             conn_log(notification.user.username + " wanted time control " + notification.time_control.time_control + ", not in: " + argv.timecontrol);
             reject = true;
         }
 
         if ( argv.minmaintime ) {
-            //if ( //["simple","none"].indexOf(notification.time_control.time//_control) < 0 ) {
-            if ((notification.time_control.time_control == "simple") || (notification.time_control.time_control == "none")) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
+                rejectmsg += "Minimum main time not supported in time control " + notification.time_control.time_control + ". ";
                 conn_log("Minimum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
-            } else if ( notification.time_control.time_control == "absolute" && (notification.time_control.total_time < argv.minmaintime )) {
+            } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time < argv.minmaintime ) {
+                rejectmsg += "Total time shorter than minimum main time (" + argv.minmaintime + "). ";
                 conn_log(notification.user.username + " wanted absolute time, but total_time shorter than minmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time < argv.minmaintime ) {
+                rejectmsg += "Minimum main time is (" + argv.minmaintime + "). ";
                 conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", below minmaintime " + argv.minmaintime);
                 reject = true;
             }
         }
 
         if ( argv.maxmaintime ) {
-            //if ( //["simple","none"].indexOf(notification.time_control.time//_control) < 0 ) {
-            if ((notification.time_control.time_control == "simple") || (notification.time_control.time_control == "none")) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
+                rejectmsg += "Maximum main time not supported in time control " + notification.time_control.time_control + ". ";
                 conn_log("Maximum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
-            } else if ( notification.time_control.time_control == "absolute" && (notification.time_control.total_time > argv.maxmaintime )) {
+            } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time > argv.maxmaintime ) {
+                rejectmsg += "Total time shorter than maximum main time (" + argv.maxmaintime + "). ";
                 conn_log(notification.user.username + " wanted absolute time, but total_time longer than maxmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time > argv.maxmaintime ) {
+                rejectmsg += "Maximum main time is (" + argv.maxmaintime + "). ";
                 conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", above maxmaintime " + argv.maxmaintime);
                 reject = true;
             }
         }
 
         if ( argv.minperiodtime &&
-            (      (notification.time_control.period_time && (notification.time_control.period_time < argv.minperiodtime))
-                || (notification.time_control.time_increment && (notification.time_control.time_increment < argv.minperiodtime))
-                || (notification.time_control.per_move && (notification.time_control.per_move < argv.minperiodtime))
-                || (notification.time_control.stones_per_period && ((notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime))
+            (      (notification.time_control.period_time && notification.time_control.period_time < argv.minperiodtime)
+                || (notification.time_control.time_increment && notification.time_control.time_increment < argv.minperiodtime)
+                || (notification.time_control.per_move && notification.time_control.per_move < argv.minperiodtime)
+                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime)
             ))
         {
-            conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time + " seconds, while I need: " + argv.minperiodtime + " seconds");
+            rejectmsg += "Minimum period length (per stone in period) is " + argv.minperiodtime + ". ";
+            conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time);
             reject = true;
         }
 
         if ( argv.maxperiodtime &&
-            (      (notification.time_control.period_time && (notification.time_control.period_time > argv.maxperiodtime))
-                || (notification.time_control.time_increment && (notification.time_control.time_increment > argv.maxperiodtime))
-                || (notification.time_control.per_move && (notification.time_control.per_move > argv.maxperiodtime))
-                || (notification.time_control.stones_per_period && ((notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime))
+            (      (notification.time_control.period_time && notification.time_control.period_time > argv.maxperiodtime)
+                || (notification.time_control.time_increment && notification.time_control.time_increment > argv.maxperiodtime)
+                || (notification.time_control.per_move && notification.time_control.per_move > argv.maxperiodtime)
+                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime)
             ))
         {
+            rejectmsg += "Maximum period length (per stone in period) is " + argv.maxperiodtime + ". ";
             conn_log(notification.user.username + " wanted period too long: " + notification.time_control.period_time);
             reject = true;
         }
 
         if ( argv.minperiods && (notification.time_control.periods < argv.minperiods) ) {
+            rejectmsg += "Minimum # of periods is " + argv.minperiods + ". ";
             conn_log(notification.user.username + " wanted too few periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( argv.minperiodsranked && notification.ranked && (notification.time_control.periods < argv.minperiodsranked) ) {
+            rejectmsg += "Minimum # of ranked periods is " + argv.minperiodsranked + ". ";
             conn_log(notification.user.username + " wanted too few ranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( argv.minperiodsunranked && !notification.ranked && (notification.time_control.periods < argv.minperiodsunranked) ) {
+            rejectmsg += "Minimum # of unranked periods is " + argv.minperiodsunranked + ". ";
             conn_log(notification.user.username + " wanted too few unranked periods: " + notification.time_control.periods);
             reject = true;
         }
@@ -1245,56 +1349,67 @@ class Connection {
         // We might specify maxperiods=0, so need to check if the variable exists. Although why use byoyomi only with zero periods?
         //
         if ( (argv.maxperiods !== undefined ) && (notification.time_control.periods > argv.maxperiods) ) {
+            rejectmsg += "Maximum # of periods is " + argv.maxperiods + ". ";
             conn_log(notification.user.username + " wanted too many periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( (argv.maxperiodsranked !== undefined ) && notification.ranked && (notification.time_control.periods > argv.maxperiodsranked) ) {
+            rejectmsg += "Maximum # of periods is " + argv.maxperiodsranked + ". ";
             conn_log(notification.user.username + " wanted too many ranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( (argv.maxperiodsunranked !== undefined ) && !notification.ranked && (notification.time_control.periods > argv.maxperiodsunranked) ) {
+            rejectmsg += "Maximum # of periods is " + argv.maxperiodsunranked + ". ";
             conn_log(notification.user.username + " wanted too many unranked periods: " + notification.time_control.periods);
             reject = true;
         }
 
         if ( argv.minrank && notification.user.ranking < argv.minrank ) {
+            rejectmsg += "Your ranking is too low. ";
             conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
             reject = true;
         }
 
         if ( argv.maxrank && notification.user.ranking > argv.maxrank ) {
+            rejectmsg += "Your ranking is too high. ";
             conn_log(notification.user.username + " ranking too high: " + notification.user.ranking);
             reject = true;
         }
 
         if ( argv.proonly && !notification.user.professional ) {
+            rejectmsg += "Games vs professionals only. ";
             conn_log(notification.user.username + " is not a professional");
             reject = true;
         }
 
         if ( argv.rankedonly && !notification.ranked ) {
+            rejectmsg += "Ranked games only. ";
             conn_log("Ranked games only");
             reject = true;
         }
 
         if ( argv.unrankedonly && notification.ranked ) {
+            rejectmsg += "Unranked games only. ";
             conn_log("Unranked games only");
             reject = true;
         }
 
         if ( (argv.maxhandicap !== undefined) && (notification.handicap > argv.maxhandicap) ) {
+            rejectmsg += "Max handicap is " + argv.maxhandicap + ". ";
             conn_log("Max handicap is " + argv.maxhandicap);
             reject = true;
         }
 
         if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
+            rejectmsg += "Max ranked handicap is " + argv.maxrankedhandicap + ". ";
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
             reject = true;
         }
 
         if ( (argv.maxunrankedhandicap !== undefined) && !notification.ranked && (notification.handicap > argv.maxunrankedhandicap) ) {
+            rejectmsg += "Max unranked handicap is " + argv.maxunrankedhandicap + ". ";
             conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
             reject = true;
         }
@@ -1305,15 +1420,21 @@ class Connection {
             .then(ignore)
             .catch((err) => {
                 conn_log("Error accepting challenge, declining it");
-                del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
+                post(api1('me/challenges/' + notification.challenge_id), this.auth({ 
+                    'delete': true,
+                    'message': 'Error accepting game challenge, challenge has been removed.',
+                }))
                 .then(ignore)
                 .catch(conn_log)
                 this.deleteNotification(notification);
             })
         } else {
-            del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
+            post(api1('me/challenges/' + notification.challenge_id), this.auth({
+                'delete': true,
+                'message': rejectmsg || "The AI you've challenged has rejected this game.",
+            }))
             .then(ignore)
-            .catch(conn_log);
+            .catch(conn_log)
         }
     }; /* }}} */
     processMove(gamedata) { /* {{{ */
@@ -1538,17 +1659,12 @@ function move2gtpvertex(move, board_size) { /* {{{ */
 function gtpchar2num(ch) { /* {{{ */
     if (ch == "." || !ch)
         return -1;
-    //Replacing 1 line for BIFRON TEST
-    //return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-    return "ABCDEFGHJKLMNOPQRSTUVWXYZ".indexOf(ch.toUpperCase());
+    return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 } /* }}} */
 function num2gtpchar(num) { /* {{{ */
     if (num == -1) 
         return ".";
-    //Replacing 1 line for BIFRON TEST
     return "abcdefghjklmnopqrstuvwxyz"[num];
-    //Reverting
-    //return "ABCDEFGHJKLMNOPQRSTUVWXYZ"[num];
 } /* }}} */
 
 function conn_log() { /* {{{ */
