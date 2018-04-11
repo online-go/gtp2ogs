@@ -661,6 +661,10 @@ class Bot {
             cmd += " " + move2gtpvertex(moves[i], width);
         this.command(cmd);
     } /* }}} */
+    // Called on game over, in case you need something special.
+    //
+    gameOver() {
+    }
 }
 
 
@@ -693,11 +697,17 @@ class Game {
 
 	    //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));	    
 	    
+	    let prev_phase = (this.state ? this.state.phase : null);
 	    this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
 	    this.log("gamedata");
 
 	    conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
+
+	    // Only call game over handler if game really just finished.
+	    // For some reason we get connected to already finished games once in a while ...
+	    if (gamedata.phase == 'finished' && prev_phase && gamedata.phase != prev_phase)
+		this.gameOver();
 	    
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
@@ -933,8 +943,6 @@ class Game {
         return this.conn.auth(obj);
     }; /* }}} */
     disconnect() { /* {{{ */
-        this.log("Disconnecting from game #", this.game_id);
-
 	conn.removeGameForPlayer(this.game_id);
 	
         if (this.processing) {
@@ -944,16 +952,32 @@ class Game {
                 --corr_moves_processing;
             }
         }
-
-        if (argv.farewell && this.state != null && this.state.game_id != null) {
-            this.sendChat(FAREWELL, "discussion");
-        }
-
+	
+	if (this.bot)   {
+	    this.bot.kill();
+	    this.bot = null;
+	}
+	
+        this.log("Disconnecting from game #", this.game_id);
+	
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
         }));
     }; /* }}} */
+    gameOver() /* {{{ */
+    {	
+        if (argv.farewell && this.state && this.state.game_id)
+	    this.sendChat(FAREWELL, "discussion");
+	
+	this.log("Game over");
+	
+	if (this.bot) {	
+	    this.bot.gameOver();
+            this.bot.kill();
+            this.bot = null;
+	}
+    } /* }}} */
     log(str) { /* {{{ */
         let arr = ["[Game " + this.game_id + "]"];
         for (let i=0; i < arguments.length; ++i) {
@@ -1213,10 +1237,6 @@ class Connection {
         }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
-            if (this.connected_games[game_id].bot) {
-                this.connected_games[game_id].bot.kill();
-                this.connected_games[game_id].bot = null;
-            }
             delete this.connected_games[game_id];
             delete this.connected_game_timeouts[game_id];
         }
