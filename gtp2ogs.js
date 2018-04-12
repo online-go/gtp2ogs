@@ -567,12 +567,6 @@ class Bot {
             let move = moves[i];
             let c = color
 	    
-            if (move.edited) {
-                c = move['color']
-		this.command("play " + c + ' ' + move2gtpvertex(move, state.width));
-		continue;
-	    }
-	    
 	    // Use set_free_handicap for handicap stones, play otherwise.
             if (doing_handicap && handicap_moves.length < state.handicap) {
 		handicap_moves.push(move);
