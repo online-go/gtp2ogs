@@ -2,16 +2,6 @@
 
 'use strict';
 
-process.on('uncaughtException', function (er) {
-  console.trace("ERROR: Uncaught exception");
-  console.error("ERROR: " + er.stack);
-  if (!conn || !conn.socket) {
-    conn = new Connection();
-  } else {
-    //conn.connection_reset();
-  }
-})
-
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let PERSIST = false;
@@ -28,21 +18,7 @@ let querystring = require('querystring');
 let http = require('http');
 let https = require('https');
 let crypto = require('crypto');
-let console = require('tracer').colorConsole({
-    format : [
-        "{{title}} {{file}}:{{line}}{{space}} {{message}}" //default format
-    ],
-    preprocess :  function(data){
-        switch (data.title) {
-            case 'debug': data.title = ' '; break;
-            case 'log': data.title = ' '; break;
-            case 'info': data.title = ' '; break;
-            case 'warn': data.title = '!'; break;
-            case 'error': data.title = '!!!!!'; break;
-        }
-        data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
-    }
-});
+let tracer = require('tracer');
 
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
@@ -264,6 +240,33 @@ let moves_processing = 0;
 let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
+
+let console = tracer.colorConsole({
+    format : [
+        "{{title}} {{file}}:{{line}}{{space}} {{message}}" //default format
+    ],
+    preprocess :  function(data){
+        switch (data.title) {
+            case 'debug': data.title = ' '; break;
+            case 'log': data.title = ' '; break;
+            case 'info': data.title = ' '; break;
+            case 'warn': data.title = '!'; break;
+            case 'error': data.title = '!!!!!'; break;
+        }
+        if (DEBUG) data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
+    }
+});
+
+process.on('uncaughtException', function (er) {
+  console.trace("ERROR: Uncaught exception");
+  console.error("ERROR: " + er.stack);
+  if (!conn || !conn.socket) {
+    conn = new Connection();
+  } else {
+    //conn.connection_reset();
+  }
+})
+
 
 /*********/
 /** Bot **/
