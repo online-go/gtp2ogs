@@ -243,12 +243,13 @@ let corr_moves_processing = 0;
 process.title = 'gtp2ogs ' + bot_command.join(' ');
 
 
-let console_fmt = "{{title}} {{message}}";
+let console_fmt = "{{timestamp}} {{title}} {{message}}";
 if (DEBUG)
-    console_fmt = "{{title}} {{file}}:{{line}}{{space}} {{message}}"; //default format
+    console_fmt = "{{timestamp}} {{title}} {{file}}:{{line}}{{space}} {{message}}";
 
 let console = tracer.colorConsole({
     format : [ console_fmt ],
+    dateformat: 'mmm dd HH:MM:ss',
     preprocess :  function(data){
         switch (data.title) {
             case 'debug': data.title = ' '; break;
