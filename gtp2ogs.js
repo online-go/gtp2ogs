@@ -1288,6 +1288,11 @@ class Connection {
                 rejectmsg += "Total time shorter than minimum main time (" + argv.minmaintime + "). ";
                 conn_log(notification.user.username + " wanted absolute time, but total_time shorter than minmaintime");
                 reject = true;
+	    } else if ( notification.time_control.time_control == "fischer" && (notification.time_control.initial_time < argv.minmaintime ||
+										notification.time_control.max_time     < argv.minmaintime) {
+                rejectmsg += "Minimum main time is " + argv.minmaintime + ". ";
+                conn_log(notification.user.username + " wanted fischer initial/max time below minmaintime " + argv.minmaintime);
+                reject = true;
             } else if ( notification.time_control.main_time < argv.minmaintime ) {
                 rejectmsg += "Minimum main time is (" + argv.minmaintime + "). ";
                 conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", below minmaintime " + argv.minmaintime);
@@ -1304,6 +1309,11 @@ class Connection {
                 rejectmsg += "Total time shorter than maximum main time (" + argv.maxmaintime + "). ";
                 conn_log(notification.user.username + " wanted absolute time, but total_time longer than maxmaintime");
                 reject = true;
+	    } else if ( notification.time_control.time_control == "fischer" && (notification.time_control.initial_time > argv.maxmaintime ||
+										notification.time_control.max_time     > argv.maxmaintime) {
+                rejectmsg += "Maximum main time is " + argv.maxmaintime + ". ";
+                conn_log(notification.user.username + " wanted fischer initial/max time longer than maxmaintime " + argv.maxmaintime);
+                reject = true;		
             } else if ( notification.time_control.main_time > argv.maxmaintime ) {
                 rejectmsg += "Maximum main time is (" + argv.maxmaintime + "). ";
                 conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", above maxmaintime " + argv.maxmaintime);
