@@ -72,6 +72,7 @@ let optimist = require("optimist")
     .describe('maxperiods', 'Maximum number of periods')
     .describe('maxperiodsranked', 'Maximum number of ranked periods')
     .describe('maxperiodsunranked', 'Maximum number of unranked periods')
+    .describe('maxactivegames', 'Maximum number of active games per player')
     .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
     .string('minrank')
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
@@ -687,12 +688,15 @@ class Game {
 
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
-            this.log("gamedata");
 
-            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
-            this.state = gamedata;
+	    //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));	    
+	    
+	    this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
+	    this.log("gamedata");
 
+	    conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
+	    
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
             if (this.state.free_handicap_placement && this.state.handicap > 1) {
@@ -929,6 +933,8 @@ class Game {
     disconnect() { /* {{{ */
         this.log("Disconnecting from game #", this.game_id);
 
+	conn.removeGameForPlayer(this.game_id);
+	
         if (this.processing) {
             this.processing = false;
             --moves_processing;
@@ -971,6 +977,12 @@ class Game {
             'game_id': this.state.game_id,
             'player_id': this.conn.bot_id
         }));
+    }    
+    getOpponent() {
+	let player = this.state.players.white;
+	if (player.id == this.conn.bot_id)
+	    player = this.state.players.black;
+	return player;
     }
 }
 
@@ -1002,6 +1014,7 @@ class Connection {
 
         this.connected_games = {};
         this.connected_game_timeouts = {};
+	this.games_by_player = {};     // Keep track of active games per player
         this.connected = false;
 
         setTimeout(()=>{
@@ -1431,6 +1444,13 @@ class Connection {
             reject = true;
         }
 
+	let active_games = conn.gamesForPlayer(notification.user.id);
+	if (argv.maxactivegames && active_games >= argv.maxactivegames) {
+	    conn_log("Too many active games.");
+	    rejectmsg = "Too many active games.";
+	    reject = true;
+	}
+	
         if (!reject) {
             conn_log("Accepting challenge, game_id = "  + notification.game_id);
             post(api1('me/challenges/' + notification.challenge_id+'/accept'), this.auth({ }))
@@ -1467,6 +1487,30 @@ class Connection {
     on_gameStarted(notification) { /* {{{ */
         /* don't care about gameStarted notifications */
     }; /* }}} */
+    addGameForPlayer(game_id, player) { /* {{{ */
+	if (!this.games_by_player[player]) {
+	    this.games_by_player[player] = [ game_id ];
+	    return;
+	}	
+	if (this.games_by_player[player].indexOf(game_id) != -1)  // Already have it ?
+	    return;
+	this.games_by_player[player].push(game_id);
+    } /* }}} */
+    removeGameForPlayer(game_id) { /* {{{ */
+	for (let player in this.games_by_player) {
+	    let idx = this.games_by_player[player].indexOf(game_id);
+	    if (idx == -1)  continue;
+	    
+	    this.games_by_player[player].splice(idx, 1);  // Remove element
+	    if (this.games_by_player[player].length == 0)
+		delete this.games_by_player[player];
+	    return;
+	}
+    } /* }}} */
+    gamesForPlayer(player) { /* {{{ */
+	if (!this.games_by_player[player])  return 0;
+	return this.games_by_player[player].length;
+    } /* }}} */
     ok (str) {{{
         conn_log(str); 
     }}}
