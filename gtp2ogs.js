@@ -707,7 +707,7 @@ class Game {
 	    let prev_phase = (this.state ? this.state.phase : null);
 	    this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
-	    this.log("gamedata");
+	    this.log("gamedata     " + this.header());
 
 	    conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
 
@@ -983,14 +983,39 @@ class Game {
     {	
         if (argv.farewell && this.state && this.state.game_id)
 	    this.sendChat(FAREWELL, "discussion");
-	
-	this.log("Game over");
-	
-	if (this.bot) {	
+
+	// Display result
+	let s = this.state;
+	let col = (s.winner == s.players.black.id ? 'B' : 'W' );
+	let res = s.outcome;   res = res[0].toUpperCase() + res.substr(1);
+	let m = s.outcome.match(/(.*) points/);
+	if (m)  res = m[1];
+	if (res == 'Resignation')  res = 'R';
+	if (res == 'Cancellation') res = 'Can';
+	if (res == 'Timeout')      res = 'Time';
+	let winloss = (s.winner == this.conn.bot_id ? "W" : "   L");
+	this.log(sprintf("Game over.   Result: %s+%-5s  %s", col, res, winloss));
+
+	if (this.bot) {
 	    this.bot.gameOver();
             this.bot.kill();
             this.bot = null;
 	}
+    } /* }}} */
+    header() { /* {{{ */
+	if (!this.state)  return;
+	let color = 'W  ';  // Playing white against ...
+	let player = this.state.players.black;
+	if (player.username == argv.username) {
+	    player = this.state.players.white;
+	    color = '  B';
+	}
+	let name = player.username;
+	let handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
+	return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
+	
+	// XXX doesn't work, getting garbage ranks here ...
+	// let rank = rank2str(player.rank);
     } /* }}} */
     log(str) { /* {{{ */
 	let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
