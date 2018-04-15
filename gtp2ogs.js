@@ -280,16 +280,17 @@ class Bot {
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.firstmove = true;
+	this.ignore = false;   // Ignore output from bot ?
 
-        if (DEBUG) {
-            this.log("Starting ", cmd.join(' '));
-        }
+        if (DEBUG) this.log("Starting ", cmd.join(' '));
 
         this.proc.stderr.on('data', (data) => {
+	    if (this.ignore)  return;
             this.error("stderr: " + data);
         });
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
+	    if (this.ignore)  return;
             stdout_buffer += data.toString();
 
             if (argv.json) {
@@ -646,8 +647,9 @@ class Bot {
         )
     } /* }}} */
     kill() { /* {{{ */
-        this.log("Killing process ");
-        this.proc.kill();
+        this.log("Stopping bot ");
+	this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
+	this.command("quit");
     } /* }}} */
     sendMove(move, width, color){
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
