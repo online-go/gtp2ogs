@@ -1180,7 +1180,12 @@ class Connection {
             //
             if (gamedata.phase == "finished") {
                 if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
-                this.disconnectFromGame(gamedata.id);
+		
+		// XXX We want to disconnect right away here, but there's a game over race condition
+		//     on server side: sometimes /gamedata event with game outcome is sent after
+		//     active_game, so it's lost since there's no game to handle it anymore...
+		//     Work around it with a timeout for now.
+		setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
             } else {
                 if (argv.timeout)
                 {
