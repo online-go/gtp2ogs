@@ -1195,6 +1195,10 @@ class Connection {
                 this.processMove(gamedata);
             } */
 
+	    // Don't connect to old finished games.
+	    if (gamedata.phase == "finished" && !(gamedata.id in this.connected_games))
+		return;
+	    
             // Set up the game so it can listen for events.
             //
             let game = this.connectToGame(gamedata.id);
