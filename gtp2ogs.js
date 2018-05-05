@@ -19,6 +19,7 @@ let http = require('http');
 let https = require('https');
 let crypto = require('crypto');
 let tracer = require('tracer');
+let sprintf = require('sprintf-js').sprintf;
 
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
@@ -242,10 +243,14 @@ let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
 
+
+let console_fmt = "{{timestamp}} {{title}} {{message}}";
+if (DEBUG)
+    console_fmt = "{{timestamp}} {{title}} {{file}}:{{line}}{{space}} {{message}}";
+
 let console = tracer.colorConsole({
-    format : [
-        "{{title}} {{file}}:{{line}}{{space}} {{message}}" //default format
-    ],
+    format : [ console_fmt ],
+    dateformat: 'mmm dd HH:MM:ss',
     preprocess :  function(data){
         switch (data.title) {
             case 'debug': data.title = ' '; break;
@@ -686,6 +691,8 @@ class Game {
         this.corr_move_pending = false;
         this.processing = false;
 
+	this.log("Connecting to game.");
+	
         // TODO: Command line options to allow undo?
         //
         this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
@@ -700,7 +707,7 @@ class Game {
 	    let prev_phase = (this.state ? this.state.phase : null);
 	    this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
-	    this.log("gamedata");
+	    this.log("gamedata     " + this.header());
 
 	    conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
 
@@ -812,6 +819,12 @@ class Game {
             if (DEBUG) this.log("game/" + game_id + "/move:", move);
             try {
                 this.state.moves.push(move.move);
+
+		// Log opponent moves
+		let m = decodeMoves(move.move, this.state.width)[0];
+		if ((this.my_color == "white" && (this.state.handicap) >= this.state.moves.length) ||
+		    move.move_number % 2 == this.opponent_evenodd)
+		    this.log("Got     " + move2gtpvertex(m, this.state.width));
             } catch (e) {
                 console.error(e)
             }
@@ -895,8 +908,8 @@ class Game {
         }
 
         if (!this.bot) {
-            this.log("Starting new bot process");
             this.bot = new Bot(this.conn, this, bot_command);
+            this.log("Starting new bot process [" + this.bot.proc.pid + "]");
 
             this.log("State loading for new bot");
             this.bot.loadState(this.state, () => {
@@ -906,7 +919,8 @@ class Game {
             }, passAndRestart);
         }
 
-        this.bot.log("Generating move for game", this.game_id);
+	if (DEBUG) this.bot.log("Generating move for game", this.game_id);
+	this.log("genmove " + (this.my_color == "black" ? "b" : "w"));
 
         this.bot.genmove(this.state, (move) => {
             this.processing = false;
@@ -922,7 +936,8 @@ class Game {
                 }));
             }
             else {
-                this.log("Playing " + move.text, move);
+		if (DEBUG) this.log("Playing " + move.text, move);
+		else       this.log("Playing " + move.text);
                 this.socket.emit('game/move', this.auth({
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
@@ -958,8 +973,7 @@ class Game {
 	    this.bot = null;
 	}
 	
-        this.log("Disconnecting from game #", this.game_id);
-	
+        this.log("Disconnecting from game.");	
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
@@ -969,20 +983,47 @@ class Game {
     {	
         if (argv.farewell && this.state && this.state.game_id)
 	    this.sendChat(FAREWELL, "discussion");
-	
-	this.log("Game over");
-	
-	if (this.bot) {	
+
+	// Display result
+	let s = this.state;
+	let col = (s.winner == s.players.black.id ? 'B' : 'W' );
+	let res = s.outcome;   res = res[0].toUpperCase() + res.substr(1);
+	let m = s.outcome.match(/(.*) points/);
+	if (m)  res = m[1];
+	if (res == 'Resignation')  res = 'R';
+	if (res == 'Cancellation') res = 'Can';
+	if (res == 'Timeout')      res = 'Time';
+	let winloss = (s.winner == this.conn.bot_id ? "W" : "   L");
+	this.log(sprintf("Game over.   Result: %s+%-5s  %s", col, res, winloss));
+
+	if (this.bot) {
 	    this.bot.gameOver();
             this.bot.kill();
             this.bot = null;
 	}
     } /* }}} */
+    header() { /* {{{ */
+	if (!this.state)  return;
+	let color = 'W  ';  // Playing white against ...
+	let player = this.state.players.black;
+	if (player.username == argv.username) {
+	    player = this.state.players.white;
+	    color = '  B';
+	}
+	let name = player.username;
+	let handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
+	return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
+	
+	// XXX doesn't work, getting garbage ranks here ...
+	// let rank = rank2str(player.rank);
+    } /* }}} */
     log(str) { /* {{{ */
-        let arr = ["[Game " + this.game_id + "]"];
-        for (let i=0; i < arguments.length; ++i) {
+	let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
+	let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
+	let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
+	
+        for (let i=0; i < arguments.length; ++i)
             arr.push(arguments[i]);
-        }
 
         console.log.apply(null, arr);
     } /* }}} */
@@ -1154,6 +1195,10 @@ class Connection {
                 this.processMove(gamedata);
             } */
 
+	    // Don't connect to old finished games.
+	    if (gamedata.phase == "finished" && !(gamedata.id in this.connected_games))
+		return;
+	    
             // Set up the game so it can listen for events.
             //
             let game = this.connectToGame(gamedata.id);
@@ -1192,7 +1237,7 @@ class Connection {
                     if (this.connected_game_timeouts[gamedata.id]) {
                         clearTimeout(this.connected_game_timeouts[gamedata.id])
                     }
-                    conn_log("Setting timeout for", gamedata.id);
+                    if (DEBUG) conn_log("Setting timeout for", gamedata.id);
                     this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
                         this.disconnectFromGame(gamedata.id);
                     }, argv.timeout); /* forget about game after --timeout seconds */
@@ -1225,7 +1270,6 @@ class Connection {
             return this.connected_games[game_id];
         }
 
-        if (DEBUG) conn_log("Connecting to game", game_id);
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
@@ -1452,8 +1496,10 @@ class Connection {
     // Check everything and return reject status + optional error msg.
     //
     checkChallenge(notification) { /* {{{ */
-	if (check_rejectnew())
+	if (check_rejectnew()) {
+	    conn_log("Not accepting new games (rejectnew).");
 	    return { reject: true, msg: "Not accepting new games at this time. " };
+	}
 	
 	let c = this.checkGameSettings(notification);
 	if (c.reject)  return c;
@@ -1468,8 +1514,14 @@ class Connection {
 	let c = this.checkChallenge(notification);
 	let rejectmsg = (c.msg ? c.msg : "");
 	
+	let handi = (notification.handicap > 0 ? "H" + notification.handicap : "");
+	let accepting = (c.reject ? "Rejecting" : "Accepting");
+	conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
+			 accepting, notification.user.username, rank2str(notification.user.ranking),
+			 notification.width, notification.width,
+			 handi, notification.game_id));
+	
         if (!c.reject) {
-	    conn_log("Accepting challenge, game_id = "  + notification.game_id);
             post(api1('me/challenges/' + notification.challenge_id+'/accept'), this.auth({ }))
             .then(ignore)
             .catch((err) => {
@@ -1743,6 +1795,11 @@ function num2gtpchar(num) { /* {{{ */
     if (num == -1) 
         return ".";
     return "abcdefghjklmnopqrstuvwxyz"[num];
+} /* }}} */
+function rank2str(r) { /* {{{ */
+    r = r.toFixed();
+    if (r >= 30)  return (r-30+1) + 'd';
+    else          return (30-r) + 'k';
 } /* }}} */
 
 function conn_log() { /* {{{ */
