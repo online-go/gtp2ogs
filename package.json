@@ -1,17 +1,19 @@
 {
   "name": "gtp2ogs",
-
   "version": "5.3.0",
   "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
   "main": "gtp2ogs.js",
-  "files": [ "gtp2ogs.js" ],
+  "files": [
+    "gtp2ogs.js"
+  ],
   "bin": {
-      "gtp2ogs": "gtp2ogs.js" 
+    "gtp2ogs": "gtp2ogs.js"
   },
   "dependencies": {
-      "socket.io-client": "=1.5.1",
-      "optimist": "=0.6.1",
-      "tracer": "=0.8.7"
+    "optimist": "=0.6.1",
+    "socket.io-client": "=1.5.1",
+    "sprintf-js": "^1.1.1",
+    "tracer": "=0.8.7"
   },
   "devDependencies": {},
   "scripts": {
