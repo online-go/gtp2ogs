@@ -691,7 +691,7 @@ class Game {
         this.corr_move_pending = false;
         this.processing = false;
 
-	this.log("Connecting to game.");
+        this.log("Connecting to game.");
 	
         // TODO: Command line options to allow undo?
         //
@@ -702,19 +702,19 @@ class Game {
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
 
-	    //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));	    
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));	    
 	    
-	    let prev_phase = (this.state ? this.state.phase : null);
-	    this.state = gamedata;
+            let prev_phase = (this.state ? this.state.phase : null);
+            this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
-	    this.log("gamedata     " + this.header());
+            this.log("gamedata     " + this.header());
 
-	    conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
+            conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
 
-	    // Only call game over handler if game really just finished.
-	    // For some reason we get connected to already finished games once in a while ...
-	    if (gamedata.phase == 'finished' && prev_phase && gamedata.phase != prev_phase)
-		this.gameOver();
+            // Only call game over handler if game really just finished.
+            // For some reason we get connected to already finished games once in a while ...
+            if (gamedata.phase == 'finished' && prev_phase && gamedata.phase != prev_phase)
+                this.gameOver();
 	    
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
