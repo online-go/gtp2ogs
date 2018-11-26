@@ -588,7 +588,8 @@ class Bot {
 
             color = color == 'black' ? 'white' : 'black';
         }
-        this.command("showboard", cb, eb);
+        // This breaks PhoenixGo.
+        //this.command("showboard", cb, eb);
     } /* }}} */
     
     command(str, cb, eb, final_command) { /* {{{ */
