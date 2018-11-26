@@ -19,6 +19,7 @@ Installation
     npm install tracer
     ```
 
+If npm install gives you an error, try doing the above commands with ```npm install -g``` instead.
 
 Basic usage
 ===========
