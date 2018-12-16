@@ -34,27 +34,45 @@ Options
 The following options are placed in the above ```<arguments>``` section.  Put a space in between options when there are more than one.  Also put a space in between the option and the parameter like:
 ```--startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
 
+  ```--host```  OGS Host to connect to (default online-go.com)
+
+  ```--port``` OGS Port to connect to (default 443)
+
+  ```--timeout``` Disconnect from a game after this many seconds (if set) (default 0)
+
+  ```--insecure```  Don't use ssl to connect to the ggs/rest servers
+
+  ```--beta```  Connect to the beta server (sets ggs/rest hosts to the beta server)
+
+  ```--debug, -d```  Output GTP command and responses from your Go engine
+
+  ```--json, -j```  Send and receive GTP commands in a JSON encoded format
+
+  ```--persist```  Bot process remains running between moves
+
+  ```--kgstime```  Set this if bot understands the kgs-time_settings command
+
+  ```--noclock```  Do not send any clock/time data to the bot
+
+  ```--corrqueue```  Process correspondence games one at a time
+
+  ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
+
+  ```--rejectnew```  Reject all new challenges
+
+  ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
+
+  ```--boardsize```  Board size(s) to accept (default 9,13,19)
+
   ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
   ```--banranked```  Comma separated list of user names or IDs who are banned from playing ranked games
 
   ```--banunranked```  Comma separated list of user names or IDs who are banned from playing unranked game
 
-  ```--beta```  Connect to the beta server (sets ggs/rest hosts to the beta server)
+  ```--speed```  Comma separated list of Game speed(s) to accept (default blitz,live,correspondence)
 
-  ```--boardsize```  Board size(s) to accept (default  9,13,19)
-
-  ```--debug```  Output GTP command and responses from your Go engine to the log
-
-  ```--hidden```  Hides the botname from the OGS game creation bot list
-
-  ```--insecure```  Don't use ssl to connect to the ggs/rest servers
-
-  ```--json```  Send and receive GTP commands in a JSON encoded format
-
-  ```--kgstime```  Set this if bot understands the kgs-time_settings command
-
-  ```--noclock```  Do not send any clock/time data to the bot
+  ```--timecontrol```  Time control(s) to accept (default fischer,byoyomi,simple,canadian,absolute,none)
 
   ```--minmaintime```  Minimum seconds of main time (rejects time control simple and none)
 
@@ -80,6 +98,10 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--maxrank```  Maximum opponent rank to accept (e.g. 1d)
 
+  ```--greeting```  Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
+
+  ```--farewell```  Thank you message to appear in chat at end of game (ex: "Thank you for playing")
+
   ```--proonly```  Only accept matches from professionals
 
   ```--rankedonly```  Only accept ranked matches
@@ -98,15 +120,5 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--nopauseunranked```  Do not allow unranked games to be paused
 
-  ```--persist```  Bot process remains running between moves
+  ```--hidden```  Hides the botname from the OGS game creation bot list
 
-  ```--rejectnew```  Reject all new challenges
-
-  ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if this file exists
-
-  ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
-
-  ```--speed```  Comma separated list of Game speed(s) to accept (default  blitz,live,correspondence)
-
-  ```--timecontrol```  Time control(s) to accept
-    (default  fischer,byoyomi,simple,canadian,absolute,none)
