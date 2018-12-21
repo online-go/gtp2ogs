@@ -37,7 +37,7 @@ npm install tracer
 For linux (preferably as sudo) :
 
 ```
-node /path/to/node_modules/gtp2ogs/gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- path/to/your/ai/runfile.file <bot argument1> <bot argument2>
+node /path/to/node_modules/gtp2ogs/gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <bot argument1> <bot argument2>
 ```
 
 For windows (preferably as admin) : 
@@ -46,7 +46,7 @@ For windows (preferably as admin) :
 pushd C:\Program Files\nodejs && node.exe C:\path\to\node_modules\gtp2ogs\gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <bot arguments>
 ```
 
-note : for all operating systemps, in ` -- `, the spaces after <gtp2ogsarguments> and before path/to/your/bot.executable are important : they separate gtp2ogs arguments from your bot arguments
+note : for all operating systemps, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
   
 note 2 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
 
