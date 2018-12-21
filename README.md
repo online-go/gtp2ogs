@@ -9,37 +9,45 @@ with [OGS (Online-Go.com Server)](https://online-go.com/)
 
 # Installation
 
-  1. Use your systems package manager or otherwise install `node.js` from http://nodejs.org/
+#### 1. Use your systems package manager or otherwise install `node.js` from http://nodejs.org/ 
+  
+(this will also install npm = node package manager)
 
-  2. Run
-    ```
-    npm install gtp2ogs
-    ```
-If npm install gives you an error, try doing the above commands with ```sudo npm install -g gtp2ogs``` instead.
+#### 2. Run
 
-  3. Optionally install any missing node.js packages if basic usage below fails, such as:
-    ```
-    npm install socket.io-client
-    npm install optimist
-    npm install tracer
-    ```
+For linux in terminal, or for windows in a node.js command prompt (as admin) :
+
+```
+npm install gtp2ogs
+```
+If npm install gives you an error, try doing the above commands with `npm install -g gtp2ogs` instead (add `sudo` for linux, run as admin for windows).
+
+On all operating systems, gtp2ogs will be installed in 2 different directories, but the one that needs to be run with node is gtp2ogs.js in node_modules directory
+
+#### 3. Optionally install any missing node.js packages if basic usage below fails, such as:
+  
+```
+npm install socket.io-client
+npm install optimist
+npm install tracer
+  ```
 
 # Basic usage
 
-for linux (preferably as sudo) :
+For linux (preferably as sudo) :
 
 ```
 node /path/to/node_modules/gtp2ogs/gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- path/to/your/ai/runfile.file <bot argument1> <bot argument2>
 ```
 
-for windows (preferably as admin) : 
+For windows (preferably as admin) : 
 
 ```
 pushd C:\Program Files\nodejs && node.exe C:\path\to\node_modules\gtp2ogs\gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <bot arguments>
 ```
 
 note : for all operating systemps, in ` -- `, the spaces after <gtp2ogsarguments> and before path/to/your/bot.executable are important : they separate gtp2ogs arguments from your bot arguments
-
+  
 note 2 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
 
 # Optional : To upgrade to devel branch
@@ -57,12 +65,11 @@ If your bot engine does not support all komi values, it is likely that some game
 
 For example [PhoenixGo](https://github.com/Tencent/PhoenixGo) only supports a komi of 7.5, and any other komi value chosen will crash the bot (including the widespread 6.5 and 0.5 komi)
 
-There is no `--komi` gtp2ogs argument yet, that would reject games that do not have the wanted komi, however there is a workaround of editing gtp2ogs.js so that it will tell your engine that the komi wil always be the set value (for example 7.5).
+There is no `--komi` gtp2ogs argument yet (that would reject games that do not have the wanted komi), however there is the  workaround of editing gtp2ogs.js so that it will tell your engine that the komi wil always be the set value (for example 7.5), even if it's not true on the OGS game.
 
 This method will result in some uncorrect scoring (so do not use it for ranked games), but at least your engine will be able to play
 
-for more details, see : 
-
+For more details, see : 
 - for linux : [3A4) Optional : Edit the gtp2ogs.js file (for example force komi to 7.5)](3A4-linux-optional-edit-gtp2ogs-js-file.md)
 - for windows : [3B4) Optional : Modify the gtp2ogs.js file (for example force komi to 7.5)](/docs/3B4-windows-optional-edit-gtp2ogs-js-file.md)
 
