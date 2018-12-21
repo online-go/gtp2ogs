@@ -56,22 +56,22 @@ By default, npm installs an old release that does not include latest improvement
 
 To upgrade to devel branch, see :
 
-- for linux : [3A3) Optional : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](/docs/3A3-linux-optional-upgrade-to-devel.md)
-- for windows : [3B3) Optional : Upgrade gtp2ogs from old branch to devel (latest) branch](/docs/3B3-windows-optional-upgrade-to-devel.md)
+- for linux : [3A3) Optional : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
+- for windows : [3B3) Optional : Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
 
 # Optional : workaround for komi not supported by your engine
 
-If your bot engine does not support all komi values, it is likely that some games will fail to start and be played
+If your bot engine does not support all komi values, it is likely that some games will fail to start.
 
-For example [PhoenixGo](https://github.com/Tencent/PhoenixGo) only supports a komi of 7.5, and any other komi value chosen will crash the bot (including the widespread 6.5 and 0.5 komi)
+For example, [PhoenixGo](https://github.com/Tencent/PhoenixGo) only supports a komi of 7.5, and any other komi value chosen will crash the bot (including the widespread 6.5 and 0.5 komi)
 
-There is no `--komi` gtp2ogs argument yet (that would reject games that do not have the wanted komi), however there is the  workaround of editing gtp2ogs.js so that it will tell your engine that the komi wil always be the set value (for example 7.5), even if it's not true on the OGS game.
+There is no `--komi` gtp2ogs argument yet (that would reject games that do not have the wanted komi), however there is a   workaround : you can edit gtp2ogs.js file so that it will always tell your engine the komi is the set value (for example 7.5), even if it's not true in the OGS game.
 
-This method will result in some uncorrect scoring (so do not use it for ranked games), but at least your engine will be able to play
+This method will result in some uncorrect scoring (so do not use it for ranked games), but at least your engine will be able to play.
 
 For more details, see : 
-- for linux : [3A4) Optional : Edit the gtp2ogs.js file (for example force komi to 7.5)](3A4-linux-optional-edit-gtp2ogs-js-file.md)
-- for windows : [3B4) Optional : Modify the gtp2ogs.js file (for example force komi to 7.5)](/docs/3B4-windows-optional-edit-gtp2ogs-js-file.md)
+- for linux : [3A4) Optional : Edit the gtp2ogs.js file (for example force komi to 7.5)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A4-linux-optional-edit-gtp2ogs-js-file.md)
+- for windows : [3B4) Optional : Modify the gtp2ogs.js file (for example force komi to 7.5)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B4-windows-optional-edit-gtp2ogs-js-file.md)
 
 # Options
 
