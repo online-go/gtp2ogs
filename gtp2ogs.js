@@ -53,10 +53,13 @@ let optimist = require("optimist")
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
     .default('boardsize', '9,13,19')
-    .describe('komi', 'Allowed komi values : when --komi is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,  example : --komi null,0.5,7.5 or --komi 7.5)
+    .describe('komi', 'Allowed komi values')
     .string('komi')
-    // TODO : re-add the ability to accept any komi value (other than null) when --komi is not used
     .default('komi', 'null')
+    // behaviour : when --komi is not used default is "null" (Automatic) and other komi values will be rejected, 
+    //but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead
+    // example : --komi null,0.5,7.5 or --komi 7.5
+    // TODO : re-add the ability to accept any komi value (other than null) when --komi is not used
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
@@ -1353,7 +1356,7 @@ class Connection {
 
         if(!allowed_komi[notification.komi]) {
             conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are" + argv.komi + ", rejecting challenge");
-            return { reject: true, msg: "Komi value different from " + argv.komi + " is not allowed ; note : -null- means -automatic- komi};
+            return { reject: true, msg: "Komi value different from " + argv.komi + " is not allowed, and null is the automatic komi. "};
         }
 
         if (!allowed_speeds[t.speed]) {
