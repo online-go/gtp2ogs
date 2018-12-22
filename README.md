@@ -15,21 +15,35 @@ with [OGS (Online-Go.com Server)](https://online-go.com/)
 
 #### 2. Run
 
-For linux in terminal, or for windows in a node.js command prompt (as admin) :
+- For linux in terminal, or for windows in a node.js command prompt (as admin) :
 
 ```
-npm install gtp2ogs
+sudo npm install -g gtp2ogs
 ```
-If npm install gives you an error, try doing the above commands with `npm install -g gtp2ogs` instead (add `sudo` for linux, run as admin for windows).
 
-On all operating systems, gtp2ogs will be installed in 2 different directories, but the one that needs to be run with node is gtp2ogs.js in node_modules directory
+default path install is : 
+> /usr/lib/node_modules/gtp2ogs/gtp2ogs.js
+
+- For windows, open a node.js command prompt as admin, then run this command :
+
+```
+npm install -g gtp2ogs
+```
+
+default path install is something like this :
+> C:\Users\yourusername\AppData\Roaming\npm\node_modules\gtp2ogs\gtp2ogs.js
+
+
+On all operating systems, gtp2ogs will be installed in 2 different directories, but **the one that needs to be run with node is gtp2ogs.js in node_modules directory**
 
 #### 3. Optionally install any missing node.js packages if basic usage below fails, such as:
-  
+ 
+(as `sudo` for linux, and as admin for windows)
+ 
 ```
-npm install socket.io-client
-npm install optimist
-npm install tracer
+npm install -g socket.io-client
+npm install -g optimist
+npm install -g tracer
   ```
 
 # Basic usage
@@ -37,7 +51,7 @@ npm install tracer
 For linux (preferably as sudo) :
 
 ```
-node /path/to/node_modules/gtp2ogs/gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <bot argument1> <bot argument2>
+node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <bot argument1> <bot argument2>
 ```
 
 For windows (preferably as admin) : 
@@ -46,11 +60,11 @@ For windows (preferably as admin) :
 pushd C:\Program Files\nodejs && node.exe C:\path\to\node_modules\gtp2ogs\gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <bot arguments>
 ```
 
-note : for all operating systemps, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
+note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
   
 note 2 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
 
-# Optional : To upgrade to devel branch
+# Optional : Upgrade to devel branch
 
 By default, npm installs an old release that does not include latest improvements and fixes
 
@@ -110,6 +124,8 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--boardsize```  Board size(s) to accept (default 9,13,19)
 
+  ```--komi``` Allowed komi values : when --komi is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,  example : `--komi null,0.5,7.5` or `--komi 7.5`
+
   ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
   ```--banranked```  Comma separated list of user names or IDs who are banned from playing ranked games
@@ -156,7 +172,11 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--unrankedonly```  Only accept unranked matches
 
+  ```--minhandicap```  Min handicap for all games
+
   ```--maxhandicap```  Max handicap for all games
+
+  ```--minrankedhandicap```  Min handicap for ranked games
 
   ```--maxrankedhandicap```  Max handicap for ranked games
 

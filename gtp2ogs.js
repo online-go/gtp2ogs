@@ -53,6 +53,10 @@ let optimist = require("optimist")
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
     .default('boardsize', '9,13,19')
+    .describe('komi', 'Allowed komi values : when --komi is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,  example : --komi null,0.5,7.5 or --komi 7.5)
+    .string('komi')
+    // TODO : re-add the ability to accept any komi value (other than null) when --komi is not used
+    .default('komi', 'null')
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
@@ -85,13 +89,16 @@ let optimist = require("optimist")
     .describe('proonly', 'Only accept matches from professionals')
     .describe('rankedonly', 'Only accept ranked matches')
     .describe('unrankedonly', 'Only accept unranked matches')
+    .describe('minhandicap', 'Min handicap for all games')
     .describe('maxhandicap', 'Max handicap for all games')
     .describe('maxrankedhandicap', 'Max handicap for ranked games')
+    .describe('minunrankedhandicap', 'Min handicap for unranked games')
     .describe('maxunrankedhandicap', 'Max handicap for unranked games')
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
     .describe('hidden', 'Don\'t list the bot in the public challenge list')
+
 ;
 let argv = optimist.argv;
 
@@ -143,6 +150,14 @@ let allowed_sizes = [];
 if (argv.boardsize) {
     for (let i of argv.boardsize.split(',')) {
         allowed_sizes[i] = true;
+    }
+}
+
+let allowed_komi = [];
+
+if (argv.komi) {
+    for (let i of argv.komi.split(',')) {
+        allowed_komi[i] = true;
     }
 }
 
@@ -1336,6 +1351,11 @@ class Connection {
             return { reject: true, msg: "Board width " + notification.width + " not an allowed size. " };
         }
 
+        if(!allowed_komi[notification.komi]) {
+            conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are" + argv.komi + ", rejecting challenge");
+            return { reject: true, msg: "Komi value different from " + argv.komi + " is not allowed " };
+        }
+
         if (!allowed_speeds[t.speed]) {
             conn_log(user.username + " wanted speed " + t.speed + ", not in: " + argv.speed);
             return { reject: true, msg: "Allowed speeds are: " + argv.speed + ". " };
@@ -1436,14 +1456,29 @@ class Connection {
 	    return { reject: true, msg: "Unranked games only. " };
         }
 
+        if (notification.handicap < argv.minhandicap) {
+            conn_log("Min handicap is " + argv.minhandicap);
+	    return { reject: true, msg: "Min handicap is " + argv.minhandicap + ". " };
+        }
+
         if (notification.handicap > argv.maxhandicap) {
             conn_log("Max handicap is " + argv.maxhandicap);
 	    return { reject: true, msg: "Max handicap is " + argv.maxhandicap + ". " };
         }
 
+        if (notification.ranked && notification.handicap < argv.minrankedhandicap) {
+            conn_log("Min ranked handicap is " + argv.minrankedhandicap);
+	    return { reject: true, msg: "Min ranked handicap is " + argv.minrankedhandicap + ". " };
+        }
+
         if (notification.ranked && notification.handicap > argv.maxrankedhandicap) {
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
 	    return { reject: true, msg: "Max ranked handicap is " + argv.maxrankedhandicap + ". " };
+        }
+
+        if (!notification.ranked && notification.handicap < argv.minunrankedhandicap) {
+            conn_log("Min unranked handicap is " + argv.minunrankedhandicap);
+	    return { reject: true, msg: "Min unranked handicap is " + argv.minunrankedhandicap + ". " };
         }
 
         if (!notification.ranked && notification.handicap > argv.maxunrankedhandicap) {
