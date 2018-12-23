@@ -51,18 +51,20 @@ npm install -g tracer
 For linux (preferably as sudo) :
 
 ```
-node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <bot argument1> <bot argument2>
+node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <botargument1> <botargument2>
 ```
 
 For windows (preferably as admin) : 
 
 ```
-pushd C:\Program Files\nodejs && node.exe C:\path\to\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <bot arguments>
+pushd C:\Program Files\nodejs && node.exe C:\replace\with\full\path\to\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <botargument1> <botargument2>
 ```
 
 note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
+
+note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but it possible to use for example 3, 8, or more
   
-note 2 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
+note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
 
 # Optional : Upgrade to devel branch
 
@@ -77,8 +79,7 @@ To upgrade to devel branch, see :
 
 The following options are placed in the above ```<arguments>``` section.  Put a space in between options when there are more than one.  Also put a space in between the option and the parameter like:
 
-```
---startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
+  ```--startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
 
   ```--host```  OGS Host to connect to (default online-go.com)
 
@@ -165,6 +166,8 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
   ```--minrankedhandicap```  Min handicap for ranked games
 
   ```--maxrankedhandicap```  Max handicap for ranked games
+
+  ```--minunrankedhandicap```  Min handicap for unranked games
 
   ```--maxunrankedhandicap```  Max handicap for unranked games
 

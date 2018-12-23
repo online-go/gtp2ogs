@@ -94,6 +94,7 @@ let optimist = require("optimist")
     .describe('unrankedonly', 'Only accept unranked matches')
     .describe('minhandicap', 'Min handicap for all games')
     .describe('maxhandicap', 'Max handicap for all games')
+    .describe('minrankedhandicap', 'Min handicap for ranked games')
     .describe('maxrankedhandicap', 'Max handicap for ranked games')
     .describe('minunrankedhandicap', 'Min handicap for unranked games')
     .describe('maxunrankedhandicap', 'Max handicap for unranked games')
@@ -101,7 +102,6 @@ let optimist = require("optimist")
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
     .describe('hidden', 'Don\'t list the bot in the public challenge list')
-
 ;
 let argv = optimist.argv;
 
