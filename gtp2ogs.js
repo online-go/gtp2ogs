@@ -1357,8 +1357,8 @@ class Connection {
         }
 
         if(!allowed_komi[notification.komi]) {
-            conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are" + argv.komi + ", rejecting challenge");
-            return { reject: true, msg: "Komi " + notification.komi + " is different from " + argv.komi + " : komi value not allowed, please note that the automatic komi is called null. "};
+            conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi + ", rejecting challenge");
+            return { reject: true, msg: "komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi};
         }
 
         if (!allowed_speeds[t.speed]) {
