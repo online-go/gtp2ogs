@@ -1531,6 +1531,11 @@ class Connection {
             return { reject: true, msg: "Too many active games." };
         }
 
+        if (argv.maxtotalgames && this.connected_games.length >= argv.maxtotalgames){
+            conn_log("Too many total games.");
+            return { reject: true, msg: "Too many total games." };
+        }
+
         return { reject: false };
 
     } /* }}} */
