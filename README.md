@@ -181,3 +181,5 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 ```
 
 note : a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
+
+note 2 : on OGS, black player will always get the handicap stones regardless of rank difference (if null (automatic) komi is selected, the komi will be 0.5 , but you can restrict allowed komi for example to only 7.5 or null with `--komi 7.5,null` , or only 7.5 komi with `--komi 7.5` for example
