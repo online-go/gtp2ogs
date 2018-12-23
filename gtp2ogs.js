@@ -304,17 +304,17 @@ class Bot {
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.firstmove = true;
-	this.ignore = false;   // Ignore output from bot ?
+        this.ignore = false;   // Ignore output from bot ?
 
         if (DEBUG) this.log("Starting ", cmd.join(' '));
 
         this.proc.stderr.on('data', (data) => {
-	    if (this.ignore)  return;
+            if (this.ignore)  return;
             this.error("stderr: " + data);
         });
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
-	    if (this.ignore)  return;
+            if (this.ignore)  return;
             stdout_buffer += data.toString();
 
             if (argv.json) {
@@ -574,36 +574,37 @@ class Bot {
         //this.log(state);
 
         //this.loadClock(state);
-	
-	let have_initial_state = false;
+
+        let have_initial_state = false;
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
             let white = decodeMoves(state.initial_state.white, state.width);
-	    have_initial_state = (black.length || white.length);
+            have_initial_state = (black.length || white.length);
 
             for (let i=0; i < black.length; ++i)
-                    this.command("play black " + move2gtpvertex(black[i], state.width));	    
+                    this.command("play black " + move2gtpvertex(black[i], state.width));
             for (let i=0; i < white.length; ++i)
-                    this.command("play white " + move2gtpvertex(white[i], state.width));	    
+                    this.command("play white " + move2gtpvertex(white[i], state.width));
         }
 
         // Replay moves made
         let color = state.initial_player;
-	let doing_handicap = (!have_initial_state && state.free_handicap_placement && state.handicap > 1);
-	let handicap_moves = [];
+        let doing_handicap = (!have_initial_state && state.free_handicap_placement && state.handicap > 1);
+        let handicap_moves = [];
         let moves = decodeMoves(state.moves, state.width);
         for (let i=0; i < moves.length; ++i) {
             let move = moves[i];
             let c = color
-	    
-	    // Use set_free_handicap for handicap stones, play otherwise.
+    
+            // Use set_free_handicap for handicap stones, play otherwise.
             if (doing_handicap && handicap_moves.length < state.handicap) {
-		handicap_moves.push(move);
-		if (handicap_moves.length == state.handicap)
-		    this.sendHandicapMoves(handicap_moves, state.width);
-		else continue;  // don't switch color.
-	    } else
-		this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+                handicap_moves.push(move);
+                if (handicap_moves.length == state.handicap)
+                this.sendHandicapMoves(handicap_moves, state.width);
+                else continue;  // don't switch color.
+            } else {
+                this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+            }
 
             color = color == 'black' ? 'white' : 'black';
         }
@@ -673,8 +674,8 @@ class Bot {
     } /* }}} */
     kill() { /* {{{ */
         this.log("Stopping bot ");
-	this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
-	this.command("quit");
+    this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
+    this.command("quit");
     } /* }}} */
     sendMove(move, width, color){
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
@@ -712,7 +713,7 @@ class Game {
         this.processing = false;
 
         this.log("Connecting to game.");
-	
+
         // TODO: Command line options to allow undo?
         //
         this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
@@ -722,8 +723,8 @@ class Game {
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
 
-            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));	    
-	    
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
+    
             let prev_phase = (this.state ? this.state.phase : null);
             this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
@@ -735,7 +736,7 @@ class Game {
             // For some reason we get connected to already finished games once in a while ...
             if (gamedata.phase == 'finished' && prev_phase && gamedata.phase != prev_phase)
                 this.gameOver();
-	    
+
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
             if (this.state.free_handicap_placement && this.state.handicap > 1) {
@@ -840,11 +841,11 @@ class Game {
             try {
                 this.state.moves.push(move.move);
 
-		// Log opponent moves
-		let m = decodeMoves(move.move, this.state.width)[0];
-		if ((this.my_color == "white" && (this.state.handicap) >= this.state.moves.length) ||
-		    move.move_number % 2 == this.opponent_evenodd)
-		    this.log("Got     " + move2gtpvertex(m, this.state.width));
+                // Log opponent moves
+                let m = decodeMoves(move.move, this.state.width)[0];
+                if ((this.my_color == "white" && (this.state.handicap) >= this.state.moves.length) ||
+                    move.move_number % 2 == this.opponent_evenodd)
+                    this.log("Got     " + move2gtpvertex(m, this.state.width));
             } catch (e) {
                 console.error(e)
             }
@@ -939,8 +940,8 @@ class Game {
             }, passAndRestart);
         }
 
-	if (DEBUG) this.bot.log("Generating move for game", this.game_id);
-	this.log("genmove " + (this.my_color == "black" ? "b" : "w"));
+        if (DEBUG) this.bot.log("Generating move for game", this.game_id);
+        this.log("genmove " + (this.my_color == "black" ? "b" : "w"));
 
         this.bot.genmove(this.state, (move) => {
             this.processing = false;
@@ -956,8 +957,8 @@ class Game {
                 }));
             }
             else {
-		if (DEBUG) this.log("Playing " + move.text, move);
-		else       this.log("Playing " + move.text);
+                if (DEBUG) this.log("Playing " + move.text, move);
+                else       this.log("Playing " + move.text);
                 this.socket.emit('game/move', this.auth({
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
@@ -978,8 +979,8 @@ class Game {
         return this.conn.auth(obj);
     }; /* }}} */
     disconnect() { /* {{{ */
-	conn.removeGameForPlayer(this.game_id);
-	
+        conn.removeGameForPlayer(this.game_id);
+
         if (this.processing) {
             this.processing = false;
             --moves_processing;
@@ -987,61 +988,61 @@ class Game {
                 --corr_moves_processing;
             }
         }
-	
-	if (this.bot)   {
-	    this.bot.kill();
-	    this.bot = null;
-	}
-	
-        this.log("Disconnecting from game.");	
+
+        if (this.bot)   {
+            this.bot.kill();
+            this.bot = null;
+        }
+
+        this.log("Disconnecting from game.");
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
         }));
     }; /* }}} */
     gameOver() /* {{{ */
-    {	
+    {
         if (argv.farewell && this.state && this.state.game_id)
-	    this.sendChat(FAREWELL, "discussion");
+            this.sendChat(FAREWELL, "discussion");
 
-	// Display result
-	let s = this.state;
-	let col = (s.winner == s.players.black.id ? 'B' : 'W' );
-	let res = s.outcome;   res = res[0].toUpperCase() + res.substr(1);
-	let m = s.outcome.match(/(.*) points/);
-	if (m)  res = m[1];
-	if (res == 'Resignation')  res = 'R';
-	if (res == 'Cancellation') res = 'Can';
-	if (res == 'Timeout')      res = 'Time';
-	let winloss = (s.winner == this.conn.bot_id ? "W" : "   L");
-	this.log(sprintf("Game over.   Result: %s+%-5s  %s", col, res, winloss));
+        // Display result
+        let s = this.state;
+        let col = (s.winner == s.players.black.id ? 'B' : 'W' );
+        let res = s.outcome;   res = res[0].toUpperCase() + res.substr(1);
+        let m = s.outcome.match(/(.*) points/);
+        if (m)  res = m[1];
+        if (res == 'Resignation')  res = 'R';
+        if (res == 'Cancellation') res = 'Can';
+        if (res == 'Timeout')      res = 'Time';
+        let winloss = (s.winner == this.conn.bot_id ? "W" : "   L");
+        this.log(sprintf("Game over.   Result: %s+%-5s  %s", col, res, winloss));
 
-	if (this.bot) {
-	    this.bot.gameOver();
+        if (this.bot) {
+            this.bot.gameOver();
             this.bot.kill();
             this.bot = null;
-	}
+        }
     } /* }}} */
     header() { /* {{{ */
-	if (!this.state)  return;
-	let color = 'W  ';  // Playing white against ...
-	let player = this.state.players.black;
-	if (player.username == argv.username) {
-	    player = this.state.players.white;
-	    color = '  B';
-	}
-	let name = player.username;
-	let handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
-	return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
-	
-	// XXX doesn't work, getting garbage ranks here ...
-	// let rank = rank2str(player.rank);
+        if (!this.state)  return;
+        let color = 'W  ';  // Playing white against ...
+        let player = this.state.players.black;
+        if (player.username == argv.username) {
+            player = this.state.players.white;
+            color = '  B';
+        }
+        let name = player.username;
+        let handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
+        return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
+
+        // XXX doesn't work, getting garbage ranks here ...
+        // let rank = rank2str(player.rank);
     } /* }}} */
     log(str) { /* {{{ */
-	let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
-	let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
-	let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
-	
+        let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
+        let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
+        let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
+
         for (let i=0; i < arguments.length; ++i)
             arr.push(arguments[i]);
 
@@ -1066,10 +1067,10 @@ class Game {
         }));
     }    
     getOpponent() {
-	let player = this.state.players.white;
-	if (player.id == this.conn.bot_id)
-	    player = this.state.players.black;
-	return player;
+        let player = this.state.players.white;
+        if (player.id == this.conn.bot_id)
+            player = this.state.players.black;
+        return player;
     }
 }
 
@@ -1101,7 +1102,7 @@ class Connection {
 
         this.connected_games = {};
         this.connected_game_timeouts = {};
-	this.games_by_player = {};     // Keep track of active games per player
+        this.games_by_player = {};     // Keep track of active games per player
         this.connected = false;
 
         setTimeout(()=>{
@@ -1215,10 +1216,10 @@ class Connection {
                 this.processMove(gamedata);
             } */
 
-	    // Don't connect to old finished games.
-	    if (gamedata.phase == "finished" && !(gamedata.id in this.connected_games))
-		return;
-	    
+            // Don't connect to old finished games.
+            if (gamedata.phase == "finished" && !(gamedata.id in this.connected_games))
+                return;
+
             // Set up the game so it can listen for events.
             //
             let game = this.connectToGame(gamedata.id);
@@ -1245,12 +1246,12 @@ class Connection {
             //
             if (gamedata.phase == "finished") {
                 if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
-		
-		// XXX We want to disconnect right away here, but there's a game over race condition
-		//     on server side: sometimes /gamedata event with game outcome is sent after
-		//     active_game, so it's lost since there's no game to handle it anymore...
-		//     Work around it with a timeout for now.
-		setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
+
+                // XXX We want to disconnect right away here, but there's a game over race condition
+                //     on server side: sometimes /gamedata event with game outcome is sent after
+                //     active_game, so it's lost since there's no game to handle it anymore...
+                //     Work around it with a timeout for now.
+                setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
             } else {
                 if (argv.timeout)
                 {
@@ -1338,7 +1339,7 @@ class Connection {
     checkGameSettings(notification) { /* {{{ */
         let t = notification.time_control;
         let user = notification.user;
-	
+
         // Sanity check, user can't choose rules. Bots only play chinese.
         if (["chinese"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
@@ -1381,7 +1382,7 @@ class Connection {
                 t.main_time    < argv.minmaintime) {  // others
                     conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
                     return { reject: true, msg: "Minimum main time is (" + argv.minmaintime + "). " };
-	        }
+                }
         }
 
         if (argv.maxmaintime) {
@@ -1390,9 +1391,9 @@ class Connection {
                 return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ". " };
             }
             if (t.total_time   > argv.maxmaintime  || // absolute
-        	t.initial_time > argv.maxmaintime  || // fischer
-        	t.max_time     > argv.maxmaintime  || // fischer
-        	t.main_time    > argv.maxmaintime) {  // others
+                t.initial_time > argv.maxmaintime  || // fischer
+                t.max_time     > argv.maxmaintime  || // fischer
+                t.main_time    > argv.maxmaintime) {  // others
                 conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
                 return { reject: true, msg: "Maximum main time is (" + argv.maxmaintime + "). " };
             }
@@ -1531,36 +1532,36 @@ class Connection {
         }
 
         return { reject: false };
-	
+
     } /* }}} */
     // Check everything and return reject status + optional error msg.
     //
     checkChallenge(notification) { /* {{{ */
-	if (check_rejectnew()) {
-	    conn_log("Not accepting new games (rejectnew).");
-	    return { reject: true, msg: "Not accepting new games at this time. " };
-	}
-	
-	let c = this.checkGameSettings(notification);
-	if (c.reject)  return c;
-	
-	c = this.checkUser(notification);
-	if (c.reject)  return c;
+        if (check_rejectnew()) {
+            conn_log("Not accepting new games (rejectnew).");
+            return { reject: true, msg: "Not accepting new games at this time. " };
+        }
 
-	return { reject: false };  /* All good. */
-	
+        let c = this.checkGameSettings(notification);
+        if (c.reject)  return c;
+
+        c = this.checkUser(notification);
+        if (c.reject)  return c;
+
+        return { reject: false };  /* All good. */
+
     } /* }}} */
     on_challenge(notification) { /* {{{ */
-	let c = this.checkChallenge(notification);
-	let rejectmsg = (c.msg ? c.msg : "");
-	
-	let handi = (notification.handicap > 0 ? "H" + notification.handicap : "");
-	let accepting = (c.reject ? "Rejecting" : "Accepting");
-	conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
-			 accepting, notification.user.username, rank2str(notification.user.ranking),
-			 notification.width, notification.width,
-			 handi, notification.game_id));
-	
+        let c = this.checkChallenge(notification);
+        let rejectmsg = (c.msg ? c.msg : "");
+
+        let handi = (notification.handicap > 0 ? "H" + notification.handicap : "");
+        let accepting = (c.reject ? "Rejecting" : "Accepting");
+        conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
+                         accepting, notification.user.username, rank2str(notification.user.ranking),
+                         notification.width, notification.width,
+                         handi, notification.game_id));
+
         if (!c.reject) {
             post(api1('me/challenges/' + notification.challenge_id+'/accept'), this.auth({ }))
             .then(ignore)
@@ -1597,28 +1598,28 @@ class Connection {
         /* don't care about gameStarted notifications */
     }; /* }}} */
     addGameForPlayer(game_id, player) { /* {{{ */
-	if (!this.games_by_player[player]) {
-	    this.games_by_player[player] = [ game_id ];
-	    return;
-	}	
-	if (this.games_by_player[player].indexOf(game_id) != -1)  // Already have it ?
-	    return;
-	this.games_by_player[player].push(game_id);
+        if (!this.games_by_player[player]) {
+            this.games_by_player[player] = [ game_id ];
+            return;
+        }
+        if (this.games_by_player[player].indexOf(game_id) != -1)  // Already have it ?
+            return;
+        this.games_by_player[player].push(game_id);
     } /* }}} */
     removeGameForPlayer(game_id) { /* {{{ */
-	for (let player in this.games_by_player) {
-	    let idx = this.games_by_player[player].indexOf(game_id);
-	    if (idx == -1)  continue;
-	    
-	    this.games_by_player[player].splice(idx, 1);  // Remove element
-	    if (this.games_by_player[player].length == 0)
-		delete this.games_by_player[player];
-	    return;
-	}
+        for (let player in this.games_by_player) {
+            let idx = this.games_by_player[player].indexOf(game_id);
+            if (idx == -1)  continue;
+
+            this.games_by_player[player].splice(idx, 1);  // Remove element
+            if (this.games_by_player[player].length == 0)
+                delete this.games_by_player[player];
+            return;
+        }
     } /* }}} */
     gamesForPlayer(player) { /* {{{ */
-	if (!this.games_by_player[player])  return 0;
-	return this.games_by_player[player].length;
+        if (!this.games_by_player[player])  return 0;
+        return this.games_by_player[player].length;
     } /* }}} */
     ok (str) {{{
         conn_log(str); 
