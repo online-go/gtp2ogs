@@ -1538,8 +1538,8 @@ class Connection {
         }
 
         if (argv.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= argv.maxtotalgames){
-            conn_log("Too many total games.");
-            return { reject: true, msg: "Too many total games." };
+            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + argv.maxtotalgames);
+            return { reject: true, msg: Object.keys(this.connected_games).length + " games being played, maximum is " + argv.maxtotalgames };
         }
 
         return { reject: false };
