@@ -1532,7 +1532,7 @@ class Connection {
         }
 
         if (this.connected_games) {
-            this.log("# of connected games = " + this.connected_games.length");
+            this.log("# of connected games = " + this.connected_games.length);
         } else {
             this.log("There are no connected games");
         }
