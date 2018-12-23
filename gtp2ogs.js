@@ -80,6 +80,7 @@ let optimist = require("optimist")
     .describe('maxperiods', 'Maximum number of periods')
     .describe('maxperiodsranked', 'Maximum number of ranked periods')
     .describe('maxperiodsunranked', 'Maximum number of unranked periods')
+    .describe('maxtotalgames', 'Maximum number of total games')
     .describe('maxactivegames', 'Maximum number of active games per player')
     .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
     .string('minrank')
@@ -1335,12 +1336,12 @@ class Connection {
     // Check game settings are acceptable
     //
     checkGameSettings(notification) { /* {{{ */
-	let t = notification.time_control;
-	let user = notification.user;
+        let t = notification.time_control;
+        let user = notification.user;
 	
-	// Sanity check, user can't choose rules. Bots only play chinese.
+        // Sanity check, user can't choose rules. Bots only play chinese.
         if (["chinese"].indexOf(notification.rules) < 0) {
-	    conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
+            conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             return { reject: true, msg: "Unhandled rules: " + notification.rules + ". " };
         }
 
@@ -1374,28 +1375,28 @@ class Connection {
                 conn_log("Minimum main time not supported in time control: " + t.time_control);
                 return { reject: true, msg: "Minimum main time not supported in time control " + t.time_control + ". " };
             }
-	    if (t.total_time   < argv.minmaintime  || // absolute
-		t.initial_time < argv.minmaintime  || // fischer
-		t.max_time     < argv.minmaintime  || // fischer
-		t.main_time    < argv.minmaintime) {  // others
-                conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
-                return { reject: true, msg: "Minimum main time is (" + argv.minmaintime + "). " };
-	    }
+            if (t.total_time   < argv.minmaintime  || // absolute
+                t.initial_time < argv.minmaintime  || // fischer
+                t.max_time     < argv.minmaintime  || // fischer
+                t.main_time    < argv.minmaintime) {  // others
+                    conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
+                    return { reject: true, msg: "Minimum main time is (" + argv.minmaintime + "). " };
+	        }
         }
-	
+
         if (argv.maxmaintime) {
             if (["simple","none"].indexOf(t.time_control) >= 0) {
                 conn_log("Maximum main time not supported in time control: " + t.time_control);
                 return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ". " };
             }
-	    if (t.total_time   > argv.maxmaintime  || // absolute
-		t.initial_time > argv.maxmaintime  || // fischer
-		t.max_time     > argv.maxmaintime  || // fischer
-		t.main_time    > argv.maxmaintime) {  // others
+            if (t.total_time   > argv.maxmaintime  || // absolute
+        	t.initial_time > argv.maxmaintime  || // fischer
+        	t.max_time     > argv.maxmaintime  || // fischer
+        	t.main_time    > argv.maxmaintime) {  // others
                 conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
                 return { reject: true, msg: "Maximum main time is (" + argv.maxmaintime + "). " };
-	    }
-	}
+            }
+        }
 
         if (argv.minperiodtime &&
             (      (t.period_time    < argv.minperiodtime)
@@ -1421,82 +1422,82 @@ class Connection {
 
         if (argv.minperiods && (t.periods < argv.minperiods)) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
-	    return { reject: true, msg: "Minimum # of periods is " + argv.minperiods + ". " };
+            return { reject: true, msg: "Minimum # of periods is " + argv.minperiods + ". " };
         }
 
         if (argv.minperiodsranked && notification.ranked && (t.periods < argv.minperiodsranked)) {
             conn_log(user.username + " wanted too few ranked periods: " + t.periods);
-	    return { reject: true, msg: "Minimum # of ranked periods is " + argv.minperiodsranked + ". " };
+            return { reject: true, msg: "Minimum # of ranked periods is " + argv.minperiodsranked + ". " };
         }
 
         if (argv.minperiodsunranked && !notification.ranked && (t.periods < argv.minperiodsunranked)) {
             conn_log(user.username + " wanted too few unranked periods: " + t.periods);
-	    return { reject: true, msg: "Minimum # of unranked periods is " + argv.minperiodsunranked + ". " };
+            return { reject: true, msg: "Minimum # of unranked periods is " + argv.minperiodsunranked + ". " };
         }
 
         if (t.periods > argv.maxperiods) {
             conn_log(user.username + " wanted too many periods: " + t.periods);
-	    return { reject: true, msg: "Maximum # of periods is " + argv.maxperiods + ". " };
+            return { reject: true, msg: "Maximum # of periods is " + argv.maxperiods + ". " };
         }
 
         if (notification.ranked && t.periods > argv.maxperiodsranked) {
             conn_log(user.username + " wanted too many ranked periods: " + t.periods);
-	    return { reject: true, msg: "Maximum # of periods is " + argv.maxperiodsranked + ". " };
+            return { reject: true, msg: "Maximum # of periods is " + argv.maxperiodsranked + ". " };
         }
 
         if (!notification.ranked && t.periods > argv.maxperiodsunranked) {
             conn_log(user.username + " wanted too many unranked periods: " + t.periods);
-	    return { reject: true, msg: "Maximum # of periods is " + argv.maxperiodsunranked + ". " };
+            return { reject: true, msg: "Maximum # of periods is " + argv.maxperiodsunranked + ". " };
         }
 
         if (argv.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
-	    return { reject: true, msg: "Ranked games only. " };
+            return { reject: true, msg: "Ranked games only. " };
         }
 
         if (argv.unrankedonly && notification.ranked) {
             conn_log("Unranked games only");
-	    return { reject: true, msg: "Unranked games only. " };
+            return { reject: true, msg: "Unranked games only. " };
         }
 
         if (notification.handicap < argv.minhandicap) {
             conn_log("Min handicap is " + argv.minhandicap);
-	    return { reject: true, msg: "Min handicap is " + argv.minhandicap + ". " };
+            return { reject: true, msg: "Min handicap is " + argv.minhandicap + ". " };
         }
 
         if (notification.handicap > argv.maxhandicap) {
             conn_log("Max handicap is " + argv.maxhandicap);
-	    return { reject: true, msg: "Max handicap is " + argv.maxhandicap + ". " };
+            return { reject: true, msg: "Max handicap is " + argv.maxhandicap + ". " };
         }
 
         if (notification.ranked && notification.handicap < argv.minrankedhandicap) {
             conn_log("Min ranked handicap is " + argv.minrankedhandicap);
-	    return { reject: true, msg: "Min ranked handicap is " + argv.minrankedhandicap + ". " };
+            return { reject: true, msg: "Min ranked handicap is " + argv.minrankedhandicap + ". " };
         }
 
         if (notification.ranked && notification.handicap > argv.maxrankedhandicap) {
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
-	    return { reject: true, msg: "Max ranked handicap is " + argv.maxrankedhandicap + ". " };
+            return { reject: true, msg: "Max ranked handicap is " + argv.maxrankedhandicap + ". " };
         }
 
         if (!notification.ranked && notification.handicap < argv.minunrankedhandicap) {
             conn_log("Min unranked handicap is " + argv.minunrankedhandicap);
-	    return { reject: true, msg: "Min unranked handicap is " + argv.minunrankedhandicap + ". " };
+            return { reject: true, msg: "Min unranked handicap is " + argv.minunrankedhandicap + ". " };
         }
 
         if (!notification.ranked && notification.handicap > argv.maxunrankedhandicap) {
             conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
-	    return { reject: true, msg: "Max unranked handicap is " + argv.maxunrankedhandicap + ". " };
+            return { reject: true, msg: "Max unranked handicap is " + argv.maxunrankedhandicap + ". " };
         }
 
-	return { reject: false };  // Ok !
-	
+        return { reject: false };  // Ok !
+
     } /* }}} */
     // Check user is acceptable
     //
     checkUser(notification) { /* {{{ */
-	let user = notification.user;
-	
+        let user = notification.user;
+
         if (banned_users[user.username] || banned_users[user.id]) {
             conn_log(user.username + " (" + user.id + ") is banned, rejecting challenge");
             return { reject: true };
@@ -1510,26 +1511,26 @@ class Connection {
 
         if (user.ranking < argv.minrank) {
             conn_log(user.username + " ranking too low: " + user.ranking);
-	    return { reject: true, msg: "Your ranking is too low. " };
+            return { reject: true, msg: "Your ranking is too low. " };
         }
 
         if (user.ranking > argv.maxrank) {
             conn_log(user.username + " ranking too high: " + user.ranking);
-	    return { reject: true, msg: "Your ranking is too high. " };
+            return { reject: true, msg: "Your ranking is too high. " };
         }
 
         if (argv.proonly && !user.professional) {
             conn_log(user.username + " is not a professional");
-	    return { reject: true, msg: "Games vs professionals only. " };
+            return { reject: true, msg: "Games vs professionals only. " };
         }
 
-	let active_games = conn.gamesForPlayer(notification.user.id);
-	if (argv.maxactivegames && active_games >= argv.maxactivegames) {
-	    conn_log("Too many active games.");
-	    return { reject: true, msg: "Too many active games." };
-	}
-	
-	return { reject: false };
+        let active_games = conn.gamesForPlayer(notification.user.id);
+        if (argv.maxactivegames && active_games >= argv.maxactivegames) {
+            conn_log("Too many active games.");
+            return { reject: true, msg: "Too many active games." };
+        }
+
+        return { reject: false };
 	
     } /* }}} */
     // Check everything and return reject status + optional error msg.
