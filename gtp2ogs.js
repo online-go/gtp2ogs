@@ -1532,9 +1532,9 @@ class Connection {
         }
 
         if (this.connected_games) {
-            this.log("# of connected games = " + this.connected_games.length);
+            console.log("# of connected games = " + this.connected_games.length);
         } else {
-            this.log("There are no connected games");
+            console.log("There are no connected games");
         }
 
         if (argv.maxtotalgames && this.connected_games && this.connected_games.length >= argv.maxtotalgames){
