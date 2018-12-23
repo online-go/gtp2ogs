@@ -51,13 +51,13 @@ npm install -g tracer
 For linux (preferably as sudo) :
 
 ```
-node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <bot argument1> <bot argument2>
+node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <bot argument1> <bot argument2>
 ```
 
 For windows (preferably as admin) : 
 
 ```
-pushd C:\Program Files\nodejs && node.exe C:\path\to\node_modules\gtp2ogs\gtp2ogs.js --botid <id> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <bot arguments>
+pushd C:\Program Files\nodejs && node.exe C:\path\to\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <bot arguments>
 ```
 
 note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
@@ -175,6 +175,6 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
   ```--nopauseunranked```  Do not allow unranked games to be paused
 
   ```--hidden```  Hides the botname from the OGS game creation bot list
+```
 
 note : a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
-
