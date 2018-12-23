@@ -1532,12 +1532,12 @@ class Connection {
         }
 
         if (this.connected_games) {
-            console.log("# of connected games = " + this.connected_games.length);
+            console.log("# of connected games = " + Object.keys(this.connected_games).length);
         } else {
             console.log("There are no connected games");
         }
 
-        if (argv.maxtotalgames && this.connected_games && this.connected_games.length >= argv.maxtotalgames){
+        if (argv.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= argv.maxtotalgames){
             conn_log("Too many total games.");
             return { reject: true, msg: "Too many total games." };
         }
