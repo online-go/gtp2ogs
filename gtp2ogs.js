@@ -285,7 +285,7 @@ class Bot {
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.firstmove = true;
-	this.ignore = false;   // Ignore output from bot ?
+        this.ignore = false;   // Ignore output from bot ?
 
         if (DEBUG) this.log("Starting ", cmd.join(' '));
 
@@ -622,14 +622,15 @@ class Bot {
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
     genmove(state, cb) { /* {{{ */
-        // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
-        //
-        this.firstmove = false;
-
         // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
         // subtract that missing time from what we tell the bot.
         //
         this.loadClock(state);
+
+        // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
+        // Must be after loadClock() since loadClock() checks this.firstmove!
+        //
+        this.firstmove = false;
 
         this.command("genmove " + this.game.my_color,
             (move) => {
