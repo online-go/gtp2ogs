@@ -143,6 +143,8 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--maxperiodsunranked```  Maximum number of unranked periods
 
+  ```--maxtotalgames``` Maximum number of total games
+
   ```--maxactivegames``` Maximum number of active games per player
 
   ```--minrank```  Minimum opponent rank to accept (e.g. 15k)
