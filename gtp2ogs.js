@@ -50,8 +50,8 @@ let optimist = require("optimist")
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
-    .describe('rejectnewargv', 'Reject all new challenges with a customized message included in quote argv quote
-    // (for example to explain why, for how long, if your bot is busy playing a tournament, etc...')
+    .describe('rejectnewargv', 'Reject all new challenges with a customized message included in quote argv quote'
+    // (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
     .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
