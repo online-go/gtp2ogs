@@ -9,6 +9,7 @@ let KGSTIME = false;
 let NOCLOCK = false;
 let GREETING = "";
 let FAREWELL = "";
+let REJECTNEWMSG = "";
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -49,9 +50,8 @@ let optimist = require("optimist")
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
-    // new behaviour : It is now possible to reject all new challenges with a customized message for better user experience
-    // similar to how --greeting and --farewell work
-    // (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
+    .describe('rejectnewmsg', 'Reject all new challenges with a customized message included in quote argv quote'
+    .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
     .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
@@ -258,6 +258,9 @@ if (argv.greeting) {
 }
 if (argv.farewell) {
     FAREWELL = argv.farewell;
+}
+if (argv.rejectnewmsg) {
+    REJECTNEWMSG = argv.rejectnewmsg;
 }
 
 
@@ -1556,7 +1559,7 @@ class Connection {
     checkChallenge(notification) { /* {{{ */
         if (check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
-            return { reject: true, msg: "Currently, this bot is not accepting games, try again later " };
+            return { reject: true, msg: REJECTNEWMSG };
         }
 
         let c = this.checkGameSettings(notification);
