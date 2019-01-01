@@ -52,7 +52,6 @@ let optimist = require("optimist")
     .describe('rejectnew', 'Reject all new challenges')
     .describe('rejectnewmsg', 'Reject all new challenges with a customized message included in quote argv quote'
     .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-    // (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
     .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
