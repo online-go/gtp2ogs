@@ -15,7 +15,7 @@ with [OGS (Online-Go.com Server)](https://online-go.com/)
 
 #### 2. Run
 
-- For linux in terminal, or for windows in a node.js command prompt (as admin) :
+- For linux in terminal :
 
 ```
 sudo npm install -g gtp2ogs
@@ -51,7 +51,7 @@ npm install -g tracer
 For linux (preferably as sudo) :
 
 ```
-node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /path/to/your/ai/runfile.file <botargument1> <botargument2>
+node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /replace/with/full/path/to/your/ai/runfile.file <botargument1> <botargument2>
 ```
 
 For windows (preferably as admin) : 
@@ -62,7 +62,7 @@ pushd C:\Program Files\nodejs && node.exe C:\replace\with\full\path\to\node_modu
 
 note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
 
-note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but it possible to use for example 3, 8, or more
+note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but it possible to use for example 3,4,5 , or as many as you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
 
@@ -77,7 +77,7 @@ To upgrade to devel branch, see :
 
 # Options
 
-The following options are placed in the above ```<arguments>``` section.  Put a space in between options when there are more than one.  Also put a space in between the option and the parameter like:
+The following options are placed in the above ```<gtp2ogsarguments>``` section.  Put a space in between options when there are more than one.  Also put a space in between the option and the parameter like:
 
   ```--startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
 
@@ -107,11 +107,15 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--rejectnew```  Reject all new challenges
 
+  ```--rejectnewargv "your text here"```  Reject all new challenges with a customized message included in "argv" (for example to explain why, for how long, if your bot is busy playing a tournament, etc...
+
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
 
   ```--boardsize```  Board size(s) to accept (default 9,13,19)
 
-  ```--komi``` Allowed komi values : when --komi is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,  example : `--komi null,0.5,7.5` or `--komi 7.5`
+  ```--komi``` Allowed komi values : when `--komi` is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,
+example : `--komi null,0.5,7.5` will allow any of the komi values automatic, 0.5, or 7.5, and will reject any other value ;
+or another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value, even if the automatic komi (null) happens to have the value 7.5 for chinese rules
 
   ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
@@ -143,7 +147,7 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--maxperiodsunranked```  Maximum number of unranked periods
 
-  ```--maxtotalgames``` Maximum number of total games
+  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is in fact the maximum total number of connected games for your bot (correspondence games are currently included in the connected games count if you use `--persist` )
 
   ```--maxactivegames``` Maximum number of active games per player
 
@@ -151,9 +155,9 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
 
   ```--maxrank```  Maximum opponent rank to accept (e.g. 1d)
 
-  ```--greeting```  Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
+  ```--greeting "Hello, have a nice game"```  Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
 
-  ```--farewell```  Thank you message to appear in chat at end of game (ex: "Thank you for playing")
+  ```--farewell "Thank you for playing"```  Thank you message to appear in chat at end of game (ex: "Thank you for playing")
 
   ```--proonly```  Only accept matches from professionals
 
@@ -180,7 +184,6 @@ The following options are placed in the above ```<arguments>``` section.  Put a 
   ```--nopauseunranked```  Do not allow unranked games to be paused
 
   ```--hidden```  Hides the botname from the OGS game creation bot list
-```
 
 note : a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
 
