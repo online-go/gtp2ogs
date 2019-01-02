@@ -47,14 +47,17 @@ let optimist = require("optimist")
     .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
     .describe('corrqueue', 'Process correspondence games one at a time')
+    .describe('maxtotalgames', 'Maximum number of total games')
+    // maxtotalgames is in fact the maximum total number of connected games for your bot (correspondence games are currently
+    // included in the total connected games count if you use `--persist` )
+    .describe('maxactivegames', 'Maximum number of active games per player')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges with the default reject message')
-    .describe('rejectnewmsg', 'Changes the reject message (but doesnt reject games, see below)')
+    .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
     .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
     // behaviour : 1. when only --rejectnew is used, default reject message is printed
-    // behaviour : 2. when you want to reject games with a customized reject message, you need both 
-    // rejectnew and rejectnewmsg, for example :
+    // behaviour : 2. when you want to add a customized reject message, do it like that for example :
     // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
     .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
@@ -87,10 +90,6 @@ let optimist = require("optimist")
     .describe('maxperiods', 'Maximum number of periods')
     .describe('maxperiodsranked', 'Maximum number of ranked periods')
     .describe('maxperiodsunranked', 'Maximum number of unranked periods')
-    .describe('maxtotalgames', 'Maximum number of total games')
-    // maxtotalgames is in fact the maximum total number of connected games for your bot (correspondence games are currently
-    // included in the total connected games count if you use `--persist` )
-    .describe('maxactivegames', 'Maximum number of active games per player')
     .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
     .string('minrank')
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
@@ -111,7 +110,7 @@ let optimist = require("optimist")
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
-    .describe('hidden', 'Don\'t list the bot in the public challenge list')
+    .describe('hidden', 'Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)')
 ;
 let argv = optimist.argv;
 

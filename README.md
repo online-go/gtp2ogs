@@ -123,17 +123,15 @@ The following options are placed in the above ```<gtp2ogsarguments>``` section. 
 
   ```--corrqueue```  Process correspondence games one at a time
 
+  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is in fact the maximum total number of connected games for your bot (correspondence games are currently included in the connected games count if you use `--persist` )
+
+  ```--maxactivegames``` Maximum number of active games per player
+
   ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
 
   ```--rejectnew```  Reject all new challenges with the default reject message
 
-  ```--rejectnewmsg``` Changes the reject message (but doesnt reject games, see below)
-
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` , behaviour : 
-
-1. when only --rejectnew is used, default reject message is printed
-2. when you want to reject games with a customized reject message, you need both rejectnew and rejectnewmsg, for example : 
---rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"```  if you add the rejectnewmsg argument, Reject all new challenges with a customized message instead of the default message. This message has to be included in "not accepting games because blablablah" (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
 
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
 
@@ -174,10 +172,6 @@ or another example `--komi 7.5` will only accept komi value 7.5 and will reject 
 
   ```--maxperiodsunranked```  Maximum number of unranked periods
 
-  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is in fact the maximum total number of connected games for your bot (correspondence games are currently included in the connected games count if you use `--persist` )
-
-  ```--maxactivegames``` Maximum number of active games per player
-
   ```--minrank```  Minimum opponent rank to accept (e.g. 15k)
 
   ```--maxrank```  Maximum opponent rank to accept (e.g. 1d)
@@ -210,7 +204,7 @@ or another example `--komi 7.5` will only accept komi value 7.5 and will reject 
 
   ```--nopauseunranked```  Do not allow unranked games to be paused
 
-  ```--hidden```  Hides the botname from the OGS game creation bot list
+  ```--hidden```  Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)
 
 note : a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
 
