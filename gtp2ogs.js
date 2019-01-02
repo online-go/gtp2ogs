@@ -49,9 +49,13 @@ let optimist = require("optimist")
     .describe('corrqueue', 'Process correspondence games one at a time')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
-    .describe('rejectnew', 'Reject all new challenges')
-    .describe('rejectnewmsg', 'Reject all new challenges with a customized message included in quote argv quote')
+    .describe('rejectnew', 'Reject all new challenges with the default reject message')
+    .describe('rejectnewmsg', 'Changes the reject message (but doesnt reject games, see below)')
     .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
+    // behaviour : 1. when only --rejectnew is used, default reject message is printed
+    // behaviour : 2. when you want to reject games with a customized reject message, you need both 
+    // rejectnew and rejectnewmsg, for example :
+    // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
     .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
@@ -59,10 +63,10 @@ let optimist = require("optimist")
     .describe('komi', 'Allowed komi values')
     .string('komi')
     .default('komi', 'null')
-    // behaviour : when --komi is not used default is "null" (Automatic) and other komi values will be rejected, 
-    //but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead
+    // behaviour : when --komi is not used default is "null" (Automatic), and other komi values will be rejected, 
+    // but if --komi argument is used with the wanted komi value(s) then only these value(s) will be allowed instead
     // example : --komi null,0.5,7.5 or --komi 7.5
-    // TODO : re-add the ability to accept any komi value (other than null) when --komi is not used
+    // if someone wants to TODO it : re-add the ability to accept any komi value (other than null) when --komi is not used
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')

@@ -4,7 +4,7 @@ This javascript tool allows Go bots that support GTP [(Go Text Protocol)](https:
 
 No programming knowledge is needed to use it : just install it and it works.
 
-Programming knowledge is needed only to add extra features such as displaying sending winrates and variations at every move, for example.
+Programming knowledge is needed only to add extra features such as displaying and sending winrates and variations at every move, for example.
 
 # Full tutorial 
 
@@ -89,9 +89,11 @@ note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of th
 
 ### Extra : add features by editing gtp2ogs.js file
 
-This step is totally not neededTo do that, programming knowledge is needed (or you can ask for help)
+This step is totally not needed but can be much appreciated
 
-For example you can program the gtp2ogs.js so that it sends winrate and playouts/visits information at every move
+To do that, programming knowledge is needed (or you can ask for help)
+
+For example you can program the gtp2ogs.js so that it sends winrate and playouts/visits information at every move, or even clickable variations, such as how [some bots](https://online-go.com/game/15926249) do for example
 
 # Options
 
@@ -125,7 +127,13 @@ The following options are placed in the above ```<gtp2ogsarguments>``` section. 
 
   ```--rejectnew```  Reject all new challenges with the default reject message
 
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"```  if you add the rejectnewmsg argument, Reject all new challenges with a customized message instead of the default message. This message has to be included in "not accepting games because blablablah" (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
+  ```--rejectnewmsg``` Changes the reject message (but doesnt reject games, see below)
+
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` , behaviour : 
+
+1. when only --rejectnew is used, default reject message is printed
+2. when you want to reject games with a customized reject message, you need both rejectnew and rejectnewmsg, for example : 
+--rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
 
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
 
