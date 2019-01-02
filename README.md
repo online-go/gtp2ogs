@@ -115,17 +115,17 @@ The following options are placed in the above ```<gtp2ogsarguments>``` section. 
 
   ```--json, -j```  Send and receive GTP commands in a JSON encoded format
 
-  ```--persist```  Bot process remains running between moves
-
   ```--kgstime```  Set this if bot understands the kgs-time_settings command
 
   ```--noclock```  Do not send any clock/time data to the bot
 
+  ```--persist```  Bot process remains running between moves
+
   ```--corrqueue```  Process correspondence games one at a time
 
-  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is in fact the maximum total number of connected games for your bot (correspondence games are currently included in the connected games count if you use `--persist` )
+  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is actually the maximum total number of connected games for your bot (correspondence games are currently included in the connected games count if you use `--persist` ) , which means the maximum number of games your bot can play at the same time (choose a low number to regulate your GPU use)
 
-  ```--maxactivegames``` Maximum number of active games per player
+  ```--maxactivegames``` Maximum number of active games per player against this bot
 
   ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
 
