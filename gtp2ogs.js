@@ -1153,7 +1153,7 @@ class Connection {
                     //
                     for (let game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
-                            this.connected_games[game_id].makeMove(this.state.moves.length);
+                            this.connected_games[game_id].makeMove(this.connected_games[game_id].state.moves.length);
                             break;
                         }
                     }
