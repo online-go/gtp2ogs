@@ -1,19 +1,23 @@
 # gtp2ogs
 
-This script allows Go bots that support GTP (Go Text Protocol) to communicate
+This script allows Go bots that support GTP [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) to communicate
 with [OGS (Online-Go.com Server)](https://online-go.com/)
 
 # Full tutorial 
 
 [for linux and windows, with screenshots, examples, and detailed explanations](https://github.com/wonderingabout/gtp2ogs-tutorial)
 
-# Installation
+# Quick Guide
 
-#### 1. Use your systems package manager or otherwise install `node.js` from http://nodejs.org/ 
-  
-(this will also install npm = node package manager)
+### 1. install node.js and npm
 
-#### 2. Run
+To install nodejs, you can :
+- either use your system package manager (like apt-get for ubuntu)
+- or download it from [nodejs website downloads](https://nodejs.org/en/download/) for linux or windows
+
+note : installing nodejs will also install npm = node package manager, which will be needed later
+
+### 2. install gtp2ogs using npm
 
 - For linux in terminal :
 
@@ -36,9 +40,12 @@ default path install is something like this :
 
 On all operating systems, gtp2ogs will be installed in 2 different directories, but **the one that needs to be run with node is gtp2ogs.js in node_modules directory**
 
-#### 3. Optionally install any missing node.js packages if basic usage below fails, such as:
+### 3. Optional : install any missing node.js packages
  
-(as `sudo` for linux, and as admin for windows)
+**This step can be skipped**
+
+you may need to install extra tools if the basic usage below fails, such as
+(run as `sudo` for linux, and as admin for windows)
  
 ```
 npm install -g socket.io-client
@@ -46,7 +53,18 @@ npm install -g optimist
 npm install -g tracer
   ```
 
-# Basic usage
+### 4. Recommended : Upgrade to devel branch
+
+This step is **is recommended**
+
+By default, npm installs an old branch of gtp2ogs that does not include latest improvements, new features, and fixes
+
+To upgrade to devel branch (newest), see :
+
+- for linux : [3A3) Optional : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
+- for windows : [3B3) Optional : Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
+
+### 5. Basic usage : start gtp2ogs.js using nodejs
 
 For linux (preferably as sudo) :
 
@@ -65,15 +83,6 @@ note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments
 note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but it possible to use for example 3,4,5 , or as many as you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
-
-# Optional : Upgrade to devel branch
-
-By default, npm installs an old release that does not include latest improvements and fixes
-
-To upgrade to devel branch, see :
-
-- for linux : [3A3) Optional : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
-- for windows : [3B3) Optional : Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
 
 # Options
 
