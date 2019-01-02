@@ -1,7 +1,10 @@
 # gtp2ogs
 
-This script allows Go bots that support GTP [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) to communicate
-with [OGS (Online-Go.com Server)](https://online-go.com/)
+This javascript tool allows Go bots that support GTP [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) to communicate with OGS [(Online-Go.com Server)](https://online-go.com/)
+
+No programming knowledge is needed to use it : just install it and it works.
+
+Programming knowledge is needed only to add extra features such as displaying sending winrates and variations at every move, for example.
 
 # Full tutorial 
 
@@ -15,7 +18,7 @@ To install nodejs, you can :
 - either use your system package manager (like apt-get for ubuntu)
 - or download it from [nodejs website downloads](https://nodejs.org/en/download/) for linux or windows
 
-note : installing nodejs will also install npm = node package manager, which will be needed later
+note : installing nodejs will also install npm = node package manager. Both will be needed later.
 
 ### 2. install gtp2ogs using npm
 
@@ -44,7 +47,7 @@ On all operating systems, gtp2ogs will be installed in 2 different directories, 
  
 **This step can be skipped**
 
-you may need to install extra tools if the basic usage below fails, such as
+you may need to install extra tools if the [Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) below fails, such as
 (run as `sudo` for linux, and as admin for windows)
  
 ```
@@ -64,7 +67,7 @@ To upgrade to devel branch (newest), see :
 - for linux : [3A3) Optional : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
 - for windows : [3B3) Optional : Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
 
-### 5. Basic usage : start gtp2ogs.js using nodejs
+### 5. Most common usage : start gtp2ogs.js using nodejs
 
 For linux (preferably as sudo) :
 
@@ -83,6 +86,12 @@ note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments
 note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but it possible to use for example 3,4,5 , or as many as you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
+
+### Extra : add features by editing gtp2ogs.js file
+
+This step is totally not neededTo do that, programming knowledge is needed (or you can ask for help)
+
+For example you can program the gtp2ogs.js so that it sends winrate and playouts/visits information at every move
 
 # Options
 
@@ -114,15 +123,16 @@ The following options are placed in the above ```<gtp2ogsarguments>``` section. 
 
   ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
 
-  ```--rejectnew```  Reject all new challenges
+  ```--rejectnew```  Reject all new challenges with the default reject message
 
-  ```--rejectnewargv "your text here"```  Reject all new challenges with a customized message included in "argv" (for example to explain why, for how long, if your bot is busy playing a tournament, etc...
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"```  if you add the rejectnewmsg argument, Reject all new challenges with a customized message instead of the default message. This message has to be included in "not accepting games because blablablah" (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
 
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
 
   ```--boardsize```  Board size(s) to accept (default 9,13,19)
 
   ```--komi``` Allowed komi values : when `--komi` is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,
+
 example : `--komi null,0.5,7.5` will allow any of the komi values automatic, 0.5, or 7.5, and will reject any other value ;
 or another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value, even if the automatic komi (null) happens to have the value 7.5 for chinese rules
 
