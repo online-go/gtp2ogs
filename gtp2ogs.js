@@ -1376,7 +1376,7 @@ class Connection {
 
         if (!allowed_speeds[t.speed]) {
             conn_log(user.username + " wanted speed " + t.speed + ", not in: " + argv.speed);
-            return { reject: true, msg: "The" + t.speed + " game speed are not allowed, please choose one of these allowed game speeds : " + argv.speed };
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed, please choose one of these allowed game speeds : " + argv.speed };
         }
 
         if (!allowed_timecontrols[t.time_control]) {
