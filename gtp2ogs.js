@@ -158,38 +158,6 @@ function check_rejectnew()
     return false;
 }
 
-let allowed_sizes = [];
-
-if (argv.boardsize) {
-    for (let i of argv.boardsize.split(',')) {
-        allowed_sizes[i] = true;
-    }
-}
-
-let allowed_komi = [];
-
-if (argv.komi) {
-    for (let i of argv.komi.split(',')) {
-        allowed_komi[i] = true;
-    }
-}
-
-let allowed_speeds = {};
-
-if (argv.speed) {
-    for (let i of argv.speed.split(',')) {
-        allowed_speeds[i] = true;
-    }
-}
-
-let allowed_timecontrols = {};
-
-if (argv.timecontrol) {
-    for (let i of argv.timecontrol.split(',')) {
-        allowed_timecontrols[i] = true;
-    }
-}
-
 let banned_users = {};
 
 if (argv.ban) {
@@ -254,6 +222,39 @@ if (argv.maxrank) {
     } else {
         console.error("Could not parse maxrank " + argv.maxrank);
         process.exit();
+    }
+}
+
+
+let allowed_sizes = [];
+
+if (argv.boardsize) {
+    for (let i of argv.boardsize.split(',')) {
+        allowed_sizes[i] = true;
+    }
+}
+
+let allowed_komi = [];
+
+if (argv.komi) {
+    for (let i of argv.komi.split(',')) {
+        allowed_komi[i] = true;
+    }
+}
+
+let allowed_timecontrols = {};
+
+if (argv.timecontrol) {
+    for (let i of argv.timecontrol.split(',')) {
+        allowed_timecontrols[i] = true;
+    }
+}
+
+let allowed_speeds = {};
+
+if (argv.speed) {
+    for (let i of argv.speed.split(',')) {
+        allowed_speeds[i] = true;
     }
 }
 
@@ -1346,6 +1347,59 @@ class Connection {
         post(api1("me/friends/invitations"), this.auth({ 'from_user': notification.user.id }))
         .then((obj)=> conn_log(obj.body))
         .catch(conn_log);
+
+
+    } /* }}} */
+    // Check user is acceptable
+    //
+    checkUser(notification) { /* {{{ */
+        let user = notification.user;
+
+        if (banned_users[user.username] || banned_users[user.id]) {
+            conn_log(user.username + " (" + user.id + ") is banned, rejecting challenge");
+            return { reject: true };
+        } else if (notification.ranked && (banned_ranked_users[user.username] || banned_ranked_users[user.id])) {
+            conn_log(user.username + " (" + user.id + ") is banned from ranked, rejecting challenge");
+            return { reject: true };
+        } else if (!notification.ranked && (banned_unranked_users[user.username] || banned_unranked_users[user.id])) {
+            conn_log(user.username + " (" + user.id + ") is banned from unranked, rejecting challenge");
+            return { reject: true };
+        }
+
+        if (argv.proonly && !user.professional) {
+            conn_log(user.username + " is not a professional");
+            return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
+        }
+
+        let active_games = conn.gamesForPlayer(notification.user.id);
+        if (argv.maxactivegames && active_games >= argv.maxactivegames) {
+            conn_log("Too many active games.");
+            return { reject: true, msg: "Maximum number of active games allowed per player against this bot is " + argv.maxactivegames + " , please reduce your number of active games against this bot, and try again" };
+        }
+
+        if (this.connected_games) {
+            if (DEBUG) console.log("# of connected games = " + Object.keys(this.connected_games).length);
+        } else {
+            if (DEBUG) console.log("There are no connected games");
+        }
+
+        if (argv.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= argv.maxtotalgames){
+            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + argv.maxtotalgames);
+            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + argv.maxtotalgames + " , try again later " };
+        }
+
+        if (user.ranking < argv.minrank) {
+            conn_log(user.username + " ranking too low: " + user.ranking);
+            return { reject: true, msg: "Minimum rank allowed is " + argv.minrank + " , your rank is " + user.ranking + " your rank is too low. " };
+        }
+
+        if (user.ranking > argv.maxrank) {
+            conn_log(user.username + " ranking too high: " + user.ranking);
+            return { reject: true, msg: "Maximum rank allowed is " + argv.maxrank + " , your rank is " + user.ranking + " your rank is too high. " };
+        }
+
+        return { reject: false }; // OK !
+
     }; /* }}} */
     // Check game settings are acceptable
     //
@@ -1359,111 +1413,6 @@ class Connection {
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
 
-        if (notification.width != notification.height) {
-            conn_log("board was not square, rejecting challenge");
-            return { reject: true, msg: "Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
-        }
-
-        if(!allowed_sizes[notification.width]) {
-            conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
-            return { reject: true, msg: "Board width " + notification.width + " is not allowed, please choose one of these allowed board sizes : " + argv.boardsize };
-        }
-
-        if(!allowed_komi[notification.komi]) {
-            conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi + ", rejecting challenge");
-            return { reject: true, msg: "komi " + notification.komi + " is not an allowed komi, please choose one of these allowed komi : " + argv.komi };
-        }
-
-        if (!allowed_speeds[t.speed]) {
-            conn_log(user.username + " wanted speed " + t.speed + ", not in: " + argv.speed);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed, please choose one of these allowed game speeds : " + argv.speed };
-        }
-
-        if (!allowed_timecontrols[t.time_control]) {
-            conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + argv.timecontrol);
-            return { reject: true, msg: "The" + t.time_control + " is not allowed, please choose one of these allowed time controls : " + argv.timecontrol };
-        }
-
-        if (argv.minmaintime) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
-            }
-            if (t.total_time   < argv.minmaintime  || // absolute
-                t.initial_time < argv.minmaintime  || // fischer
-                t.max_time     < argv.minmaintime  || // fischer
-                t.main_time    < argv.minmaintime) {  // others
-                    conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
-                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds, please increase main time " };
-                }
-        }
-
-        if (argv.maxmaintime) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > argv.maxmaintime  || // absolute
-                t.initial_time > argv.maxmaintime  || // fischer
-                t.max_time     > argv.maxmaintime  || // fischer
-                t.main_time    > argv.maxmaintime) {  // others
-                conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
-                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. " };
-            }
-        }
-
-        if (argv.minperiodtime &&
-            (      (t.period_time    < argv.minperiodtime)
-                || (t.time_increment < argv.minperiodtime)
-                || (t.per_move       < argv.minperiodtime)
-                || ((t.period_time / t.stones_per_period) < argv.minperiodtime)
-            ))
-        {
-            conn_log(user.username + " wanted period too short");
-            return { reject: true, msg: "Minimum period length (per stone in period) is " + argv.minperiodtime + " seconds, please increase period time. " };
-        }
-
-        if (argv.maxperiodtime &&
-            (      (t.period_time    > argv.maxperiodtime)
-                || (t.time_increment > argv.maxperiodtime)
-                || (t.per_move       > argv.maxperiodtime)
-                || ((t.period_time / t.stones_per_period) > argv.maxperiodtime)
-            ))
-        {
-            conn_log(user.username + " wanted period too long");
-            return { reject: true, msg: "Maximum period length (per stone in period) is " + argv.maxperiodtime + " seconds, please reduce period time. " };
-        }
-
-        if (argv.minperiods && (t.periods < argv.minperiods)) {
-            conn_log(user.username + " wanted too few periods: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods " };
-        }
-
-        if (argv.minperiodsranked && notification.ranked && (t.periods < argv.minperiodsranked)) {
-            conn_log(user.username + " wanted too few ranked periods: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods " };
-        }
-
-        if (argv.minperiodsunranked && !notification.ranked && (t.periods < argv.minperiodsunranked)) {
-            conn_log(user.username + " wanted too few unranked periods: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods " };
-        }
-
-        if (t.periods > argv.maxperiods) {
-            conn_log(user.username + " wanted too many periods: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods is " + argv.maxperiods + " , please reduce the number of periods " };
-        }
-
-        if (notification.ranked && t.periods > argv.maxperiodsranked) {
-            conn_log(user.username + " wanted too many ranked periods: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods " };
-        }
-
-        if (!notification.ranked && t.periods > argv.maxperiodsunranked) {
-            conn_log(user.username + " wanted too many unranked periods: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods " };
-        }
-
         if (argv.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
             return { reject: true, msg: "This bot accepts ranked games only. " };
@@ -1472,6 +1421,16 @@ class Connection {
         if (argv.unrankedonly && notification.ranked) {
             conn_log("Unranked games only");
             return { reject: true, msg: "This bot accepts Unranked games only. " };
+        }
+
+        if (notification.width != notification.height) {
+            conn_log("board was not square, rejecting challenge");
+            return { reject: true, msg: "Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+        }
+
+        if(!allowed_sizes[notification.width]) {
+            conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
+            return { reject: true, msg: "Board width " + notification.width + " is not allowed, please choose one of these allowed board sizes : " + argv.boardsize };
         }
 
         if (notification.handicap < argv.minhandicap) {
@@ -1504,58 +1463,105 @@ class Connection {
             return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxunrankedhandicap + " , please increase the number of handicap stones" };
         }
 
+        if(!allowed_komi[notification.komi]) {
+            conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi + ", rejecting challenge");
+            return { reject: true, msg: "komi " + notification.komi + " is not an allowed komi, please choose one of these allowed komi : " + argv.komi };
+        }
+
+        if (!allowed_speeds[t.speed]) {
+            conn_log(user.username + " wanted speed " + t.speed + ", not in: " + argv.speed);
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed, please choose one of these allowed game speeds : " + argv.speed };
+        }
+
+        if (!allowed_timecontrols[t.time_control]) {
+            conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + argv.timecontrol);
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed, please choose one of these allowed time controls : " + argv.timecontrol };
+        }
+
+        if (argv.minmaintime) {
+            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Minimum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+            }
+            if (t.total_time   < argv.minmaintime  || // absolute
+                t.initial_time < argv.minmaintime  || // fischer
+                t.max_time     < argv.minmaintime  || // fischer
+                t.main_time    < argv.minmaintime) {  // others
+                    conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
+                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds, please increase main time " };
+                }
+        }
+
+        if (argv.maxmaintime) {
+            if (["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Maximum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
+            }
+            if (t.total_time   > argv.maxmaintime  || // absolute
+                t.initial_time > argv.maxmaintime  || // fischer
+                t.max_time     > argv.maxmaintime  || // fischer
+                t.main_time    > argv.maxmaintime) {  // others
+                conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
+                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. " };
+            }
+        }
+
+        if (argv.minperiods && (t.periods < argv.minperiods)) {
+            conn_log(user.username + " wanted too few periods: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods " };
+        }
+
+        if (argv.minperiodsranked && notification.ranked && (t.periods < argv.minperiodsranked)) {
+            conn_log(user.username + " wanted too few ranked periods: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods " };
+        }
+
+        if (argv.minperiodsunranked && !notification.ranked && (t.periods < argv.minperiodsunranked)) {
+            conn_log(user.username + " wanted too few unranked periods: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods " };
+        }
+
+        if (t.periods > argv.maxperiods) {
+            conn_log(user.username + " wanted too many periods: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods is " + argv.maxperiods + " , please reduce the number of periods " };
+        }
+
+        if (notification.ranked && t.periods > argv.maxperiodsranked) {
+            conn_log(user.username + " wanted too many ranked periods: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods " };
+        }
+
+        if (!notification.ranked && t.periods > argv.maxperiodsunranked) {
+            conn_log(user.username + " wanted too many unranked periods: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods " };
+        }
+
+        if (argv.minperiodtime &&
+            (      (t.period_time    < argv.minperiodtime)
+                || (t.time_increment < argv.minperiodtime)
+                || (t.per_move       < argv.minperiodtime)
+                || ((t.period_time / t.stones_per_period) < argv.minperiodtime)
+            ))
+        {
+            conn_log(user.username + " wanted period too short");
+            return { reject: true, msg: "Minimum period length (per stone in period) is " + argv.minperiodtime + " seconds, please increase period time. " };
+        }
+
+        if (argv.maxperiodtime &&
+            (      (t.period_time    > argv.maxperiodtime)
+                || (t.time_increment > argv.maxperiodtime)
+                || (t.per_move       > argv.maxperiodtime)
+                || ((t.period_time / t.stones_per_period) > argv.maxperiodtime)
+            ))
+        {
+            conn_log(user.username + " wanted period too long");
+            return { reject: true, msg: "Maximum period length (per stone in period) is " + argv.maxperiodtime + " seconds, please reduce period time. " };
+        }
+
+
         return { reject: false };  // Ok !
 
-    } /* }}} */
-    // Check user is acceptable
-    //
-    checkUser(notification) { /* {{{ */
-        let user = notification.user;
 
-        if (banned_users[user.username] || banned_users[user.id]) {
-            conn_log(user.username + " (" + user.id + ") is banned, rejecting challenge");
-            return { reject: true };
-        } else if (notification.ranked && (banned_ranked_users[user.username] || banned_ranked_users[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from ranked, rejecting challenge");
-            return { reject: true };
-        } else if (!notification.ranked && (banned_unranked_users[user.username] || banned_unranked_users[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from unranked, rejecting challenge");
-            return { reject: true };
-        }
-
-        if (user.ranking < argv.minrank) {
-            conn_log(user.username + " ranking too low: " + user.ranking);
-            return { reject: true, msg: "Minimum rank allowed is " + argv.minrank + " , your rank is too low. " };
-        }
-
-        if (user.ranking > argv.maxrank) {
-            conn_log(user.username + " ranking too high: " + user.ranking);
-            return { reject: true, msg: "Maximum rank allowed is " + argv.maxrank + " , your rank is too high. " };
-        }
-
-        if (argv.proonly && !user.professional) {
-            conn_log(user.username + " is not a professional");
-            return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
-        }
-
-        let active_games = conn.gamesForPlayer(notification.user.id);
-        if (argv.maxactivegames && active_games >= argv.maxactivegames) {
-            conn_log("Too many active games.");
-            return { reject: true, msg: "Maximum number of active games allowed per player against this bot is " + argv.maxactivegames + " , please reduce your number of active games against this bot, and try again" };
-        }
-
-        if (this.connected_games) {
-            if (DEBUG) console.log("# of connected games = " + Object.keys(this.connected_games).length);
-        } else {
-            if (DEBUG) console.log("There are no connected games");
-        }
-
-        if (argv.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= argv.maxtotalgames){
-            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + argv.maxtotalgames);
-            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + argv.maxtotalgames + " , try again later " };
-        }
-
-        return { reject: false };
 
     } /* }}} */
     // Check everything and return reject status + optional error msg.
