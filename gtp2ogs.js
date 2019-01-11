@@ -1390,12 +1390,12 @@ class Connection {
 
         if (user.ranking < argv.minrank) {
             conn_log(user.username + " ranking too low: " + user.ranking);
-            return { reject: true, msg: "Minimum rank allowed is " + argv.minrank + " , your rank is " + user.ranking + " your rank is too low. " };
+            return { reject: true, msg: "Minimum rank allowed is " + argv.minrank + " (in bot ranking units), your rank is " + user.ranking + " (in bot ranking units), your rank is too low, try again when your rank is high enough." };
         }
 
         if (user.ranking > argv.maxrank) {
             conn_log(user.username + " ranking too high: " + user.ranking);
-            return { reject: true, msg: "Maximum rank allowed is " + argv.maxrank + " , your rank is " + user.ranking + " your rank is too high. " };
+            return { reject: true, msg: "Maximum rank allowed is " + argv.maxrank + " (in bot ranking units), your rank is " + user.ranking + " (in bot ranking units), your rank is too high, try again when your rank is low enough." };
         }
 
         return { reject: false }; // OK !
@@ -1572,10 +1572,10 @@ class Connection {
             return { reject: true, msg: REJECTNEWMSG };
         }
 
-        let c = this.checkGameSettings(notification);
+        let c = this.checkUser(notification);
         if (c.reject)  return c;
 
-        c = this.checkUser(notification);
+        c = this.checkGameSettings(notification);
         if (c.reject)  return c;
 
         return { reject: false };  /* All good. */
