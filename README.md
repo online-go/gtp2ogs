@@ -206,6 +206,21 @@ or another example `--komi 7.5` will only accept komi value 7.5 and will reject 
 
   ```--hidden```  Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)
 
-note : a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
+## notes :
 
-note 2 : on OGS, black player will always get the handicap stones regardless of rank difference (if null (automatic) komi is selected, the komi will be 0.5 , but you can restrict allowed komi for example to only 7.5 or null with `--komi 7.5,null` , or only 7.5 komi with `--komi 7.5` for example
+#### 1.
+
+a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
+
+#### 2 : 
+
+on OGS, black player will always get the handicap stones regardless of rank difference (if null (automatic) komi is selected, the komi will be 0.5 , 
+
+but you can restrict allowed komi for example to only 7.5 or null with `--komi 7.5,null` , or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi if your bot does not support 0.5 komi value.
+
+#### 3 : 
+
+when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , so test special characters in your messages with caution 
+
+these special characters have been tested to work on messages, among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
+
