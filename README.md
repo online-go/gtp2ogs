@@ -137,10 +137,7 @@ The following options are placed in the above ```<gtp2ogsarguments>``` section. 
 
   ```--boardsize```  Board size(s) to accept (default 9,13,19)
 
-  ```--komi``` Allowed komi values : when `--komi` is not used default is "null" (Automatic) and other komi values will be rejected, but if --komi argument is used with the wanted komi value(s) then only these values will be allowed instead,
-
-example : `--komi null,0.5,7.5` will allow any of the komi values automatic, 0.5, or 7.5, and will reject any other value ;
-or another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value, even if the automatic komi (null) happens to have the value 7.5 for chinese rules
+  ```--komi``` Allowed komi values : when `--komi` is not used default is "null" (Automatic) and other komi values will be rejected, but if `--komi` argument is used with the wanted komi value(s) then only these values will be allowed instead, see [notes](/README.md#notes-) for details
 
   ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
@@ -218,7 +215,15 @@ on OGS, black player will always get the handicap stones regardless of rank diff
 
 but you can restrict allowed komi for example to only 7.5 or null with `--komi 7.5,null` , or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi if your bot does not support 0.5 komi value.
 
-#### 3 : 
+#### 3 :
+
+explanation on how to use komi argument:
+
+- `--komi null,0.5,7.5` for example, will allow any of these komi values : automatic(null), 0.5, or 7.5, and will reject any other value
+- another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value. Note that in that example, if null (automatic) komi happens to have the value 7.5 (bots will always replace any rules with chinese rules, hence always having a 7.5 komi on 19x19 with no handicap),
+- the `--komi 7.5` can be useful if your bot handles handicap well, but only with the value 7.5 for example (and not 0.5)
+
+#### 4 : 
 
 when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , so test special characters in your messages with caution 
 
