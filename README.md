@@ -220,7 +220,7 @@ but you can restrict allowed komi for example to only 7.5 or null with `--komi 7
 explanation on how to use komi argument:
 
 - `--komi null,0.5,7.5` for example, will allow any of these komi values : automatic(null), 0.5, or 7.5, and will reject any other value
-- another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value. Note that in that example, if null (automatic) komi happens to have the value 7.5 (bots will always replace any rules with chinese rules, hence always having a 7.5 komi on 19x19 with no handicap),
+- another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value. In that example, note that if null (automatic) komi happens to have the value 7.5, the null value will be set to 7.5 and will be accepted and game will start (bots will always replace any rules with chinese rules, so a non handicap game 19x19 on ogs against a bot will always have the komi 7.5)
 - the `--komi 7.5` can be useful if your bot handles handicap well, but only with the value 7.5 for example (and not 0.5)
 
 #### 4 : 
