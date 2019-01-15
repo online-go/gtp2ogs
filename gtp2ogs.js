@@ -66,11 +66,11 @@ let optimist = require("optimist")
     .default('boardsize', '9,13,19')
     .describe('komi', 'Allowed komi values')
     .string('komi')
-    .default('komi', 'null')
-    // behaviour : when --komi is not used default is "null" (Automatic), and other komi values will be rejected, 
-    // but if --komi argument is used with the wanted komi value(s) then only these value(s) will be allowed instead
-    // example : --komi null,0.5,7.5 or --komi 7.5
-    // if someone wants to TODO it : re-add the ability to accept any komi value (other than null) when --komi is not used
+    .default('komi', 'auto')
+    // behaviour: --komi may be specified as "auto" (Automatic), "any"
+    // (accept any value) or comma separated list of explicit values.
+    // The default is "auto".
+    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi any
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
@@ -234,11 +234,18 @@ if (argv.boardsize) {
     }
 }
 
+let allow_any_komi = false;
 let allowed_komi = [];
 
 if (argv.komi) {
-    for (let i of argv.komi.split(',')) {
-        allowed_komi[i] = true;
+    for (let komi of argv.komi.split(',')) {
+        if (komi == "any") {
+            allow_any_komi = true;
+        } else if (komi == "auto") {
+            allowed_komi[null] = true;
+        } else {
+            allowed_komi[komi] = true;
+        }
     }
 }
 
@@ -1463,7 +1470,7 @@ class Connection {
             return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxunrankedhandicap + " , please increase the number of handicap stones" };
         }
 
-        if(!allowed_komi[notification.komi]) {
+        if (!allowed_komi[notification.komi] && !allow_any_komi) {
             conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi + ", rejecting challenge");
             return { reject: true, msg: "komi " + notification.komi + " is not an allowed komi, please choose one of these allowed komi : " + argv.komi };
         }
