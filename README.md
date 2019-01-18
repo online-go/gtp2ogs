@@ -135,7 +135,9 @@ The following options are placed in the above ```<gtp2ogsarguments>``` section. 
 
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
 
-  ```--boardsize```  Board size(s) to accept (default 9,13,19)
+  ```--boardsize```  Possible boardsize values `any` (allows ALL boardsizes, use only if your bot can handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size written in numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), see [notes](/README.md#notes-) for details
+
+  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom board size (if your bot can handle it), it is needed to use `custom` followed by comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, see [notes](/README.md#notes-) for details
 
   ```--komi``` Possible komi values `auto` (allows Automatic komi), `any` (allows all komi values), and for example `7.5` (allows komi value 7.5). When `any` is used alone, all komi values are allowed. When an argument other than `any` is used, only the chosen argument komi values are allowed and all other komi values are rejected see [notes](/README.md#notes-) for details
 
@@ -228,4 +230,33 @@ explanation on how to use komi argument:
 when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , so test special characters in your messages with caution 
 
 these special characters have been tested to work on messages, among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
+
+#### 5 : 
+
+example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9)
+
+or `--boardsize any` (if you made some fancy bot)
+    
+if you want to use a "custom" board size, you need to specify wanted custom width(s) and height(s) desired
+
+for example : `--boardsize custom --boardsizewidth 25 --boardsizeheight 1` will allow only 25x1 board size
+
+or another example `--boardsize custom --boardsizewidth 9,10,11 --boardsizeheight 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25` will allow all possible combinations of width and height here (there 3 multiplied by 17 possible combinations here, which is 51 possible board sizes !
+
+finally, it is possible to play "official" boardsizes too with this setting, 
+for example `--boardsize custom --boardsizewidth 9 --boardsizeheight 9,19` will allow 9x9 and 9x19 board sizes
+
+# Contributing
+
+You like gtp2ogs and want to improve it ?
+
+found a bugfix ?
+
+want to add a new feature ?
+
+Welcome !
+
+come help us all make gtp2ogs more awesome than it already is ! 
+
+Read Contributing instructions [here](/CONTRIBUTING-README.md)
 
