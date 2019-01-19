@@ -1415,7 +1415,7 @@ class Connection {
 
         if (argv.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= argv.maxtotalgames){
             conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + argv.maxtotalgames);
-            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + argv.maxtotalgames + " , try again later " };
+            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + argv.maxtotalgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
         if (user.ranking < argv.minrank) {
