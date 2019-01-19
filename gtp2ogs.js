@@ -7,6 +7,7 @@ let DEBUG = false;
 let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
+let PLACEFREEHANDICAP = false;
 let GREETING = "";
 let FAREWELL = "";
 let REJECTNEWMSG = "";
@@ -47,6 +48,7 @@ let optimist = require("optimist")
     .describe('noclock', 'Do not send any clock/time data to the bot')
     .describe('persist', 'Bot process remains running between moves')
     .describe('corrqueue', 'Process correspondence games one at a time')
+    .describe('placefreehandicap', 'Use place_free_handicap command for handicap stone placement')
     .describe('maxtotalgames', 'Maximum number of total games')
     // maxtotalgames is actually the maximum total number of connected games for your bot 
     // which means the maximum number of games your bot can play at the same time (choose a low number to regulate your GPU use)
@@ -149,6 +151,10 @@ if (argv.kgstime) {
 
 if (argv.noclock) {
     NOCLOCK = true;
+}
+
+if (argv.placefreehandicap) {
+    PLACEFREEHANDICAP = true;
 }
 
 function check_rejectnew()
@@ -693,6 +699,47 @@ class Bot {
             true /* final command */
         )
     } /* }}} */
+    place_free_handicap(state, handicap_stones, cb) { /* {{{ */
+        // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
+        // subtract that missing time from what we tell the bot.
+        //
+        this.loadClock(state);
+
+        // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
+        // Must be after loadClock() since loadClock() checks this.firstmove!
+        //
+        this.firstmove = false;
+
+        this.command('place_free_handicap ' + handicap_stones,
+            (moveStr) => {
+                let moves = [];
+                for (let move of moveStr.toLowerCase().split(' ')) {
+                    let resign = move == 'resign';
+                    if (resign) {
+                        this.log('Literal resign as a handicap move from the bot')
+                    }
+                    if (move == 'pass') {
+                        resign = true;
+                        this.log('Pass as a handicap move from the bot, resigning')
+                    }
+                    let x=-1, y=-1;
+                    if (!resign) {
+                        if (move && move[0]) {
+                            x = gtpchar2num(move[0]);
+                            y = state.width - parseInt(move.substr(1))
+                        } else {
+                            this.log("place_free_handicap failed, resigning");
+                            resign = true;
+                        }
+                    }
+                    moves.push({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': false});
+                }
+                cb(moves);
+            },
+            null,
+            true /* final command */
+        )
+    } /* }}} */
     kill() { /* {{{ */
         this.log("Stopping bot ");
     this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
@@ -732,6 +779,9 @@ class Game {
         this.my_color = null;
         this.corr_move_pending = false;
         this.processing = false;
+        // If there is an error, we pass once to hopefully unbreak the engine. This is to make sure we pass just once if
+        // there are multiple errors during a single move.
+        this.passed = false;
 
         this.log("Connecting to game.");
 
@@ -805,7 +855,11 @@ class Game {
                 if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
                     this.corr_move_pending = true;
                 } else {
-                    this.makeMove(this.state.moves.length);
+                    if (this.state.moves.length == 0 && this.state.handicap && PLACEFREEHANDICAP) {
+                        this.placeFreeHandicap(this.state.handicap);
+                    } else {
+                        this.makeMove(this.state.moves.length);
+                    }
                 }
             }
         });
@@ -882,8 +936,18 @@ class Game {
             if (this.state.free_handicap_placement && (this.state.handicap) > this.state.moves.length) {
                 if (this.my_color == "black") {
                     // If we are black, we make extra moves.
-                    //
-                    this.makeMove(this.state.moves.length);
+                    if (PLACEFREEHANDICAP) {
+                        // All handicap moves given by engine at once and sent to server - ignore our own handicap moves
+                        // until all of them have been placed.
+                        //
+                        // Normally shouldn't get here as this should have triggered straight after gamedata.
+                        if (this.state.moves.length == 0) {
+                            this.placeFreeHandicap(this.state.handicap);
+                        }
+                    } else {
+                        // Engine does not suppport place_free_handicap, request one move one at a time.
+                        this.makeMove(this.state.moves.length);
+                    }
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
                     if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
@@ -913,25 +977,11 @@ class Game {
             'game_id': game_id
         }));
     } /* }}} */
-    makeMove(move_number) { /* {{{ */
-        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
-        if (!this.state || this.state.moves.length != move_number) {
-            return;
-        }
-        if (this.state.phase != 'play') {
-            return;
-        }
-
-        ++moves_processing;
-        this.processing = true;
-        if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
-            ++corr_moves_processing;
-        }
-
-        let passed = false;
-        let passAndRestart = () => {
-            if (!passed) {
-                passed = true;
+    passAndRestartCallback() { /* {{{ */
+        this.passed = false;
+        return () => {
+            if (!this.passed) {
+                this.passed = true;
                 this.log("Bot process crashed, state was");
                 this.log(this.state);
                 this.socket.emit('game/move', this.auth({
@@ -947,8 +997,9 @@ class Game {
                 if (this.bot) this.bot.kill();
                 this.bot = null;
             }
-        }
-
+        };
+    } /* }}} */
+    ensureBotStarted(passAndRestart) { /* {{{ */
         if (!this.bot) {
             this.bot = new Bot(this.conn, this, bot_command);
             this.log("Starting new bot process [" + this.bot.proc.pid + "]");
@@ -960,6 +1011,32 @@ class Game {
                 }
             }, passAndRestart);
         }
+    } /* }}} */
+    maybeGreet() { /* {{{ */
+        //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
+        if(argv.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
+            // TODO: Do not greet again if reconnecting in the middle of handicap placement.
+            this.sendChat(GREETING, "discussion");
+            this.greeted = true;
+        }
+    } /* }}} */
+    makeMove(move_number) { /* {{{ */
+        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
+        if (!this.state || this.state.moves.length != move_number) {
+            return;
+        }
+        if (this.state.phase != 'play') {
+            return;
+        }
+
+        ++moves_processing;
+        this.processing = true;
+        if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+            ++corr_moves_processing;
+        }
+
+        let passAndRestart = this.passAndRestartCallback();
+        this.ensureBotStarted(passAndRestart);
 
         if (DEBUG) this.bot.log("Generating move for game", this.game_id);
         this.log("genmove " + (this.my_color == "black" ? "b" : "w"));
@@ -984,11 +1061,70 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
-                //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
-        if( argv.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-                  this.sendChat( GREETING, "discussion");
-                  this.greeted = true;
+                this.maybeGreet();
+            }
+            if (!PERSIST && this.bot != null) {
+                this.bot.kill();
+                this.bot = null;
+            }
+        }, passAndRestart);
+    } /* }}} */
+    placeFreeHandicap(handicap_stones) { /* {{{ */
+        if (DEBUG && this.state) { this.log("placeFreeHandicap", handicap_stones); }
+        if (!this.state || this.state.moves.length != 0) {
+            this.log('place_free_handicap must be called before any moves have been played');
+            return;
         }
+        if (this.state.phase != 'play') {
+            this.log('place_free_handicap must be called in play phase');
+            return;
+        }
+
+        ++moves_processing;
+        this.processing = true;
+        if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+            ++corr_moves_processing;
+        }
+
+        let passAndRestart = this.passAndRestartCallback();
+        this.ensureBotStarted(passAndRestart);
+
+        if (DEBUG) this.bot.log("Generating handicap stones", this.game_id);
+        this.log("place_free_handicap " + handicap_stones);
+
+        this.bot.place_free_handicap(this.state, handicap_stones, (moves) => {
+            this.processing = false;
+            --moves_processing;
+            if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                this.corr_move_pending = false;
+                --corr_moves_processing;
+            }
+            if (moves.length != handicap_stones) {
+                this.log("Invalid number of handicap moves generated, resigning!");
+                this.socket.emit('game/resign', this.auth({
+                    'game_id': this.state.game_id,
+                }));
+            } else {
+                for (let move of moves) {
+                    if (move.resign) {
+                        this.log("Failure generating handicap moves, resigning!");
+                        this.socket.emit('game/resign', this.auth({
+                            'game_id': this.state.game_id,
+                        }));
+                    } else if (move.pass) {
+                        this.log("Invalid pass move as part of handicap moves, resigning!");
+                        this.socket.emit('game/resign', this.auth({
+                            'game_id': this.state.game_id,
+                        }));
+                    } else {
+                        this.log("Playing a handicap stone " + move.text);
+                        this.socket.emit('game/move', this.auth({
+                            'game_id': this.state.game_id,
+                            'move': encodeMove(move)
+                        }));
+                        this.maybeGreet();
+                    }
+                }
             }
             if (!PERSIST && this.bot != null) {
                 this.bot.kill();
