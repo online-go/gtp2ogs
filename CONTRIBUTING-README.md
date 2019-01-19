@@ -1,14 +1,14 @@
 Contributing is easy !
 
-All the steps below need to use the ubuntu/linux terminal in some steps, but it is also possible on windows and mac
+All the steps below need to use the ubuntu/linux terminal in some steps, but all the steps below are also possible on windows and mac
 
 To contribute to gtp2ogs, you need to : 
 
 ### 1) fork online-go/gtp2ogs devel branch
 
-go on the gitub [here](https://github.com/online-go/gtp2ogs/tree/devel) , click on "fork" on the top right
+go on the github [here](https://github.com/online-go/gtp2ogs/tree/devel) , click on "fork" on the top right
 
-gtp2ogs will be cloned to your github account and added to your respositories
+gtp2ogs will be forked to your github account and added to your respositories
 
 ### 2) clone your forked gtp2ogs devel branch
 
@@ -26,6 +26,14 @@ A local copy of your gtp2ogs fork will be cloned/downloaded on your computer
 
 this step is needed only if you forked from online-go/gtp2ogs devel branch long ago : there are probably new commits available
 
+The code below will : 
+
+- add an entry to the "upstream" parent project source
+- add a link of the parent upstream project in upstream/devel (your fork is in origin/devel)
+- pull the github server latest "upstream" (online-go parent source) changes to your local branch (your fork)
+- check which branch it is to make sure we didnt do a mistake (we are updating devel so it has to be devel)
+- push your local changes to yourgithubusername github website and server (you updated your old fork devel with the latest devel "upstream" devel changes), username and password are asked for security, provide them and press ENTER to confirm
+
 to update your fork to latest online-go commits, do :
 
 ```
@@ -39,9 +47,13 @@ if there are conflicts in the devel branch you can use instead (use with caution
 git checkout devel && git push --force origin devel 
 ```
 
+Note that this step will be needed everytime you want to add another contribution, if your forked devel is not in sync with the upstream (online-go) devel (not in sync = is a few commits behind the online-go devel)
+
 ### 4) Create a new branch to edit it
 
 The devel branch should never be modified and always kept up to date with online-go devel
+
+To keep your devel branch clean, your changes need to be made on a new branch which is a copy of the devel branch
 
 To create a copy of the devel branch with a different name, do : 
 
@@ -53,7 +65,7 @@ git checkout -b yourbranchname && git branch
 
 Edit your branch locally as many times as you want (you can add files, remove files, edit and reedit, test your code, etc..)
 
-To test your code, copy paste your edited gtp2ogs.js and overwrite the existing gtp2ogs.js in node_modules (you can make a backup of the existing one, and you can also make backups of your code improvements every while)
+To test your code, copy your edited gtp2ogs.js and paste overwrite the existing gtp2ogs.js in node_modules (you can make a backup of the existing one, and you can also make backups of your code improvements every while)
 
 When your code is finalized and has been tested, it is time to commit it !
 
@@ -63,7 +75,7 @@ The code below will now :
 
 - configure your github username and email (identity)
 - detect all changes and all them on the "to be committed list"
-- commit all the "to be commited" list, in one commit locally, write a commit name and save and exit (on ubuntu with nano you can save and exit with ctrl+x to exit then "y" to confirm
+- commit all the "to be commited" list, in one commit locally, write a commit name and save and exit (on ubuntu with nano you can save and exit with ctrl+x to exit then "y" to confirm)
 - display which branch we are in again, to make sure we didnt commit in devel carelessly
 
 ```
