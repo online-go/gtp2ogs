@@ -246,6 +246,14 @@ or another example `--boardsize custom --boardsizewidth 9,10,11 --boardsizeheigh
 finally, it is possible to play "official" boardsizes too with this setting, 
 for example `--boardsize custom --boardsizewidth 9 --boardsizeheight 9,19` will allow 9x9 and 9x19 board sizes
 
+#### 6 : 
+
+if you're read that far, maybe you'll be interested to share your bot experience with bot admins or see talked topic !
+
+come on the leela zero discord in `#bots` channel and follow the talk with everyone !
+
+https://discord.gg/HZ23Cp9
+
 # Contributing
 
 You like gtp2ogs and want to improve it ?
