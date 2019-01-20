@@ -744,6 +744,7 @@ class Game {
         this.my_color = null;
         this.corr_move_pending = false;
         this.processing = false;
+	this.handicap_moves = [];    // Handicap stones waiting to be sent when bot is playing black.
 
         this.log("Connecting to game.");
 
@@ -1009,6 +1010,8 @@ class Game {
     } /* }}} */
 
     // Get move from bot and upload to server.
+    // Handle handicap stones with bot as black transparently
+    // (we get all of them at once with place_free_handicap).
     //
     makeMove(move_number) { /* {{{ */
         if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
@@ -1017,10 +1020,36 @@ class Game {
         if (this.state.phase != 'play')
             return;
 
-	let sendMove = (moves) => {  this.uploadMove(moves[0]);  };
-	let sendPass = ()      => {  this.uploadMove({'x': -1});  };
+	let sendPass = () => {  this.uploadMove({'x': -1});  };
+	let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
+			      this.state.moves.length < this.state.handicap);
 	
-	this.getBotMoves("genmove " + this.my_color, sendMove, sendPass);
+	if (!doing_handicap) {  // Regular genmove ...
+	    let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+	    this.getBotMoves("genmove " + this.my_color, sendTheMove, sendPass);
+	    return;
+	}
+	
+	// Already have handicap stones ? Return next one.
+	if (this.handicap_moves.length) {
+	    this.uploadMove(this.handicap_moves.shift());
+	    return;
+	}
+
+	// Get handicap stones from bot and return first one.
+	let storeMoves = (moves) => {
+	    if (moves.length != this.state.handicap) {  // Sanity check
+		this.log("place_free_handicap returned wrong number of handicap stones, resigning.");
+		if (this.bot) this.bot.kill();
+		this.bot = null;
+		this.uploadMove({'resign': true});
+		return;
+	    }
+	    this.handicap_moves = moves;
+	    this.uploadMove(this.handicap_moves.shift());
+	};
+	    
+	this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, sendPass);
 	
     } /* }}} */
 
