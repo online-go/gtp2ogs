@@ -1036,19 +1036,29 @@ class Game {
 	    return;
 	}
 
+	let warnAndResign = (msg) => {
+	    this.log(msg);
+	    if (this.bot) this.bot.kill();
+	    this.bot = null;
+	    this.uploadMove({'resign': true});
+	}
+	
 	// Get handicap stones from bot and return first one.
 	let storeMoves = (moves) => {
 	    if (moves.length != this.state.handicap) {  // Sanity check
-		this.log("place_free_handicap returned wrong number of handicap stones, resigning.");
-		if (this.bot) this.bot.kill();
-		this.bot = null;
-		this.uploadMove({'resign': true});
+		warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
 		return;
 	    }
+            for (let i in moves)                     // Sanity check
+		if (moves[i].pass || moves[i].x < 0) {
+		    warnAndResign("place_free_handicap returned a pass, resigning.");
+		    return;
+		}
+	    
 	    this.handicap_moves = moves;
 	    this.uploadMove(this.handicap_moves.shift());
 	};
-	    
+	
 	this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, sendPass);
 	
     } /* }}} */
