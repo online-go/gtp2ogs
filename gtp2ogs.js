@@ -1458,7 +1458,7 @@ class Connection {
 
         if (!allowed_sizes[notification.width] && !allow_any_sizes && !allow_custom_sizes) {
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size, rejecting challenge");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed square board sizes (same width and height) : " + argv.boardsize };
+            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of the allowed square board sizes (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes : " + argv.boardsize };
         }
 
         // for custom board sizes, including square board sizes if width == height as well
