@@ -100,7 +100,7 @@ For example you can program the gtp2ogs.js so that it sends winrate and playouts
 Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
   ```--username``` Specify the username of the bot, for example `--username GnuGo`, currently there is no profile
-number log in support on ogs, see [notes A-](/README.md#A-) for details
+number log in support on ogs, see [notes A-](/README.md#a-) for details
 
   ```--apikey``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
@@ -142,11 +142,11 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>``` sec
 
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
 
-  ```--boardsize```  Possible boardsize values `any` (allows ALL boardsizes, use only if your bot can handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size written in numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), see [notes e-](/README.md#E-) for details
+  ```--boardsize```  Possible boardsize values `any` (allows ALL boardsizes, use only if your bot can handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size written in numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), see [notes E-](/README.md#e-) for details
 
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom board size (if your bot can handle it), it is needed to use `custom` followed by comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, see [notes e-](/README.md#notes E-) for details
+  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom board size (if your bot can handle it), it is needed to use `custom` followed by comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, see [notes E-](/README.md#notes e-) for details
 
-  ```--komi``` Possible komi values `auto` (allows Automatic komi), `any` (allows all komi values), and for example `7.5` (allows komi value 7.5). When `any` is used alone, all komi values are allowed. When an argument other than `any` is used, only the chosen argument komi values are allowed and all other komi values are rejected see [notes c-](/README.md#C-) and [notes D-](/README.md#D-) for details
+  ```--komi``` Possible komi values `auto` (allows Automatic komi), `any` (allows all komi values), and for example `7.5` (allows komi value 7.5). When `any` is used alone, all komi values are allowed. When an argument other than `any` is used, only the chosen argument komi values are allowed and all other komi values are rejected see [notes C-](/README.md#c-) and [notes D-](/README.md#d-) for details
 
   ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
