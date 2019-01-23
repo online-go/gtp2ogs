@@ -4,6 +4,11 @@
   "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
   "main": "gtp2ogs.js",
   "files": [
+    "bot.js",
+    "config.js",
+    "connection.js",
+    "console.js",
+    "game.js",
     "gtp2ogs.js"
   ],
   "bin": {
