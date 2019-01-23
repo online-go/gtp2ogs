@@ -224,7 +224,7 @@ Currently, ogs does not support profile id number authentification, so you have 
 
 Therefore, the old `id` aliases (`id` , `botid` , `bot`), that still required names and not id numbers, contrary to what this line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) that added confusion to how to use gtp2ogs for bot admins have been removed
 
-To sum up, to connect your bot on OGS, you need and you have to simply use bot name, for example ```--username GnuGo` for the bot admin of GnuGo
+To sum up, to connect your bot on OGS, you need and you have to simply use bot name, for example `--username GnuGo` for the bot admin of GnuGo
 
 #### B.
 
@@ -232,16 +232,20 @@ a list of gtp2ogs arguments is also available [here](https://github.com/online-g
 
 #### C : 
 
-on OGS, black player will always get the handicap stones regardless of rank difference (if auto (automatic) komi is selected, the komi will be 0.5 , 
+on OGS, black player will always get the handicap stones regardless of rank difference (if auto (automatic) komi is selected, the komi will be 0.5) 
 
-but you can restrict allowed komi for example to only 7.5 or auto with `--komi 7.5,auto` , or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi if your bot does not support 0.5 komi value.
+but you can restrict allowed komi for example to only 7.5 or auto with `--komi 7.5,auto`
+
+or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi, if your bot does not support 0.5 komi value.
 
 #### D :
 
 explanation on how to use komi argument:
 
 - `--komi auto,0.5,7.5` for example, will allow any of these komi values : automatic(auto), 0.5, or 7.5, and will reject any other value
+
 - another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value. In that example, note that if `auto` (automatic) komi happens to have the value 7.5, the auto value will be set to 7.5 and will be accepted and game will start (bots will always replace any rules with chinese rules, so a non handicap game 19x19 on ogs against a bot will always have the komi 7.5)
+
 - the `--komi 7.5` can be useful if your bot handles handicap well, but only with the value 7.5 for example (and not 0.5)
 
 #### E : 
