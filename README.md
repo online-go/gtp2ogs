@@ -217,7 +217,7 @@ from your bot path and `<botarguments>`, as shown in [Most common usage earlier]
 
 ## notes :
 
-#### A.
+#### A : 
 
 Currently, ogs does not support profile id number authentification, so you have to use bot username only. For example, for this famous bot
  https://online-go.com/player/58441/GnuGo , you have to use the bot name `GnuGo` and currently you cannot use profile number `58441` (it will not work)
@@ -226,7 +226,7 @@ Therefore, the old `id` aliases (`id` , `botid` , `bot`), that still required na
 
 To sum up, to connect your bot on OGS, you need and you have to simply use bot name, for example `--username GnuGo` for the bot admin of GnuGo
 
-#### B.
+#### B : 
 
 a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
 
