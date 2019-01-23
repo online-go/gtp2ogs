@@ -24,14 +24,11 @@ let sprintf = require('sprintf-js').sprintf;
 
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
-    .alias('username', 'botid')
-    .alias('username', 'bot')
-    .alias('username', 'id')
     .alias('debug', 'd')
     .alias('json', 'j')
     .demand('username')
     .demand('apikey')
-    .describe('username', 'Specify the username of the bot')
+    .describe('username', 'Specify the username of the bot, for example GnuGo')
     .describe('apikey', 'Specify the API key for the bot')
     .describe('host', 'OGS Host to connect to')
     .default('host', 'online-go.com')
@@ -64,13 +61,21 @@ let optimist = require("optimist")
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
     .default('boardsize', '9,13,19')
+    .string('boardsizewidth')
+    .describe('boardsizewidth', 'For custom board size(s) to accept, specify boardsize width, for example 25')
+    .string('boardsizeheight')
+    .describe('boardsizeheight', 'For custom board size(s) to accept, specify boardsize height, for example 1')
+    // behaviour : --boardsize can be specified as "custom" (allows board with custom size width x height),
+    // "any" (allows any boardsize), or for square boardsizes only (same width x height) 
+    // comma separated list of explicit values.
+    // The default is "9,13,19" (square board sizes only), see README for details
     .describe('komi', 'Allowed komi values')
     .string('komi')
     .default('komi', 'auto')
     // behaviour: --komi may be specified as "auto" (Automatic), "any"
-    // (accept any value) or comma separated list of explicit values.
+    // (accept any value), or comma separated list of explicit values.
     // The default is "auto".
-    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi any
+    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi any, see README for details
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
@@ -225,12 +230,27 @@ if (argv.maxrank) {
     }
 }
 
-
+let allow_any_sizes = false;
+let allow_custom_sizes = false;
+let allowed_custom_boardsizewidth = [];
+let allowed_custom_boardsizeheight = [];
 let allowed_sizes = [];
 
 if (argv.boardsize) {
-    for (let i of argv.boardsize.split(',')) {
-        allowed_sizes[i] = true;
+    for (let boardsize of argv.boardsize.split(',')) {
+        if (boardsize == "any") {
+            allow_any_sizes = true;
+        } else if (boardsize == "custom") {
+            allow_custom_sizes = true;
+            for (let boardsizewidth of argv.boardsizewidth.split(',')) {
+                allowed_custom_boardsizewidth[boardsizewidth] = true;
+            }
+            for (let boardsizeheight of argv.boardsizeheight.split(',')) {
+                allowed_custom_boardsizeheight[boardsizeheight] = true;
+            }
+        } else {
+            allowed_sizes[boardsize] = true;
+        }
     }
 }
 
@@ -1459,7 +1479,7 @@ class Connection {
 
         if (argv.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= argv.maxtotalgames){
             conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + argv.maxtotalgames);
-            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + argv.maxtotalgames + " , try again later " };
+            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + argv.maxtotalgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
         if (user.ranking < argv.minrank) {
@@ -1497,14 +1517,26 @@ class Connection {
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
 
-        if (notification.width != notification.height) {
+        // for square board sizes only
+        if (notification.width != notification.height && !allow_any_sizes && !allow_custom_sizes) {
             conn_log("board was not square, rejecting challenge");
-            return { reject: true, msg: "Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if(!allowed_sizes[notification.width]) {
-            conn_log("board width " + notification.width + " not an allowed size, rejecting challenge");
-            return { reject: true, msg: "Board width " + notification.width + " is not allowed, please choose one of these allowed board sizes : " + argv.boardsize };
+        if (!allowed_sizes[notification.width] && !allow_any_sizes && !allow_custom_sizes) {
+            conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size, rejecting challenge");
+            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of the allowed square board sizes (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes : " + argv.boardsize };
+        }
+
+        // for custom board sizes, including square board sizes if width == height as well
+        if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizewidth[notification.width]) {
+            conn_log("custom board width " + notification.width + " is not an allowed custom board width, rejecting challenge");
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + argv.boardsizewidth };
+        }
+
+        if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizeheight[notification.height]) {
+            conn_log("custom board height " + notification.height + " is not an allowed custom board height, rejecting challenge");
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
 
         if (notification.handicap < argv.minhandicap) {
