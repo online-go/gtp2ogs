@@ -659,9 +659,12 @@ class Bot {
             if (eb) eb(e);
         }
     } /* }}} */
+
+    // For commands like genmove, place_free_handicap ... :
+    // Send @cmd to engine and call @cb with returned moves.
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
-    genmove(state, cb) { /* {{{ */
+    getMoves(cmd, state, cb, eb) { /* {{{ */
         // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
         // subtract that missing time from what we tell the bot.
         //
@@ -672,9 +675,14 @@ class Bot {
         //
         this.firstmove = false;
 
-        this.command("genmove " + this.game.my_color,
-            (move) => {
-                move = typeof(move) == "string" ? move.toLowerCase() : null;
+	this.command(cmd, (line) => {
+	    line = typeof(line) == "string" ? line.toLowerCase() : null;
+	    let parts = line.split(/ +/);
+	    let moves = [];
+	    
+	    for (let i=0; i < parts.length; i++) {
+		let move = parts[i];
+		
                 let resign = move == 'resign';
                 let pass = move == 'pass';
                 let x=-1, y=-1;
@@ -683,16 +691,20 @@ class Bot {
                         x = gtpchar2num(move[0]);
                         y = state.width - parseInt(move.substr(1))
                     } else {
-                        this.log("genmove failed, resigning");
+                        this.log(cmd + " failed, resigning");
                         resign = true;
                     }
                 }
-                cb({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
-            },
-            null,
+                moves.push({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
+	    }
+
+	    cb(moves);
+        },
+            eb,
             true /* final command */
         )
     } /* }}} */
+
     kill() { /* {{{ */
         this.log("Stopping bot ");
     this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
@@ -732,6 +744,7 @@ class Game {
         this.my_color = null;
         this.corr_move_pending = false;
         this.processing = false;
+	this.handicap_moves = [];    // Handicap stones waiting to be sent when bot is playing black.
 
         this.log("Connecting to game.");
 
@@ -913,42 +926,8 @@ class Game {
             'game_id': game_id
         }));
     } /* }}} */
-    makeMove(move_number) { /* {{{ */
-        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
-        if (!this.state || this.state.moves.length != move_number) {
-            return;
-        }
-        if (this.state.phase != 'play') {
-            return;
-        }
 
-        ++moves_processing;
-        this.processing = true;
-        if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
-            ++corr_moves_processing;
-        }
-
-        let passed = false;
-        let passAndRestart = () => {
-            if (!passed) {
-                passed = true;
-                this.log("Bot process crashed, state was");
-                this.log(this.state);
-                this.socket.emit('game/move', this.auth({
-                    'game_id': this.state.game_id,
-                    'move': ".."
-                }));
-                this.procesing = false;
-                --moves_processing;
-                if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
-                   this.corr_move_pending = false;
-                    --corr_moves_processing;
-                }
-                if (this.bot) this.bot.kill();
-                this.bot = null;
-            }
-        }
-
+    startBot(eb) { /* {{{ */
         if (!this.bot) {
             this.bot = new Bot(this.conn, this, bot_command);
             this.log("Starting new bot process [" + this.bot.proc.pid + "]");
@@ -958,44 +937,132 @@ class Game {
                 if (DEBUG) {
                     this.log("State loaded for new bot");
                 }
-            }, passAndRestart);
-        }
+            }, eb);
+        }	
+    } /* }}} */
 
-        if (DEBUG) this.bot.log("Generating move for game", this.game_id);
-        this.log("genmove " + (this.my_color == "black" ? "b" : "w"));
+    // Send @cmd to bot and call @cb with returned moves.
+    //
+    getBotMoves(cmd, cb, eb) { /* {{{ */
+        ++moves_processing;
+        this.processing = true;
+        if (argv.corrqueue && this.state.time_control.speed == "correspondence")
+            ++corr_moves_processing;
 
-        this.bot.genmove(this.state, (move) => {
-            this.processing = false;
+	let doneProcessing = () => {
+            this.procesing = false;
             --moves_processing;
             if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                 this.corr_move_pending = false;
                 --corr_moves_processing;
             }
-            if (move.resign) {
-                this.log("Resigning");
-                this.socket.emit('game/resign', this.auth({
-                    'game_id': this.state.game_id
-                }));
-            }
-            else {
-                if (DEBUG) this.log("Playing " + move.text, move);
-                else       this.log("Playing " + move.text);
-                this.socket.emit('game/move', this.auth({
-                    'game_id': this.state.game_id,
-                    'move': encodeMove(move)
-                }));
-                //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
-        if( argv.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-                  this.sendChat( GREETING, "discussion");
-                  this.greeted = true;
+	};
+
+        let failed = false;
+        let botError = (e) => {
+            if (failed)  return;
+	    
+            failed = true;
+	    doneProcessing();
+            if (this.bot) this.bot.kill();
+            this.bot = null;
+	    if (eb) eb(e);
         }
-            }
-            if (!PERSIST && this.bot != null) {
+
+        if (!this.bot)  this.startBot(botError);
+
+	if (DEBUG) this.bot.log("Generating move for game", this.game_id);
+	this.log(cmd);
+
+        this.bot.getMoves(cmd, this.state, (moves) => {
+	    doneProcessing();
+	    cb(moves)
+	    
+	    if (!PERSIST && this.bot != null) {
                 this.bot.kill();
                 this.bot = null;
-            }
-        }, passAndRestart);
+	    }
+        }, botError);
     } /* }}} */
+
+    // Send move to server.
+    // 
+    uploadMove(move) { /* {{{ */	    
+	if (move.resign) {
+            this.log("Resigning");
+            this.socket.emit('game/resign', this.auth({
+		'game_id': this.state.game_id
+            }));
+	    return;
+	}
+	
+        if (DEBUG) this.log("Playing " + move.text, move);
+	else       this.log("Playing " + move.text);
+        this.socket.emit('game/move', this.auth({
+	    'game_id': this.state.game_id,
+	    'move': encodeMove(move)
+        }));
+        //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
+	if( argv.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
+	    this.sendChat( GREETING, "discussion");
+	    this.greeted = true;
+	}
+    } /* }}} */
+
+    // Get move from bot and upload to server.
+    // Handle handicap stones with bot as black transparently
+    // (we get all of them at once with place_free_handicap).
+    //
+    makeMove(move_number) { /* {{{ */
+        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
+        if (!this.state || this.state.moves.length != move_number)
+            return;
+        if (this.state.phase != 'play')
+            return;
+
+	let sendPass = () => {  this.uploadMove({'x': -1});  };
+	let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
+			      this.state.moves.length < this.state.handicap);
+	
+	if (!doing_handicap) {  // Regular genmove ...
+	    let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+	    this.getBotMoves("genmove " + this.my_color, sendTheMove, sendPass);
+	    return;
+	}
+	
+	// Already have handicap stones ? Return next one.
+	if (this.handicap_moves.length) {
+	    this.uploadMove(this.handicap_moves.shift());
+	    return;
+	}
+
+	let warnAndResign = (msg) => {
+	    this.log(msg);
+	    if (this.bot) this.bot.kill();
+	    this.bot = null;
+	    this.uploadMove({'resign': true});
+	}
+	
+	// Get handicap stones from bot and return first one.
+	let storeMoves = (moves) => {
+	    if (moves.length != this.state.handicap) {  // Sanity check
+		warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
+		return;
+	    }
+            for (let i in moves)                     // Sanity check
+		if (moves[i].pass || moves[i].x < 0) {
+		    warnAndResign("place_free_handicap returned a pass, resigning.");
+		    return;
+		}
+	    
+	    this.handicap_moves = moves;
+	    this.uploadMove(this.handicap_moves.shift());
+	};
+	
+	this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, sendPass);
+	
+    } /* }}} */
+
     auth(obj) { /* {{{ */
         return this.conn.auth(obj);
     }; /* }}} */
