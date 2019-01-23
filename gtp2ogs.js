@@ -1450,6 +1450,7 @@ class Connection {
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
 
+        // for square board sizes only
         if (notification.width != notification.height && !allow_any_sizes && !allow_custom_sizes) {
             conn_log("board was not square, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
@@ -1460,14 +1461,15 @@ class Connection {
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed square board sizes (same width and height) : " + argv.boardsize };
         }
 
+        // for custom board sizes, including square board sizes if width == height as well
         if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizewidth[notification.width]) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width, rejecting challenge");
-            return { reject: true, msg: "In your selected custom board size " + notification.width + "x" + notification.height + " (width x height), custom board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + argv.boardsizewidth };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + argv.boardsizewidth };
         }
 
         if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizeheight[notification.height]) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height, rejecting challenge");
-            return { reject: true, msg: "In your selected custom board size " + notification.width + "x" + notification.height + " (width x height), custom board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
 
         if (notification.handicap < argv.minhandicap) {
