@@ -39,6 +39,7 @@ let optimist = require("optimist")
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
+    .describe('logfile', 'In addition to logging to the console, also log to this file')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
     .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
@@ -307,7 +308,7 @@ let console_fmt = "{{timestamp}} {{title}} {{message}}";
 if (DEBUG)
     console_fmt = "{{timestamp}} {{title}} {{file}}:{{line}}{{space}} {{message}}";
 
-let console = tracer.colorConsole({
+let console_config = {
     format : [ console_fmt ],
     dateformat: 'mmm dd HH:MM:ss',
     preprocess :  function(data){
@@ -320,7 +321,19 @@ let console = tracer.colorConsole({
         }
         if (DEBUG) data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
     }
-});
+};
+if (argv.logfile) {
+    let real_console = require('console');
+    console_config.transport = (data) => {
+        real_console.log(data.output);
+        fs.open(argv.logfile, 'a', parseInt('0644', 8), function(e, id) {
+            fs.write(id, data.output+"\n", null, 'utf8', function() {
+                fs.close(id, () => { });
+            });
+        });
+    }
+}
+let console = tracer.colorConsole(console_config);
 
 process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
