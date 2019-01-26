@@ -22,11 +22,14 @@ let ignorable_notifications = {
 };
 
 class Connection {
-    constructor() {{{
+    constructor(io_client) {{{
         let prefix = (config.insecure ? 'http://' : 'https://') + config.host + ':' + config.port;
 
         conn_log(`Connecting to ${prefix}`);
-        let socket = this.socket = io(prefix, {
+        if (!io_client) {
+          io_client = io;
+        }
+        let socket = this.socket = io_client(prefix, {
             reconection: true,
             reconnectionDelay: 500,
             reconnectionDelayMax: 60000,
@@ -38,7 +41,7 @@ class Connection {
         this.games_by_player = {};     // Keep track of active games per player
         this.connected = false;
 
-        setTimeout(()=>{
+        this.connect_timeout = setTimeout(()=>{
             if (!this.connected) {
                 console.error(`Failed to connect to ${prefix}`);
                 process.exit(-1);
@@ -48,7 +51,7 @@ class Connection {
 
         this.clock_drift = 0;
         this.network_latency = 0;
-        setInterval(this.ping.bind(this), 10000);
+        this.ping_interval = setInterval(this.ping.bind(this), 10000);
         socket.on('net/pong', this.handlePong.bind(this));
 
         socket.on('connect', () => {
@@ -76,7 +79,7 @@ class Connection {
         if (config.corrqueue) {
             // Check every so often if we have correspondence games that need moves
             //
-            setInterval(() => {
+            this.corr_queue_interval = setInterval(() => {
                 // If a game needs a move and we aren't already working on one, make a move
                 //
                 if (Game.corr_moves_processing == 0) {
@@ -93,7 +96,7 @@ class Connection {
             }, 10000);
         }
 
-        setInterval(() => {
+        this.notification_connect_interval = setInterval(() => {
             /* if we're sitting there bored, make sure we don't have any move
              * notifications that got lost in the shuffle... and maybe someday
              * we'll get it figured out how this happens in the first place. */
@@ -736,6 +739,12 @@ class Connection {
         let drift = ((now-latency/2) - data.server);
         this.network_latency = latency;
         this.clock_drift = drift;
+    }}}
+    terminate() {{{
+        clearTimeout(this.connect_timeout);
+        clearInterval(this.ping_interval);
+        clearInterval(this.notification_connect_interval);
+        clearInterval(this.corr_queue_interval);
     }}}
 }
 

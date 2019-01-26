@@ -1,4 +1,4 @@
-let spawn = require('child_process').spawn;
+let child_process = require('child_process');
 let console = require('./console').console;
 let config = require('./config');
 
@@ -9,7 +9,7 @@ class Bot {
     constructor(conn, game, cmd) {{{
         this.conn = conn;
         this.game = game;
-        this.proc = spawn(cmd[0], cmd.slice(1));
+        this.proc = child_process.spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.firstmove = true;
