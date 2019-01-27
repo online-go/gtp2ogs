@@ -1,5 +1,6 @@
 let assert = require('assert');
 let sinon = require('sinon');
+let util = require('util');
 
 let connection = require('../connection');
 let config = require('../config');
@@ -8,7 +9,7 @@ let console = require('../console').console;
 let child_process = require('child_process');
 let https = require('https');
 
-config.DEBUG = false;
+config.DEBUG = true;
 config.apikey = 'deadbeef';
 config.host = 'test';
 config.port = 80;
@@ -27,10 +28,12 @@ class FakeSocket {
   }
 
   on(ev, cb) {
+    console.log('client on: ' + ev)
     this.on_callbacks[ev] = cb;
   }
 
   inject(ev, data) {
+    console.log('client on(' + ev + ')')
     this.on_callbacks[ev](data);
   }
 
@@ -363,6 +366,96 @@ describe('A single game', () => {
       outcome: 'Resignation',
     });
     fake_socket.inject('game/1/gamedata', gamedata);
+
+    conn.terminate();
+  });
+});
+
+describe('Concurrent games', () => {
+  it('do not starve each other', () => {
+    sinon.stub(console, 'log');
+    let clock = sinon.useFakeTimers();
+
+    let fake_socket = new FakeSocket();
+    fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
+    let fake_api = new FakeAPI();
+    sinon.stub(https, 'request').callsFake(fake_api.request);
+
+    sinon.stub(child_process, 'spawn').callsFake(() => {
+      let fake_gtp = new FakeGTP();
+      fake_gtp.on_cmd('genmove', () => {
+        // Takes 1 second to generate a move.
+        setTimeout(() => {
+          fake_gtp.gtp_response('Q4');
+        }, 1000);
+      });
+      return fake_gtp;
+    });
+
+    sinon.stub(config, 'corrqueue').value(true);
+
+    let conn = new connection.Connection(() => { return fake_socket; });
+
+    fake_socket.inject('connect');
+
+    fake_socket.on_emit('game/connect', (connect) => {
+      let gamedata = base_gamedata({
+        game_id: connect.game_id,
+      });
+      gamedata.time_control.speed = 'correspondence';
+      fake_socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
+    });
+
+    let seen_moves = {};
+
+    fake_socket.on_emit('game/move', (move) => {
+      let move_number = seen_moves[move.game_id];
+      fake_socket.inject('game/'+move.game_id+'/move', {
+        move_number: ++seen_moves[move.game_id],
+        move: [15, 15],
+      });
+      // Respond to move in 1 second.
+      setTimeout(() => {
+        seen_moves[move.game_id]++;
+        fake_socket.inject('game/'+move.game_id+'/move', {
+          move_number: ++seen_moves[move.game_id],
+          move: [15, 15],
+        });
+      }, 1000);
+    });
+
+    // There are 5 active correspondence games.
+    let games = 5;
+    for (var i = 1; i <= games; i++) {
+      seen_moves[i] = 0;
+      fake_socket.inject('active_game', base_active_game({ id: i }));
+    }
+
+    // Simulate time passing
+    for (var i = 0; i < 500; i++) {
+      clock.tick(100);
+    }
+
+    // All games must have seen a move.
+    for (var i = 1; i <= games; i++) {
+      assert.equal(seen_moves[i] > 0, true, 'Game '+i+' has seen no moves');
+    }
+
+    conn.terminate();
+  });
+});
+      });
+    }
+
+    // Simulate time passing
+    for (var i = 0; i < 500; i++) {
+      clock.tick(100);
+    }
+
+    // All games must have seen a move.
+    for (var i = 1; i <= games; i++) {
+      assert.equal(seen_moves[i] > 0, true, 'Game '+i+' has seen no moves');
+    }
 
     conn.terminate();
   });

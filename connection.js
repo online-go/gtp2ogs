@@ -86,15 +86,19 @@ class Connection {
                 if (Game.corr_moves_processing == 0) {
                     // Choose a corr game to make a move
                     // TODO: Choose the game with least time remaining
-                    //
+                    let candidates = [];
                     for (let game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
-                            this.connected_games[game_id].makeMove(this.connected_games[game_id].state.moves.length);
-                            break;
+                            candidates.push(this.connected_games[game_id]);
                         }
                     }
+                    // Pick a random game that needs a move.
+                    if (candidates.length > 0) {
+                        let game = candidates[Math.floor(Math.random()*candidates.length)];
+                        game.makeMove(game.state.moves.length);
+                    }
                 }
-            }, 10000);
+            }, 1000);
         }
 
         this.notification_connect_interval = setInterval(() => {
