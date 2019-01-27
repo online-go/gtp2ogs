@@ -130,11 +130,11 @@ Put a space in between options when there are more than one.  Also put a space i
   ```--beta```  Connect to the [beta server](https://beta.online-go.com/) instead of 
 [OGS](https://online-go.com/) (sets ggs/rest hosts to the beta server)
 
-  ```--debug, -d```  Output GTP command and responses from your Go engine
+  ```--debug``` or ```-d```  Output GTP command and responses from your Go engine
 
-  ```--logfile, -l``` In addition to logging to the console, also log gtp2ogs output to a text file
+  ```--logfile``` or ```-l``` In addition to logging to the console, also log gtp2ogs output to a text file
 
-  ```--json, -j```  Send and receive GTP commands in a JSON encoded format
+  ```--json``` or ```-j```  Send and receive GTP commands in a JSON encoded format
 
   ```--kgstime```  Set this if bot understands the kgs-time_settings command
 
