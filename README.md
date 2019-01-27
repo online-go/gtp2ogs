@@ -1,10 +1,12 @@
 # gtp2ogs
 
-This javascript tool allows Go bots that support GTP [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) to communicate with OGS [(Online-Go.com Server)](https://online-go.com/)
+This javascript tool allows Go bots that support GTP [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
+to communicate with OGS [(Online-Go.com Server)](https://online-go.com/)
 
 No programming knowledge is needed to use it : just install it and it works.
 
-Programming knowledge is needed only to add extra features such as displaying and sending winrates and variations at every move, for example.
+Programming knowledge is needed only to add extra features such as displaying and sending winrates and variations 
+at every move, for example.
 
 # Full tutorial 
 
@@ -41,14 +43,15 @@ default path install is something like this :
 > C:\Users\yourusername\AppData\Roaming\npm\node_modules\gtp2ogs\gtp2ogs.js
 
 
-On all operating systems, gtp2ogs will be installed in 2 different directories, but **the one that needs to be run with node is gtp2ogs.js in node_modules directory**
+On all operating systems, gtp2ogs will be installed in 2 different directories, but 
+**the one that needs to be run with node is gtp2ogs.js in node_modules directory**
 
 ### 3. Optional : install any missing node.js packages
  
 **This step can be skipped**
 
-you may need to install extra tools if the [Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) below fails, such as
-(run as `sudo` for linux, and as admin for windows)
+you may need to install extra tools if the 
+[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) below fails, such as (run as `sudo` for linux, and as admin for windows)
  
 ```
 npm install -g socket.io-client
@@ -60,7 +63,8 @@ npm install -g tracer
 
 This step is **is recommended**
 
-By default, npm installs an old branch of gtp2ogs that does not include latest improvements, new features, and fixes
+By default, npm installs an old branch of gtp2ogs that does not include latest improvements, 
+new features, and fixes
 
 To upgrade to devel branch (newest), see :
 
@@ -78,14 +82,17 @@ node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --api
 For windows (preferably as admin) : 
 
 ```
-pushd C:\Program Files\nodejs && node.exe C:\replace\with\full\path\to\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <botargument1> <botargument2>
+pushd C:\Program Files\nodejs && node.exe C:\Users\yourwindowsusername\AppData\Roaming\npm\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <botargument1> <botargument2>
 ```
 
-note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
+note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before
+ `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
 
-note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but it possible to use for example 3,4,5 , or as many as you want
+note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but 
+it possible to use for example 3,4,5 , or as many as you want
   
-note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the [OGS server](https://online-go.com/), add the `-- beta` argument
+note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
+[OGS server](https://online-go.com/), add the `-- beta` argument
 
 ### Extra : add features by editing gtp2ogs.js file
 
@@ -93,18 +100,22 @@ This step is totally not needed but can be much appreciated
 
 To do that, programming knowledge is needed (or you can ask for help)
 
-For example you can program the gtp2ogs.js so that it sends winrate and playouts/visits information at every move, or even clickable variations, such as what [some bots](https://online-go.com/game/15926249) use for example.
+For example you can program the gtp2ogs.js so that it sends winrate and playouts/visits information 
+at every move, or even clickable variations, such as what [some bots](https://online-go.com/game/15926249) 
+use for example.
 
 # Options
 
 Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
-  ```--username``` Specify the username of the bot, for example `--username GnuGo`, currently there is no profile
-number log in support on ogs, see [notes A-](/README.md#a-) for details
+  ```--username``` Specify the username of the bot, for example `--username GnuGo`, currently 
+there is no profile number log in support on ogs, see [notes A-](/README.md#a-) for details
 
   ```--apikey``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
-Then, the following options are placed in the above ```<gtp2ogsarguments>``` section.  Put a space in between options when there are more than one.  Also put a space in between the option and the parameter like:
+Then, the following options are placed in the above ```<gtp2ogsarguments>``` section. 
+Put a space in between options when there are more than one.  Also put a space in between
+ the option and the parameter like:
 
   ```--startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
 
@@ -116,9 +127,12 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>``` sec
 
   ```--insecure```  Don't use ssl to connect to the ggs/rest servers
 
-  ```--beta```  Connect to the [beta server](https://beta.online-go.com/) instead of [OGS](https://online-go.com/) (sets ggs/rest hosts to the beta server)
+  ```--beta```  Connect to the [beta server](https://beta.online-go.com/) instead of 
+[OGS](https://online-go.com/) (sets ggs/rest hosts to the beta server)
 
   ```--debug, -d```  Output GTP command and responses from your Go engine
+
+  ```--logfile, -l``` In addition to logging to the console, also log gtp2ogs output to a text file
 
   ```--json, -j```  Send and receive GTP commands in a JSON encoded format
 
@@ -130,7 +144,10 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>``` sec
 
   ```--corrqueue```  Process correspondence games one at a time
 
-  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is actually the maximum total number of connected games for your bot (correspondence games are currently included in the connected games count if you use `--persist` ) , which means the maximum number of games your bot can play at the same time (choose a low number to regulate your GPU use)
+  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is actually the maximum total number 
+of connected games for your bot (correspondence games are currently included in the connected games count 
+if you use `--persist` ) , which means the maximum number of games your bot can play at the same time 
+(choose a low number to regulate your GPU use)
 
   ```--maxactivegames``` Maximum number of active games per player against this bot
 
@@ -138,15 +155,27 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>``` sec
 
   ```--rejectnew```  Reject all new challenges with the default reject message
 
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"```  if you add the rejectnewmsg argument, Reject all new challenges with a customized message instead of the default message. This message has to be included in "not accepting games because blablablah" (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"```  if you add the rejectnewmsg 
+argument, Reject all new challenges with a customized message instead of the default message. This message 
+has to be included in "not accepting games because blablablah" (for example to explain why, for how long, 
+if your bot is busy playing a tournament, etc...)
 
-  ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, can use for load-balancing)
+  ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, 
+can use for load-balancing)
 
-  ```--boardsize```  Possible boardsize values `any` (allows ALL boardsizes, use only if your bot can handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size written in numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), see [notes E-](/README.md#e-) for details
+  ```--boardsize```  Possible boardsize values `all` (allows ALL boardsizes, use only if your bot can 
+handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), 
+and square board size written in numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), 
+see [notes E-](/README.md#e-) for details
 
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom board size (if your bot can handle it), it is needed to use `custom` followed by comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, see [notes E-](/README.md#notes e-) for details
+  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom board size 
+(if your bot can handle it), it is needed to use `custom` followed by comma separated value(s), 
+in this example 25x1 25x2 25x3 are all allowed boardsizes, see [notes E-](/README.md#e-) for details
 
-  ```--komi``` Possible komi values `auto` (allows Automatic komi), `any` (allows all komi values), and for example `7.5` (allows komi value 7.5). When `any` is used alone, all komi values are allowed. When an argument other than `any` is used, only the chosen argument komi values are allowed and all other komi values are rejected see [notes C-](/README.md#c-) and [notes D-](/README.md#d-) for details
+  ```--komi``` Possible komi values `auto` (allows Automatic komi), `all` (allows all komi values), 
+and for example `7.5` (allows komi value 7.5). When `all` is used alone, all komi values are allowed. 
+When an argument other than `all` is used, only the chosen argument komi values are allowed and 
+all other komi values are rejected see [notes C-](/README.md#c-) and [notes D-](/README.md#d-) for details
 
   ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
@@ -182,9 +211,11 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>``` sec
 
   ```--maxrank```  Maximum opponent rank to accept (e.g. 1d)
 
-  ```--greeting "Hello, have a nice game"```  Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
+  ```--greeting "Hello, have a nice game"```  Greeting message to appear in chat at first move 
+(ex: "Hello, have a nice game")
 
-  ```--farewell "Thank you for playing"```  Thank you message to appear in chat at end of game (ex: "Thank you for playing")
+  ```--farewell "Thank you for playing"```  Thank you message to appear in chat at end of game 
+(ex: "Thank you for playing")
 
   ```--proonly```  Only accept matches from professionals
 
@@ -210,72 +241,106 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>``` sec
 
   ```--nopauseunranked```  Do not allow unranked games to be paused
 
-  ```--hidden```  Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)
+  ```--hidden```  Hides the botname from the OGS game "Play against computer" bot list 
+(but it can still accept challenges)
 
-After that, add a ``` -- ``` (with one space before and one space after the `--` ), to separate `<gtp2ogsarguments>`
-from your bot path and `<botarguments>`, as shown in [Most common usage earlier](/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
+After that, add a ``` -- ``` (with one space before and one space after the `--` ), to 
+separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as shown in 
+[Most common usage earlier](/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
 ## notes :
 
 #### A : 
 
-Currently, ogs does not support profile id number authentification, so you have to use bot username only. For example, for this famous bot
- https://online-go.com/player/58441/GnuGo , you have to use the bot name `GnuGo` and currently you cannot use profile number `58441` (it will not work)
+Currently, ogs does not support profile id number authentification, so you have to use bot 
+username only. For example, for this famous bot https://online-go.com/player/58441/GnuGo , 
+you have to use the bot name `GnuGo` and currently you cannot use profile number `58441` 
+(it will not work)
 
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that still required names and not id numbers, contrary to what this line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) that added confusion to how to use gtp2ogs for bot admins have been removed
+Therefore, the old `id` aliases (`id` , `botid` , `bot`), that still required names and not 
+id numbers, contrary to what this line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) 
+that added confusion to how to use gtp2ogs for bot admins have been removed
 
-To sum up, to connect your bot on OGS, you need and you have to simply use bot name, for example `--username GnuGo` for the bot admin of GnuGo
+To sum up, to connect your bot on OGS, you need and you have to simply use bot name, 
+for example `--username GnuGo` for the bot admin of GnuGo
 
 #### B : 
 
-a list of gtp2ogs arguments is also available [here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
+a list of gtp2ogs arguments is also available 
+[here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
 
 #### C : 
 
-on OGS, black player will always get the handicap stones regardless of rank difference (if auto (automatic) komi is selected, the komi will be 0.5) 
+on OGS, black player will always get the handicap stones regardless of rank difference 
+(if auto (automatic) komi is selected, the komi will be 0.5) 
 
 but you can restrict allowed komi for example to only 7.5 or auto with `--komi 7.5,auto`
 
-or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi, if your bot does not support 0.5 komi value.
+or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi, if your bot 
+does not support 0.5 komi value.
 
 #### D :
 
 explanation on how to use komi argument:
 
-- `--komi auto,0.5,7.5` for example, will allow any of these komi values : automatic(auto), 0.5, or 7.5, and will reject any other value
+- `--komi auto,0.5,7.5` for example, will allow any of these komi values : 
+automatic(auto), 0.5, or 7.5, and will reject any other value
 
-- another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value. In that example, note that if `auto` (automatic) komi happens to have the value 7.5, the auto value will be set to 7.5 and will be accepted and game will start (bots will always replace any rules with chinese rules, so a non handicap game 19x19 on ogs against a bot will always have the komi 7.5)
+- another example `--komi 7.5` will only accept komi value 7.5 and will reject any other value. 
+In that example, note that if `auto` (automatic) komi happens to have the value 7.5, 
+the auto value will be set to 7.5 and will be accepted and game will start (bots will always 
+replace any rules with chinese rules, so a non handicap game 19x19 on ogs against a bot will 
+always have the komi 7.5)
 
-- the `--komi 7.5` can be useful if your bot handles handicap well, but only with the value 7.5 for example (and not 0.5)
+- the `--komi 7.5` can be useful if your bot handles handicap well, but only with the value 7.5 
+for example (and not 0.5)
 
 #### E : 
 
 example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9)
 
-or `--boardsize any` (if you made some fancy bot)
+or `--boardsize all` (if you made some fancy bot)
     
-if you want to use a "custom" board size, you need to specify wanted custom width(s) and height(s) desired
+if you want to use a "custom" board size, you need to specify wanted custom width(s) 
+and height(s) desired
 
-for example : `--boardsize custom --boardsizewidth 25 --boardsizeheight 1` will allow only 25x1 board size
+for example : `--boardsize custom --boardsizewidth 25 --boardsizeheight 1` will allow only 
+25x1 board size
 
-or another example `--boardsize custom --boardsizewidth 9,10,11 --boardsizeheight 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25` will allow all possible combinations of width and height here (there 3 multiplied by 17 possible combinations here, which is 51 possible board sizes !
+or another example `--boardsize custom --boardsizewidth 9,10,11 --boardsizeheight 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25` 
+will allow all possible combinations of width and height here (there 3 multiplied by 
+17 possible combinations here, which is 51 possible board sizes !
 
 finally, it is possible to play "official" boardsizes too with this setting, 
-for example `--boardsize custom --boardsizewidth 9 --boardsizeheight 9,19` will allow 9x9 and 9x19 board sizes
+for example `--boardsize custom --boardsizewidth 9 --boardsizeheight 9,19` will 
+allow 9x9 and 9x19 board sizes
 
 #### F : 
 
-when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , so test special characters in your messages with caution 
+when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , 
+some special characters 
+will make gtp2ogs crash, such as `!!` (two times `!`) , so test special characters in your 
+messages with caution 
 
-these special characters have been tested to work on messages, among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
+these special characters have been tested to work on messages, among others :  `!` 
+(one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
 
-#### G : 
+# Discord chat : 
 
-if you're read that far, maybe you'll be interested to share your bot experience with bot admins or see talked topic !
+if you're read that far, maybe you'll be interested to share your bot experience with 
+bot admins or see talked topic !
 
 come on the leela zero discord in `#bots` channel and follow the talk with everyone !
 
 https://discord.gg/HZ23Cp9
+
+This discord can also be useful if you want to have fast and quick, interactive chat !
+
+You can also use the discord to ask simple and quick questions
+
+However, if you have a problem and it needs some explanations and time, it is common 
+github practices to uses the ["Issues](https://github.com/online-go/gtp2ogs/issues) 
+forum instead
 
 # Contributing
 
@@ -289,5 +354,5 @@ Welcome !
 
 come help us all make gtp2ogs more awesome than it already is ! 
 
-Read Contributing instructions [here](/CONTRIBUTING-README.md)
+Read Contributing instructions [here](/CONTRIBUTING.md)
 

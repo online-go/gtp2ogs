@@ -25,6 +25,7 @@ let sprintf = require('sprintf-js').sprintf;
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
     .alias('debug', 'd')
+    .alias('logfile', 'l')
     .alias('json', 'j')
     .demand('username')
     .demand('apikey')
@@ -39,7 +40,7 @@ let optimist = require("optimist")
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
-    .describe('logfile', 'In addition to logging to the console, also log to this file')
+    .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
     .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
@@ -67,16 +68,16 @@ let optimist = require("optimist")
     .string('boardsizeheight')
     .describe('boardsizeheight', 'For custom board size(s) to accept, specify boardsize height, for example 1')
     // behaviour : --boardsize can be specified as "custom" (allows board with custom size width x height),
-    // "any" (allows any boardsize), or for square boardsizes only (same width x height) 
+    // "all" (allows all boardsize), or for square boardsizes only (same width x height) 
     // comma separated list of explicit values.
     // The default is "9,13,19" (square board sizes only), see README for details
     .describe('komi', 'Allowed komi values')
     .string('komi')
     .default('komi', 'auto')
-    // behaviour: --komi may be specified as "auto" (Automatic), "any"
-    // (accept any value), or comma separated list of explicit values.
+    // behaviour: --komi may be specified as "auto" (Automatic), "all"
+    // (accept all value), or comma separated list of explicit values.
     // The default is "auto".
-    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi any, see README for details
+    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi all, see README for details
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
@@ -231,7 +232,7 @@ if (argv.maxrank) {
     }
 }
 
-let allow_any_sizes = false;
+let allow_all_sizes = false;
 let allow_custom_sizes = false;
 let allowed_custom_boardsizewidth = [];
 let allowed_custom_boardsizeheight = [];
@@ -239,8 +240,8 @@ let allowed_sizes = [];
 
 if (argv.boardsize) {
     for (let boardsize of argv.boardsize.split(',')) {
-        if (boardsize == "any") {
-            allow_any_sizes = true;
+        if (boardsize == "all") {
+            allow_all_sizes = true;
         } else if (boardsize == "custom") {
             allow_custom_sizes = true;
             for (let boardsizewidth of argv.boardsizewidth.split(',')) {
@@ -255,13 +256,13 @@ if (argv.boardsize) {
     }
 }
 
-let allow_any_komi = false;
+let allow_all_komi = false;
 let allowed_komi = [];
 
 if (argv.komi) {
     for (let komi of argv.komi.split(',')) {
-        if (komi == "any") {
-            allow_any_komi = true;
+        if (komi == "all") {
+            allow_all_komi = true;
         } else if (komi == "auto") {
             allowed_komi[null] = true;
         } else {
@@ -1531,23 +1532,23 @@ class Connection {
         }
 
         // for square board sizes only
-        if (notification.width != notification.height && !allow_any_sizes && !allow_custom_sizes) {
+        if (notification.width != notification.height && !allow_all_sizes && !allow_custom_sizes) {
             conn_log("board was not square, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if (!allowed_sizes[notification.width] && !allow_any_sizes && !allow_custom_sizes) {
+        if (!allowed_sizes[notification.width] && !allow_all_sizes && !allow_custom_sizes) {
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size, rejecting challenge");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of the allowed square board sizes (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes : " + argv.boardsize };
         }
 
         // for custom board sizes, including square board sizes if width == height as well
-        if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizewidth[notification.width]) {
+        if (!allow_all_sizes && allow_custom_sizes && !allowed_custom_boardsizewidth[notification.width]) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + argv.boardsizewidth };
         }
 
-        if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizeheight[notification.height]) {
+        if (!allow_all_sizes && allow_custom_sizes && !allowed_custom_boardsizeheight[notification.height]) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
@@ -1582,7 +1583,7 @@ class Connection {
             return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxunrankedhandicap + " , please increase the number of handicap stones" };
         }
 
-        if (!allowed_komi[notification.komi] && !allow_any_komi) {
+        if (!allowed_komi[notification.komi] && !allow_all_komi) {
             conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi + ", rejecting challenge");
             return { reject: true, msg: "komi " + notification.komi + " is not an allowed komi, please choose one of these allowed komi : " + argv.komi };
         }
