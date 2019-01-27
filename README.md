@@ -366,6 +366,8 @@ Here are the currently available aliases on gtp2ogs :
 
 When you use these aliases one `-` is enough, you don't need to do `--`
 
+The list of aliases can also be found inside [gtp2ogs.js file](/gtp2ogs.js)
+
 # Discord chat : 
 
 if you're read that far, maybe you'll be interested to share your bot experience with 
@@ -380,7 +382,7 @@ This discord can also be useful if you want to have fast and quick, interactive 
 You can also use the discord to ask simple and quick questions
 
 However, if you have a problem and it needs some explanations and time, it is common 
-github practices to uses the ["Issues](https://github.com/online-go/gtp2ogs/issues) 
+github practices to use the ["Issues"](https://github.com/online-go/gtp2ogs/issues) 
 forum instead
 
 # Contributing
