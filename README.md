@@ -14,8 +14,9 @@ so you can download them directly or ask them if you want these features
 
 When you have a bot on OGS, you have total control over it : 
 you put it online when you want only, and there are many settings to choose 
-game settings to accept (rank, boardisze, etc..), but also options to control 
-your GPU/computing device power spent (max number of simultaneous games, corrqueue, etc..)
+game settings to accept (rank, boardisze, correspondence games, etc..), but also options 
+to control your GPU/computing device power spent (max number of simultaneous games, 
+corrqueue, etc..)
 
 # Full tutorial 
 
