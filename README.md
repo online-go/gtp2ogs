@@ -1,16 +1,25 @@
 # gtp2ogs
 
-This javascript tool allows Go bots that support GTP [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
+This javascript tool allows Go bots that support GTP 
+[(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
 to communicate with OGS [(Online-Go.com Server)](https://online-go.com/)
 
 No programming knowledge is needed to use it : just install it and it works.
 
-Programming knowledge is needed only to add extra features such as displaying and sending winrates and variations 
-at every move, for example.
+Programming knowledge is needed only to add extra features such as displaying
+and sending winrates and variations at every move, for example.
+
+Note that some contributors already provide their custom gtp2ogs branches 
+so you can download them directly or ask them if you want these features
+
+When you have a bot on OGS, you have total control over it : 
+you put it online when you want only, and there are many settings to choose 
+game settings to accept (rank, boardisze, etc..), but also options to control 
+your GPU/computing device power spent (max number of simultaneous games, corrqueue, etc..)
 
 # Full tutorial 
 
-[for linux and windows, with screenshots, examples, and detailed explanations](https://github.com/wonderingabout/gtp2ogs-tutorial)
+[for windows and linux, with screenshots, examples, and detailed explanations](https://github.com/wonderingabout/gtp2ogs-tutorial)
 
 # Quick Guide
 
@@ -18,9 +27,11 @@ at every move, for example.
 
 To install nodejs, you can :
 - either use your system package manager (like apt-get for ubuntu)
-- or download it from [nodejs website downloads](https://nodejs.org/en/download/) for linux or windows
+- or download it from [nodejs website downloads](https://nodejs.org/en/download/) 
+for linux or windows
 
-note : installing nodejs will also install npm = node package manager. Both will be needed later.
+note : installing nodejs will also install npm = node package manager. Both 
+will be needed later.
 
 ### 2. install gtp2ogs using npm
 
@@ -85,11 +96,12 @@ For windows (preferably as admin) :
 pushd C:\Program Files\nodejs && node.exe C:\Users\yourwindowsusername\AppData\Roaming\npm\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <botargument1> <botargument2>
 ```
 
-note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` and before
- `/path/to/your/bot.executable` are important : they separate gtp2ogs arguments from your bot arguments
+note : for all operating systems, in ` -- `, the spaces after `<gtp2ogsarguments>` 
+and before `/path/to/your/bot.executable` are important : they separate gtp2ogs 
+arguments from your bot arguments
 
-note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, here only 2 were shown but 
-it possible to use for example 3,4,5 , or as many as you want
+note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, 
+here only 2 were shown but it possible to use for example 3,4,5 , or as many as you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
@@ -100,9 +112,9 @@ This step is totally not needed but can be much appreciated
 
 To do that, programming knowledge is needed (or you can ask for help)
 
-For example you can program the gtp2ogs.js so that it sends winrate and playouts/visits information 
-at every move, or even clickable variations, such as what [some bots](https://online-go.com/game/15926249) 
-use for example.
+For example you can program the gtp2ogs.js so that it sends winrate and 
+playouts/visits information at every move, or even clickable variations, 
+such as what [some bots](https://online-go.com/game/15926249) use for example.
 
 # Options
 
@@ -132,7 +144,8 @@ Put a space in between options when there are more than one.  Also put a space i
 
   ```--debug``` or ```-d```  Output GTP command and responses from your Go engine
 
-  ```--logfile``` or ```-l``` In addition to logging to the console, also log gtp2ogs output to a text file
+  ```--logfile``` or ```-l``` In addition to logging to the console, also log gtp2ogs 
+  output to a text file
 
   ```--json``` or ```-j```  Send and receive GTP commands in a JSON encoded format
 
