@@ -67,17 +67,19 @@ let optimist = require("optimist")
     .describe('boardsizewidth', 'For custom board size(s) to accept, specify boardsize width, for example 25')
     .string('boardsizeheight')
     .describe('boardsizeheight', 'For custom board size(s) to accept, specify boardsize height, for example 1')
-    // behaviour : --boardsize can be specified as "custom" (allows board with custom size width x height),
-    // "all" (allows all boardsize), or for square boardsizes only (same width x height) 
-    // comma separated list of explicit values.
+    // behaviour : --boardsize can be specified as 
+    // "custom" (allows board with custom size width x height),
+    // "all" (allows ALL boardsizes), 
+    // or for square boardsizes only (same width x height) comma separated list of explicit values.
     // The default is "9,13,19" (square board sizes only), see README for details
     .describe('komi', 'Allowed komi values')
     .string('komi')
     .default('komi', 'auto')
-    // behaviour: --komi may be specified as "auto" (Automatic), "all"
-    // (accept all value), or comma separated list of explicit values.
-    // The default is "auto".
-    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi all, see README for details
+    // behaviour: --komi may be specified as 
+    // "auto" (Automatic), 
+    // "all" (accept all komi values), 
+    // or comma separated list of explicit values.
+    // The default is "auto", see README for details
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
