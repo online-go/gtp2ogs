@@ -155,35 +155,35 @@ Put a space in between options when there are more than one.  Also put a space i
 
   ```--persist```  Bot process remains running between moves
 
-  ```--corrqueue```  Process correspondence games one at a time
+  ```--corrqueue``` or ```-cq``` Process correspondence games one at a time
 
-  ```--maxtotalgames``` Maximum number of total games, maxtotalgames is actually the maximum total number 
-of connected games for your bot (correspondence games are currently included in the connected games count 
-if you use `--persist` ) , which means the maximum number of games your bot can play at the same time 
-(choose a low number to regulate your GPU use)
+  ```--maxtotalgames``` or ```-mt``` Maximum number of total games, maxtotalgames is actually 
+the maximum total number of connected games for your bot (correspondence games are currently included in 
+the connected games count if you use `--persist` ) , which means the maximum number of games your bot 
+can play at the same time (choose a low number to regulate your GPU use)
 
-  ```--maxactivegames``` Maximum number of active games per player against this bot
+  ```--maxactivegames``` or ```-ma``` Maximum number of active games per player against this bot
 
   ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
 
-  ```--rejectnew```  Reject all new challenges with the default reject message
+  ```--rejectnew``` or ```-r``` Reject all new challenges with the default reject message
 
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"```  if you add the rejectnewmsg 
-argument, Reject all new challenges with a customized message instead of the default message. This message 
-has to be included in "not accepting games because blablablah" (for example to explain why, for how long, 
-if your bot is busy playing a tournament, etc...)
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` or ```-r -rm "not accepting games because blablablah"``` if you add the rejectnewmsg argument, Reject all new challenges with a customized message 
+instead of the default message. This message has to be included in "not accepting games because blablablah" 
+(for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
 
   ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, 
 can use for load-balancing)
 
-  ```--boardsize```  Possible boardsize values `all` (allows ALL boardsizes, use only if your bot can 
-handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), 
-and square board size written in numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), 
-see [notes E-](/README.md#e-) for details
+  ```--boardsize``` or ```-bb``` Possible boardsize values `all` (allows ALL boardsizes, use only if 
+your bot can handle it !), `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 
+15x15, 3x2, etc..), and square board size written in numbers comma separated (for example 9x9, 13x13, 
+19x19, default is `9,13,19`), see [notes E-](/README.md#e-) for details
 
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom board size 
-(if your bot can handle it), it is needed to use `custom` followed by comma separated value(s), 
-in this example 25x1 25x2 25x3 are all allowed boardsizes, see [notes E-](/README.md#e-) for details
+  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or ```-bb custom -bw 25 -bh 1,2,3``` 
+Allows custom board size (if your bot can handle it), it is needed to use `custom` followed by 
+comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, 
+see [notes E-](/README.md#e-) for details
 
   ```--komi``` Possible komi values `auto` (allows Automatic komi), `all` (allows all komi values), 
 and for example `7.5` (allows komi value 7.5). When `all` is used alone, all komi values are allowed. 
@@ -254,7 +254,7 @@ all other komi values are rejected see [notes C-](/README.md#c-) and [notes D-](
 
   ```--nopauseunranked```  Do not allow unranked games to be paused
 
-  ```--hidden```  Hides the botname from the OGS game "Play against computer" bot list 
+  ```--hidden``` or ```-h``` Hides the botname from the OGS game "Play against computer" bot list 
 (but it can still accept challenges)
 
 After that, add a ``` -- ``` (with one space before and one space after the `--` ), to 
@@ -310,7 +310,13 @@ for example (and not 0.5)
 
 #### E : 
 
-example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9)
+aliases :
+- whenever `--boardsize` is usued, you can shorten it with just `-bb`
+- whenever `--boardsizewidth` is usued, you can shorten it with just `-bw`
+- whenever `--boardsizeheight` is usued, you can shorten it with just `-bh`
+
+example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9) 
+or `-bb 19`
 
 or `--boardsize all` (if you made some fancy bot)
     
@@ -331,12 +337,33 @@ allow 9x9 and 9x19 board sizes
 #### F : 
 
 when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , 
-some special characters 
-will make gtp2ogs crash, such as `!!` (two times `!`) , so test special characters in your 
-messages with caution 
+some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , 
+so test special characters in your messages with caution 
 
 these special characters have been tested to work on messages, among others :  `!` 
 (one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
+
+#### G : 
+
+for some `gtp2ogsarguments`, it is possible to use a shorter version of the argument to 
+write faster and with less command length, it is also called "aliases"
+
+Here are the currently available aliases on gtp2ogs :
+
+- `--debug`, `-d`
+- `--logfile`, `-l`
+- `--json`, `-j`
+- `--hidden`, `-h`
+- `--rejectnew`, `-r`
+- `--rejectnewmsg`, `-rm`
+- `--maxtotalgames`, `-mt`
+- `--maxactivegames`, `-ma`
+- `--corrqueue`, `-cq`
+- `--boardsize`, `-bb`
+- `--boardsizewidth`, `-bw`
+- `--boardsizeheight`, `-bh`
+
+When you use these aliases one `-` is enough, you don't need to do `--`
 
 # Discord chat : 
 
