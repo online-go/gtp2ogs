@@ -107,6 +107,9 @@ here only 2 were shown but it possible to use for example 3,4,5 , or as many as 
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
 
+**note 4 : it is possible to use intuitive semi-syllabic aliases to write your gtp2ogs 
+arguments in a much smaller size, see [notes G-](/README.md#g-) for details**
+
 ### Extra : add features by editing gtp2ogs.js file
 
 This step is totally not needed but can be much appreciated
@@ -121,16 +124,28 @@ such as what [some bots](https://online-go.com/game/15926249) use for example.
 
 Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
-  ```--username``` Specify the username of the bot, for example `--username GnuGo`, currently 
-there is no profile number log in support on ogs, see [notes A-](/README.md#a-) for details
+  ```--username``` or `-u` Specify the username of the bot, for example `--username GnuGo`, 
+currently there is no profile number log in support on ogs, see 
+[notes A-](/README.md#a-) for details
 
-  ```--apikey``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
+  ```--apikey``` or ```-a``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
 Then, the following options are placed in the above ```<gtp2ogsarguments>``` section. 
-Put a space in between options when there are more than one.  Also put a space in between
- the option and the parameter like:
+Put a space in between options when there are more than one.  Also put a space in between 
+the option and the parameter, for example :
 
-  ```--startupbuffer 2 --boardsize 13,19 --ban UserX,playerY ```
+  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxactivegames 1 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
+  
+  or with intuitive semi-syllabic aliases (see [notes G-](/README.md#g-) for details), 
+  the same example becomes :
+  
+  ```-sb 2 -bb 13,19 -nc -uo -1ag 1 -1mt 1200 -b UserX,playerY -1pr 5```
+  
+  note : some gtp2ogsarguments have default so they are enabled even if you don't specify 
+  them, such as `--komi` which default is automatic even if you dont specify it !
+  
+  below is a list of all possible to use gtp2ogs arguments, use the ones you want only, 
+  no need to use them all !
 
   ```--host```  OGS Host to connect to (default online-go.com)
 
@@ -152,20 +167,20 @@ Put a space in between options when there are more than one.  Also put a space i
 
   ```--kgstime```  Set this if bot understands the kgs-time_settings command
 
-  ```--noclock```  Do not send any clock/time data to the bot
+  ```--noclock```  or ```-nc``` Do not send any clock/time data to the bot
 
-  ```--persist```  Bot process remains running between moves
+  ```--persist``` or ```-p```  Bot process remains running between moves
 
   ```--corrqueue``` or ```-cq``` Process correspondence games one at a time
 
-  ```--maxtotalgames``` or ```-mt``` Maximum number of total games, maxtotalgames is actually 
+  ```--maxtotalgames``` or ```-1tg``` Maximum number of total games, maxtotalgames is actually 
 the maximum total number of connected games for your bot (correspondence games are currently included in 
 the connected games count if you use `--persist` ) , which means the maximum number of games your bot 
 can play at the same time (choose a low number to regulate your GPU use)
 
-  ```--maxactivegames``` or ```-ma``` Maximum number of active games per player against this bot
+  ```--maxactivegames``` or ```-1ag``` Maximum number of active games per player against this bot
 
-  ```--startupbuffer``` Subtract this many seconds from time available on first move (default 5)
+  ```--startupbuffer``` or ```-sb``` Subtract this many seconds from time available on first move (default 5)
 
   ```--rejectnew``` or ```-r``` Reject all new challenges with the default reject message
 
@@ -173,7 +188,7 @@ can play at the same time (choose a low number to regulate your GPU use)
 instead of the default message. This message has to be included in "not accepting games because blablablah" 
 (for example to explain why, for how long, if your bot is busy playing a tournament, etc...)
 
-  ```--rejectnewfile ~/rejectnew.status```  Reject new challenges if file exists (checked each time, 
+  ```--rejectnewfile ~/rejectnew.status```  or ```-rf``` Reject new challenges if file exists (checked each time, 
 can use for load-balancing)
 
   ```--boardsize``` or ```-bb``` Possible boardsize values `all` (allows ALL boardsizes, use only if 
@@ -186,74 +201,74 @@ Allows custom board size (if your bot can handle it), it is needed to use `custo
 comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, 
 see [notes E-](/README.md#e-) for details
 
-  ```--komi``` Possible komi values `auto` (allows Automatic komi), `all` (allows all komi values), 
+  ```--komi``` or ```-k``` Possible komi values `auto` (allows Automatic komi), `all` (allows all komi values), 
 and for example `7.5` (allows komi value 7.5). When `all` is used alone, all komi values are allowed. 
 When an argument other than `all` is used, only the chosen argument komi values are allowed and 
 all other komi values are rejected see [notes C-](/README.md#c-) and [notes D-](/README.md#d-) for details
 
-  ```--ban```  Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
+  ```--ban```  or ```-b``` Comma separated list of user names or IDs (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
-  ```--banranked```  Comma separated list of user names or IDs who are banned from playing ranked games
+  ```--banranked```  or ```-br``` Comma separated list of user names or IDs who are banned from playing ranked games
 
-  ```--banunranked```  Comma separated list of user names or IDs who are banned from playing unranked game
+  ```--banunranked```  or ```-bu``` Comma separated list of user names or IDs who are banned from playing unranked game
 
-  ```--speed```  Comma separated list of Game speed(s) to accept (default blitz,live,correspondence)
+  ```--speed```  or ```-s``` Comma separated list of Game speed(s) to accept (default blitz,live,correspondence)
 
-  ```--timecontrol```  Time control(s) to accept (default fischer,byoyomi,simple,canadian,absolute,none)
+  ```--timecontrol```  or ```-tc``` Time control(s) to accept (default fischer,byoyomi,simple,canadian,absolute,none)
 
-  ```--minmaintime```  Minimum seconds of main time (rejects time control simple and none)
+  ```--minmaintime```  or ```-0mt``` Minimum seconds of main time (rejects time control simple and none)
 
-  ```--maxmaintime```  Maximum seconds of main time (rejects time control simple and none)
+  ```--maxmaintime```  or ```-1mt``` Maximum seconds of main time (rejects time control simple and none)
 
-  ```--minperiodtime```  Minimum seconds per period (per stone in canadian)
+  ```--minperiodtime```  or ```-0pt``` Minimum seconds per period (per stone in canadian)
 
-  ```--maxperiodtime```  Maximum seconds per period (per stone in canadian)
+  ```--maxperiodtime```  or ```-1pt``` Maximum seconds per period (per stone in canadian)
 
-  ```--minperiods```  Minimum number of periods
+  ```--minperiods```  or ```-0p``` Minimum number of periods
 
-  ```--minperiodsranked```  Minimum number of ranked periods
+  ```--minperiodsranked```  or ```-0pr``` Minimum number of ranked periods
 
-  ```--minperiodsunranked```  Minimum number of unranked periods
+  ```--minperiodsunranked```  or ```-0pu``` Minimum number of unranked periods
 
-  ```--maxperiods```  Maximum number of periods
+  ```--maxperiods```  or ```-1p``` Maximum number of periods
 
-  ```--maxperiodsranked```  Maximum number of ranked periods
+  ```--maxperiodsranked```  or ```-1pr``` Maximum number of ranked periods
 
-  ```--maxperiodsunranked```  Maximum number of unranked periods
+  ```--maxperiodsunranked```  or ```-1pu``` Maximum number of unranked periods
 
-  ```--minrank```  Minimum opponent rank to accept (e.g. 15k)
+  ```--minrank```  or ```-0r``` Minimum opponent rank to accept (e.g. 15k)
 
-  ```--maxrank```  Maximum opponent rank to accept (e.g. 1d)
+  ```--maxrank```  or ```-1r``` Maximum opponent rank to accept (e.g. 1d)
 
-  ```--greeting "Hello, have a nice game"```  Greeting message to appear in chat at first move 
-(ex: "Hello, have a nice game")
+  ```--greeting "Hello, have a nice game"```  or ```-g "Hello, have a nice game"``` 
+Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
 
-  ```--farewell "Thank you for playing"```  Thank you message to appear in chat at end of game 
-(ex: "Thank you for playing")
+  ```--farewell "Thank you for playing"```  or ```-f "Thank you for playing"``` 
+Thank you message to appear in chat at end of game (ex: "Thank you for playing")
 
-  ```--proonly```  Only accept matches from professionals
+  ```--proonly```  or ```-po``` Only accept matches from professionals
 
-  ```--rankedonly```  Only accept ranked matches
+  ```--rankedonly```  or ```-ro``` Only accept ranked matches
 
-  ```--unrankedonly```  Only accept unranked matches
+  ```--unrankedonly``` or ```-uo```  Only accept unranked matches
 
-  ```--minhandicap```  Min handicap for all games
+  ```--minhandicap``` or ```-0h```  Min handicap for all games
 
-  ```--maxhandicap```  Max handicap for all games
+  ```--maxhandicap``` or ```-1h```  Max handicap for all games
 
-  ```--minrankedhandicap```  Min handicap for ranked games
+  ```--minhandicapranked``` or ```-0hr```  Min handicap for ranked games
 
-  ```--maxrankedhandicap```  Max handicap for ranked games
+  ```--maxhandicapranked```  or ```-1hr``` Max handicap for ranked games
 
-  ```--minunrankedhandicap```  Min handicap for unranked games
+  ```--minhandicapunranked```  or ```-0hu``` Min handicap for unranked games
 
-  ```--maxunrankedhandicap```  Max handicap for unranked games
+  ```--maxhandicapranked```  or ```-0hr``` Max handicap for unranked games
 
-  ```--nopause```  Do not allow games to be paused
+  ```--nopause``` or ```-np```  Do not allow games to be paused
 
-  ```--nopauseranked```  Do not allow ranked games to be paused
+  ```--nopauseranked```  or ```-npr``` Do not allow ranked games to be paused
 
-  ```--nopauseunranked```  Do not allow unranked games to be paused
+  ```--nopauseunranked```  or ```-npu``` Do not allow unranked games to be paused
 
   ```--hidden``` or ```-h``` Hides the botname from the OGS game "Play against computer" bot list 
 (but it can still accept challenges)
@@ -311,11 +326,6 @@ for example (and not 0.5)
 
 #### E : 
 
-aliases :
-- whenever `--boardsize` is usued, you can shorten it with just `-bb`
-- whenever `--boardsizewidth` is usued, you can shorten it with just `-bw`
-- whenever `--boardsizeheight` is usued, you can shorten it with just `-bh`
-
 example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9) 
 or `-bb 19`
 
@@ -349,24 +359,30 @@ these special characters have been tested to work on messages, among others :  `
 for some `gtp2ogsarguments`, it is possible to use a shorter version of the argument to 
 write faster and with less command length, it is also called "aliases"
 
-Here are the currently available aliases on gtp2ogs :
-
-- `--debug`, `-d`
-- `--logfile`, `-l`
-- `--json`, `-j`
-- `--hidden`, `-h`
-- `--rejectnew`, `-r`
-- `--rejectnewmsg`, `-rm`
-- `--maxtotalgames`, `-mt`
-- `--maxactivegames`, `-ma`
-- `--corrqueue`, `-cq`
-- `--boardsize`, `-bb`
-- `--boardsizewidth`, `-bw`
-- `--boardsizeheight`, `-bh`
-
-When you use these aliases one `-` is enough, you don't need to do `--`
-
 The list of aliases can also be found inside [gtp2ogs.js file](/gtp2ogs.js)
+
+When you use these aliases, one `-` is enough, you don't need to do `--`
+
+Also, the format chosen was "intuitive semi-syllabic aliases" (easy to write them 
+just by ear : one word one letter, 2 words 2 letters, `0` is min , `1` is max )
+
+note : `--farewell` is 2 syllabes but only one word, so only one letter (semi-syllabic) , 
+
+For example, these lines on gtp2ogs.js 
+
+```
+    .alias('farewell', 'f')
+    .alias('noclock', 'nc')
+    .alias('unrankedonly', 'uo')
+    .alias('minperiodtime', '0pt')
+```
+
+mean that the gtp2ogs arguments can be abriged like that : 
+
+- `--farewell` -> `-f`
+- `--noclock` -> `-nc`
+- `--unrankedonly` -> `-uo`
+- `--minperiodtime` -> `0pt`
 
 # Discord chat : 
 
