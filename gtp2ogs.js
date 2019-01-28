@@ -162,10 +162,10 @@ let optimist = require("optimist")
     .describe('unrankedonly', 'Only accept unranked matches')
     .describe('minhandicap', 'Min handicap for all games')
     .describe('maxhandicap', 'Max handicap for all games')
-    .describe('minrankedhandicap', 'Min handicap for ranked games')
-    .describe('maxrankedhandicap', 'Max handicap for ranked games')
-    .describe('minunrankedhandicap', 'Min handicap for unranked games')
-    .describe('maxunrankedhandicap', 'Max handicap for unranked games')
+    .describe('minhandicapranked', 'Min handicap for ranked games')
+    .describe('maxhandicapranked', 'Max handicap for ranked games')
+    .describe('minhandicapunranked', 'Min handicap for unranked games')
+    .describe('maxhandicapunranked', 'Max handicap for unranked games')
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
@@ -1614,24 +1614,24 @@ class Connection {
             return { reject: true, msg: "Maximum handicap is " + argv.maxhandicap + " , please reduce the number of handicap stones " };
         }
 
-        if (notification.ranked && notification.handicap < argv.minrankedhandicap) {
-            conn_log("Min ranked handicap is " + argv.minrankedhandicap);
-            return { reject: true, msg: "Minimum handicap for ranked games is " + argv.minrankedhandicap + " , please increase the number of handicap stones" };
+        if (notification.ranked && notification.handicap < argv.minhandicapranked) {
+            conn_log("Min ranked handicap is " + argv.minhandicapranked);
+            return { reject: true, msg: "Minimum handicap for ranked games is " + argv.minhandicapranked + " , please increase the number of handicap stones" };
         }
 
-        if (notification.ranked && notification.handicap > argv.maxrankedhandicap) {
-            conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
-            return { reject: true, msg: "Maximum handicap for ranked games is " + argv.maxrankedhandicap + " , please reduce the number of handicap stones" };
+        if (notification.ranked && notification.handicap > argv.maxhandicapranked) {
+            conn_log("Max ranked handicap is " + argv.maxhandicapranked);
+            return { reject: true, msg: "Maximum handicap for ranked games is " + argv.maxhandicapranked + " , please reduce the number of handicap stones" };
         }
 
-        if (!notification.ranked && notification.handicap < argv.minunrankedhandicap) {
-            conn_log("Min unranked handicap is " + argv.minunrankedhandicap);
-            return { reject: true, msg: "Minimum handicap for unranked games is " + argv.minunrankedhandicap + " , please reduce the number of handicap stones" };
+        if (!notification.ranked && notification.handicap < argv.minhandicapunranked) {
+            conn_log("Min unranked handicap is " + argv.minhandicapunranked);
+            return { reject: true, msg: "Minimum handicap for unranked games is " + argv.minhandicapunranked + " , please reduce the number of handicap stones" };
         }
 
-        if (!notification.ranked && notification.handicap > argv.maxunrankedhandicap) {
-            conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
-            return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxunrankedhandicap + " , please increase the number of handicap stones" };
+        if (!notification.ranked && notification.handicap > argv.maxhandicapunranked) {
+            conn_log("Max unranked handicap is " + argv.maxhandicapunranked);
+            return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxhandicapunranked + " , please increase the number of handicap stones" };
         }
 
         if (!allowed_komi[notification.komi] && !allow_all_komi) {
