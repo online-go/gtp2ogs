@@ -1651,22 +1651,22 @@ class Connection {
             return { reject: true, msg: "Maximum handicap is " + argv.maxhandicap + " , please reduce the number of handicap stones " };
         }
 
-        if (notification.ranked && notification.handicap < argv.minhandicapranked) {
+        if (notification.handicap < argv.minhandicapranked && notification.ranked) {
             conn_log("Min ranked handicap is " + argv.minhandicapranked);
             return { reject: true, msg: "Minimum handicap for ranked games is " + argv.minhandicapranked + " , please increase the number of handicap stones" };
         }
 
-        if (notification.ranked && notification.handicap > argv.maxhandicapranked) {
+        if (notification.handicap > argv.maxhandicapranked && notification.ranked) {
             conn_log("Max ranked handicap is " + argv.maxhandicapranked);
             return { reject: true, msg: "Maximum handicap for ranked games is " + argv.maxhandicapranked + " , please reduce the number of handicap stones" };
         }
 
-        if (!notification.ranked && notification.handicap < argv.minhandicapunranked) {
+        if (notification.handicap < argv.minhandicapunranked && !notification.ranked) {
             conn_log("Min unranked handicap is " + argv.minhandicapunranked);
             return { reject: true, msg: "Minimum handicap for unranked games is " + argv.minhandicapunranked + " , please reduce the number of handicap stones" };
         }
 
-        if (!notification.ranked && notification.handicap > argv.maxhandicapunranked) {
+        if (notification.handicap > argv.maxhandicapunranked && !notification.ranked) {
             conn_log("Max unranked handicap is " + argv.maxhandicapunranked);
             return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxhandicapunranked + " , please increase the number of handicap stones" };
         }
@@ -1719,12 +1719,12 @@ class Connection {
             return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods " };
         }
 
-        if (argv.minperiodsranked && notification.ranked && (t.periods < argv.minperiodsranked)) {
+        if (argv.minperiodsranked && (t.periods < argv.minperiodsranked) && notification.ranked) {
             conn_log(user.username + " wanted too few ranked periods: " + t.periods);
             return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods " };
         }
 
-        if (argv.minperiodsunranked && !notification.ranked && (t.periods < argv.minperiodsunranked)) {
+        if (argv.minperiodsunranked && (t.periods < argv.minperiodsunranked) && !notification.ranked) {
             conn_log(user.username + " wanted too few unranked periods: " + t.periods);
             return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods " };
         }
@@ -1734,12 +1734,12 @@ class Connection {
             return { reject: true, msg: "Maximum number of periods is " + argv.maxperiods + " , please reduce the number of periods " };
         }
 
-        if (notification.ranked && t.periods > argv.maxperiodsranked) {
+        if (t.periods > argv.maxperiodsranked && notification.ranked) {
             conn_log(user.username + " wanted too many ranked periods: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods " };
         }
 
-        if (!notification.ranked && t.periods > argv.maxperiodsunranked) {
+        if (t.periods > argv.maxperiodsunranked && !notification.ranked) {
             conn_log(user.username + " wanted too many unranked periods: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods " };
         }
