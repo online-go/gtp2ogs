@@ -42,9 +42,9 @@ let optimist = require("optimist")
     .alias('nopause', 'np')
     .alias('nopauseranked', 'npr')
     .alias('nopauseunranked', 'npu')
-    .alias('noautorandicap', 'nah')
-    .alias('noautorandicapranked', 'nahr')
-    .alias('noautorandicapunranked', 'nahu')
+    .alias('noautohandicap', 'nah')
+    .alias('noautohandicapranked', 'nahr')
+    .alias('noautohandicapunranked', 'nahu')
     .alias('rankedonly', 'ro')
     .alias('unrankedonly', 'uo')
     .alias('proonly', 'po')
@@ -328,26 +328,20 @@ if (argv.komi) {
     }
 }
 
-let autohandicap = false;
-let autohandicapranked = false;
-let autohandicapunranked = false;
+let no_autohandicap = false;
+let no_autohandicapranked = false;
+let no_autohandicapunranked = false;
 
 if (argv.noautohandicap) {
-    if (notification.handicap < 0) {
-        autohandicap = true;
-    }
+    no_autohandicap = true;
 }
 
 if (argv.noautohandicapranked) {
-    if (notification.ranked && notification.handicap < 0) {
-        autohandicapranked = true;
-    }
+    no_autohandicapranked = true;
 }
 
 if (argv.noautohandicapunranked) {
-    if (!notification.ranked && notification.handicap < 0) {
-        autohandicapunranked = true;
-    }
+    no_autohandicapunranked = true;
 }
 
 let allowed_timecontrols = {};
@@ -1632,17 +1626,17 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
 
-        if (autohandicap) {
+        if (no_autohandicap && notification.handicap == -1) {
             conn_log("no autohandicap, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (autohandicapranked) {
+        if (no_autohandicapranked && notification.handicap == -1 && notification.ranked) {
             conn_log("no autohandicap for ranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (autohandicapunranked) {
+        if (no_autohandicapunranked && notification.handicap == -1 && !notification.ranked) {
             conn_log("no autohandicap for unranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
