@@ -279,6 +279,14 @@ Thank you message to appear in chat at end of game (ex: "Thank you for playing")
   ```--minhandicapunranked```  or ```--0hu``` Min handicap for unranked games
 
   ```--maxhandicapranked```  or ```--0hr``` Max handicap for unranked games
+  
+  ```--noautohandicap``` or ```--nah``` Do not allow handicap to be set to -automatic-
+
+  ```--noautohandicapranked``` or ```--nahr``` Do not allow handicap to be set to 
+-automatic- for ranked games
+  
+  ```--noautohandicapunranked``` or ```--nahu``` Do not allow handicap to be set to 
+-automatic- for unranked games
 
   ```--nopause``` or ```--np```  Do not allow games to be paused
 
