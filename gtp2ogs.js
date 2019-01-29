@@ -42,6 +42,9 @@ let optimist = require("optimist")
     .alias('nopause', 'np')
     .alias('nopauseranked', 'npr')
     .alias('nopauseunranked', 'npu')
+    .alias('noautorandicap', 'nah')
+    .alias('noautorandicapranked', 'nahr')
+    .alias('noautorandicapunranked', 'nahu')
     .alias('rankedonly', 'ro')
     .alias('unrankedonly', 'uo')
     .alias('proonly', 'po')
@@ -166,6 +169,9 @@ let optimist = require("optimist")
     .describe('maxhandicapranked', 'Max handicap for ranked games')
     .describe('minhandicapunranked', 'Min handicap for unranked games')
     .describe('maxhandicapunranked', 'Max handicap for unranked games')
+    .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
+    .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
+    .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
@@ -319,6 +325,28 @@ if (argv.komi) {
         } else {
             allowed_komi[komi] = true;
         }
+    }
+}
+
+let autohandicap = false;
+let autohandicapranked = false;
+let autohandicapunranked = false;
+
+if (argv.noautohandicap) {
+    if (notification.handicap < 0) {
+        autohandicap = true;
+    }
+}
+
+if (argv.noautohandicapranked) {
+    if (notification.ranked && notification.handicap < 0) {
+        autohandicapranked = true;
+    }
+}
+
+if (argv.noautohandicapunranked) {
+    if (!notification.ranked && notification.handicap < 0) {
+        autohandicapunranked = true;
     }
 }
 
@@ -1603,6 +1631,21 @@ class Connection {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
+
+        if (autohandicap) {
+            conn_log("no autohandicap, rejecting challenge") ;
+            return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+	}
+
+        if (autohandicapranked) {
+            conn_log("no autohandicap for ranked games, rejecting challenge") ;
+            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+	}
+
+        if (autohandicapunranked) {
+            conn_log("no autohandicap for unranked games, rejecting challenge") ;
+            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+	}
 
         if (notification.handicap < argv.minhandicap) {
             conn_log("Min handicap is " + argv.minhandicap);
