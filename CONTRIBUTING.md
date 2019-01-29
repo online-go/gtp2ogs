@@ -112,6 +112,39 @@ it will ask your github username and password for security reasons, provide
 
 Your branch is now visible on the github website
 
+### 7B) If you want to cancel some of your latest commits/changes
+
+If after testing/looking/discussing you want to go back to older commits, 
+it is possible to remove one or many commits in your branch by doing this , 
+while in your git branch 
+
+```
+git reset --hard <sha1_of_previous_commit>
+```
+
+You can find the sha1 commit in the commits list, for example here for 
+online-go/gtp2ogs devel branch : 
+[example of commits list](https://github.com/online-go/gtp2ogs/commits/devel)
+
+[example of commit sha1 b60368b7376933e5a108c979473e5c9abe599711](https://github.com/online-go/gtp2ogs/commit/b60368b7376933e5a108c979473e5c9abe599711)
+
+so in that example, to roll back to this commit, you would need to do for example :
+
+```
+git reset --hard b60368b7376933e5a108c979473e5c9abe599711
+```
+
+note : the "hard" reset will erase forever all commits later than this commit, 
+use with caution !!
+
+Then to export your local changes to the github server website page, 
+force push your local changes : 
+
+```
+git branch
+git push --force origin yourbranchname 
+```
+
 ### 8) Create a pull request comparing yourgithubusername yourbranchname with onlinego devel
 
 On the github website, click on "create pull request", and compare your branch
