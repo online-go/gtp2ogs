@@ -371,8 +371,8 @@ describe('A single game', () => {
   });
 });
 
-describe('Concurrent games', () => {
-  it('do not starve each other', () => {
+describe('Games do not hang', () => {
+  function setupStubs() {
     sinon.stub(console, 'log');
     let clock = sinon.useFakeTimers();
 
@@ -392,48 +392,62 @@ describe('Concurrent games', () => {
       return fake_gtp;
     });
 
-    sinon.stub(config, 'corrqueue').value(true);
+    return {
+      clock: clock,
+      socket: fake_socket,
+      api: fake_api,
+    }
+  }
 
-    let conn = new connection.Connection(() => { return fake_socket; });
-
-    fake_socket.inject('connect');
-
-    fake_socket.on_emit('game/connect', (connect) => {
+  function setupGames(fakes) {
+    fakes.socket.on_emit('game/connect', (connect) => {
       let gamedata = base_gamedata({
         game_id: connect.game_id,
       });
       gamedata.time_control.speed = 'correspondence';
-      fake_socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
+      fakes.socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
     });
 
     let seen_moves = {};
 
-    fake_socket.on_emit('game/move', (move) => {
+    fakes.socket.on_emit('game/move', (move) => {
       let move_number = seen_moves[move.game_id];
-      fake_socket.inject('game/'+move.game_id+'/move', {
+      fakes.socket.inject('game/'+move.game_id+'/move', {
         move_number: ++seen_moves[move.game_id],
         move: [15, 15],
       });
       // Respond to move in 1 second.
       setTimeout(() => {
         seen_moves[move.game_id]++;
-        fake_socket.inject('game/'+move.game_id+'/move', {
+        fakes.socket.inject('game/'+move.game_id+'/move', {
           move_number: ++seen_moves[move.game_id],
           move: [15, 15],
         });
       }, 1000);
     });
 
-    // There are 5 active correspondence games.
+    return seen_moves;
+  }
+
+
+  it('due to correspondence queue starvation', () => {
+    let fakes = setupStubs();
+    sinon.stub(config, 'corrqueue').value(true);
+
+    let conn = new connection.Connection(() => { return fakes.socket; });
+    let seen_moves = setupGames(fakes);
+    fakes.socket.inject('connect');
+
+    // Set up the games.
     let games = 5;
     for (var i = 1; i <= games; i++) {
       seen_moves[i] = 0;
-      fake_socket.inject('active_game', base_active_game({ id: i }));
+      fakes.socket.inject('active_game', base_active_game({ id: i }));
     }
 
     // Simulate time passing
     for (var i = 0; i < 500; i++) {
-      clock.tick(100);
+      fakes.clock.tick(100);
     }
 
     // All games must have seen a move.
@@ -443,13 +457,26 @@ describe('Concurrent games', () => {
 
     conn.terminate();
   });
-});
-      });
+
+  it('due to a timeout on a game waiting for move', () => {
+    let fakes = setupStubs();
+    sinon.stub(config, 'corrqueue').value(true);
+    sinon.stub(config, 'timeout').value(5);
+
+    let conn = new connection.Connection(() => { return fakes.socket; });
+    let seen_moves = setupGames(fakes);
+    fakes.socket.inject('connect');
+
+    // Set up the games.
+    let games = 5;
+    for (var i = 1; i <= games; i++) {
+      seen_moves[i] = 0;
+      fakes.socket.inject('active_game', base_active_game({ id: i }));
     }
 
     // Simulate time passing
     for (var i = 0; i < 500; i++) {
-      clock.tick(100);
+      fakes.clock.tick(100);
     }
 
     // All games must have seen a move.

@@ -150,6 +150,14 @@ class Game {
         this.socket.on('game/' + game_id + '/move', (move) => {
             if (!this.connected) return;
             if (config.DEBUG) this.log("game/" + game_id + "/move:", move);
+            if (!this.state) {
+                console.error("Received move for " + this.game_id + "but no state exists");
+                // Try to connect again, to get the server to send the gamedata over.
+                this.socket.emit('game/connect', this.auth({
+                    'game_id': game_id
+                }));
+                return;
+            }
             try {
                 this.state.moves.push(move.move);
 
