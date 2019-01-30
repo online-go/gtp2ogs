@@ -234,6 +234,24 @@ control simple and none)
   ```--maxmaintime```  or ```--1mt``` Maximum seconds of main time (rejects time 
 control simple and none)
 
+  ```--minmaintimeranked```  or ```--0mtr``` Minimum seconds of main time for ranked games (rejects time 
+control simple and none)
+
+  ```--maxmaintimeranked```  or ```--1mtr``` Maximum seconds of main time for ranked games (rejects time 
+control simple and none)
+
+  ```--minmaintimeunranked```  or ```--0mtru``` Minimum seconds of main time for uranked games (rejects time 
+control simple and none)
+
+  ```--maxmaintimeunranked```  or ```--1mtru``` Maximum seconds of main time for unranked games (rejects time 
+control simple and none)
+
+  ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
+in canadian)
+
+  ```--maxperiodtime```  or ```--1pt``` Maximum seconds per period (per stone 
+in canadian)
+
   ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
 in canadian)
 
@@ -401,6 +419,8 @@ For example, these lines on gtp2ogs.js
     .alias('unrankedonly', 'uo')
     .alias('minperiodtime', '0pt')
     .alias('noautohandicap', 'nah')
+    .alias('maxmaintimeunranked', '1mtu'
+
 ```
 
 mean that the gtp2ogs arguments can be abriged like that : 
@@ -410,6 +430,7 @@ mean that the gtp2ogs arguments can be abriged like that :
 - `--unrankedonly` -> `--uo`
 - `--minperiodtime` -> `--0pt`
 - `--noautohandicap` -> `--nah`
+- `--maxmaintimeranked` -> `--1mtr`
 
 # Discord chat : 
 

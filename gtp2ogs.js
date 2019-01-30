@@ -65,8 +65,16 @@ let optimist = require("optimist")
     .alias('maxrank', '1r')
     .alias('minmaintime', '0mt')
     .alias('maxmaintime', '1mt')
+    .alias('minmaintimeranked', '0mtr')
+    .alias('maxmaintimeranked', '1mtr')
+    .alias('minmaintimeunranked', '0mtu')
+    .alias('maxmaintimeunranked', '1mtu')
     .alias('minperiodtime', '0pt')
     .alias('maxperiodtime', '1pt')
+    .alias('minperiodtimeranked', '0ptr')
+    .alias('maxperiodtimeranked', '1ptr')
+    .alias('minperiodtimeunranked', '0ptu')
+    .alias('maxperiodtimeunranked', '1ptu')
     .alias('minperiods', '0p')
     .alias('maxperiods', '1p')
     .alias('minperiodsranked', '0pr')
@@ -144,8 +152,14 @@ let optimist = require("optimist")
     .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
     .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
     .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
+    .describe('minmaintimeranked', 'Minimum seconds of main time for ranked games (rejects time control simple and none)')
+    .describe('maxmaintimeranked', 'Maximum seconds of main time for ranked games (rejects time control simple and none)')
+    .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
+    .describe('maxmaintimeunranked', 'Maximum seconds of main time for unranked games (rejects time control simple and none)')
     .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
     .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
+    .describe('minperiodtimeranked', 'Minimum seconds per period for ranked games (per stone in canadian)')
+    .describe('maxperiodtimeranked', 'Maximum seconds per period for unranked games (per stone in canadian)')
     .describe('minperiods', 'Minimum number of periods')
     .describe('minperiodsranked', 'Minimum number of ranked periods')
     .describe('minperiodsunranked', 'Minimum number of unranked periods')
@@ -1652,22 +1666,22 @@ class Connection {
         }
 
         if (notification.handicap < argv.minhandicapranked && notification.ranked) {
-            conn_log("Min ranked handicap is " + argv.minhandicapranked);
+            conn_log("Min handicap ranked is " + argv.minhandicapranked);
             return { reject: true, msg: "Minimum handicap for ranked games is " + argv.minhandicapranked + " , please increase the number of handicap stones" };
         }
 
         if (notification.handicap > argv.maxhandicapranked && notification.ranked) {
-            conn_log("Max ranked handicap is " + argv.maxhandicapranked);
+            conn_log("Max handicap ranked is " + argv.maxhandicapranked);
             return { reject: true, msg: "Maximum handicap for ranked games is " + argv.maxhandicapranked + " , please reduce the number of handicap stones" };
         }
 
         if (notification.handicap < argv.minhandicapunranked && !notification.ranked) {
-            conn_log("Min unranked handicap is " + argv.minhandicapunranked);
+            conn_log("Min handicap unranked is " + argv.minhandicapunranked);
             return { reject: true, msg: "Minimum handicap for unranked games is " + argv.minhandicapunranked + " , please reduce the number of handicap stones" };
         }
 
         if (notification.handicap > argv.maxhandicapunranked && !notification.ranked) {
-            conn_log("Max unranked handicap is " + argv.maxhandicapunranked);
+            conn_log("Max handicap unranked is " + argv.maxhandicapunranked);
             return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxhandicapunranked + " , please increase the number of handicap stones" };
         }
 
@@ -1696,7 +1710,7 @@ class Connection {
                 t.max_time     < argv.minmaintime  || // fischer
                 t.main_time    < argv.minmaintime) {  // others
                     conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
-                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds, please increase main time " };
+                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds , please increase main time \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
                 }
         }
 
@@ -1710,7 +1724,63 @@ class Connection {
                 t.max_time     > argv.maxmaintime  || // fischer
                 t.main_time    > argv.maxmaintime) {  // others
                 conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
-                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. " };
+                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+            }
+        }
+
+        if (argv.minmaintimeranked && notification.ranked) {
+            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Minimum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+            }
+            if (t.total_time   < argv.minmaintimeranked  || // absolute
+                t.initial_time < argv.minmaintimeranked  || // fischer
+                t.max_time     < argv.minmaintimeranked  || // fischer
+                t.main_time    < argv.minmaintimeranked) {  // others
+                    conn_log(user.username + " wanted main time ranked below minmaintimeranked " + argv.minmaintimeranked);
+                    return { reject: true, msg: "Minimum main time for ranked games is " + argv.minmaintimeranked + " seconds, please increase main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                }
+        }
+
+        if (argv.maxmaintimeranked && notification.ranked) {
+            if (["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Maximum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
+            }
+            if (t.total_time   > argv.maxmaintimeranked  || // absolute
+                t.initial_time > argv.maxmaintimeranked  || // fischer
+                t.max_time     > argv.maxmaintimeranked  || // fischer
+                t.main_time    > argv.maxmaintimeranked) {  // others
+                conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + argv.maxmaintimeranked);
+                return { reject: true, msg: "Maximum main time for ranked games is " + argv.maxmaintimeranked + " seconds, please reduce main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+            }
+        }
+
+        if (argv.minmaintimeunranked && !notification.ranked) {
+            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Minimum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+            }
+            if (t.total_time   < argv.minmaintimeunranked  || // absolute
+                t.initial_time < argv.minmaintimeunranked  || // fischer
+                t.max_time     < argv.minmaintimeunranked  || // fischer
+                t.main_time    < argv.minmaintimeunranked) {  // others
+                    conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + argv.minmaintimeunranked);
+                    return { reject: true, msg: "Minimum main time for unranked games is " + argv.minmaintimeunranked + " seconds, please increase main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                }
+        }
+
+        if (argv.maxmaintimeunranked && !notification.unranked) {
+            if (["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Maximum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
+            }
+            if (t.total_time   > argv.maxmaintimeunranked  || // absolute
+                t.initial_time > argv.maxmaintimeunranked  || // fischer
+                t.max_time     > argv.maxmaintimeunranked  || // fischer
+                t.main_time    > argv.maxmaintimeunranked) {  // others
+                conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + argv.maxmaintimeunranked);
+                return { reject: true, msg: "Maximum main time for unranked games is " + argv.maxmaintimeunranked + " seconds, please reduce main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
             }
         }
 
@@ -1720,12 +1790,12 @@ class Connection {
         }
 
         if (argv.minperiodsranked && (t.periods < argv.minperiodsranked) && notification.ranked) {
-            conn_log(user.username + " wanted too few ranked periods: " + t.periods);
+            conn_log(user.username + " wanted too few periods ranked: " + t.periods);
             return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods " };
         }
 
         if (argv.minperiodsunranked && (t.periods < argv.minperiodsunranked) && !notification.ranked) {
-            conn_log(user.username + " wanted too few unranked periods: " + t.periods);
+            conn_log(user.username + " wanted too few periods unranked: " + t.periods);
             return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods " };
         }
 
@@ -1735,12 +1805,12 @@ class Connection {
         }
 
         if (t.periods > argv.maxperiodsranked && notification.ranked) {
-            conn_log(user.username + " wanted too many ranked periods: " + t.periods);
+            conn_log(user.username + " wanted too many periods ranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods " };
         }
 
         if (t.periods > argv.maxperiodsunranked && !notification.ranked) {
-            conn_log(user.username + " wanted too many unranked periods: " + t.periods);
+            conn_log(user.username + " wanted too many periods unranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods " };
         }
 
@@ -1751,8 +1821,8 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) < argv.minperiodtime)
             ))
         {
-            conn_log(user.username + " wanted period too short");
-            return { reject: true, msg: "Minimum period length (per stone in period) is " + argv.minperiodtime + " seconds, please increase period time. " };
+            conn_log(user.username + " wanted period time too short");
+            return { reject: true, msg: "Minimum is " + argv.minperiodtime + " seconds per period, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period. " };
         }
 
         if (argv.maxperiodtime &&
@@ -1762,10 +1832,53 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) > argv.maxperiodtime)
             ))
         {
-            conn_log(user.username + " wanted period too long");
-            return { reject: true, msg: "Maximum period length (per stone in period) is " + argv.maxperiodtime + " seconds, please reduce period time. " };
+            conn_log(user.username + " wanted period time too long");
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtime + " seconds per period, please reduce period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
         }
 
+        if (argv.minperiodtimeranked && notification.ranked && 
+            (      (t.period_time    < argv.minperiodtimeranked)
+                || (t.time_increment < argv.minperiodtimeranked)
+                || (t.per_move       < argv.minperiodtimeranked)
+                || ((t.period_time / t.stones_per_period) < argv.minperiodtimeranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time ranked too short");
+            return { reject: true, msg: "Minimum is " + argv.minperiodtimeranked + " seconds per period for ranked games, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+        }
+
+        if (argv.maxperiodtimeranked && notification.ranked &&
+            (      (t.period_time    > argv.maxperiodtimeranked)
+                || (t.time_increment > argv.maxperiodtimeranked)
+                || (t.per_move       > argv.maxperiodtimeranked)
+                || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time ranked too long");
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeranked + " seconds per period for ranked games, please reduce period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+        }
+
+        if (argv.minperiodtimeunranked && !notification.ranked && 
+            (      (t.period_time    < argv.minperiodtimeunranked)
+                || (t.time_increment < argv.minperiodtimeunranked)
+                || (t.per_move       < argv.minperiodtimeunranked)
+                || ((t.period_time / t.stones_per_period) < argv.minperiodtimeunranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time unranked too short");
+            return { reject: true, msg: "Minimum is " + argv.minperiodtimeunranked + " seconds per period for unranked games, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+        }
+
+        if (argv.maxperiodtimeunranked && !notification.unranked &&
+            (      (t.period_time    > argv.maxperiodtimeunranked)
+                || (t.time_increment > argv.maxperiodtimeunranked)
+                || (t.per_move       > argv.maxperiodtimeunranked)
+                || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeunranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time unranked too long");
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeunranked + " seconds per period for unranked games, please reduce period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period. " };
+        }
 
         return { reject: false };  // Ok !
 
