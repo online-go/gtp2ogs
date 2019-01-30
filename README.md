@@ -14,9 +14,9 @@ so you can download them directly or ask them if you want these features
 
 When you have a bot on OGS, you have total control over it : 
 you put it online when you want only, and there are many settings to choose 
-game settings to accept (rank, boardisze, correspondence games, etc..), but also options 
-to control your GPU/computing device power spent (max number of simultaneous games, 
-corrqueue, etc..)
+game settings to accept (rank, boardisze, correspondence games, etc..), but 
+also options to control your GPU/computing device power spent (max number of 
+simultaneous games, corrqueue, etc..)
 
 # Full tutorial 
 
@@ -63,7 +63,8 @@ On all operating systems, gtp2ogs will be installed in 2 different directories, 
 **This step can be skipped**
 
 you may need to install extra tools if the 
-[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) below fails, such as (run as `sudo` for linux, and as admin for windows)
+[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) below fails, such as (run as `sudo` for linux, and as 
+admin for windows)
  
 ```
 npm install -g socket.io-client
@@ -75,8 +76,8 @@ npm install -g tracer
 
 This step is **is recommended**
 
-By default, npm installs an old branch of gtp2ogs that does not include latest improvements, 
-new features, and fixes
+By default, npm installs an old branch of gtp2ogs that does not include latest 
+improvements, new features, and fixes
 
 To upgrade to devel branch (newest), see :
 
@@ -102,13 +103,15 @@ and before `/path/to/your/bot.executable` are important : they separate gtp2ogs
 arguments from your bot arguments
 
 note 2 : the number of <gtp2ogsarguments> and <botarguments> is not limited, 
-here only 2 were shown but it possible to use for example 3,4,5 , or as many as you want
+here only 2 were shown but it possible to use for example 3,4,5 , or as many as 
+you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
 
-**note 4 : it is possible to use intuitive semi-syllabic aliases to write your gtp2ogs 
-arguments in a much smaller size, see [notes G-](/README.md#g-) for details**
+**note 4 : it is possible to use intuitive semi-syllabic aliases to write 
+your gtp2ogs arguments in a much smaller size, see [notes G-](/README.md#g-) 
+for details**
 
 ### Extra : add features by editing gtp2ogs.js file
 
@@ -130,19 +133,19 @@ currently there is no profile number log in support on ogs, see
 
   ```--apikey``` or ```--a``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
-Then, the following options are placed in the above ```<gtp2ogsarguments>``` section. 
-Put a space in between options when there are more than one.  Also put a space in between 
-the option and the parameter, for example :
+Then, the following options are placed in the above ```<gtp2ogsarguments>``` 
+section. Put a space in between options when there are more than one.  
+Also put a space in between the option and the parameter, for example :
 
   ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxactivegames 1 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
   
-  or with intuitive semi-syllabic aliases (see [notes G-](/README.md#g-) for details), 
-  the same example becomes :
+or with intuitive semi-syllabic aliases (see [notes G-](/README.md#g-) for details), 
+the same example becomes :
   
   ```--sb 2 --bb 13,19 --nc --uo --1ag 1 --1mt 1200 --b UserX,playerY --1pr 5```
   
-  note : some gtp2ogsarguments have default so they are enabled even if you don't specify 
-  them, such as `--komi` which default is automatic even if you dont specify it !
+note : some gtp2ogsarguments have default so they are enabled even if you don't 
+specify them, such as `--komi` which default is automatic even if you dont specify it !
   
   below is a list of all possible to use gtp2ogs arguments, use the ones you want only, 
   no need to use them all !
@@ -161,7 +164,7 @@ the option and the parameter, for example :
   ```--debug``` or ```--d```  Output GTP command and responses from your Go engine
 
   ```--logfile``` or ```--l``` In addition to logging to the console, also log gtp2ogs 
-  output to a text file
+output to a text file
 
   ```--json``` or ```--j```  Send and receive GTP commands in a JSON encoded format
 
@@ -173,38 +176,41 @@ the option and the parameter, for example :
 
   ```--corrqueue``` or ```--cq``` Process correspondence games one at a time
 
-  ```--maxtotalgames``` or ```--1tg``` Maximum number of total games, maxtotalgames is 
-actually the maximum total number of connected games for your bot (correspondence games 
-are currently included in the connected games count if you use `--persist` ) , which means 
-the maximum number of games your bot can play at the same time (choose a low number 
-to regulate your GPU use)
+  ```--maxtotalgames``` or ```--1tg``` Maximum number of total games, maxtotalgames 
+is actually the maximum total number of connected games for your bot (correspondence 
+games are currently included in the connected games count if you use `--persist` ) , 
+which means the maximum number of games your bot can play at the same time (choose 
+a low number to regulate your GPU use)
 
-  ```--maxactivegames``` or ```--1ag``` Maximum number of active games per player against 
-this bot
+  ```--maxactivegames``` or ```--1ag``` Maximum number of active games per player 
+against this bot
 
   ```--startupbuffer``` or ```--sb``` Subtract this many seconds from time available 
 on first move (default 5)
 
   ```--rejectnew``` or ```--r``` Reject all new challenges with the default reject message
 
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` or ```--r --rm "not accepting games because blablablah"``` if you add the rejectnewmsg argument, Reject all new challenges with 
-a customized message instead of the default message. This message has to be included in 
-"not accepting games because blablablah" (for example to explain why, for how long, 
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` or 
+```--r --rm "not accepting games because blablablah"``` if you add the rejectnewmsg 
+argument, Reject all new challenges with a customized message instead of the default 
+message. This message has to be included in "not accepting games because blablablah" 
+(for example to explain why, for how long, 
 if your bot is busy playing a tournament, etc...)
 
   ```--rejectnewfile ~/rejectnew.status```  or ```--rf``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
 
-  ```--boardsize``` or ```--bb``` Possible boardsize values `all` (allows ALL boardsizes, 
-use only if your bot can handle it !), `custom` (allows specified custom boardsize 
-(for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size written in 
-numbers comma separated (for example 9x9, 13x13, 19x19, default is `9,13,19`), see 
-[notes E-](/README.md#e-) for details
+  ```--boardsize``` or ```--bb``` Possible boardsize values `all` (allows ALL 
+boardsizes, use only if your bot can handle it !), `custom` (allows specified custom 
+boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size 
+written in numbers comma separated (for example 9x9, 13x13, 19x19, default is 
+`9,13,19`), see [notes E-](/README.md#e-) for details
 
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or ```--bb custom --bw 25 --bh 1,2,3``` 
-Allows custom board size (if your bot can handle it), it is needed to use `custom` 
-followed by comma separated value(s), in this example 25x1 25x2 25x3 are all 
-allowed boardsizes, see [notes E-](/README.md#e-) for details
+  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or 
+```--bb custom --bw 25 --bh 1,2,3``` Allows custom board size (if your bot can 
+handle it), it is needed to use `custom` followed by comma separated value(s), 
+in this example 25x1 25x2 25x3 are all allowed boardsizes, see 
+[notes E-](/README.md#e-) for details
 
   ```--komi``` or ```--k``` Possible komi values `auto` (allows Automatic komi), 
 `all` (allows all komi values), and for example `7.5` (allows komi value 7.5). 
@@ -234,29 +240,35 @@ control simple and none)
   ```--maxmaintime```  or ```--1mt``` Maximum seconds of main time (rejects time 
 control simple and none)
 
-  ```--minmaintimeranked```  or ```--0mtr``` Minimum seconds of main time for ranked games (rejects time 
-control simple and none)
+  ```--minmaintimeranked```  or ```--0mtr``` Minimum seconds of main time for 
+ranked games (rejects time control simple and none)
 
-  ```--maxmaintimeranked```  or ```--1mtr``` Maximum seconds of main time for ranked games (rejects time 
-control simple and none)
+  ```--maxmaintimeranked```  or ```--1mtr``` Maximum seconds of main time for 
+ranked games (rejects time control simple and none)
 
-  ```--minmaintimeunranked```  or ```--0mtru``` Minimum seconds of main time for uranked games (rejects time 
-control simple and none)
+  ```--minmaintimeunranked```  or ```--0mtru``` Minimum seconds of main time 
+for uranked games (rejects time control simple and none)
 
-  ```--maxmaintimeunranked```  or ```--1mtru``` Maximum seconds of main time for unranked games (rejects time 
-control simple and none)
-
-  ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
-in canadian)
-
-  ```--maxperiodtime```  or ```--1pt``` Maximum seconds per period (per stone 
-in canadian)
+  ```--maxmaintimeunranked```  or ```--1mtru``` Maximum seconds of main time for 
+unranked games (rejects time control simple and none)
 
   ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
 in canadian)
 
   ```--maxperiodtime```  or ```--1pt``` Maximum seconds per period (per stone 
 in canadian)
+
+  ```--minperiodtimeranked```  or ```--0ptr``` Minimum seconds per period for 
+ranked games (per stone in canadian)
+
+  ```--maxperiodtimeranked```  or ```--1ptr``` Maximum seconds per period for 
+ranked games (per stone in canadian)
+
+  ```--minperiodtimeunranked```  or ```--0ptu``` Minimum seconds per period for 
+unranked games (per stone in canadian)
+
+  ```--maxperiodtimeunranked```  or ```--1ptu``` Maximum seconds per period for 
+unranked games (per stone in canadian)
 
   ```--minperiods```  or ```--0p``` Minimum number of periods
 
