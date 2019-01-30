@@ -1770,7 +1770,7 @@ class Connection {
                 }
         }
 
-        if (argv.maxmaintimeunranked && !notification.unranked) {
+        if (argv.maxmaintimeunranked && !notification.ranked) {
             if (["simple","none"].indexOf(t.time_control) >= 0) {
                 conn_log("Maximum main time not supported in time control: " + t.time_control);
                 return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
@@ -1869,7 +1869,7 @@ class Connection {
             return { reject: true, msg: "Minimum is " + argv.minperiodtimeunranked + " seconds per period for unranked games, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
         }
 
-        if (argv.maxperiodtimeunranked && !notification.unranked &&
+        if (argv.maxperiodtimeunranked && !notification.ranked &&
             (      (t.period_time    > argv.maxperiodtimeunranked)
                 || (t.time_increment > argv.maxperiodtimeunranked)
                 || (t.per_move       > argv.maxperiodtimeunranked)
