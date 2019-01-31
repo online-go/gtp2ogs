@@ -24,8 +24,69 @@ let sprintf = require('sprintf-js').sprintf;
 
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
+    .alias('username', 'u')
+    .alias('apikey', 'a')
     .alias('debug', 'd')
+    .alias('logfile', 'l')
     .alias('json', 'j')
+    .alias('hidden', 'h')
+    .alias('greeting', 'g')
+    .alias('farewell', 'f')
+    .alias('persist', 'p')
+    .alias('speed', 's')
+    .alias('komi', 'k')
+    .alias('rejectnew', 'r')
+    .alias('rejectnewmsg', 'rm')
+    .alias('rejectnewfile', 'rf')
+    .alias('noclock', 'nc')
+    .alias('nopause', 'np')
+    .alias('nopauseranked', 'npr')
+    .alias('nopauseunranked', 'npu')
+    .alias('noautohandicap', 'nah')
+    .alias('noautohandicapranked', 'nahr')
+    .alias('noautohandicapunranked', 'nahu')
+    .alias('rankedonly', 'ro')
+    .alias('unrankedonly', 'uo')
+    .alias('proonly', 'po')
+    .alias('ban', 'b')
+    .alias('banranked', 'br')
+    .alias('banunranked', 'bu')
+    .alias('corrqueue', 'cq')
+    .alias('startupbuffer', 'sb')
+    .alias('timecontrol', 'tc')
+    // alias bb is for square boardsizes only, hence the double b (width x height)
+    .alias('boardsize', 'bb')
+    .alias('boardsizewidth', 'bw')
+    .alias('boardsizeheight', 'bh')
+    // for below aliases : 0 is min , 1 is max,
+    .alias('maxtotalgames', '1tg')
+    .alias('maxactivegames', '1ag')
+    .alias('minrank', '0r')
+    .alias('maxrank', '1r')
+    .alias('minmaintime', '0mt')
+    .alias('maxmaintime', '1mt')
+    .alias('minmaintimeranked', '0mtr')
+    .alias('maxmaintimeranked', '1mtr')
+    .alias('minmaintimeunranked', '0mtu')
+    .alias('maxmaintimeunranked', '1mtu')
+    .alias('minperiodtime', '0pt')
+    .alias('maxperiodtime', '1pt')
+    .alias('minperiodtimeranked', '0ptr')
+    .alias('maxperiodtimeranked', '1ptr')
+    .alias('minperiodtimeunranked', '0ptu')
+    .alias('maxperiodtimeunranked', '1ptu')
+    .alias('minperiods', '0p')
+    .alias('maxperiods', '1p')
+    .alias('minperiodsranked', '0pr')
+    .alias('minperiodsunranked', '0pu')
+    .alias('maxperiodsranked', '1pr')
+    .alias('maxperiodsunranked', '1pu')
+    .alias('minhandicap', '0h')
+    .alias('maxhandicap', '1h')
+    .alias('minhandicapranked', '0hr')
+    .alias('minhandicapunranked', '0hu')
+    .alias('maxhandicapranked', '1hr')
+    .alias('maxhandicapunranked', '1hu')
     .demand('username')
     .demand('apikey')
     .describe('username', 'Specify the username of the bot, for example GnuGo')
@@ -39,7 +100,7 @@ let optimist = require("optimist")
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
-    .describe('logfile', 'In addition to logging to the console, also log to this file')
+    .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
     .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
@@ -66,17 +127,19 @@ let optimist = require("optimist")
     .describe('boardsizewidth', 'For custom board size(s) to accept, specify boardsize width, for example 25')
     .string('boardsizeheight')
     .describe('boardsizeheight', 'For custom board size(s) to accept, specify boardsize height, for example 1')
-    // behaviour : --boardsize can be specified as "custom" (allows board with custom size width x height),
-    // "any" (allows any boardsize), or for square boardsizes only (same width x height) 
-    // comma separated list of explicit values.
+    // behaviour : --boardsize can be specified as 
+    // "custom" (allows board with custom size width x height),
+    // "all" (allows ALL boardsizes), 
+    // or for square boardsizes only (same width x height) comma separated list of explicit values.
     // The default is "9,13,19" (square board sizes only), see README for details
     .describe('komi', 'Allowed komi values')
     .string('komi')
     .default('komi', 'auto')
-    // behaviour: --komi may be specified as "auto" (Automatic), "any"
-    // (accept any value), or comma separated list of explicit values.
-    // The default is "auto".
-    // example: --komi auto,7.5 or --komi 7.5,5.5,0.5 or --komi any, see README for details
+    // behaviour: --komi may be specified as 
+    // "auto" (Automatic), 
+    // "all" (accept all komi values), 
+    // or comma separated list of explicit values.
+    // The default is "auto", see README for details
     .describe('ban', 'Comma separated list of user names or IDs')
     .string('ban')
     .describe('banranked', 'Comma separated list of user names or IDs')
@@ -89,8 +152,14 @@ let optimist = require("optimist")
     .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
     .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
     .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
+    .describe('minmaintimeranked', 'Minimum seconds of main time for ranked games (rejects time control simple and none)')
+    .describe('maxmaintimeranked', 'Maximum seconds of main time for ranked games (rejects time control simple and none)')
+    .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
+    .describe('maxmaintimeunranked', 'Maximum seconds of main time for unranked games (rejects time control simple and none)')
     .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
     .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
+    .describe('minperiodtimeranked', 'Minimum seconds per period for ranked games (per stone in canadian)')
+    .describe('maxperiodtimeranked', 'Maximum seconds per period for unranked games (per stone in canadian)')
     .describe('minperiods', 'Minimum number of periods')
     .describe('minperiodsranked', 'Minimum number of ranked periods')
     .describe('minperiodsunranked', 'Minimum number of unranked periods')
@@ -110,10 +179,13 @@ let optimist = require("optimist")
     .describe('unrankedonly', 'Only accept unranked matches')
     .describe('minhandicap', 'Min handicap for all games')
     .describe('maxhandicap', 'Max handicap for all games')
-    .describe('minrankedhandicap', 'Min handicap for ranked games')
-    .describe('maxrankedhandicap', 'Max handicap for ranked games')
-    .describe('minunrankedhandicap', 'Min handicap for unranked games')
-    .describe('maxunrankedhandicap', 'Max handicap for unranked games')
+    .describe('minhandicapranked', 'Min handicap for ranked games')
+    .describe('maxhandicapranked', 'Max handicap for ranked games')
+    .describe('minhandicapunranked', 'Min handicap for unranked games')
+    .describe('maxhandicapunranked', 'Max handicap for unranked games')
+    .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
+    .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
+    .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
@@ -231,7 +303,7 @@ if (argv.maxrank) {
     }
 }
 
-let allow_any_sizes = false;
+let allow_all_sizes = false;
 let allow_custom_sizes = false;
 let allowed_custom_boardsizewidth = [];
 let allowed_custom_boardsizeheight = [];
@@ -239,8 +311,8 @@ let allowed_sizes = [];
 
 if (argv.boardsize) {
     for (let boardsize of argv.boardsize.split(',')) {
-        if (boardsize == "any") {
-            allow_any_sizes = true;
+        if (boardsize == "all") {
+            allow_all_sizes = true;
         } else if (boardsize == "custom") {
             allow_custom_sizes = true;
             for (let boardsizewidth of argv.boardsizewidth.split(',')) {
@@ -255,13 +327,13 @@ if (argv.boardsize) {
     }
 }
 
-let allow_any_komi = false;
+let allow_all_komi = false;
 let allowed_komi = [];
 
 if (argv.komi) {
     for (let komi of argv.komi.split(',')) {
-        if (komi == "any") {
-            allow_any_komi = true;
+        if (komi == "all") {
+            allow_all_komi = true;
         } else if (komi == "auto") {
             allowed_komi[null] = true;
         } else {
@@ -296,13 +368,11 @@ if (argv.rejectnewmsg) {
     REJECTNEWMSG = argv.rejectnewmsg;
 }
 
-
 let bot_command = argv._;
 let moves_processing = 0;
 let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
-
 
 let console_fmt = "{{timestamp}} {{title}} {{message}}";
 if (DEBUG)
@@ -322,6 +392,7 @@ let console_config = {
         if (DEBUG) data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
     }
 };
+
 if (argv.logfile) {
     let real_console = require('console');
     console_config.transport = (data) => {
@@ -333,6 +404,7 @@ if (argv.logfile) {
         });
     }
 }
+
 let console = tracer.colorConsole(console_config);
 
 process.on('uncaughtException', function (er) {
@@ -1531,26 +1603,41 @@ class Connection {
         }
 
         // for square board sizes only
-        if (notification.width != notification.height && !allow_any_sizes && !allow_custom_sizes) {
+        if (notification.width != notification.height && !allow_all_sizes && !allow_custom_sizes) {
             conn_log("board was not square, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if (!allowed_sizes[notification.width] && !allow_any_sizes && !allow_custom_sizes) {
+        if (!allowed_sizes[notification.width] && !allow_all_sizes && !allow_custom_sizes) {
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size, rejecting challenge");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of the allowed square board sizes (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes : " + argv.boardsize };
         }
 
         // for custom board sizes, including square board sizes if width == height as well
-        if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizewidth[notification.width]) {
+        if (!allow_all_sizes && allow_custom_sizes && !allowed_custom_boardsizewidth[notification.width]) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + argv.boardsizewidth };
         }
 
-        if (!allow_any_sizes && allow_custom_sizes && !allowed_custom_boardsizeheight[notification.height]) {
+        if (!allow_all_sizes && allow_custom_sizes && !allowed_custom_boardsizeheight[notification.height]) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
+
+        if (argv.noautohandicap && notification.handicap == -1) {
+            conn_log("no autohandicap, rejecting challenge") ;
+            return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+	}
+
+        if (argv.noautohandicapranked && notification.handicap == -1 && notification.ranked) {
+            conn_log("no autohandicap for ranked games, rejecting challenge") ;
+            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+	}
+
+        if (argv.noautohandicapunranked && notification.handicap == -1 && !notification.ranked) {
+            conn_log("no autohandicap for unranked games, rejecting challenge") ;
+            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+	}
 
         if (notification.handicap < argv.minhandicap) {
             conn_log("Min handicap is " + argv.minhandicap);
@@ -1562,27 +1649,27 @@ class Connection {
             return { reject: true, msg: "Maximum handicap is " + argv.maxhandicap + " , please reduce the number of handicap stones " };
         }
 
-        if (notification.ranked && notification.handicap < argv.minrankedhandicap) {
-            conn_log("Min ranked handicap is " + argv.minrankedhandicap);
-            return { reject: true, msg: "Minimum handicap for ranked games is " + argv.minrankedhandicap + " , please increase the number of handicap stones" };
+        if (notification.handicap < argv.minhandicapranked && notification.ranked) {
+            conn_log("Min handicap ranked is " + argv.minhandicapranked);
+            return { reject: true, msg: "Minimum handicap for ranked games is " + argv.minhandicapranked + " , please increase the number of handicap stones" };
         }
 
-        if (notification.ranked && notification.handicap > argv.maxrankedhandicap) {
-            conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
-            return { reject: true, msg: "Maximum handicap for ranked games is " + argv.maxrankedhandicap + " , please reduce the number of handicap stones" };
+        if (notification.handicap > argv.maxhandicapranked && notification.ranked) {
+            conn_log("Max handicap ranked is " + argv.maxhandicapranked);
+            return { reject: true, msg: "Maximum handicap for ranked games is " + argv.maxhandicapranked + " , please reduce the number of handicap stones" };
         }
 
-        if (!notification.ranked && notification.handicap < argv.minunrankedhandicap) {
-            conn_log("Min unranked handicap is " + argv.minunrankedhandicap);
-            return { reject: true, msg: "Minimum handicap for unranked games is " + argv.minunrankedhandicap + " , please reduce the number of handicap stones" };
+        if (notification.handicap < argv.minhandicapunranked && !notification.ranked) {
+            conn_log("Min handicap unranked is " + argv.minhandicapunranked);
+            return { reject: true, msg: "Minimum handicap for unranked games is " + argv.minhandicapunranked + " , please reduce the number of handicap stones" };
         }
 
-        if (!notification.ranked && notification.handicap > argv.maxunrankedhandicap) {
-            conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
-            return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxunrankedhandicap + " , please increase the number of handicap stones" };
+        if (notification.handicap > argv.maxhandicapunranked && !notification.ranked) {
+            conn_log("Max handicap unranked is " + argv.maxhandicapunranked);
+            return { reject: true, msg: "Maximum handicap for unranked games is " + argv.maxhandicapunranked + " , please increase the number of handicap stones" };
         }
 
-        if (!allowed_komi[notification.komi] && !allow_any_komi) {
+        if (!allowed_komi[notification.komi] && !allow_all_komi) {
             conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + argv.komi + ", rejecting challenge");
             return { reject: true, msg: "komi " + notification.komi + " is not an allowed komi, please choose one of these allowed komi : " + argv.komi };
         }
@@ -1607,7 +1694,7 @@ class Connection {
                 t.max_time     < argv.minmaintime  || // fischer
                 t.main_time    < argv.minmaintime) {  // others
                     conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
-                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds, please increase main time " };
+                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds , please increase main time \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
                 }
         }
 
@@ -1621,7 +1708,63 @@ class Connection {
                 t.max_time     > argv.maxmaintime  || // fischer
                 t.main_time    > argv.maxmaintime) {  // others
                 conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
-                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. " };
+                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+            }
+        }
+
+        if (argv.minmaintimeranked && notification.ranked) {
+            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Minimum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+            }
+            if (t.total_time   < argv.minmaintimeranked  || // absolute
+                t.initial_time < argv.minmaintimeranked  || // fischer
+                t.max_time     < argv.minmaintimeranked  || // fischer
+                t.main_time    < argv.minmaintimeranked) {  // others
+                    conn_log(user.username + " wanted main time ranked below minmaintimeranked " + argv.minmaintimeranked);
+                    return { reject: true, msg: "Minimum main time for ranked games is " + argv.minmaintimeranked + " seconds, please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                }
+        }
+
+        if (argv.maxmaintimeranked && notification.ranked) {
+            if (["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Maximum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
+            }
+            if (t.total_time   > argv.maxmaintimeranked  || // absolute
+                t.initial_time > argv.maxmaintimeranked  || // fischer
+                t.max_time     > argv.maxmaintimeranked  || // fischer
+                t.main_time    > argv.maxmaintimeranked) {  // others
+                conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + argv.maxmaintimeranked);
+                return { reject: true, msg: "Maximum main time for ranked games is " + argv.maxmaintimeranked + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+            }
+        }
+
+        if (argv.minmaintimeunranked && !notification.ranked) {
+            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Minimum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+            }
+            if (t.total_time   < argv.minmaintimeunranked  || // absolute
+                t.initial_time < argv.minmaintimeunranked  || // fischer
+                t.max_time     < argv.minmaintimeunranked  || // fischer
+                t.main_time    < argv.minmaintimeunranked) {  // others
+                    conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + argv.minmaintimeunranked);
+                    return { reject: true, msg: "Minimum main time for unranked games is " + argv.minmaintimeunranked + " seconds, please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                }
+        }
+
+        if (argv.maxmaintimeunranked && !notification.ranked) {
+            if (["simple","none"].indexOf(t.time_control) >= 0) {
+                conn_log("Maximum main time not supported in time control: " + t.time_control);
+                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
+            }
+            if (t.total_time   > argv.maxmaintimeunranked  || // absolute
+                t.initial_time > argv.maxmaintimeunranked  || // fischer
+                t.max_time     > argv.maxmaintimeunranked  || // fischer
+                t.main_time    > argv.maxmaintimeunranked) {  // others
+                conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + argv.maxmaintimeunranked);
+                return { reject: true, msg: "Maximum main time for unranked games is " + argv.maxmaintimeunranked + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1630,13 +1773,13 @@ class Connection {
             return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods " };
         }
 
-        if (argv.minperiodsranked && notification.ranked && (t.periods < argv.minperiodsranked)) {
-            conn_log(user.username + " wanted too few ranked periods: " + t.periods);
+        if (argv.minperiodsranked && (t.periods < argv.minperiodsranked) && notification.ranked) {
+            conn_log(user.username + " wanted too few periods ranked: " + t.periods);
             return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods " };
         }
 
-        if (argv.minperiodsunranked && !notification.ranked && (t.periods < argv.minperiodsunranked)) {
-            conn_log(user.username + " wanted too few unranked periods: " + t.periods);
+        if (argv.minperiodsunranked && (t.periods < argv.minperiodsunranked) && !notification.ranked) {
+            conn_log(user.username + " wanted too few periods unranked: " + t.periods);
             return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods " };
         }
 
@@ -1645,13 +1788,13 @@ class Connection {
             return { reject: true, msg: "Maximum number of periods is " + argv.maxperiods + " , please reduce the number of periods " };
         }
 
-        if (notification.ranked && t.periods > argv.maxperiodsranked) {
-            conn_log(user.username + " wanted too many ranked periods: " + t.periods);
+        if (t.periods > argv.maxperiodsranked && notification.ranked) {
+            conn_log(user.username + " wanted too many periods ranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods " };
         }
 
-        if (!notification.ranked && t.periods > argv.maxperiodsunranked) {
-            conn_log(user.username + " wanted too many unranked periods: " + t.periods);
+        if (t.periods > argv.maxperiodsunranked && !notification.ranked) {
+            conn_log(user.username + " wanted too many periods unranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods " };
         }
 
@@ -1662,8 +1805,8 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) < argv.minperiodtime)
             ))
         {
-            conn_log(user.username + " wanted period too short");
-            return { reject: true, msg: "Minimum period length (per stone in period) is " + argv.minperiodtime + " seconds, please increase period time. " };
+            conn_log(user.username + " wanted period time too short");
+            return { reject: true, msg: "Minimum is " + argv.minperiodtime + " seconds per period, please increase period time " };
         }
 
         if (argv.maxperiodtime &&
@@ -1673,10 +1816,53 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) > argv.maxperiodtime)
             ))
         {
-            conn_log(user.username + " wanted period too long");
-            return { reject: true, msg: "Maximum period length (per stone in period) is " + argv.maxperiodtime + " seconds, please reduce period time. " };
+            conn_log(user.username + " wanted period time too long");
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtime + " seconds per period, please reduce period time " };
         }
 
+        if (argv.minperiodtimeranked && notification.ranked && 
+            (      (t.period_time    < argv.minperiodtimeranked)
+                || (t.time_increment < argv.minperiodtimeranked)
+                || (t.per_move       < argv.minperiodtimeranked)
+                || ((t.period_time / t.stones_per_period) < argv.minperiodtimeranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time ranked too short");
+            return { reject: true, msg: "Minimum is " + argv.minperiodtimeranked + " seconds per period for ranked games, please increase period time " };
+        }
+
+        if (argv.maxperiodtimeranked && notification.ranked &&
+            (      (t.period_time    > argv.maxperiodtimeranked)
+                || (t.time_increment > argv.maxperiodtimeranked)
+                || (t.per_move       > argv.maxperiodtimeranked)
+                || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time ranked too long");
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeranked + " seconds per period for ranked games, please reduce period time " };
+        }
+
+        if (argv.minperiodtimeunranked && !notification.ranked && 
+            (      (t.period_time    < argv.minperiodtimeunranked)
+                || (t.time_increment < argv.minperiodtimeunranked)
+                || (t.per_move       < argv.minperiodtimeunranked)
+                || ((t.period_time / t.stones_per_period) < argv.minperiodtimeunranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time unranked too short");
+            return { reject: true, msg: "Minimum is " + argv.minperiodtimeunranked + " seconds per period for unranked games, please increase period time " };
+        }
+
+        if (argv.maxperiodtimeunranked && !notification.ranked &&
+            (      (t.period_time    > argv.maxperiodtimeunranked)
+                || (t.time_increment > argv.maxperiodtimeunranked)
+                || (t.per_move       > argv.maxperiodtimeunranked)
+                || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeunranked)
+            ))
+        {
+            conn_log(user.username + " wanted period time unranked too long");
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeunranked + " seconds per period for unranked games, please reduce period time " };
+        }
 
         return { reject: false };  // Ok !
 
