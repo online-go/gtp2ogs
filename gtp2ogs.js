@@ -342,22 +342,6 @@ if (argv.komi) {
     }
 }
 
-let no_autohandicap = false;
-let no_autohandicapranked = false;
-let no_autohandicapunranked = false;
-
-if (argv.noautohandicap) {
-    no_autohandicap = true;
-}
-
-if (argv.noautohandicapranked) {
-    no_autohandicapranked = true;
-}
-
-if (argv.noautohandicapunranked) {
-    no_autohandicapunranked = true;
-}
-
 let allowed_timecontrols = {};
 
 if (argv.timecontrol) {
@@ -384,13 +368,11 @@ if (argv.rejectnewmsg) {
     REJECTNEWMSG = argv.rejectnewmsg;
 }
 
-
 let bot_command = argv._;
 let moves_processing = 0;
 let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
-
 
 let console_fmt = "{{timestamp}} {{title}} {{message}}";
 if (DEBUG)
@@ -410,6 +392,7 @@ let console_config = {
         if (DEBUG) data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
     }
 };
+
 if (argv.logfile) {
     let real_console = require('console');
     console_config.transport = (data) => {
@@ -421,6 +404,7 @@ if (argv.logfile) {
         });
     }
 }
+
 let console = tracer.colorConsole(console_config);
 
 process.on('uncaughtException', function (er) {
@@ -1640,17 +1624,17 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + argv.boardsizeheight };
         }
 
-        if (no_autohandicap && notification.handicap == -1) {
+        if (argv.noautohandicap && notification.handicap == -1) {
             conn_log("no autohandicap, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (no_autohandicapranked && notification.handicap == -1 && notification.ranked) {
+        if (argv.noautohandicapranked && notification.handicap == -1 && notification.ranked) {
             conn_log("no autohandicap for ranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (no_autohandicapunranked && notification.handicap == -1 && !notification.ranked) {
+        if (argv.noautohandicapunranked && notification.handicap == -1 && !notification.ranked) {
             conn_log("no autohandicap for unranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
@@ -1710,7 +1694,7 @@ class Connection {
                 t.max_time     < argv.minmaintime  || // fischer
                 t.main_time    < argv.minmaintime) {  // others
                     conn_log(user.username + " wanted main time below minmaintime " + argv.minmaintime);
-                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds , please increase main time \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                    return { reject: true, msg: "Minimum main time is " + argv.minmaintime + " seconds , please increase main time \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
                 }
         }
 
@@ -1724,7 +1708,7 @@ class Connection {
                 t.max_time     > argv.maxmaintime  || // fischer
                 t.main_time    > argv.maxmaintime) {  // others
                 conn_log(user.username + " wanted main time above maxmaintime " + argv.maxmaintime);
-                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                return { reject: true, msg: "Maximum main time is " + argv.maxmaintime + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1738,7 +1722,7 @@ class Connection {
                 t.max_time     < argv.minmaintimeranked  || // fischer
                 t.main_time    < argv.minmaintimeranked) {  // others
                     conn_log(user.username + " wanted main time ranked below minmaintimeranked " + argv.minmaintimeranked);
-                    return { reject: true, msg: "Minimum main time for ranked games is " + argv.minmaintimeranked + " seconds, please increase main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                    return { reject: true, msg: "Minimum main time for ranked games is " + argv.minmaintimeranked + " seconds, please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
                 }
         }
 
@@ -1752,7 +1736,7 @@ class Connection {
                 t.max_time     > argv.maxmaintimeranked  || // fischer
                 t.main_time    > argv.maxmaintimeranked) {  // others
                 conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + argv.maxmaintimeranked);
-                return { reject: true, msg: "Maximum main time for ranked games is " + argv.maxmaintimeranked + " seconds, please reduce main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                return { reject: true, msg: "Maximum main time for ranked games is " + argv.maxmaintimeranked + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1766,7 +1750,7 @@ class Connection {
                 t.max_time     < argv.minmaintimeunranked  || // fischer
                 t.main_time    < argv.minmaintimeunranked) {  // others
                     conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + argv.minmaintimeunranked);
-                    return { reject: true, msg: "Minimum main time for unranked games is " + argv.minmaintimeunranked + " seconds, please increase main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                    return { reject: true, msg: "Minimum main time for unranked games is " + argv.minmaintimeunranked + " seconds, please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
                 }
         }
 
@@ -1780,7 +1764,7 @@ class Connection {
                 t.max_time     > argv.maxmaintimeunranked  || // fischer
                 t.main_time    > argv.maxmaintimeunranked) {  // others
                 conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + argv.maxmaintimeunranked);
-                return { reject: true, msg: "Maximum main time for unranked games is " + argv.maxmaintimeunranked + " seconds, please reduce main time. \n - how to convert : 60 seconds is 1 minute , 300 seconds is 5 minutes , 600 seconds is 10 minutes, etc " };
+                return { reject: true, msg: "Maximum main time for unranked games is " + argv.maxmaintimeunranked + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1822,7 +1806,7 @@ class Connection {
             ))
         {
             conn_log(user.username + " wanted period time too short");
-            return { reject: true, msg: "Minimum is " + argv.minperiodtime + " seconds per period, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period. " };
+            return { reject: true, msg: "Minimum is " + argv.minperiodtime + " seconds per period, please increase period time " };
         }
 
         if (argv.maxperiodtime &&
@@ -1833,7 +1817,7 @@ class Connection {
             ))
         {
             conn_log(user.username + " wanted period time too long");
-            return { reject: true, msg: "Maximum is " + argv.maxperiodtime + " seconds per period, please reduce period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtime + " seconds per period, please reduce period time " };
         }
 
         if (argv.minperiodtimeranked && notification.ranked && 
@@ -1844,7 +1828,7 @@ class Connection {
             ))
         {
             conn_log(user.username + " wanted period time ranked too short");
-            return { reject: true, msg: "Minimum is " + argv.minperiodtimeranked + " seconds per period for ranked games, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+            return { reject: true, msg: "Minimum is " + argv.minperiodtimeranked + " seconds per period for ranked games, please increase period time " };
         }
 
         if (argv.maxperiodtimeranked && notification.ranked &&
@@ -1855,7 +1839,7 @@ class Connection {
             ))
         {
             conn_log(user.username + " wanted period time ranked too long");
-            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeranked + " seconds per period for ranked games, please reduce period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeranked + " seconds per period for ranked games, please reduce period time " };
         }
 
         if (argv.minperiodtimeunranked && !notification.ranked && 
@@ -1866,7 +1850,7 @@ class Connection {
             ))
         {
             conn_log(user.username + " wanted period time unranked too short");
-            return { reject: true, msg: "Minimum is " + argv.minperiodtimeunranked + " seconds per period for unranked games, please increase period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period." };
+            return { reject: true, msg: "Minimum is " + argv.minperiodtimeunranked + " seconds per period for unranked games, please increase period time " };
         }
 
         if (argv.maxperiodtimeunranked && !notification.ranked &&
@@ -1877,7 +1861,7 @@ class Connection {
             ))
         {
             conn_log(user.username + " wanted period time unranked too long");
-            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeunranked + " seconds per period for unranked games, please reduce period time : \n - If you use byo-yomi or fischer time, set time per period, for example 30 seconds per period. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per period. " };
+            return { reject: true, msg: "Maximum is " + argv.maxperiodtimeunranked + " seconds per period for unranked games, please reduce period time " };
         }
 
         return { reject: false };  // Ok !

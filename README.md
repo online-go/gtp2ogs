@@ -246,10 +246,10 @@ ranked games (rejects time control simple and none)
   ```--maxmaintimeranked```  or ```--1mtr``` Maximum seconds of main time for 
 ranked games (rejects time control simple and none)
 
-  ```--minmaintimeunranked```  or ```--0mtru``` Minimum seconds of main time 
-for uranked games (rejects time control simple and none)
+  ```--minmaintimeunranked```  or ```--0mtu``` Minimum seconds of main time 
+for unranked games (rejects time control simple and none)
 
-  ```--maxmaintimeunranked```  or ```--1mtru``` Maximum seconds of main time for 
+  ```--maxmaintimeunranked```  or ```--1mtu``` Maximum seconds of main time for 
 unranked games (rejects time control simple and none)
 
   ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
