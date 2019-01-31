@@ -11,11 +11,26 @@ class Bot {
     constructor(conn, game, cmd) {{{
         this.conn = conn;
         this.game = game;
-        this.proc = child_process.spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
+        this.command_error_callbacks = [];
         this.firstmove = true;
         this.ignore = false;   // Ignore output from bot ?
+        // Set to true when the bot process has died and needs to be restarted before it can be used again.
+        this.dead = false;
+        // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
+        // After a few failures we stop retrying and resign the game.
+        this.failed = false;
+
+        try {
+            this.proc = child_process.spawn(cmd[0], cmd.slice(1));
+        } catch (e) {
+            this.log("Failed to start the bot: ", e);
+            this.ignore = true;
+            this.dead = true;
+            this.failed = true;
+            return;
+        }
 
         if (config.DEBUG) this.log("Starting ", cmd.join(' '));
 
@@ -57,6 +72,7 @@ class Bot {
                         ++i;
                     }
                     let cb = this.command_callbacks.shift();
+                    this.command_error_callbacks.shift();
                     if (cb) cb(line.substr(1).trim());
                 }
                 else if (line.trim()[0] == '?') {
@@ -65,17 +81,51 @@ class Bot {
                         ++i;
                         this.log(lines[i]);
                     }
+                    this.failed = true;
+                    this.command_callbacks.shift();
+                    let eb = this.command_error_callbacks.shift();
+                    if (eb) eb(line.substr(1).trim());
                 }
                 else {
                     this.log("Unexpected output: ", line);
+                    this.failed = true;
+                    this.command_callbacks.shift();
+                    let eb = this.command_error_callbacks.shift();
+                    if (eb) eb();
                     //throw new Error("Unexpected output: " + line);
                 }
             }
         });
+        this.proc.on('exit', (code) => {
+            if (config.DEBUG) {
+                this.log('Bot exited');
+            }
+            this.command_callbacks.shift();
+            this.dead = true;
+            let eb = this.command_error_callbacks.shift();
+            if (eb) eb(code);
+        });
+        this.proc.stdin.on('error', (code) => {
+            if (config.DEBUG) {
+                this.log('Bot stdin write error');
+            }
+            this.command_callbacks.shift();
+            this.dead = true;
+            this.failed = true;
+            let eb = this.command_error_callbacks.shift();
+            if (eb) eb(code);
+        });
     }}}
 
+    pid() {
+        if (this.proc) {
+            return this.proc.pid;
+        } else {
+            return -1;
+        }
+    }
     log(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "]"];
+        let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -83,7 +133,7 @@ class Bot {
         console.log.apply(null, arr);
     } /* }}} */
     error(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "]"];
+        let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -91,7 +141,7 @@ class Bot {
         console.error.apply(null, arr);
     } /* }}} */
     verbose(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "]"];
+        let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -282,9 +332,16 @@ class Bot {
     }
     
     loadState(state, cb, eb) { /* {{{ */
-        this.command("boardsize " + state.width);
-        this.command("clear_board");
-        this.command("komi " + state.komi);
+        if (this.dead) {
+            if (config.DEBUG) { this.log("Attempting to load dead bot") }
+            this.failed = true;
+            if (eb) { eb() }
+            return false;
+        }
+
+        this.command("boardsize " + state.width, () => {}, eb);
+        this.command("clear_board", () => {}, eb);
+        this.command("komi " + state.komi, () => {}, eb);
         //this.log(state);
 
         //this.loadClock(state);
@@ -296,9 +353,9 @@ class Bot {
             have_initial_state = (black.length || white.length);
 
             for (let i=0; i < black.length; ++i)
-                    this.command("play black " + move2gtpvertex(black[i], state.width));
+                this.command("play black " + move2gtpvertex(black[i], state.width), () => {}, eb);
             for (let i=0; i < white.length; ++i)
-                    this.command("play white " + move2gtpvertex(white[i], state.width));
+                this.command("play white " + move2gtpvertex(white[i], state.width), () => {}, eb);
         }
 
         // Replay moves made
@@ -324,10 +381,19 @@ class Bot {
         }
         // This breaks PhoenixGo.
         //this.command("showboard", cb, eb);
+        return true;
     } /* }}} */
 
     command(str, cb, eb, final_command) { /* {{{ */
+        if (this.dead) {
+            if (config.DEBUG) { this.log("Attempting to send to dead bot:", str) }
+            this.failed = true;
+            if (eb) { eb() }
+            return;
+        }
+
         this.command_callbacks.push(cb);
+        this.command_error_callbacks.push(eb);
         if (config.DEBUG) {
             this.log(">>>", str);
         }
@@ -350,6 +416,10 @@ class Bot {
         } catch (e) {
             this.log("Failed to send command: ", str);
             this.log(e);
+            this.dead = true;
+            this.failed = true;
+            // Already calling the callback!
+            this.command_error_callbacks.shift();
             if (eb) eb(e);
         }
     } /* }}} */
@@ -400,9 +470,16 @@ class Bot {
     } /* }}} */
 
     kill() { /* {{{ */
-        this.log("Stopping bot ");
-    this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
-    this.command("quit");
+        this.log("Stopping bot");
+        this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
+        this.dead = true;
+        this.command("quit");
+        if (this.proc) {
+            this.proc.kill();
+            setTimeout(() => {
+                this.proc.kill(9);
+            }, 5000);
+        }
     } /* }}} */
     sendMove(move, width, color){
         if (config.DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));

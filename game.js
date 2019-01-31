@@ -21,10 +21,13 @@ class Game {
         this.greeted = false;
         this.connected = true;
         this.bot = null;
+        this.bot_failures = 0;
         this.my_color = null;
         this.corr_move_pending = false;
         this.processing = false;
         this.handicap_moves = [];    // Handicap stones waiting to be sent when bot is playing black.
+
+        this.scheduleRetry = this.scheduleRetry.bind(this);
 
         this.log("Connecting to game.");
 
@@ -80,8 +83,7 @@ class Game {
             //
             if (this.bot) {
                 this.log("Killing bot because of gamedata packet after bot was started");
-                this.bot.kill();
-                this.bot = null;
+                this.ensureBotKilled();
 
                 if (this.processing) {
                     this.processing = false;
@@ -153,14 +155,7 @@ class Game {
             }
 
             if (phase == 'play') {
-                /* FIXME: This is pretty stupid.. we know what state we're in to
-                 * see if it's our move or not, but it's late and blindly sending
-                 * this out works as the server will reject bad moves */
-                this.log("Game play resumed, sending pass because we're too lazy to check the state right now to see what we should do");
-                this.socket.emit('game/move', this.auth({
-                    'game_id': this.state.game_id,
-                    'move': '..'
-                }));
+                this.scheduleRetry();
             }
         });
         this.socket.on('game/' + game_id + '/move', (move) => {
@@ -232,18 +227,47 @@ class Game {
         }));
     } /* }}} */
 
-    startBot(eb) { /* {{{ */
-        if (!this.bot) {
-            this.bot = new Bot(this.conn, this, config.bot_command);
-            this.log("Starting new bot process [" + this.bot.proc.pid + "]");
-
-            this.log("State loading for new bot");
-            this.bot.loadState(this.state, () => {
+    // Kill the bot, if it is currently running.
+    ensureBotKilled() {
+        if (this.bot) {
+            if (this.bot.failed) {
+                this.bot_failures++;
                 if (config.DEBUG) {
-                    this.log("State loaded for new bot");
+                    this.log("Observed " + this.bot_failures + " bot failures");
                 }
-            }, eb);
+            }
+            this.bot.kill();
+            this.bot = null;
         }
+    }
+    // Start the bot.
+    ensureBotStarted(eb) { /* {{{ */
+        if (this.bot && this.bot.dead) {
+            this.ensureBotKilled();
+        }
+
+        if (this.bot) return true;
+
+        if (this.bot_failures >= 5) {
+            // This bot keeps on failing, give up on the game.
+            this.log("Bot has crashed too many times, resigining game");
+            this.socket.emit('game/resign', this.auth({
+                'game_id': this.state.game_id
+            }));
+            if (eb) eb();
+            return false;
+        }
+
+        this.bot = new Bot(this.conn, this, config.bot_command);
+        this.log("Starting new bot process [" + this.bot.pid() + "]");
+
+        this.log("State loading for new bot");
+        return this.bot.loadState(this.state, () => {
+            if (config.DEBUG) {
+                this.log("State loaded for new bot");
+            }
+        }, eb);
+        return true;
     } /* }}} */
 
     // Send @cmd to bot and call @cb with returned moves.
@@ -269,13 +293,15 @@ class Game {
 
             failed = true;
             doneProcessing();
-            if (this.bot) this.bot.kill();
-            this.bot = null;
+            this.ensureBotKilled();
 
             if (eb) eb(e);
         }
 
-        if (!this.bot)  this.startBot(botError);
+        if (!this.ensureBotStarted(botError)) {
+            this.log("Failed to start the bot, can not make a move");
+            return;
+        }
 
         if (config.DEBUG) this.bot.log("Generating move for game", this.game_id);
         this.log(cmd);
@@ -285,12 +311,22 @@ class Game {
             cb(moves)
 
             if (!config.PERSIST && this.bot != null) {
-                this.bot.kill();
-                this.bot = null;
+                this.ensureBotKilled();
             }
         }, botError);
     } /* }}} */
 
+    scheduleRetry() {
+        if (config.DEBUG) {
+            this.log("We may need to move but were not able to. Re-connect to trigger action based on game state.");
+        }
+        this.socket.emit('game/disconnect', this.auth({
+            'game_id': this.state.game_id,
+        }));
+        this.socket.emit('game/connect', this.auth({
+            'game_id': this.state.game_id,
+        }));
+    }
     // Send move to server.
     // 
     uploadMove(move) { /* {{{ */
@@ -326,13 +362,12 @@ class Game {
         if (this.state.phase != 'play')
             return;
 
-        let sendPass = () => {  this.uploadMove({'x': -1});  };
         let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
             this.state.moves.length < this.state.handicap);
 
         if (!doing_handicap) {  // Regular genmove ...
             let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
-            this.getBotMoves("genmove " + this.my_color, sendTheMove, sendPass);
+            this.getBotMoves("genmove " + this.my_color, sendTheMove, this.scheduleRetry);
             return;
         }
 
@@ -344,8 +379,7 @@ class Game {
 
         let warnAndResign = (msg) => {
             this.log(msg);
-            if (this.bot) this.bot.kill();
-            this.bot = null;
+            this.ensureBotKilled();
             this.uploadMove({'resign': true});
         }
 
@@ -365,7 +399,7 @@ class Game {
             this.uploadMove(this.handicap_moves.shift());
         };
 
-        this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, sendPass);
+        this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, this.scheduleRetry);
     } /* }}} */
 
     auth(obj) { /* {{{ */
@@ -382,10 +416,7 @@ class Game {
             }
         }
 
-        if (this.bot)   {
-            this.bot.kill();
-            this.bot = null;
-        }
+        this.ensureBotKilled();
 
         this.log("Disconnecting from game.");
         this.connected = false;
@@ -412,8 +443,7 @@ class Game {
 
         if (this.bot) {
             this.bot.gameOver();
-            this.bot.kill();
-            this.bot = null;
+            this.ensureBotKilled();
         }
     } /* }}} */
     header() { /* {{{ */
