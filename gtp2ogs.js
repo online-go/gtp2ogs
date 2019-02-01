@@ -260,6 +260,39 @@ if (argv.banunranked) {
     }
 }
 
+let console_fmt = "{{timestamp}} {{title}} {{message}}";
+if (DEBUG)
+    console_fmt = "{{timestamp}} {{title}} {{file}}:{{line}}{{space}} {{message}}";
+
+let console_config = {
+    format : [ console_fmt ],
+    dateformat: 'mmm dd HH:MM:ss',
+    preprocess :  function(data){
+        switch (data.title) {
+            case 'debug': data.title = ' '; break;
+            case 'log': data.title = ' '; break;
+            case 'info': data.title = ' '; break;
+            case 'warn': data.title = '!'; break;
+            case 'error': data.title = '!!!!!'; break;
+        }
+        if (DEBUG) data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
+    }
+};
+
+if (argv.logfile) {
+    let real_console = require('console');
+    console_config.transport = (data) => {
+        real_console.log(data.output);
+        fs.open(argv.logfile, 'a', parseInt('0644', 8), function(e, id) {
+            fs.write(id, data.output+"\n", null, 'utf8', function() {
+                fs.close(id, () => { });
+            });
+        });
+    }
+}
+
+let console = tracer.colorConsole(console_config);
+
 if (argv.minrank) {
     let re = /(\d+)([kdp])/;
     let results = argv.minrank.toLowerCase().match(re);
@@ -374,39 +407,6 @@ let corr_moves_processing = 0;
 
 process.title = 'gtp2ogs ' + bot_command.join(' ');
 
-let console_fmt = "{{timestamp}} {{title}} {{message}}";
-if (DEBUG)
-    console_fmt = "{{timestamp}} {{title}} {{file}}:{{line}}{{space}} {{message}}";
-
-let console_config = {
-    format : [ console_fmt ],
-    dateformat: 'mmm dd HH:MM:ss',
-    preprocess :  function(data){
-        switch (data.title) {
-            case 'debug': data.title = ' '; break;
-            case 'log': data.title = ' '; break;
-            case 'info': data.title = ' '; break;
-            case 'warn': data.title = '!'; break;
-            case 'error': data.title = '!!!!!'; break;
-        }
-        if (DEBUG) data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
-    }
-};
-
-if (argv.logfile) {
-    let real_console = require('console');
-    console_config.transport = (data) => {
-        real_console.log(data.output);
-        fs.open(argv.logfile, 'a', parseInt('0644', 8), function(e, id) {
-            fs.write(id, data.output+"\n", null, 'utf8', function() {
-                fs.close(id, () => { });
-            });
-        });
-    }
-}
-
-let console = tracer.colorConsole(console_config);
-
 process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
   console.error("ERROR: " + er.stack);
@@ -417,6 +417,33 @@ process.on('uncaughtException', function (er) {
   }
 })
 
+if (argv.botid) {
+    console.log("Warning: --botid alias is no longer supported. Use --username instead.");
+}
+
+if (argv.bot) {
+    console.log("Warning: --bot alias is no longer supported. Use --username instead.");
+}
+
+if (argv.id) {
+    console.log("Warning: --id alias is no longer supported. Use --username instead.");
+}
+
+if (argv.minrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
+}
+
+if (argv.maxrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapranked instead.");
+}
+
+if (argv.minunrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead.");
+}
+
+if (argv.maxunrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
+}
 
 /*********/
 /** Bot **/
