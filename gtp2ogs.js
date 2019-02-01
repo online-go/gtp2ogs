@@ -1784,7 +1784,7 @@ class Connection {
                 t.main_time    > argv.maxmaintimeunranked) {  // others
                     let botSecondsTime = timespanToDisplayString(argv.maxmaintimeunranked);
                     conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + botSecondsTime);
-                    return { reject: true, msg: "Maximum main time for unranked games is " + botSecondsTime + " seconds, please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    return { reject: true, msg: "Maximum main time for unranked games is " + botSecondsTime + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1827,7 +1827,7 @@ class Connection {
         {
             let botSecondsTime = timespanToDisplayString(argv.minperiodtime);
             conn_log(user.username + " wanted period time too short");
-            return { reject: true, msg: "Minimum is " + botSecondsTime + " seconds per period, please increase period time " };
+            return { reject: true, msg: "Minimum is " + botSecondsTime + " per period, please increase period time " };
         }
 
         if (argv.maxperiodtime &&
@@ -1839,7 +1839,7 @@ class Connection {
         {
             let botSecondsTime = timespanToDisplayString(argv.maxperiodtime);
             conn_log(user.username + " wanted period time too long");
-            return { reject: true, msg: "Maximum is " + botSecondsTime + " seconds per period, please reduce period time " };
+            return { reject: true, msg: "Maximum is " + botSecondsTime + " per period, please reduce period time " };
         }
 
         if (argv.minperiodtimeranked && notification.ranked && 
@@ -1851,7 +1851,7 @@ class Connection {
         {
             let botSecondsTime = timespanToDisplayString(argv.minperiodtimeranked);
             conn_log(user.username + " wanted period time ranked too short");
-            return { reject: true, msg: "Minimum is " + botSecondsTime + " seconds per period for ranked games, please increase period time " };
+            return { reject: true, msg: "Minimum is " + botSecondsTime + " per period for ranked games, please increase period time " };
         }
 
         if (argv.maxperiodtimeranked && notification.ranked &&
@@ -1863,7 +1863,7 @@ class Connection {
         {
             let botSecondsTime = timespanToDisplayString(argv.maxperiodtimeranked);
             conn_log(user.username + " wanted period time ranked too long");
-            return { reject: true, msg: "Maximum is " + botSecondsTime + " seconds per period for ranked games, please reduce period time " };
+            return { reject: true, msg: "Maximum is " + botSecondsTime + " per period for ranked games, please reduce period time " };
         }
 
         if (argv.minperiodtimeunranked && !notification.ranked && 
@@ -1875,7 +1875,7 @@ class Connection {
         {
             let botSecondsTime = timespanToDisplayString(argv.minperiodtimeunranked);
             conn_log(user.username + " wanted period time unranked too short");
-            return { reject: true, msg: "Minimum is " + botSecondsTime + " seconds per period for unranked games, please increase period time " };
+            return { reject: true, msg: "Minimum is " + botSecondsTime + " per period for unranked games, please increase period time " };
         }
 
         if (argv.maxperiodtimeunranked && !notification.ranked &&
