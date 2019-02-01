@@ -109,7 +109,7 @@ you want
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
 
-**note 4 : it is possible to use intuitive semi-syllabic aliases to write 
+**note 4 : it is possible to use ISSA (intuitive semi-syllabic aliases) to write 
 your gtp2ogs arguments in a much smaller size, see [notes G-](/README.md#g-) 
 for details**
 
@@ -139,7 +139,7 @@ Also put a space in between the option and the parameter, for example :
 
   ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxactivegames 1 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
   
-or with intuitive semi-syllabic aliases (see [notes G-](/README.md#g-) for details), 
+or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/README.md#g-) for details), 
 the same example becomes :
   
   ```--sb 2 --bb 13,19 --nc --uo --1ag 1 --1mt 1200 --b UserX,playerY --1pr 5```
@@ -154,7 +154,7 @@ specify them, such as `--komi` which default is automatic even if you dont speci
 
   ```--port``` OGS Port to connect to (default 443)
 
-  ```--timeout``` Disconnect from a game after this many seconds (if set) (default 0)
+  ```--timeout``` or ```--t``` Disconnect from a game after this many seconds (if set) (default 0)
 
   ```--insecure```  Don't use ssl to connect to the ggs/rest servers
 
@@ -417,8 +417,8 @@ to write faster and with less command length, it is also called "aliases"
 
 The list of aliases can also be found inside [gtp2ogs.js file](/gtp2ogs.js)
 
-For these aliases, the format chosen was "intuitive semi-syllabic aliases" (easy 
-to write them just by ear : one word one letter, 2 words 2 letters, `0` is min , 
+For these aliases, the format chosen was ISSA : "intuitive semi-syllabic aliases" 
+(easy to write them just by ear : one word one letter, 2 words 2 letters, `0` is min , 
 `1` is max )
 
 note : `--farewell` is 2 syllabes but only one word, so only one letter (semi-syllabic) , 
