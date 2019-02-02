@@ -430,6 +430,22 @@ if (argv.id) {
     console.log("Warning: --id alias is no longer supported. Use --username instead.");
 }
 
+if (argv.maxmaintime && (argv.maxmaintimeranked || argv.maxmaintimeunranked)) {
+    console.log("Warning: You are using --maxmaintime in combination with --maxmaintimeranked or/and --maxmaintimeunranked. \n Use either --maxmaintime alone , OR --maxmaintimeranked with --maxmaintimeunranked. \n But don't use the 3 --maxmaintime arguments at the same time. ");
+}
+
+if (argv.minmaintime && (argv.minmaintimeranked || argv.minmaintimeunranked)) {
+    console.log("Warning: You are using --minmaintime in combination with --minmaintimeranked or/and --minmaintimeunranked. \n Use either --minmaintime alone , OR --minmaintimeranked with --minmaintimeunranked. \n But don't use the 3 --minmaintime arguments at the same time. ");
+}
+
+if (argv.maxperiodtime && (argv.maxperiodtimeranked || argv.maxperiodtimeunranked)) {
+    console.log("Warning: You are using --maxperiodtime in combination with --maxperiodtimeranked or/and --maxperiodtimeunranked. \n Use either --maxperiodtime alone , OR --maxperiodtimeranked with --maxperiodtimeunranked. \n But don't use the 3 --maxperiodtime arguments at the same time. ");
+}
+
+if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranked)) {
+    console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked or/and --minperiodtimeunranked. \n Use either --minperiodtime alone , OR --minperiodtimeranked with --minperiodtimeunranked. \n But don't use the 3 --minperiodtime arguments at the same time. ");
+}
+
 if (argv.minrankedhandicap) {
     console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
 }
@@ -445,6 +461,8 @@ if (argv.minunrankedhandicap) {
 if (argv.maxunrankedhandicap) {
     console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
 }
+
+
 
 /*********/
 /** Bot **/
@@ -1596,13 +1614,17 @@ class Connection {
         }
 
         if (user.ranking < argv.minrank) {
-            conn_log(user.username + " ranking too low: " + user.ranking);
-            return { reject: true, msg: "Minimum rank allowed is " + argv.minrank + " (in bot ranking units), your rank is " + user.ranking + " (in bot ranking units), your rank is too low, try again when your rank is high enough." };
+            let humanReadableUserRank = rank2str(user.ranking);
+            let humanReadableMinRank = rank2str(argv.minrank);
+            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
+            return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + " , your rank is too low, try again when your rank is high enough." };
         }
 
         if (user.ranking > argv.maxrank) {
-            conn_log(user.username + " ranking too high: " + user.ranking);
-            return { reject: true, msg: "Maximum rank allowed is " + argv.maxrank + " (in bot ranking units), your rank is " + user.ranking + " (in bot ranking units), your rank is too high, try again when your rank is low enough." };
+            let humanReadableUserRank = rank2str(user.ranking);
+            let humanReadableMaxRank = rank2str(argv.maxrank);
+            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
+            return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + " , your rank is too high, try again when your rank is low enough." };
         }
 
         return { reject: false }; // OK !
@@ -1734,9 +1756,9 @@ class Connection {
                 t.initial_time < argv.minmaintime  || // fischer
                 t.max_time     < argv.minmaintime  || // fischer
                 t.main_time    < argv.minmaintime) {  // others
-                    let botSecondsTime = timespanToDisplayString(argv.minmaintime);
-                    conn_log(user.username + " wanted main time below minmaintime " + botSecondsTime);
-                    return { reject: true, msg: "Minimum main time is " + botSecondsTime + ", please increase main time \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    let humanReadableTime = timespanToDisplayString(argv.minmaintime);
+                    conn_log(user.username + " wanted main time below minmaintime " + humanReadableTime);
+                    return { reject: true, msg: "Minimum main time is " + humanReadableTime + ", please increase main time \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1749,9 +1771,9 @@ class Connection {
                 t.initial_time > argv.maxmaintime  || // fischer
                 t.max_time     > argv.maxmaintime  || // fischer
                 t.main_time    > argv.maxmaintime) {  // others
-                    let botSecondsTime = timespanToDisplayString(argv.maxmaintime);
-                    conn_log(user.username + " wanted main time above maxmaintime " + botSecondsTime);
-                    return { reject: true, msg: "Maximum main time is " + botSecondsTime + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    let humanReadableTime = timespanToDisplayString(argv.maxmaintime);
+                    conn_log(user.username + " wanted main time above maxmaintime " + humanReadableTime);
+                    return { reject: true, msg: "Maximum main time is " + humanReadableTime + ", please reduce main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1764,9 +1786,9 @@ class Connection {
                 t.initial_time < argv.minmaintimeranked  || // fischer
                 t.max_time     < argv.minmaintimeranked  || // fischer
                 t.main_time    < argv.minmaintimeranked) {  // others
-                    let botSecondsTime = timespanToDisplayString(argv.minmaintimeranked);
-                    conn_log(user.username + " wanted main time ranked below minmaintimeranked " + botSecondsTime);
-                    return { reject: true, msg: "Minimum main time for ranked games is " + botSecondsTime + ", please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    let humanReadableTime = timespanToDisplayString(argv.minmaintimeranked);
+                    conn_log(user.username + " wanted main time ranked below minmaintimeranked " + humanReadableTime);
+                    return { reject: true, msg: "Minimum main time for ranked games is " + humanReadableTime + ", please increase main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1779,9 +1801,9 @@ class Connection {
                 t.initial_time > argv.maxmaintimeranked  || // fischer
                 t.max_time     > argv.maxmaintimeranked  || // fischer
                 t.main_time    > argv.maxmaintimeranked) {  // others
-                    let botSecondsTime = timespanToDisplayString(argv.maxmaintimeranked);
-                    conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + botSecondsTime);
-                    return { reject: true, msg: "Maximum main time for ranked games is " + botSecondsTime + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    let humanReadableTime = timespanToDisplayString(argv.maxmaintimeranked);
+                    conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + humanReadableTime);
+                    return { reject: true, msg: "Maximum main time for ranked games is " + humanReadableTime + ", please reduce main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1794,9 +1816,9 @@ class Connection {
                 t.initial_time < argv.minmaintimeunranked  || // fischer
                 t.max_time     < argv.minmaintimeunranked  || // fischer
                 t.main_time    < argv.minmaintimeunranked) {  // others
-                    let botSecondsTime = timespanToDisplayString(argv.minmaintimeunranked);
-                    conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + botSecondsTime);
-                    return { reject: true, msg: "Minimum main time for unranked games is " + botSecondsTime + ", please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    let humanReadableTime = timespanToDisplayString(argv.minmaintimeunranked);
+                    conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + humanReadableTime);
+                    return { reject: true, msg: "Minimum main time for unranked games is " + humanReadableTime + ", please increase main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1809,9 +1831,9 @@ class Connection {
                 t.initial_time > argv.maxmaintimeunranked  || // fischer
                 t.max_time     > argv.maxmaintimeunranked  || // fischer
                 t.main_time    > argv.maxmaintimeunranked) {  // others
-                    let botSecondsTime = timespanToDisplayString(argv.maxmaintimeunranked);
-                    conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + botSecondsTime);
-                    return { reject: true, msg: "Maximum main time for unranked games is " + botSecondsTime + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                    let humanReadableTime = timespanToDisplayString(argv.maxmaintimeunranked);
+                    conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + humanReadableTime);
+                    return { reject: true, msg: "Maximum main time for unranked games is " + humanReadableTime + ", please reduce main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
             }
         }
 
@@ -1852,9 +1874,9 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) < argv.minperiodtime)
             ))
         {
-            let botSecondsTime = timespanToDisplayString(argv.minperiodtime);
+            let humanReadableTime = timespanToDisplayString(argv.minperiodtime);
             conn_log(user.username + " wanted period time too short");
-            return { reject: true, msg: "Minimum is " + botSecondsTime + " per period, please increase period time " };
+            return { reject: true, msg: "Minimum is " + humanReadableTime + " per period, please increase period time. \n - If you use Fischer, you need to change -increment time- " };
         }
 
         if (argv.maxperiodtime &&
@@ -1864,9 +1886,9 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) > argv.maxperiodtime)
             ))
         {
-            let botSecondsTime = timespanToDisplayString(argv.maxperiodtime);
+            let humanReadableTime = timespanToDisplayString(argv.maxperiodtime);
             conn_log(user.username + " wanted period time too long");
-            return { reject: true, msg: "Maximum is " + botSecondsTime + " per period, please reduce period time " };
+            return { reject: true, msg: "Maximum is " + humanReadableTime + " per period, please reduce period time \n - If you use Fischer, you need to change -increment time-" };
         }
 
         if (argv.minperiodtimeranked && notification.ranked && 
@@ -1876,9 +1898,9 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) < argv.minperiodtimeranked)
             ))
         {
-            let botSecondsTime = timespanToDisplayString(argv.minperiodtimeranked);
+            let humanReadableTime = timespanToDisplayString(argv.minperiodtimeranked);
             conn_log(user.username + " wanted period time ranked too short");
-            return { reject: true, msg: "Minimum is " + botSecondsTime + " per period for ranked games, please increase period time " };
+            return { reject: true, msg: "Minimum is " + humanReadableTime + " per period for ranked games, please increase period time \n - If you use Fischer, you need to change -increment time- " };
         }
 
         if (argv.maxperiodtimeranked && notification.ranked &&
@@ -1888,9 +1910,9 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeranked)
             ))
         {
-            let botSecondsTime = timespanToDisplayString(argv.maxperiodtimeranked);
+            let humanReadableTime = timespanToDisplayString(argv.maxperiodtimeranked);
             conn_log(user.username + " wanted period time ranked too long");
-            return { reject: true, msg: "Maximum is " + botSecondsTime + " per period for ranked games, please reduce period time " };
+            return { reject: true, msg: "Maximum is " + humanReadableTime + " per period for ranked games, please reduce period time \n - If you use Fischer, you need to change -increment time- " };
         }
 
         if (argv.minperiodtimeunranked && !notification.ranked && 
@@ -1900,9 +1922,9 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) < argv.minperiodtimeunranked)
             ))
         {
-            let botSecondsTime = timespanToDisplayString(argv.minperiodtimeunranked);
+            let humanReadableTime = timespanToDisplayString(argv.minperiodtimeunranked);
             conn_log(user.username + " wanted period time unranked too short");
-            return { reject: true, msg: "Minimum is " + botSecondsTime + " per period for unranked games, please increase period time " };
+            return { reject: true, msg: "Minimum is " + humanReadableTime + " per period for unranked games, please increase period time \n - If you use Fischer, you need to change -increment time- " };
         }
 
         if (argv.maxperiodtimeunranked && !notification.ranked &&
@@ -1912,9 +1934,9 @@ class Connection {
                 || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeunranked)
             ))
         {
-            let botSecondsTime = timespanToDisplayString(argv.maxperiodtimeunranked);
+            let humanReadableTime = timespanToDisplayString(argv.maxperiodtimeunranked);
             conn_log(user.username + " wanted period time unranked too long");
-            return { reject: true, msg: "Maximum is " + botSecondsTime + " seconds per period for unranked games, please reduce period time " };
+            return { reject: true, msg: "Maximum is " + humanReadableTime + " seconds per period for unranked games, please reduce period time \n - If you use Fischer, you need to change -increment time- " };
         }
 
         return { reject: false };  // Ok !
@@ -2226,9 +2248,9 @@ function num2gtpchar(num) { /* {{{ */
     return "abcdefghjklmnopqrstuvwxyz"[num];
 } /* }}} */
 function rank2str(r) { /* {{{ */
-    r = r.toFixed();
-    if (r >= 30)  return (r-30+1) + 'd';
-    else          return (30-r) + 'k';
+    r = Math.floor(r);
+    if (r >= 30)  return (r-30+1) + 'd'; // r>=30 : 1 dan or stronger
+    else          return (30-r) + 'k'; // r<30 : 1 kyu or weaker
 } /* }}} */
 
 function conn_log() { /* {{{ */
