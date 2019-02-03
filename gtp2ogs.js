@@ -418,6 +418,10 @@ process.on('uncaughtException', function (er) {
   }
 })
 
+// console messages : for bot admins information
+
+console.log("You are using gtp2ogs version 6.0 \n - For changelog or devel updates, please visit : https://github.com/online-go/gtp2ogs/tree/devel \n - For known issues, please visit https://github.com/online-go/gtp2ogs/KNOWN-ISSUES.md");
+
 // console warnings : for bot admins usage
 
 if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
@@ -1674,10 +1678,15 @@ class Connection {
         // using absolute or simple (no period time) is likely to make bots timeout or play way too fast 
         /* "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
         let TimeControlString = String(t.time_control);
-        if ((TimeControlString === "absolute") || (TimeControlString === "simple")) {
+        if (TimeControlString === "absolute") {
             conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
             return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian." };
-            }          
+        }
+    
+        if ((TimeControlString === "simple") || (TimeControlString === "simple")) {
+            conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
+            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian. \n You can keep using the same time as in "  + TimeControlString + " time, just add a period time on top of it, for example 20 minutes + 5 x 30 seconds" };
+        }      
     
         if (argv.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
@@ -1901,11 +1910,6 @@ class Connection {
 
         ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
-        // making period number to choose being more user friendly
-        // TO UHMAEAT it too : 
-        // let examplePeriodsNumber = 0;
-        // let examplePeriodsSentence = ` ,for example ${examplePeriodsNumber} x ${examplePeriodtimeNumber}`;
-
         if (argv.minperiods && (t.periods < argv.minperiods)) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
             return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods" };
@@ -1959,6 +1963,11 @@ class Connection {
             let universalPeriodtimeTimecontrolString = String(t.time_control);/*
             "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
 
+            // for canadian we add a small explanation how to period convert time //
+            let canadianPeriodtimeConvertedNumber = Number("0"); // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+            let canadianPeriodtimeConvertedString = String(""); // e.g. "12 seconds per stone"
+            let canadianPeriodtimeConvertedSentence = String(); // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+
             if (argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
                 universalPeriodtimeMinimumMaximumSentence = "Minimum ";
                 universalPeriodtimeIncreaseDecreaseSentence = ", please increase ";
@@ -2002,11 +2011,18 @@ class Connection {
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
                         return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     }
-                    if (universalPeriodtimeTimecontrolString === "canadian" && (t.period_time < universalPeriodtimeNumber)) {
+                    if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) < universalPeriodtimeNumber)) {
                         universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
                         universalPeriodtimeEndingSentence = ".";
+
+                        // for canadian we add a small explanation how to period convert time //
+                        canadianPeriodtimeConvertedNumber = t.period_time; // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+                        canadianPeriodtimeConvertedString = timespanToDisplayString(canadianPeriodtimeConvertedNumber); // human readable time string
+                        canadianPeriodtimeConvertedSentence = `per stone (same as ${canadianPeriodtimeConvertedString} for all the ${t.stones_per_period} stones)`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+
+                        universalPeriodtimeEndingSentence = ".";
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
-                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeConvertedSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     }
                 }
             }
@@ -2054,17 +2070,24 @@ class Connection {
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
                         return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     }
-                    if (universalPeriodtimeTimecontrolString === "canadian" && (t.period_time > universalPeriodtimeNumber)) {
+                    if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) > universalPeriodtimeNumber)) {
                         universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
+
+                        // for canadian we add a small explanation how to period convert time //
+                        canadianPeriodtimeConvertedNumber = t.period_time; // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+                        canadianPeriodtimeConvertedString = timespanToDisplayString(canadianPeriodtimeConvertedNumber); // human readable time string
+                        canadianPeriodtimeConvertedSentence = `per stone (same as ${canadianPeriodtimeConvertedString} for all the ${t.stones_per_period} stones)`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+
                         universalPeriodtimeEndingSentence = ".";
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
-                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeConvertedSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     } 
                 }
             }
         }
 
         ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+
 
         return { reject: false };  // Ok !
 
