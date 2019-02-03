@@ -464,6 +464,14 @@ if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked or/and --nopauseunranked. \n Use either --nopause alone , OR --nopauseranked with --nopauseunranked. \n But don't use the 3 --nopause arguments at the same time. " );
 }
 
+if (!argv.minperiods && !argv.minperiodsranked && !argv.minperiodsunranked) {
+    console.log("Warning: No min period number setting detected, your bot is likely to timeout" );
+}
+
+if (!argv.maxperiods && !argv.maxperiodsranked && !argv.maxperiodsunranked) {
+    console.log("Warning: No max period number setting detected, the games are likely to last forever.." );
+}
+
 // console warnings : depreciated features if used
 
 if (argv.botid) {
