@@ -1669,6 +1669,15 @@ class Connection {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
+
+        // ** first we eliminate absolute and simple time control : they don't support the use of a period time
+        // using absolute or simple (no period time) is likely to make bots timeout or play way too fast 
+        /* "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+        let TimeControlString = String(t.time_control);
+        if ((TimeControlString === "absolute") || (TimeControlString === "simple")) {
+            conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
+            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian." };
+            }          
     
         if (argv.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
@@ -1770,17 +1779,9 @@ class Connection {
             // also, whenever before TimecontrolString is going to be tested,
             // we always make sure it has the latest value
             // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
-            // e.g. stuck on "absolute"
-            // ** first we eliminate absolute and simple time control : they don't support the use of a period time
-            // using absolute or simple (no period time) is likely to make bots timeout or play way too fast
-            let universalMaintimeTimecontrolString = String(t.time_control);/*
-            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
-            if ((universalMaintimeTimecontrolString === "absolute") || (universalMaintimeTimecontrolString === "simple")) {
-                conn_log(`Minimum and Maximum main time is not supported in time control: ${universalMaintimeTimecontrolString}` );
-                return { reject: true, msg: `Period time management is not supported in the time control ${universalMaintimeTimecontrolString} , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian.`};
-            }          
+            // e.g. stuck on "absolute"  
 
-            // ** then for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            // for fischer, byoyomi, or canadian, we use our UHMAEAT !
             let universalMaintimeMinimumMaximumSentence = "";    // minimum
             let universalMaintimeTimecontrolSentence = "";       // main time - initial time and/or max time, etc..
             let universalMaintimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
@@ -1789,6 +1790,8 @@ class Connection {
             let universalMaintimeIncreaseDecreaseSentence = "";  // , please increase/decrease
                                                                  // main time - MaintimeTimecontrolSentence again
             let universalMaintimeEndingSentence = "";            // optionnal, for example in canadian, adds explanation
+            let universalMaintimeTimecontrolString = String(t.time_control);/*
+            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
 
             if (argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked) {
                 universalMaintimeMinimumMaximumSentence = "Minimum ";
