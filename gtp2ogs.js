@@ -1963,10 +1963,8 @@ class Connection {
             let universalPeriodtimeTimecontrolString = String(t.time_control);/*
             "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
 
-            // for canadian we add a small explanation how to period convert time //
-            let canadianPeriodtimeConvertedNumber = Number("0"); // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
-            let canadianPeriodtimeConvertedString = String(""); // e.g. "12 seconds per stone"
-            let canadianPeriodtimeConvertedSentence = String(); // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+            // for canadian we add a small explanation how to understand period time for all stones //
+            let canadianPeriodtimeSentence = ""; // see "canadian" for details
 
             if (argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
                 universalPeriodtimeMinimumMaximumSentence = "Minimum ";
@@ -2015,14 +2013,28 @@ class Connection {
                         universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
                         universalPeriodtimeEndingSentence = ".";
 
-                        // for canadian we add a small explanation how to period convert time //
-                        canadianPeriodtimeConvertedNumber = t.period_time; // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
-                        canadianPeriodtimeConvertedString = timespanToDisplayString(canadianPeriodtimeConvertedNumber); // human readable time string
-                        canadianPeriodtimeConvertedSentence = `per stone (same as ${canadianPeriodtimeConvertedString} for all the ${t.stones_per_period} stones)`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+                        // for canadian we add a small explanation how to understand period for all stones //
+                        // canadian period time is already for n number of stones, dont divide by stone
+                        // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+                        // first we reconvert displayedTimeToString
+                        if (argv.minperiodtime) {
+                            universalPeriodtimeNumber = (argv.minperiodtime * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (argv.minperiodtimeranked && notification.ranked) {
+                            universalPeriodtimeNumber = (argv.minperiodtimeranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (argv.minperiodtimeunranked && !notification.ranked) {
+                            universalPeriodtimeNumber = (argv.minperiodtimeunranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        // then we add the wanted explanation for canadian number of stones
+                        canadianPeriodtimeSentence = `for all the ${t.stones_per_period} stones`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
 
                         universalPeriodtimeEndingSentence = ".";
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
-                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeConvertedSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     }
                 }
             }
@@ -2073,14 +2085,28 @@ class Connection {
                     if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) > universalPeriodtimeNumber)) {
                         universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
 
-                        // for canadian we add a small explanation how to period convert time //
-                        canadianPeriodtimeConvertedNumber = t.period_time; // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
-                        canadianPeriodtimeConvertedString = timespanToDisplayString(canadianPeriodtimeConvertedNumber); // human readable time string
-                        canadianPeriodtimeConvertedSentence = `per stone (same as ${canadianPeriodtimeConvertedString} for all the ${t.stones_per_period} stones)`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+                        // for canadian we add a small explanation how to understand period for all stones //
+                        // canadian period time is already for n number of stones, dont divide by stone
+                        // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+                        // first we reconvert displayedTimeToString
+                        if (argv.maxperiodtime) {
+                            universalPeriodtimeNumber = (argv.maxperiodtime * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (argv.maxperiodtimeranked && notification.ranked) {
+                            universalPeriodtimeNumber = (argv.maxperiodtimeranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (argv.maxperiodtimeunranked && !notification.ranked) {
+                            universalPeriodtimeNumber = (argv.maxperiodtimeunranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        // then we add the wanted explanation for canadian number of stones
+                        canadianPeriodtimeSentence = `for all the ${t.stones_per_period} stones`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
 
                         universalPeriodtimeEndingSentence = ".";
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
-                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeConvertedSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     } 
                 }
             }
