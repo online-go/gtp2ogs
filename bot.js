@@ -234,8 +234,11 @@ class Bot {
                     + " " + state.time_control.time_increment + " 1");
             }
 
-            this.command("time_left black " + black_timeleft + " 1");
-            this.command("time_left white " + white_timeleft + " 1");
+            // Always tell the bot we are in main time ('0') so it doesn't try to think all of timeleft per move. But
+            // subtract the increment time above to avoid timeouts.
+            //
+            this.command("time_left black " + black_timeleft + " 0");
+            this.command("time_left white " + white_timeleft + " 0");
         } else if (state.time_control.system == 'simple') {
             // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
             //
