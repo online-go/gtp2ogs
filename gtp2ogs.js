@@ -1772,6 +1772,7 @@ class Connection {
         }
 
         ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+        ///// for maintime 
 
         if (argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked) {
             // later the t.time_control can't be used for rule detection for some reason,
@@ -1900,107 +1901,170 @@ class Connection {
 
         ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
+        // making period number to choose being more user friendly
+        // TO UHMAEAT it too : 
+        // let examplePeriodsNumber = 0;
+        // let examplePeriodsSentence = ` ,for example ${examplePeriodsNumber} x ${examplePeriodtimeNumber}`;
+
         if (argv.minperiods && (t.periods < argv.minperiods)) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods, for example " + argv.minperiods + " x 30 seconds " };
+            return { reject: true, msg: "Minimum number of periods is " + argv.minperiods + " , please increase the number of periods" };
         }
 
         if (argv.minperiodsranked && (t.periods < argv.minperiodsranked) && notification.ranked) {
             conn_log(user.username + " wanted too few periods ranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods, for example " + argv.minperiodsranked + " x 30 seconds " };
+            return { reject: true, msg: "Minimum number of periods for ranked games is " + argv.minperiodsranked + " , please increase the number of periods" };
         }
 
         if (argv.minperiodsunranked && (t.periods < argv.minperiodsunranked) && !notification.ranked) {
             conn_log(user.username + " wanted too few periods unranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods, for example " + argv.minperiodsunranked + " x 30 seconds " };
+            return { reject: true, msg: "Minimum number of periods for unranked games is " + argv.minperiodsunranked + " , please increase the number of periods" };
         }
 
         if (t.periods > argv.maxperiods) {
             conn_log(user.username + " wanted too many periods: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods is " + argv.maxperiods + " , please reduce the number of periods, for example " + argv.maxperiods + " x 30 seconds " };
+            return { reject: true, msg: "Maximum number of periods is " + argv.maxperiods + " , please reduce the number of periods" };
         }
 
         if (t.periods > argv.maxperiodsranked && notification.ranked) {
             conn_log(user.username + " wanted too many periods ranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods, for example " + argv.maxperiodsranked + " x 30 seconds " };
+            return { reject: true, msg: "Maximum number of periods for ranked games is " + argv.maxperiodsranked + " , please reduce the number of periods" };
         }
 
         if (t.periods > argv.maxperiodsunranked && !notification.ranked) {
             conn_log(user.username + " wanted too many periods unranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods, for example " + argv.maxperiodsunranked + " x 30 seconds " };
+            return { reject: true, msg: "Maximum number of periods for unranked games is " + argv.maxperiodsunranked + " , please reduce the number of periods" };
         }
 
-        if (argv.minperiodtime &&
-            (      (t.period_time    < argv.minperiodtime)
-                || (t.time_increment < argv.minperiodtime)
-                || (t.per_move       < argv.minperiodtime)
-                || ((t.period_time / t.stones_per_period) < argv.minperiodtime)
-            ))
-        {
-            let humanReadableTime = timespanToDisplayString(argv.minperiodtime);
-            conn_log(user.username + " wanted period time too short");
-            return { reject: true, msg: "Minimum is " + humanReadableTime + " per period, please increase period time. \n - If you use Fischer, you need to change -increment time- " };
+        ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+        // for period time //
+
+        if (argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked) {
+            // later the t.time_control can't be used for rule detection for some reason,
+            // so storing it now in a string while we can
+            // also, whenever before TimecontrolString is going to be tested,
+            // we always make sure it has the latest value
+            // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
+            // e.g. stuck on "absolute"  
+
+            // for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            let universalPeriodtimeMinimumMaximumSentence = "";    // minimum
+            let universalPeriodtimeTimecontrolSentence = "";       // period time - initial time and/or max time, etc..
+            let universalPeriodtimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
+            let universalPeriodtimeNumber = 0;                     // for example 600 (600 seconds)
+            let universalPeriodtimeToString = "";                  // for example "10 minutes"  = timespanToDisplayString(argv.xxx)
+            let universalPeriodtimeIncreaseDecreaseSentence = "";  // , please increase/decrease
+                                                                 // period time - PeriodtimeTimecontrolSentence again
+            let universalPeriodtimeEndingSentence = "";            // optionnal, for example in canadian, adds explanation
+            let universalPeriodtimeTimecontrolString = String(t.time_control);/*
+            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+
+            if (argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
+                universalPeriodtimeMinimumMaximumSentence = "Minimum ";
+                universalPeriodtimeIncreaseDecreaseSentence = ", please increase ";
+                let universalPeriodtimeConnSentence = user.username + " wanted period time below minimum period time ";
+                if (argv.minperiodtime) {
+                    universalPeriodtimeNumber = argv.minperiodtime;
+                    universalPeriodtimeToString = timespanToDisplayString(argv.minperiodtime);
+                    universalPeriodtimeForRankedUnrankedSentence = "is ";
+                }
+                if (argv.minperiodtimeranked && notification.ranked) {
+                    universalPeriodtimeNumber = argv.minperiodtimeranked;
+                    universalPeriodtimeToString = timespanToDisplayString(argv.minperiodtimeranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (argv.minperiodtimeunranked && !notification.ranked) {
+                    universalPeriodtimeNumber = argv.minperiodtimeunranked;
+                    universalPeriodtimeToString = timespanToDisplayString(argv.minperiodtimeunranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for unranked games is ";
+                 }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalPeriodtimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
+
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }                
+
+                // if sanity check passes :
+                if ((universalPeriodtimeTimecontrolString === "fischer") || (universalPeriodtimeTimecontrolString === "byoyomi") || (universalPeriodtimeTimecontrolString === "canadian")) {
+                    if ((universalPeriodtimeTimecontrolString === "fischer") && (t.time_increment < universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Increment Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "byoyomi" && t.period_time < universalPeriodtimeNumber) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "canadian" && (t.period_time < universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                }
+            }
+
+            if (argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked) {
+                universalPeriodtimeMinimumMaximumSentence = "Maximum ";
+                universalPeriodtimeIncreaseDecreaseSentence = ", please reduce ";
+                let universalPeriodtimeConnSentence = user.username + " wanted period time above maximum period time ";
+                if (argv.maxperiodtime) {
+                    universalPeriodtimeNumber = argv.maxperiodtime;
+                    universalPeriodtimeToString = timespanToDisplayString(argv.maxperiodtime);
+                    universalPeriodtimeForRankedUnrankedSentence = "is ";
+                }
+                if (argv.maxperiodtimeranked && notification.ranked) {
+                    universalPeriodtimeNumber = argv.maxperiodtimeranked;
+                    universalPeriodtimeToString = timespanToDisplayString(argv.maxperiodtimeranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (argv.maxperiodtimeunranked && !notification.ranked) {
+                    universalPeriodtimeNumber = argv.maxperiodtimeunranked;
+                    universalPeriodtimeToString = timespanToDisplayString(argv.maxperiodtimeunranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for unranked games is ";
+                }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalPeriodtimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
+
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }                
+
+                // if sanity check passes :
+                if ((universalPeriodtimeTimecontrolString === "fischer") || (universalPeriodtimeTimecontrolString === "byoyomi") || (universalPeriodtimeTimecontrolString === "canadian")) {
+                    if ((universalPeriodtimeTimecontrolString === "fischer") && (t.time_increment > universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Increment Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "byoyomi" && t.period_time > universalPeriodtimeNumber) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "canadian" && (t.period_time > universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    } 
+                }
+            }
         }
 
-        if (argv.maxperiodtime &&
-            (      (t.period_time    > argv.maxperiodtime)
-                || (t.time_increment > argv.maxperiodtime)
-                || (t.per_move       > argv.maxperiodtime)
-                || ((t.period_time / t.stones_per_period) > argv.maxperiodtime)
-            ))
-        {
-            let humanReadableTime = timespanToDisplayString(argv.maxperiodtime);
-            conn_log(user.username + " wanted period time too long");
-            return { reject: true, msg: "Maximum is " + humanReadableTime + " per period, please reduce period time \n - If you use Fischer, you need to change -increment time-" };
-        }
-
-        if (argv.minperiodtimeranked && notification.ranked && 
-            (      (t.period_time    < argv.minperiodtimeranked)
-                || (t.time_increment < argv.minperiodtimeranked)
-                || (t.per_move       < argv.minperiodtimeranked)
-                || ((t.period_time / t.stones_per_period) < argv.minperiodtimeranked)
-            ))
-        {
-            let humanReadableTime = timespanToDisplayString(argv.minperiodtimeranked);
-            conn_log(user.username + " wanted period time ranked too short");
-            return { reject: true, msg: "Minimum is " + humanReadableTime + " per period for ranked games, please increase period time \n - If you use Fischer, you need to change -increment time- " };
-        }
-
-        if (argv.maxperiodtimeranked && notification.ranked &&
-            (      (t.period_time    > argv.maxperiodtimeranked)
-                || (t.time_increment > argv.maxperiodtimeranked)
-                || (t.per_move       > argv.maxperiodtimeranked)
-                || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeranked)
-            ))
-        {
-            let humanReadableTime = timespanToDisplayString(argv.maxperiodtimeranked);
-            conn_log(user.username + " wanted period time ranked too long");
-            return { reject: true, msg: "Maximum is " + humanReadableTime + " per period for ranked games, please reduce period time \n - If you use Fischer, you need to change -increment time- " };
-        }
-
-        if (argv.minperiodtimeunranked && !notification.ranked && 
-            (      (t.period_time    < argv.minperiodtimeunranked)
-                || (t.time_increment < argv.minperiodtimeunranked)
-                || (t.per_move       < argv.minperiodtimeunranked)
-                || ((t.period_time / t.stones_per_period) < argv.minperiodtimeunranked)
-            ))
-        {
-            let humanReadableTime = timespanToDisplayString(argv.minperiodtimeunranked);
-            conn_log(user.username + " wanted period time unranked too short");
-            return { reject: true, msg: "Minimum is " + humanReadableTime + " per period for unranked games, please increase period time \n - If you use Fischer, you need to change -increment time- " };
-        }
-
-        if (argv.maxperiodtimeunranked && !notification.ranked &&
-            (      (t.period_time    > argv.maxperiodtimeunranked)
-                || (t.time_increment > argv.maxperiodtimeunranked)
-                || (t.per_move       > argv.maxperiodtimeunranked)
-                || ((t.period_time / t.stones_per_period) > argv.maxperiodtimeunranked)
-            ))
-        {
-            let humanReadableTime = timespanToDisplayString(argv.maxperiodtimeunranked);
-            conn_log(user.username + " wanted period time unranked too long");
-            return { reject: true, msg: "Maximum is " + humanReadableTime + " seconds per period for unranked games, please reduce period time \n - If you use Fischer, you need to change -increment time- " };
-        }
+        ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
         return { reject: false };  // Ok !
 
