@@ -418,48 +418,76 @@ process.on('uncaughtException', function (er) {
   }
 })
 
-if (argv.botid) {
-    console.log("Warning: --botid alias is no longer supported. Use --username instead.");
+// console warnings : for bot admins usage
+
+if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
+    console.log("Warning: You are using --maxhandicap in combination with --maxhandicapranked or/and --maxhandicapunranked. \n Use either --maxhandicap alone , OR --maxhandicapranked with --maxhandicapunranked. \n But don't use the 3 --maxhandicap arguments at the same time. " );
 }
 
-if (argv.bot) {
-    console.log("Warning: --bot alias is no longer supported. Use --username instead.");
-}
-
-if (argv.id) {
-    console.log("Warning: --id alias is no longer supported. Use --username instead.");
+if (argv.minhandicap && (argv.minhandicapranked || argv.minhandicapunranked)) {
+    console.log("Warning: You are using --minhandicap in combination with --minhandicapranked or/and --minhandicapunranked. \n Use either --minhandicap alone , OR --minhandicapranked with --minhandicapunranked. \n But don't use the 3 --minhandicap arguments at the same time. " );
 }
 
 if (argv.maxmaintime && (argv.maxmaintimeranked || argv.maxmaintimeunranked)) {
-    console.log("Warning: You are using --maxmaintime in combination with --maxmaintimeranked or/and --maxmaintimeunranked. \n Use either --maxmaintime alone , OR --maxmaintimeranked with --maxmaintimeunranked. \n But don't use the 3 --maxmaintime arguments at the same time. ");
+    console.log("Warning: You are using --maxmaintime in combination with --maxmaintimeranked or/and --maxmaintimeunranked. \n Use either --maxmaintime alone , OR --maxmaintimeranked with --maxmaintimeunranked. \n But don't use the 3 --maxmaintime arguments at the same time. " );
 }
 
 if (argv.minmaintime && (argv.minmaintimeranked || argv.minmaintimeunranked)) {
-    console.log("Warning: You are using --minmaintime in combination with --minmaintimeranked or/and --minmaintimeunranked. \n Use either --minmaintime alone , OR --minmaintimeranked with --minmaintimeunranked. \n But don't use the 3 --minmaintime arguments at the same time. ");
+    console.log("Warning: You are using --minmaintime in combination with --minmaintimeranked or/and --minmaintimeunranked. \n Use either --minmaintime alone , OR --minmaintimeranked with --minmaintimeunranked. \n But don't use the 3 --minmaintime arguments at the same time. " );
+}
+
+if (argv.maxperiods && (argv.maxperiodsranked || argv.maxperiodsunranked)) {
+    console.log("Warning: You are using --maxperiods in combination with --maxperiodsranked or/and --maxperiodsunranked. \n Use either --maxperiods alone , OR --maxperiodsranked with --maxperiodsunranked. \n But don't use the 3 --maxperiods arguments at the same time. " );
+}
+
+if (argv.minperiods && (argv.minperiodsranked || argv.minperiodsunranked)) {
+    console.log("Warning: You are using --minperiods in combination with --minperiodsranked or/and --minperiodsunranked. \n Use either --minperiods alone , OR --minperiodsranked with --minperiodsunranked. \n But don't use the 3 --minperiods arguments at the same time. " );
 }
 
 if (argv.maxperiodtime && (argv.maxperiodtimeranked || argv.maxperiodtimeunranked)) {
-    console.log("Warning: You are using --maxperiodtime in combination with --maxperiodtimeranked or/and --maxperiodtimeunranked. \n Use either --maxperiodtime alone , OR --maxperiodtimeranked with --maxperiodtimeunranked. \n But don't use the 3 --maxperiodtime arguments at the same time. ");
+    console.log("Warning: You are using --maxperiodtime in combination with --maxperiodtimeranked or/and --maxperiodtimeunranked. \n Use either --maxperiodtime alone , OR --maxperiodtimeranked with --maxperiodtimeunranked. \n But don't use the 3 --maxperiodtime arguments at the same time. " );
 }
 
 if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranked)) {
-    console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked or/and --minperiodtimeunranked. \n Use either --minperiodtime alone , OR --minperiodtimeranked with --minperiodtimeunranked. \n But don't use the 3 --minperiodtime arguments at the same time. ");
+    console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked or/and --minperiodtimeunranked. \n Use either --minperiodtime alone , OR --minperiodtimeranked with --minperiodtimeunranked. \n But don't use the 3 --minperiodtime arguments at the same time. " );
+}
+
+if (argv.noautohandicap && (argv.noautohandicapranked || argv.noautohandicapunranked)) {
+    console.log("Warning: You are using --noautohandicap in combination with --noautohandicapranked or/and --noautohandicapunranked. \n Use either --noautohandicap alone , OR --noautohandicapranked with --noautohandicapunranked. \n But don't use the 3 --noautohandicap arguments at the same time. " );
+}
+
+if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
+    console.log("Warning: You are using --nopause in combination with --nopauseranked or/and --nopauseunranked. \n Use either --nopause alone , OR --nopauseranked with --nopauseunranked. \n But don't use the 3 --nopause arguments at the same time. " );
+}
+
+// console warnings : depreciated features if used
+
+if (argv.botid) {
+    console.log("Warning: --botid alias is no longer supported. Use --username instead." );
+}
+
+if (argv.bot) {
+    console.log("Warning: --bot alias is no longer supported. Use --username instead." );
+}
+
+if (argv.id) {
+    console.log("Warning: --id alias is no longer supported. Use --username instead." );
 }
 
 if (argv.minrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead." );
 }
 
 if (argv.maxrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapranked instead.");
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapranked instead." );
 }
 
 if (argv.minunrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead.");
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead." );
 }
 
 if (argv.maxunrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead." );
 }
 
 
@@ -1275,7 +1303,7 @@ class Game {
         return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
 
         // XXX doesn't work, getting garbage ranks here ...
-        // let rank = rank2str(player.rank);
+        // let rank = rankToString(player.rank);
     } /* }}} */
     log(str) { /* {{{ */
         let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
@@ -1614,15 +1642,15 @@ class Connection {
         }
 
         if (user.ranking < argv.minrank) {
-            let humanReadableUserRank = rank2str(user.ranking);
-            let humanReadableMinRank = rank2str(argv.minrank);
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMinRank = rankToString(argv.minrank);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
             return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + " , your rank is too low, try again when your rank is high enough." };
         }
 
         if (user.ranking > argv.maxrank) {
-            let humanReadableUserRank = rank2str(user.ranking);
-            let humanReadableMaxRank = rank2str(argv.maxrank);
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMaxRank = rankToString(argv.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
             return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + " , your rank is too high, try again when your rank is low enough." };
         }
@@ -1640,19 +1668,6 @@ class Connection {
         if (["chinese"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
-        }
-        
-        
-        function timespanToDisplayString(timespan) {
-            let ss = timespan % 60;
-            let mm = Math.floor(timespan / 60 % 60);
-            let hh = Math.floor(timespan / (60*60) % 24);
-            let dd = Math.floor(timespan / (60*60*24));
-            let text = ["days", "hours", "minutes", "seconds"];
-            return [dd, hh, mm, ss]
-                .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
-                .filter(e => e !== "")
-                .join(" ");
         }
     
         if (argv.rankedonly && !notification.ranked) {
@@ -1747,95 +1762,126 @@ class Connection {
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed, please choose one of these allowed time controls : " + argv.timecontrol };
         }
 
-        if (argv.minmaintime) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+        ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+
+        if (argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked) {
+            // later the t.time_control can't be used for rule detection for some reason,
+            // so storing it now in a string while we can
+            // also, whenever before TimecontrolString is going to be tested,
+            // we always make sure it has the latest value
+            // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
+            // e.g. stuck on "absolute"
+            // ** first we eliminate absolute and simple time control : they don't support the use of a period time
+            // using absolute or simple (no period time) is likely to make bots timeout or play way too fast
+            let universalMaintimeTimecontrolString = String(t.time_control);/*
+            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+            if ((universalMaintimeTimecontrolString === "absolute") || (universalMaintimeTimecontrolString === "simple")) {
+                conn_log(`Minimum and Maximum main time is not supported in time control: ${universalMaintimeTimecontrolString}` );
+                return { reject: true, msg: `Period time management is not supported in the time control ${universalMaintimeTimecontrolString} , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian.`};
+            }          
+
+            // ** then for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            let universalMaintimeMinimumMaximumSentence = "";    // minimum
+            let universalMaintimeTimecontrolSentence = "";       // main time - initial time and/or max time, etc..
+            let universalMaintimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
+            let universalMaintimeNumber = 0;                     // for example 600 (600 seconds)
+            let universalMaintimeToString = "";                  // for example "10 minutes"  = timespanToDisplayString(argv.xxx)
+            let universalMaintimeIncreaseDecreaseSentence = "";  // , please increase/decrease
+                                                                 // main time - MaintimeTimecontrolSentence again
+            let universalMaintimeEndingSentence = "";            // optionnal, for example in canadian, adds explanation
+
+            if (argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked) {
+                universalMaintimeMinimumMaximumSentence = "Minimum ";
+                universalMaintimeIncreaseDecreaseSentence = ", please increase ";
+                let universalMaintimeConnSentence = user.username + " wanted main time below minimum main time ";
+                if (argv.minmaintime) {
+                    universalMaintimeNumber = argv.minmaintime;
+                    universalMaintimeToString = timespanToDisplayString(argv.minmaintime);
+                    universalMaintimeForRankedUnrankedSentence = "is ";
+                }
+                if (argv.minmaintimeranked && notification.ranked) {
+                    universalMaintimeNumber = argv.minmaintimeranked;
+                    universalMaintimeToString = timespanToDisplayString(argv.minmaintimeranked);
+                    universalMaintimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (argv.minmaintimeunranked && !notification.ranked) {
+                    universalMaintimeNumber = argv.minmaintimeunranked;
+                    universalMaintimeToString = timespanToDisplayString(argv.minmaintimeunranked);
+                    universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
+                 }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalMaintimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
+                conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time < universalMaintimeNumber) || (t.max_time < universalMaintimeNumber))) {
+                    universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
+                    universalMaintimeEndingSentence = ".";
+                }
+                if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time < universalMaintimeNumber) {
+                    universalMaintimeTimecontrolSentence = "Main Time ";
+                    universalMaintimeEndingSentence = ".";
+                }
+                if (universalMaintimeTimecontrolString === "canadian" && t.main_time < universalMaintimeNumber) {
+                    universalMaintimeTimecontrolSentence = "Main Time ";
+                    universalMaintimeEndingSentence = "."; 
+                }
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }
+                // if sanity check passes :
+                return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+
             }
-            if (t.total_time   < argv.minmaintime  || // absolute
-                t.initial_time < argv.minmaintime  || // fischer
-                t.max_time     < argv.minmaintime  || // fischer
-                t.main_time    < argv.minmaintime) {  // others
-                    let humanReadableTime = timespanToDisplayString(argv.minmaintime);
-                    conn_log(user.username + " wanted main time below minmaintime " + humanReadableTime);
-                    return { reject: true, msg: "Minimum main time is " + humanReadableTime + ", please increase main time \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+
+            if (argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked) {
+                universalMaintimeMinimumMaximumSentence = "Maximum ";
+                universalMaintimeIncreaseDecreaseSentence = ", please reduce ";
+                let universalMaintimeConnSentence = user.username + " wanted main time above maximum main time ";
+                if (argv.maxmaintime) {
+                    universalMaintimeNumber = argv.maxmaintime;
+                    universalMaintimeToString = timespanToDisplayString(argv.maxmaintime);
+                    universalMaintimeForRankedUnrankedSentence = "is ";
+                }
+                if (argv.maxmaintimeranked && notification.ranked) {
+                    universalMaintimeNumber = argv.maxmaintimeranked;
+                    universalMaintimeToString = timespanToDisplayString(argv.maxmaintimeranked);
+                    universalMaintimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (argv.maxmaintimeunranked && !notification.ranked) {
+                    universalMaintimeNumber = argv.maxmaintimeunranked;
+                    universalMaintimeToString = timespanToDisplayString(argv.maxmaintimeunranked);
+                    universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
+                }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                let universalMaintimeTimecontrolString = String(t.time_control);/*
+                "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+                conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                
+                if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time > universalMaintimeNumber) || (t.max_time > universalMaintimeNumber))) {
+                    universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
+                    universalMaintimeEndingSentence = ".";
+                }
+                if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time > universalMaintimeNumber) {
+                    universalMaintimeTimecontrolSentence = "Main Time ";
+                    universalMaintimeEndingSentence = ".";
+                }
+                if (universalMaintimeTimecontrolString === "canadian" && t.main_time > universalMaintimeNumber) {
+                    universalMaintimeTimecontrolSentence = "Main Time ";
+                    universalMaintimeEndingSentence = ".";
+                }
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }
+                // if sanity check passes :
+                return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
             }
         }
 
-        if (argv.maxmaintime) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > argv.maxmaintime  || // absolute
-                t.initial_time > argv.maxmaintime  || // fischer
-                t.max_time     > argv.maxmaintime  || // fischer
-                t.main_time    > argv.maxmaintime) {  // others
-                    let humanReadableTime = timespanToDisplayString(argv.maxmaintime);
-                    conn_log(user.username + " wanted main time above maxmaintime " + humanReadableTime);
-                    return { reject: true, msg: "Maximum main time is " + humanReadableTime + ", please reduce main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
-
-        if (argv.minmaintimeranked && notification.ranked) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
-            }
-            if (t.total_time   < argv.minmaintimeranked  || // absolute
-                t.initial_time < argv.minmaintimeranked  || // fischer
-                t.max_time     < argv.minmaintimeranked  || // fischer
-                t.main_time    < argv.minmaintimeranked) {  // others
-                    let humanReadableTime = timespanToDisplayString(argv.minmaintimeranked);
-                    conn_log(user.username + " wanted main time ranked below minmaintimeranked " + humanReadableTime);
-                    return { reject: true, msg: "Minimum main time for ranked games is " + humanReadableTime + ", please increase main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
-
-        if (argv.maxmaintimeranked && notification.ranked) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > argv.maxmaintimeranked  || // absolute
-                t.initial_time > argv.maxmaintimeranked  || // fischer
-                t.max_time     > argv.maxmaintimeranked  || // fischer
-                t.main_time    > argv.maxmaintimeranked) {  // others
-                    let humanReadableTime = timespanToDisplayString(argv.maxmaintimeranked);
-                    conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + humanReadableTime);
-                    return { reject: true, msg: "Maximum main time for ranked games is " + humanReadableTime + ", please reduce main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
-
-        if (argv.minmaintimeunranked && !notification.ranked) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
-            }
-            if (t.total_time   < argv.minmaintimeunranked  || // absolute
-                t.initial_time < argv.minmaintimeunranked  || // fischer
-                t.max_time     < argv.minmaintimeunranked  || // fischer
-                t.main_time    < argv.minmaintimeunranked) {  // others
-                    let humanReadableTime = timespanToDisplayString(argv.minmaintimeunranked);
-                    conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + humanReadableTime);
-                    return { reject: true, msg: "Minimum main time for unranked games is " + humanReadableTime + ", please increase main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
-
-        if (argv.maxmaintimeunranked && !notification.ranked) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > argv.maxmaintimeunranked  || // absolute
-                t.initial_time > argv.maxmaintimeunranked  || // fischer
-                t.max_time     > argv.maxmaintimeunranked  || // fischer
-                t.main_time    > argv.maxmaintimeunranked) {  // others
-                    let humanReadableTime = timespanToDisplayString(argv.maxmaintimeunranked);
-                    conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + humanReadableTime);
-                    return { reject: true, msg: "Maximum main time for unranked games is " + humanReadableTime + ", please reduce main time. \n - If you use Fischer, you need to change both -initial time- and -max time-, and also -time increment- \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
+        ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (argv.minperiods && (t.periods < argv.minperiods)) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
@@ -1968,7 +2014,7 @@ class Connection {
         let handi = (notification.handicap > 0 ? "H" + notification.handicap : "");
         let accepting = (c.reject ? "Rejecting" : "Accepting");
         conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
-                         accepting, notification.user.username, rank2str(notification.user.ranking),
+                         accepting, notification.user.username, rankToString(notification.user.ranking),
                          notification.width, notification.width,
                          handi, notification.game_id));
 
@@ -2247,10 +2293,21 @@ function num2gtpchar(num) { /* {{{ */
         return ".";
     return "abcdefghjklmnopqrstuvwxyz"[num];
 } /* }}} */
-function rank2str(r) { /* {{{ */
+function rankToString(r) { /* {{{ */
     r = Math.floor(r);
     if (r >= 30)  return (r-30+1) + 'd'; // r>=30 : 1 dan or stronger
     else          return (30-r) + 'k'; // r<30 : 1 kyu or weaker
+} /* }}} */
+function timespanToDisplayString(timespan) {
+    let ss = timespan % 60;
+    let mm = Math.floor(timespan / 60 % 60);
+    let hh = Math.floor(timespan / (60*60) % 24);
+    let dd = Math.floor(timespan / (60*60*24));
+    let text = ["days", "hours", "minutes", "seconds"];
+    return [dd, hh, mm, ss]
+    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
+    .filter(e => e !== "")
+    .join(" ");
 } /* }}} */
 
 function conn_log() { /* {{{ */
