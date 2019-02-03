@@ -1812,27 +1812,34 @@ class Connection {
                 // now just before TimecontrolString is being tested, we again make sure it has the latest value
                 universalMaintimeTimecontrolString = String(t.time_control);/*
                 "fischer", "byoyomi", "canadian" */
-                conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time < universalMaintimeNumber) || (t.max_time < universalMaintimeNumber))) {
-                    universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
-                    universalMaintimeEndingSentence = ".";
-                }
-                if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time < universalMaintimeNumber) {
-                    universalMaintimeTimecontrolSentence = "Main Time ";
-                    universalMaintimeEndingSentence = ".";
-                }
-                if (universalMaintimeTimecontrolString === "canadian" && t.main_time < universalMaintimeNumber) {
-                    universalMaintimeTimecontrolSentence = "Main Time ";
-                    universalMaintimeEndingSentence = "."; 
-                }
+
                 // sanity check : if not fischer, not byoyomi, not canadian
                 if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
                     conn_log ("error, could not find time control in " + t.time_control);
                     return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
-                }
-                // if sanity check passes :
-                return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                }                
 
+                // if sanity check passes :
+                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) {
+                    if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time < universalMaintimeNumber) || (t.max_time < universalMaintimeNumber))) {
+                        universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time < universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "canadian" && t.main_time < universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                }
             }
 
             if (argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked) {
@@ -1855,29 +1862,36 @@ class Connection {
                     universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
                 }
                 // now just before TimecontrolString is being tested, we again make sure it has the latest value
-                let universalMaintimeTimecontrolString = String(t.time_control);/*
-                "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
-                conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                
-                if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time > universalMaintimeNumber) || (t.max_time > universalMaintimeNumber))) {
-                    universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
-                    universalMaintimeEndingSentence = ".";
-                }
-                if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time > universalMaintimeNumber) {
-                    universalMaintimeTimecontrolSentence = "Main Time ";
-                    universalMaintimeEndingSentence = ".";
-                }
-                if (universalMaintimeTimecontrolString === "canadian" && t.main_time > universalMaintimeNumber) {
-                    universalMaintimeTimecontrolSentence = "Main Time ";
-                    universalMaintimeEndingSentence = ".";
-                }
+                universalMaintimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
+
                 // sanity check : if not fischer, not byoyomi, not canadian
                 if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
                     conn_log ("error, could not find time control in " + t.time_control);
                     return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
-                }
+                }                
+
                 // if sanity check passes :
-                return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) {
+                    if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time > universalMaintimeNumber) || (t.max_time > universalMaintimeNumber))) {
+                        universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time > universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "canadian" && t.main_time > universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    } 
+                }
             }
         }
 
