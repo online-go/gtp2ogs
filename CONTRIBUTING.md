@@ -87,6 +87,9 @@ the existing gtp2ogs.js in node_modules (you can make a backup of the
 existing one, and you can also make backups of your code improvements 
 every while)
 
+To run the test cases that have been committed to the repository, either run
+`npm test` or `mocha`.
+
 When your code is finalized and has been tested, it is time to commit it !
 
 ### 6) Commit your changes and push the commit(s) to your forked yourbranchname
