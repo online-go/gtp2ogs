@@ -342,10 +342,6 @@ shown in
 
 A page summarizing the notes and details about gtp2ogs use can be viewed [here](/NOTES.md)
 
-# Known issues and bugs : 
-
-A page summarizing current known issues and bugs can be viewed [here](/KNOWN-ISSUES.md)
-
 # Discord chat : 
 
 if you're read that far, maybe you'll be interested to share your bot experience with 

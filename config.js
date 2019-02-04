@@ -204,7 +204,7 @@ exports.updateFromArgv = function() {
 
 // console : greeting //
 
-console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n- For known issues, please visit https://github.com/online-go/gtp2ogs/KNOWN-ISSUES.md");
+console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel");
 
 // console : warnings //
 
