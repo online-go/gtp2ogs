@@ -1,7 +1,7 @@
 Below is a list of the main KNOWN bugs, issues, and other problems with 
 the current latest branch : 
 
-All issues can be viewed in [Issues](https://github.com/online-go/gtp2ogs), 
+All issues can be viewed in [Issues](https://github.com/online-go/gtp2ogs/issues), 
 but this page summarizes the most common ones or critical ones
 
 ### 1) automatic handicap bypass min-max handicap limits
@@ -26,5 +26,4 @@ given low priority to fix
 Also, sometimes the challenge error loops, because gtp2ogs does not 
 delete the challenge, for some reason
 
-See issues for details
-
+See [Issues](https://github.com/online-go/gtp2ogs/issues) for details
