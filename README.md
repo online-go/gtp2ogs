@@ -344,7 +344,7 @@ A page summarizing the notes and details about gtp2ogs use can be viewed [here](
 
 # Known issues and bugs : 
 
-A page summarizing current known issues and bugs can be viewed her
+A page summarizing current known issues and bugs can be viewed [here](/KNOWN-ISSUES.md)
 
 # Discord chat : 
 
