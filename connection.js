@@ -314,14 +314,14 @@ class Connection {
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMinRank = rankToString(config.minrank);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
-            return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + " , your rank is too low, try again when your rank is high enough." };
+            return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + ", your rank is too low, try again when your rank is high enough." };
         }
 
         if (user.ranking > config.maxrank) {
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
-            return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + " , your rank is too high, try again when your rank is low enough." };
+            return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + ", your rank is too high, try again when your rank is low enough." };
         }
 
         return { reject: false }; // OK !
