@@ -338,6 +338,20 @@ class Connection {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
+
+        // ** first we eliminate absolute and simple time control : they don't support the use of a period time
+        // using absolute or simple (no period time) is likely to make bots timeout or play way too fast 
+        /* "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+        let TimeControlString = String(t.time_control);
+        if (TimeControlString === "absolute") {
+            conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
+            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian." };
+        }
+    
+        if (TimeControlString === "simple") {
+            conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
+            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian. \n You can keep using the same time as in "  + TimeControlString + " time, just add a period time on top of it, for example 20 minutes + 5 x 30 seconds" };
+        }  
     
         if (config.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
@@ -431,201 +445,336 @@ class Connection {
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed, please choose one of these allowed time controls : " + config.timecontrol };
         }
 
-        if (config.minmaintime) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
-            }
-            if (t.total_time   < config.minmaintime  || // absolute
-                t.initial_time < config.minmaintime  || // fischer
-                t.max_time     < config.minmaintime  || // fischer
-                t.main_time    < config.minmaintime) {  // others
-                    let humanReadableTimeString = timespanToDisplayString(config.minmaintime);
-                    conn_log(user.username + " wanted main time below minmaintime " + humanReadableTimeString);
-                    return { reject: true, msg: "Minimum main time is " + humanReadableTimeString + ", please increase main time \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
+        ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+        ///// for maintime 
+        if (config.minmaintime || config.minmaintimeranked || config.minmaintimeunranked || config.maxmaintime || config.maxmaintimeranked || config.maxmaintimeunranked) {
+            // later the t.time_control can't be used for rule detection for some reason,
+            // so storing it now in a string while we can
+            // also, whenever before TimecontrolString is going to be tested,
+            // we always make sure it has the latest value
+            // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
+            // e.g. stuck on "absolute"  
 
-        if (config.maxmaintime) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > config.maxmaintime  || // absolute
-                t.initial_time > config.maxmaintime  || // fischer
-                t.max_time     > config.maxmaintime  || // fischer
-                t.main_time    > config.maxmaintime) {  // others
-                    let humanReadableTimeString = timespanToDisplayString(config.maxmaintime);
-                    conn_log(user.username + " wanted main time above maxmaintime " + humanReadableTimeString);
-                    return { reject: true, msg: "Maximum main time is " + humanReadableTimeString + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
+            // for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            let universalMaintimeMinimumMaximumSentence = "";    // minimum
+            let universalMaintimeTimecontrolSentence = "";       // main time - initial time and/or max time, etc..
+            let universalMaintimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
+            let universalMaintimeNumber = 0;                     // for example 600 (600 seconds)
+            let universalMaintimeToString = "";                  // for example "10 minutes"  = timespanToDisplayString(config.xxx)
+            let universalMaintimeIncreaseDecreaseSentence = "";  // , please increase/decrease
+                                                                 // main time - MaintimeTimecontrolSentence again
+            let universalMaintimeEndingSentence = "";            // optionnal, for example in canadian, adds explanation
+            let universalMaintimeTimecontrolString = String(t.time_control);/*
+            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
 
-        if (config.minmaintimeranked && notification.ranked) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
-            }
-            if (t.total_time   < config.minmaintimeranked  || // absolute
-                t.initial_time < config.minmaintimeranked  || // fischer
-                t.max_time     < config.minmaintimeranked  || // fischer
-                t.main_time    < config.minmaintimeranked) {  // others
-                    let humanReadableTimeString = timespanToDisplayString(config.minmaintimeranked);
-                    conn_log(user.username + " wanted main time ranked below minmaintimeranked " + humanReadableTimeString);
-                    return { reject: true, msg: "Minimum main time for ranked games is " + humanReadableTimeString + ", please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
+            if (config.minmaintime || config.minmaintimeranked || config.minmaintimeunranked) {
+                universalMaintimeMinimumMaximumSentence = "Minimum ";
+                universalMaintimeIncreaseDecreaseSentence = ", please increase ";
+                let universalMaintimeConnSentence = user.username + " wanted main time below minimum main time ";
+                if (config.minmaintime) {
+                    universalMaintimeNumber = config.minmaintime;
+                    universalMaintimeToString = timespanToDisplayString(config.minmaintime);
+                    universalMaintimeForRankedUnrankedSentence = "is ";
+                }
+                if (config.minmaintimeranked && notification.ranked) {
+                    universalMaintimeNumber = config.minmaintimeranked;
+                    universalMaintimeToString = timespanToDisplayString(config.minmaintimeranked);
+                    universalMaintimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (config.minmaintimeunranked && !notification.ranked) {
+                    universalMaintimeNumber = config.minmaintimeunranked;
+                    universalMaintimeToString = timespanToDisplayString(config.minmaintimeunranked);
+                    universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
+                 }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalMaintimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
 
-        if (config.maxmaintimeranked && notification.ranked) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > config.maxmaintimeranked  || // absolute
-                t.initial_time > config.maxmaintimeranked  || // fischer
-                t.max_time     > config.maxmaintimeranked  || // fischer
-                t.main_time    > config.maxmaintimeranked) {  // others
-                    let humanReadableTimeString = timespanToDisplayString(config.maxmaintimeranked);
-                    conn_log(user.username + " wanted main time ranked above maxmaintimeranked " + humanReadableTimeString);
-                    return { reject: true, msg: "Maximum main time for ranked games is " + humanReadableTimeString + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }                
 
-        if (config.minmaintimeunranked && !notification.ranked) {
-            if ( ["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Minimum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Minimum main time is not supported in the time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian." };
+                // if sanity check passes :
+                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) {
+                    if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time < universalMaintimeNumber) || (t.max_time < universalMaintimeNumber))) {
+                        universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time < universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "canadian" && t.main_time < universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                }
             }
-            if (t.total_time   < config.minmaintimeunranked  || // absolute
-                t.initial_time < config.minmaintimeunranked  || // fischer
-                t.max_time     < config.minmaintimeunranked  || // fischer
-                t.main_time    < config.minmaintimeunranked) {  // others
-                    let humanReadableTimeString = timespanToDisplayString(config.minmaintimeunranked);
-                    conn_log(user.username + " wanted main time unranked below minmaintimeunranked " + humanReadableTimeString);
-                    return { reject: true, msg: "Minimum main time for unranked games is " + humanReadableTimeString + ", please increase main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
-            }
-        }
+          
+            if (config.maxmaintime || config.maxmaintimeranked || config.maxmaintimeunranked) {
+                universalMaintimeMinimumMaximumSentence = "Maximum ";
+                universalMaintimeIncreaseDecreaseSentence = ", please reduce ";
+                let universalMaintimeConnSentence = user.username + " wanted main time above maximum main time ";
+                if (config.maxmaintime) {
+                    universalMaintimeNumber = config.maxmaintime;
+                    universalMaintimeToString = timespanToDisplayString(config.maxmaintime);
+                    universalMaintimeForRankedUnrankedSentence = "is ";
+                }
+                if (config.maxmaintimeranked && notification.ranked) {
+                    universalMaintimeNumber = config.maxmaintimeranked;
+                    universalMaintimeToString = timespanToDisplayString(config.maxmaintimeranked);
+                    universalMaintimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (config.maxmaintimeunranked && !notification.ranked) {
+                    universalMaintimeNumber = config.maxmaintimeunranked;
+                    universalMaintimeToString = timespanToDisplayString(config.maxmaintimeunranked);
+                    universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
+                }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalMaintimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
 
-        if (config.maxmaintimeunranked && !notification.ranked) {
-            if (["simple","none"].indexOf(t.time_control) >= 0) {
-                conn_log("Maximum main time not supported in time control: " + t.time_control);
-                return { reject: true, msg: "Maximum main time not supported in time control " + t.time_control + ", please choose a time control that supports the use of a minimum main time, such as byoyomi,fischer,canadian. " };
-            }
-            if (t.total_time   > config.maxmaintimeunranked  || // absolute
-                t.initial_time > config.maxmaintimeunranked  || // fischer
-                t.max_time     > config.maxmaintimeunranked  || // fischer
-                t.main_time    > config.maxmaintimeunranked) {  // others
-                    let humanReadableTimeString = timespanToDisplayString(config.maxmaintimeunranked);
-                    conn_log(user.username + " wanted main time unranked above maxmaintimeunranked " + humanReadableTimeString);
-                    return { reject: true, msg: "Maximum main time for unranked games is " + humanReadableTimeString + ", please reduce main time. \n - If you use canadian byo-yomi, set the average time per stone, for example 5 minutes/25 stones needs to be set up as 180 seconds (5 minutes) divided by 25 stones , which equals 7.2 seconds per stone. " };
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }                
+
+                // if sanity check passes :
+                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) {
+                    if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time > universalMaintimeNumber) || (t.max_time > universalMaintimeNumber))) {
+                        universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time > universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    }
+                    if (universalMaintimeTimecontrolString === "canadian" && t.main_time > universalMaintimeNumber) {
+                        universalMaintimeTimecontrolSentence = "Main Time ";
+                        universalMaintimeEndingSentence = ".";
+                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
+                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
+                    } 
+                }
             }
         }
+        ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (config.minperiods && (t.periods < config.minperiods)) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods is " + config.minperiods + " , please increase the number of periods, for example " + config.minperiods + " x 30 seconds " };
+            return { reject: true, msg: "Minimum number of periods is " + config.minperiods + " , please increase the number of periods" };
         }
 
         if (config.minperiodsranked && (t.periods < config.minperiodsranked) && notification.ranked) {
             conn_log(user.username + " wanted too few periods ranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for ranked games is " + config.minperiodsranked + " , please increase the number of periods, for example " + config.minperiodsranked + " x 30 seconds " };
+            return { reject: true, msg: "Minimum number of periods for ranked games is " + config.minperiodsranked + " , please increase the number of periods" };
         }
 
         if (config.minperiodsunranked && (t.periods < config.minperiodsunranked) && !notification.ranked) {
             conn_log(user.username + " wanted too few periods unranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for unranked games is " + config.minperiodsunranked + " , please increase the number of periods, for example " + config.minperiodsunranked + " x 30 seconds " };
+            return { reject: true, msg: "Minimum number of periods for unranked games is " + config.minperiodsunranked + " , please increase the number of periods" };
         }
 
         if (t.periods > config.maxperiods) {
             conn_log(user.username + " wanted too many periods: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods is " + config.maxperiods + " , please reduce the number of periods, for example " + config.maxperiods + " x 30 seconds " };
+            return { reject: true, msg: "Maximum number of periods is " + config.maxperiods + " , please reduce the number of periods" };
         }
 
         if (t.periods > config.maxperiodsranked && notification.ranked) {
             conn_log(user.username + " wanted too many periods ranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for ranked games is " + config.maxperiodsranked + " , please reduce the number of periods, for example " + config.maxperiodsranked + " x 30 seconds " };
+            return { reject: true, msg: "Maximum number of periods for ranked games is " + config.maxperiodsranked + " , please reduce the number of periods" };
         }
 
         if (t.periods > config.maxperiodsunranked && !notification.ranked) {
             conn_log(user.username + " wanted too many periods unranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for unranked games is " + config.maxperiodsunranked + " , please reduce the number of periods, for example " + config.maxperiodsunranked + " x 30 seconds " };
-        }
 
-        if (config.minperiodtime &&
-            (      (t.period_time    < config.minperiodtime)
-                || (t.time_increment < config.minperiodtime)
-                || (t.per_move       < config.minperiodtime)
-                || ((t.period_time / t.stones_per_period) < config.minperiodtime)
-            ))
-        {
-            let humanReadableTimeString = timespanToDisplayString(config.minperiodtime);
-            conn_log(user.username + " wanted period time too short");
-            return { reject: true, msg: "Minimum is " + humanReadableTimeString + " per period, please increase period time " };
-        }
+        ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+        // for period time //
 
-        if (config.maxperiodtime &&
-            (      (t.period_time    > config.maxperiodtime)
-                || (t.time_increment > config.maxperiodtime)
-                || (t.per_move       > config.maxperiodtime)
-                || ((t.period_time / t.stones_per_period) > config.maxperiodtime)
-            ))
-        {
-            let humanReadableTimeString = timespanToDisplayString(config.maxperiodtime);
-            conn_log(user.username + " wanted period time too long");
-            return { reject: true, msg: "Maximum is " + humanReadableTimeString + " per period, please reduce period time " };
-        }
+        if (config.minperiodtime || config.minperiodtimeranked || config.minperiodtimeunranked || config.maxperiodtime || config.maxperiodtimeranked || config.maxperiodtimeunranked) {
+            // later the t.time_control can't be used for rule detection for some reason,
+            // so storing it now in a string while we can
+            // also, whenever before TimecontrolString is going to be tested,
+            // we always make sure it has the latest value
+            // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
+            // e.g. stuck on "absolute"  
 
-        if (config.minperiodtimeranked && notification.ranked && 
-            (      (t.period_time    < config.minperiodtimeranked)
-                || (t.time_increment < config.minperiodtimeranked)
-                || (t.per_move       < config.minperiodtimeranked)
-                || ((t.period_time / t.stones_per_period) < config.minperiodtimeranked)
-            ))
-        {
-            let humanReadableTimeString = timespanToDisplayString(config.minperiodtimeranked);
-            conn_log(user.username + " wanted period time ranked too short");
-            return { reject: true, msg: "Minimum is " + humanReadableTimeString + " per period for ranked games, please increase period time " };
-        }
+            // for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            let universalPeriodtimeMinimumMaximumSentence = "";    // minimum
+            let universalPeriodtimeTimecontrolSentence = "";       // period time - initial time and/or max time, etc..
+            let universalPeriodtimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
+            let universalPeriodtimeNumber = 0;                     // for example 600 (600 seconds)
+            let universalPeriodtimeToString = "";                  // for example "10 minutes"  = timespanToDisplayString(config.xxx)
+            let universalPeriodtimeIncreaseDecreaseSentence = "";  // , please increase/decrease
+                                                                 // period time - PeriodtimeTimecontrolSentence again
+            let universalPeriodtimeEndingSentence = "";            // optionnal, for example in canadian, adds explanation
+            let universalPeriodtimeTimecontrolString = String(t.time_control);/*
+            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
 
-        if (config.maxperiodtimeranked && notification.ranked &&
-            (      (t.period_time    > config.maxperiodtimeranked)
-                || (t.time_increment > config.maxperiodtimeranked)
-                || (t.per_move       > config.maxperiodtimeranked)
-                || ((t.period_time / t.stones_per_period) > config.maxperiodtimeranked)
-            ))
-        {
-            let humanReadableTimeString = timespanToDisplayString(config.maxperiodtimeranked);
-            conn_log(user.username + " wanted period time ranked too long");
-            return { reject: true, msg: "Maximum is " + humanReadableTimeString + " per period for ranked games, please reduce period time " };
-        }
+            // for canadian we add a small explanation how to understand period time for all stones //
+            let canadianPeriodtimeSentence = ""; // see "canadian" for details
 
-        if (config.minperiodtimeunranked && !notification.ranked && 
-            (      (t.period_time    < config.minperiodtimeunranked)
-                || (t.time_increment < config.minperiodtimeunranked)
-                || (t.per_move       < config.minperiodtimeunranked)
-                || ((t.period_time / t.stones_per_period) < config.minperiodtimeunranked)
-            ))
-        {
-            let humanReadableTimeString = timespanToDisplayString(config.minperiodtimeunranked);
-            conn_log(user.username + " wanted period time unranked too short");
-            return { reject: true, msg: "Minimum is " + humanReadableTimeString + " per period for unranked games, please increase period time " };
-        }
+            if (config.minperiodtime || config.minperiodtimeranked || config.minperiodtimeunranked) {
+                universalPeriodtimeMinimumMaximumSentence = "Minimum ";
+                universalPeriodtimeIncreaseDecreaseSentence = ", please increase ";
+                let universalPeriodtimeConnSentence = user.username + " wanted period time below minimum period time ";
+                if (config.minperiodtime) {
+                    universalPeriodtimeNumber = config.minperiodtime;
+                    universalPeriodtimeToString = timespanToDisplayString(config.minperiodtime);
+                    universalPeriodtimeForRankedUnrankedSentence = "is ";
+                }
+                if (config.minperiodtimeranked && notification.ranked) {
+                    universalPeriodtimeNumber = config.minperiodtimeranked;
+                    universalPeriodtimeToString = timespanToDisplayString(config.minperiodtimeranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (config.minperiodtimeunranked && !notification.ranked) {
+                    universalPeriodtimeNumber = config.minperiodtimeunranked;
+                    universalPeriodtimeToString = timespanToDisplayString(config.minperiodtimeunranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for unranked games is ";
+                 }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalPeriodtimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
 
-        if (config.maxperiodtimeunranked && !notification.ranked &&
-            (      (t.period_time    > config.maxperiodtimeunranked)
-                || (t.time_increment > config.maxperiodtimeunranked)
-                || (t.per_move       > config.maxperiodtimeunranked)
-                || ((t.period_time / t.stones_per_period) > config.maxperiodtimeunranked)
-            ))
-        {
-            let humanReadableTimeString = timespanToDisplayString(config.maxperiodtimeunranked);
-            conn_log(user.username + " wanted period time unranked too long");
-            return { reject: true, msg: "Maximum is " + humanReadableTimeString + " seconds per period for unranked games, please reduce period time " };
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }                
+
+                // if sanity check passes :
+                if ((universalPeriodtimeTimecontrolString === "fischer") || (universalPeriodtimeTimecontrolString === "byoyomi") || (universalPeriodtimeTimecontrolString === "canadian")) {
+                    if ((universalPeriodtimeTimecontrolString === "fischer") && (t.time_increment < universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Increment Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "byoyomi" && t.period_time < universalPeriodtimeNumber) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) < universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
+                        universalPeriodtimeEndingSentence = ".";
+
+                        // for canadian we add a small explanation how to understand period for all stones //
+                        // canadian period time is already for n number of stones, dont divide by stone
+                        // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+                        // first we reconvert displayedTimeToString
+                        if (config.minperiodtime) {
+                            universalPeriodtimeNumber = (config.minperiodtime * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (config.minperiodtimeranked && notification.ranked) {
+                            universalPeriodtimeNumber = (config.minperiodtimeranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (config.minperiodtimeunranked && !notification.ranked) {
+                            universalPeriodtimeNumber = (config.minperiodtimeunranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        // then we add the wanted explanation for canadian number of stones
+                        canadianPeriodtimeSentence = `for all the ${t.stones_per_period} stones`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                }
+            }
+
+            if (config.maxperiodtime || config.maxperiodtimeranked || config.maxperiodtimeunranked) {
+                universalPeriodtimeMinimumMaximumSentence = "Maximum ";
+                universalPeriodtimeIncreaseDecreaseSentence = ", please reduce ";
+                let universalPeriodtimeConnSentence = user.username + " wanted period time above maximum period time ";
+                if (config.maxperiodtime) {
+                    universalPeriodtimeNumber = config.maxperiodtime;
+                    universalPeriodtimeToString = timespanToDisplayString(config.maxperiodtime);
+                    universalPeriodtimeForRankedUnrankedSentence = "is ";
+                }
+                if (config.maxperiodtimeranked && notification.ranked) {
+                    universalPeriodtimeNumber = config.maxperiodtimeranked;
+                    universalPeriodtimeToString = timespanToDisplayString(config.maxperiodtimeranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for ranked games is ";
+                }
+                if (config.maxperiodtimeunranked && !notification.ranked) {
+                    universalPeriodtimeNumber = config.maxperiodtimeunranked;
+                    universalPeriodtimeToString = timespanToDisplayString(config.maxperiodtimeunranked);
+                    universalPeriodtimeForRankedUnrankedSentence = "for unranked games is ";
+                }
+                // now just before TimecontrolString is being tested, we again make sure it has the latest value
+                universalPeriodtimeTimecontrolString = String(t.time_control);/*
+                "fischer", "byoyomi", "canadian" */
+
+                // sanity check : if not fischer, not byoyomi, not canadian
+                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian")) {
+                    conn_log ("error, could not find time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                }                
+
+                // if sanity check passes :
+                if ((universalPeriodtimeTimecontrolString === "fischer") || (universalPeriodtimeTimecontrolString === "byoyomi") || (universalPeriodtimeTimecontrolString === "canadian")) {
+                    if ((universalPeriodtimeTimecontrolString === "fischer") && (t.time_increment > universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Increment Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "byoyomi" && t.period_time > universalPeriodtimeNumber) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
+                    if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) > universalPeriodtimeNumber)) {
+                        universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
+
+                        // for canadian we add a small explanation how to understand period for all stones //
+                        // canadian period time is already for n number of stones, dont divide by stone
+                        // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
+                        // first we reconvert displayedTimeToString
+                        if (config.maxperiodtime) {
+                            universalPeriodtimeNumber = (config.maxperiodtime * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (config.maxperiodtimeranked && notification.ranked) {
+                            universalPeriodtimeNumber = (config.maxperiodtimeranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        if (config.maxperiodtimeunranked && !notification.ranked) {
+                            universalPeriodtimeNumber = (config.maxperiodtimeunranked * t.stones_per_period);
+                            universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
+                        }
+                        // then we add the wanted explanation for canadian number of stones
+                        canadianPeriodtimeSentence = `for all the ${t.stones_per_period} stones`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${canadianPeriodtimeSentence} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    } 
+                }
+            }
         }
+        ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
         return { reject: false };  // Ok !
-
-
 
     } /* }}} */
     // Check everything and return reject status + optional error msg.
