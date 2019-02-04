@@ -311,13 +311,17 @@ class Connection {
         }
 
         if (user.ranking < config.minrank) {
-            conn_log(user.username + " ranking too low: " + user.ranking);
-            return { reject: true, msg: "Minimum rank allowed is " + config.minrank + " (in bot ranking units), your rank is " + user.ranking + " (in bot ranking units), your rank is too low, try again when your rank is high enough." };
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMinRank = rankToString(config.minrank);
+            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
+            return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + ", your rank is too low, try again when your rank is high enough." };
         }
 
         if (user.ranking > config.maxrank) {
-            conn_log(user.username + " ranking too high: " + user.ranking);
-            return { reject: true, msg: "Maximum rank allowed is " + config.maxrank + " (in bot ranking units), your rank is " + user.ranking + " (in bot ranking units), your rank is too high, try again when your rank is low enough." };
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMaxRank = rankToString(config.maxrank);
+            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
+            return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + ", your rank is too high, try again when your rank is low enough." };
         }
 
         return { reject: false }; // OK !
@@ -348,20 +352,7 @@ class Connection {
             conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
             return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian. \n You can keep using the same time as in "  + TimeControlString + " time, just add a period time on top of it, for example 20 minutes + 5 x 30 seconds" };
         }  
-        
-        
-        function timespanToDisplayString(timespan) {
-            let ss = timespan % 60;
-            let mm = Math.floor(timespan / 60 % 60);
-            let hh = Math.floor(timespan / (60*60) % 24);
-            let dd = Math.floor(timespan / (60*60*24));
-            let text = ["days", "hours", "minutes", "seconds"];
-            return [dd, hh, mm, ss]
-                .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
-                .filter(e => e !== "")
-                .join(" ");
-        }
-    
+
         if (config.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
             return { reject: true, msg: "This bot accepts ranked games only. " };
@@ -812,7 +803,7 @@ class Connection {
         let handi = (notification.handicap > 0 ? "H" + notification.handicap : "");
         let accepting = (c.reject ? "Rejecting" : "Accepting");
         conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
-                         accepting, notification.user.username, rank2str(notification.user.ranking),
+                         accepting, notification.user.username, rankToString(notification.user.ranking),
                          notification.width, notification.width,
                          handi, notification.game_id));
 
@@ -898,6 +889,24 @@ class Connection {
         clearInterval(this.corr_queue_interval);
     }}}
 }
+
+function rankToString(r) { /* {{{ */
+    r = Math.floor(r);
+    if (r >= 30)  return (r-30+1) + 'd'; // r>=30 : 1 dan or stronger
+    else          return (30-r) + 'k'; // r<30 : 1 kyu or weaker
+} /* }}} */
+
+function timespanToDisplayString(timespan) {
+    let ss = timespan % 60;
+    let mm = Math.floor(timespan / 60 % 60);
+    let hh = Math.floor(timespan / (60*60) % 24);
+    let dd = Math.floor(timespan / (60*60*24));
+    let text = ["days", "hours", "minutes", "seconds"];
+    return [dd, hh, mm, ss]
+    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
+    .filter(e => e !== "")
+    .join(" ");
+} /* }}} */
 
 function conn_log() { /* {{{ */
     let arr = ["# "];
@@ -990,12 +999,6 @@ function request(method, host, port, path, data) { /* {{{ */
         req.write(enc_data);
         req.end();
     });
-} /* }}} */
-
-function rank2str(r) { /* {{{ */
-    r = r.toFixed();
-    if (r >= 30)  return (r-30+1) + 'd';
-    else          return (30-r) + 'k';
 } /* }}} */
 
 exports.Connection = Connection;

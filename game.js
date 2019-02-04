@@ -402,7 +402,7 @@ class Game {
         return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
 
         // XXX doesn't work, getting garbage ranks here ...
-        // let rank = rank2str(player.rank);
+        // let rank = rankToString(player.rank);
     } /* }}} */
     log(str) { /* {{{ */
         let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
