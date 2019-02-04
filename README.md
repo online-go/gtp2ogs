@@ -45,7 +45,7 @@ sudo npm install -g gtp2ogs
 ```
 
 default path install is : 
-> /usr/lib/node_modules/gtp2ogs/gtp2ogs.js
+> /usr/lib/node_modules/gtp2ogs/
 
 - For windows, open a node.js command prompt as admin, then run this command :
 
@@ -54,7 +54,7 @@ npm install -g gtp2ogs
 ```
 
 default path install is something like this :
-> C:\Users\yourusername\AppData\Roaming\npm\node_modules\gtp2ogs\gtp2ogs.js
+> C:\Users\yourusername\AppData\Roaming\npm\node_modules\gtp2ogs\
 
 
 On all operating systems, gtp2ogs will be installed in 2 different directories, but 
@@ -62,11 +62,11 @@ On all operating systems, gtp2ogs will be installed in 2 different directories, 
 
 ### 3. Optional : install any missing node.js packages
  
-**This step can be skipped**
+**This step can be skipped unless you have issues or bugs**
 
 you may need to install extra tools if the 
-[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) below fails, such as (run as `sudo` for linux, and as 
-admin for windows)
+[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) 
+below fails, such as (run as `sudo` for linux, and as admin for windows)
  
 ```
 npm install -g socket.io-client
@@ -85,6 +85,10 @@ To upgrade to devel branch (newest), see :
 
 - for linux : [3A3) Recommended : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
 - for windows : [3B3) Recommended : Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
+
+When you upgrade you need to copy all the gtp2ogs files (bot.js, config.js, etc..) 
+and overwrite the old files (you can backup your old files so that you can go back 
+to the old version if you want later)
 
 ### 5. Most common usage : start gtp2ogs.js using nodejs
 
@@ -111,17 +115,17 @@ you want
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
 
-**note 4 : it is possible to use ISSA (intuitive semi-syllabic aliases) to write 
-your gtp2ogs arguments in a much smaller size, see [notes G-](/README.md#g-) 
-for details**
+note 4 : it is possible to use ISSA (intuitive semi-syllabic aliases) to write 
+your gtp2ogs arguments in a much smaller size, see [notes G-](/NOTES.md#g-) 
+for details
 
-### Extra : add features by editing gtp2ogs.js file
+### Extra : add features by editing gtp2ogs files
 
 This step is totally not needed but can be much appreciated
 
 To do that, programming knowledge is needed (or you can ask for help)
 
-For example you can program the gtp2ogs.js so that it sends winrate and 
+For example you can program gtp2ogs so that it sends winrate and 
 playouts/visits information at every move, or even clickable variations, 
 such as what [some bots](https://online-go.com/game/15926249) use for example.
 
@@ -131,7 +135,7 @@ Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
   ```--username``` or `--u` Specify the username of the bot, for example `--username GnuGo`, 
 currently there is no profile number log in support on ogs, see 
-[notes A-](/README.md#a-) for details
+[notes A-](/NOTES.md#a-) for details
 
   ```--apikey``` or ```--a``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
@@ -141,7 +145,7 @@ Also put a space in between the option and the parameter, for example :
 
   ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxactivegames 1 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
   
-or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/README.md#g-) for details), 
+or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/NOTES.md#g-) for details), 
 the same example becomes :
   
   ```--sb 2 --bb 13,19 --nc --uo --1ag 1 --1mt 1200 --b UserX,playerY --1pr 5```
@@ -206,19 +210,19 @@ file exists (checked each time, can use for load-balancing)
 boardsizes, use only if your bot can handle it !), `custom` (allows specified custom 
 boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size 
 written in numbers comma separated (for example 9x9, 13x13, 19x19, default is 
-`9,13,19`), see [notes E-](/README.md#e-) for details
+`9,13,19`), see [notes E-](/NOTES.md#e-) for details
 
   ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or 
 ```--bb custom --bw 25 --bh 1,2,3``` Allows custom board size (if your bot can 
 handle it), it is needed to use `custom` followed by comma separated value(s), 
 in this example 25x1 25x2 25x3 are all allowed boardsizes, see 
-[notes E-](/README.md#e-) for details
+[notes E-](/NOTES.md#e-) for details
 
   ```--komi``` or ```--k``` Possible komi values `auto` (allows Automatic komi), 
 `all` (allows all komi values), and for example `7.5` (allows komi value 7.5). 
 When `all` is used alone, all komi values are allowed. When an argument other 
 than `all` is used, only the chosen argument komi values are allowed and all other 
-komi values are rejected see [notes C-](/README.md#c-) and [notes D-](/README.md#d-) 
+komi values are rejected see [notes C-](/NOTES.md#c-) and [notes D-](/NOTES.md#d-) 
 for details
 
   ```--ban```  or ```--b``` Comma separated list of user names or IDs 
@@ -332,119 +336,15 @@ computer" bot list (but it can still accept challenges)
 After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
 to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
 shown in 
-[Most common usage earlier](/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
+[Most common usage earlier](/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
-## notes :
+## Notes :
 
-#### A : 
+A page summarizing the notes and details about gtp2ogs use can be viewed [here](/NOTES.md)
 
-Currently, ogs does not support profile id number authentification, so you have 
-to use bot username only. For example, for this famous bot 
-https://online-go.com/player/58441/GnuGo , you have to use the bot name `GnuGo` 
-and currently you cannot use profile number `58441` (it will not work)
+# Known issues and bugs : 
 
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that still 
-required names and not id numbers, contrary to what this line was suggesting 
-`Jan 23 17:18:13   #  Bot is user id: 58441`) that added confusion to how to use 
-gtp2ogs for bot admins have been removed
-
-To sum up, to connect your bot on OGS, you need and you have to simply use bot name, 
-for example `--username GnuGo` for the bot admin of GnuGo
-
-#### B : 
-
-a list of gtp2ogs arguments is also available 
-[here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
-
-#### C : 
-
-on OGS, black player will always get the handicap stones regardless of rank difference 
-(if auto (automatic) komi is selected, the komi will be 0.5) 
-
-but you can restrict allowed komi for example to only 7.5 or auto with `--komi 7.5,auto`
-
-or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi, if your bot 
-does not support 0.5 komi value.
-
-#### D :
-
-explanation on how to use komi argument:
-
-- `--komi auto,0.5,7.5` for example, will allow any of these komi values : 
-automatic(auto), 0.5, or 7.5, and will reject any other value
-
-- another example `--komi 7.5` will only accept komi value 7.5 and will reject 
-any other value. In that example, note that if `auto` (automatic) komi happens 
-to have the value 7.5, the auto value will be set to 7.5 and will be accepted 
-and game will start (bots will always replace any rules with chinese rules, so 
-a non handicap game 19x19 on ogs against a bot will always have the komi 7.5)
-
-- the `--komi 7.5` can be useful if your bot handles handicap well, but only with 
-the value 7.5 for example (and not 0.5)
-
-#### E : 
-
-example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9) 
-or `--bb 19`
-
-or `--boardsize all` (if you made some fancy bot)
-    
-if you want to use a "custom" board size, you need to specify wanted custom width(s) 
-and height(s) desired
-
-for example : `--boardsize custom --boardsizewidth 25 --boardsizeheight 1` 
-will allow only 25x1 board size
-
-or another example `--boardsize custom --boardsizewidth 9,10,11 --boardsizeheight 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25` 
-will allow all possible combinations of width and height here (there 3 multiplied by 
-17 possible combinations here, which is 51 possible board sizes !
-
-finally, it is possible to play "official" boardsizes too with this setting, 
-for example `--boardsize custom --boardsizewidth 9 --boardsizeheight 9,19` will 
-allow 9x9 and 9x19 board sizes
-
-#### F : 
-
-when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , 
-some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , 
-so test special characters in your messages with caution 
-
-these special characters have been tested to work on messages, among others :  `!` 
-(one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
-
-#### G : 
-
-for some `gtp2ogsarguments`, it is possible to use a shorter version of the argument 
-to write faster and with less command length, it is also called "aliases"
-
-The list of aliases can also be found inside [gtp2ogs.js file](/gtp2ogs.js)
-
-For these aliases, the format chosen was ISSA : "intuitive semi-syllabic aliases" 
-(easy to write them just by ear : one word one letter, 2 words 2 letters, `0` is min , 
-`1` is max )
-
-note : `--farewell` is 2 syllabes but only one word, so only one letter (semi-syllabic) , 
-
-For example, these lines on gtp2ogs.js 
-
-```
-    .alias('farewell', 'f')
-    .alias('noclock', 'nc')
-    .alias('unrankedonly', 'uo')
-    .alias('minperiodtime', '0pt')
-    .alias('noautohandicap', 'nah')
-    .alias('maxmaintimeunranked', '1mtu'
-
-```
-
-mean that the gtp2ogs arguments can be abriged like that : 
-
-- `--farewell` -> `--f`
-- `--noclock` -> `--nc`
-- `--unrankedonly` -> `--uo`
-- `--minperiodtime` -> `--0pt`
-- `--noautohandicap` -> `--nah`
-- `--maxmaintimeranked` -> `--1mtr`
+A page summarizing current known issues and bugs can be viewed her
 
 # Discord chat : 
 

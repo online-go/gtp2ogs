@@ -202,33 +202,119 @@ exports.updateFromArgv = function() {
       process.exit();
     }
 
-    if (argv.botid) {
-        console.log("Warning: --botid alias is no longer supported. Use --username instead.");
-    }
+// console : greeting //
 
-    if (argv.bot) {
-        console.log("Warning: --bot alias is no longer supported. Use --username instead.");
-    }
+console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n- For known issues, please visit https://github.com/online-go/gtp2ogs/KNOWN-ISSUES.md");
 
-    if (argv.id) {
-        console.log("Warning: --id alias is no longer supported. Use --username instead.");
-    }
+// console : warnings //
 
-    if (argv.minrankedhandicap) {
-        console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
-    }
+// - warning : dont use 3 settings of the same family (all, ranked, unranked) at the same time
+if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
+    console.log("Warning: You are using --maxhandicap in combination with --maxhandicapranked and/or --maxhandicapunranked.\nUse either --maxhandicap alone, OR --maxhandicapranked with --maxhandicapunranked.\nBut don't use the 3 --maxhandicap arguments at the same time.");
+}
 
-    if (argv.maxrankedhandicap) {
-        console.log("Warning: --maxrankedhandicap argument is no longer supported. Use --maxhandicapranked instead.");
-    }
+if (argv.minhandicap && (argv.minhandicapranked || argv.minhandicapunranked)) {
+    console.log("Warning: You are using --minhandicap in combination with --minhandicapranked and/or --minhandicapunranked.\nUse either --minhandicap alone, OR --minhandicapranked with --minhandicapunranked. \nBut don't use the 3 --minhandicap arguments at the same time.");
+}
 
-    if (argv.minunrankedhandicap) {
-        console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead.");
-    }
+if (argv.maxmaintime && (argv.maxmaintimeranked || argv.maxmaintimeunranked)) {
+    console.log("Warning: You are using --maxmaintime in combination with --maxmaintimeranked and/or --maxmaintimeunranked.\nUse either --maxmaintime alone, OR --maxmaintimeranked with --maxmaintimeunranked.\nBut don't use the 3 --maxmaintime arguments at the same time.");
+}
 
-    if (argv.maxunrankedhandicap) {
-        console.log("Warning: --maxunrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
-    }
+if (argv.minmaintime && (argv.minmaintimeranked || argv.minmaintimeunranked)) {
+    console.log("Warning: You are using --minmaintime in combination with --minmaintimeranked and/or --minmaintimeunranked.\nUse either --minmaintime alone, OR --minmaintimeranked with --minmaintimeunranked.\nBut don't use the 3 --minmaintime arguments at the same time.");
+}
+
+if (argv.maxperiods && (argv.maxperiodsranked || argv.maxperiodsunranked)) {
+    console.log("Warning: You are using --maxperiods in combination with --maxperiodsranked and/or --maxperiodsunranked.\nUse either --maxperiods alone, OR --maxperiodsranked with --maxperiodsunranked.\nBut don't use the 3 --maxperiods arguments at the same time.");
+}
+
+if (argv.minperiods && (argv.minperiodsranked || argv.minperiodsunranked)) {
+    console.log("Warning: You are using --minperiods in combination with --minperiodsranked and/or --minperiodsunranked.\nUse either --minperiods alone, OR --minperiodsranked with --minperiodsunranked.\nBut don't use the 3 --minperiods arguments at the same time.");
+}
+
+if (argv.maxperiodtime && (argv.maxperiodtimeranked || argv.maxperiodtimeunranked)) {
+    console.log("Warning: You are using --maxperiodtime in combination with --maxperiodtimeranked and/or --maxperiodtimeunranked.\nUse either --maxperiodtime alone, OR --maxperiodtimeranked with --maxperiodtimeunranked.\nBut don't use the 3 --maxperiodtime arguments at the same time.");
+}
+
+if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranked)) {
+    console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked and/or --minperiodtimeunranked.\nUse either --minperiodtime alone, OR --minperiodtimeranked with --minperiodtimeunranked.\nBut don't use the 3 --minperiodtime arguments at the same time.");
+}
+
+if (argv.noautohandicap && (argv.noautohandicapranked || argv.noautohandicapunranked)) {
+    console.log("Warning: You are using --noautohandicap in combination with --noautohandicapranked and/or --noautohandicapunranked.\nUse either --noautohandicap alone, OR --noautohandicapranked with --noautohandicapunranked.\nBut don't use the 3 --noautohandicap arguments at the same time.");
+}
+
+if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
+    console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 --nopause arguments at the same time.");
+}
+
+// - warning : avoid infinite games, or very short games timeout
+
+if (!argv.minperiods && !argv.minperiodsranked && !argv.minperiodsunranked) {
+    console.log("Warning: No min period number setting detected, your bot is likely to timeout");
+}
+
+if (!argv.maxperiods && !argv.maxperiodsranked && !argv.maxperiodsunranked) {
+    console.log("Warning: No max period number setting detected, games are likely to last forever..");
+}
+
+if (!argv.minperiodtime && !argv.minperiodtimeranked && !argv.minperiodtimeunranked) {
+    console.log("Warning: No min period time setting detected, your bot is likely to timeout");
+}
+
+if (!argv.maxperiodtime && !argv.maxperiodtimeranked && !argv.maxperiodtimeunranked) {
+    console.log("Warning: No max period time setting detected, games are likely to last forever..");
+}
+
+if (!argv.minmaintime && !argv.minmaintimeranked && !argv.minmaintimeunranked) {
+    console.log("Warning: No min main time setting detected, your bot is likely to timeout");
+}
+
+if (!argv.maxmaintime && !argv.maxmaintimeranked && !argv.maxmaintimeunranked) {
+    console.log("Warning: No max main time setting detected, games are likely to last forever..");
+}
+
+// - warning : avoid bot overload
+
+if (!argv.maxactivegames) {
+    console.log("Warning : No max games per user limit set with --maxactivegames, your bot is likely to be overloaded with games by one user");
+}
+
+if (!argv.maxtotalgames) {
+    console.log("Warning : No max games for all users limit set with --maxtotalgames, your bot is likely to be overloaded with games by all users");
+}
+
+// - warning : depreciated features if used
+
+if (argv.botid) {
+    console.log("Warning: --botid alias is no longer supported. Use --username instead.");
+}
+
+if (argv.bot) {
+    console.log("Warning: --bot alias is no longer supported. Use --username instead.");
+}
+
+if (argv.id) {
+    console.log("Warning: --id alias is no longer supported. Use --username instead.");
+}
+
+if (argv.minrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
+}
+
+if (argv.maxrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapranked instead.");
+}
+
+if (argv.minunrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead.");
+}
+
+if (argv.maxunrankedhandicap) {
+    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
+}
+// end of console messages
 
     // Set all the argv
     for(var k in argv) exports[k] = argv[k];
