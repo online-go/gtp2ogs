@@ -310,16 +310,16 @@ class Connection {
             return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxtotalgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
-        if (user.ranking < argv.minrank) {
+        if (user.ranking < config.minrank) {
             let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMinRank = rankToString(argv.minrank);
+            let humanReadableMinRank = rankToString(config.minrank);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
             return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + " , your rank is too low, try again when your rank is high enough." };
         }
 
-        if (user.ranking > argv.maxrank) {
+        if (user.ranking > config.maxrank) {
             let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMaxRank = rankToString(argv.maxrank);
+            let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
             return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + " , your rank is too high, try again when your rank is low enough." };
         }
