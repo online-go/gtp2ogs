@@ -179,6 +179,9 @@ class Game {
                     // If we are white, we wait for opponent to make extra moves.
                     if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                     if (config.DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
+                    if (this.state.moves.length ===1) { // remind once, avoid spamming the reminder
+                        this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
+                    }
                 }
             } else {
                 if (move.move_number % 2 == this.opponent_evenodd) {
