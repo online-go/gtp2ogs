@@ -66,6 +66,7 @@ class Connection {
                     console.error("ERROR: Bot account is unknown to the system: " +   config.username);
                     process.exit();
                 }
+                conn_log("Bot is username: " + config.username);
                 conn_log("Bot is user id:", this.bot_id);
                 socket.emit('authenticate', this.auth({}))
                 socket.emit('notification/connect', this.auth({}), (x) => {
