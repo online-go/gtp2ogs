@@ -248,12 +248,14 @@ if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranke
 if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
 }
-console.log("\n"); /*after last warning, we skip a line to make it more pretty*/
+
+console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
 
 // - warning : avoid infinite games, or very short games timeout
 
 if (!argv.minperiods && !argv.minperiodsranked && !argv.minperiodsunranked) {
     console.log("Warning: No min periods setting detected, games are likely to timeout");
+}
 
 if (!argv.maxperiods && !argv.maxperiodsranked && !argv.maxperiodsunranked) {
     console.log("Warning: No max periods setting detected, games are likely to last forever");
