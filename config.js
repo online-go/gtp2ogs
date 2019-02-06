@@ -193,6 +193,8 @@ exports.updateFromArgv = function() {
         .describe('nopause', 'Do not allow games to be paused')
         .describe('nopauseranked', 'Do not allow ranked games to be paused')
         .describe('nopauseunranked', 'Do not allow unranked games to be paused')
+        .describe('maxpauses' , 'If pausing games is allowed, adds the possibility to restrict max number of pauses allowed')
+        .describe('maxpausetime' , 'If pausing games is allowed, adds the possibility to restrict max time allowed per pause')
         .describe('hidden', 'Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)')
     ;
     let argv = optimist.argv;

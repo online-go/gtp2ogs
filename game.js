@@ -113,6 +113,42 @@ class Game {
                 this.resumeGame();
             }
 
+            // the code below can be viewed as a maxperiods + maxperiodtime problem, where period=pause
+            // if maxpausetime and 
+            if ((config.maxpausetime || config.maxpauses) && clock.pause.paused && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
+
+                let pausesNumberConsumed = 0; // max is config.maxpauses
+                let remainingPausesNumber = config.maxpauses - pausesNumberConsumed; // when = 0, no more pauses allowed
+        
+                function pausetimeCountdown() {
+                    if (remainingPausesNumber = 0) {
+                        conn_log(`All ${config.maxpauses} have been consumed, no more pauses allowed, resuming the game`);
+                        this.sendchat(`All ${config.maxpauses} pauses allowed have been consumed, no more pauses allowed, resuming the game`);
+                    } else {
+                        let i = Date.now(); // current time, will be refreshed every 1 minutes in the loop
+                        let pausetimeInitialTime = Date.now(); // date at which we start pausing the game
+                        let pausetimeMaxTime = config.maxpausetime + Date.now(); // after the pause starts, the human player has  config.maxpausetime seconds before the game resumes
+                        // we send an ingame sendchat to notify the user of pause settings allowed, in human readable time
+                        conn_log(`The game has been paused, pausetime allowed : ${timespanToDisplayString(config.maxpausetime)}, remaining pauses allowed : ${timespanToDisplayString(config.maxpauses)}`);
+                        this.sendchat(`The game has been paused, pausetime allowed : ${timespanToDisplayString(config.maxpausetime)}, remaining pauses allowed : ${timespanToDisplayString(config.maxpauses)}`);
+
+                        let pausetimeCheck = function() {
+                            if (i >= pausetimeMaxTime) { // when all allowed pause time is consumed
+                                pausesNumberConsumed+=1;
+                                remainingPausesNumber = config.maxpauses - pausesNumberConsumed;
+                                conn_log(`Just consumed one allowed pause, remaining allowed pauses number is : ${remainingPausesNumber}`);
+                                this.sendchat(`Just consumed one allowed pause, remaining allowed pauses number is : ${remainingPausesNumber}`);
+                            } else {
+                                setTimeout(pausetimeCheck, 60000000); //re check every 1 minutes until all pause time is consumed
+                            }
+                        }
+                        pausetimeCheck(); // the code will halt here until one pause period is consumed
+                    }
+                }
+            pausetimeCountdown();
+      
+        }
+
             //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
                 this.state.clock = clock;
