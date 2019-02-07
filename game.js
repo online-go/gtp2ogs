@@ -23,6 +23,37 @@ class Game {
         this.corr_move_pending = false;
         this.processing = false;
 	this.handicap_moves = [];    // Handicap stones waiting to be sent when bot is playing black.
+        // the code below can be viewed as a maxperiods + maxperiodtime problem, where period=pause
+        if (config.maxpausetime || config.maxpauses) { 
+            this.pausesNumberConsumed = 0; // max is config.maxpauses
+            this.pausesNumberRemaining = (config.maxpauses - pausesNumberConsumed); // when = 0, no more pauses allowed
+            this.pausesNumberMax = config.maxpauses; // max pauses allowed, storing the value
+            this.pausetimeTimeout = config.maxpausetime;
+        }
+
+        // now setting up the function
+        if ((config.maxpausetime || config.maxpauses) && clock.pause.paused && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
+        
+            function pausetimeTimeout(n,i,nmax,timeout) {
+            // pausesNumberRemaining, pausesNumberConsumed, pausesNumberMax, pausetimeTimeout
+                if (n = 0) { // if no more pause number remaining (n)
+                    conn_log(`All ${nmax} have been consumed, no more pauses allowed, resuming the game`);
+                    this.sendchat(`All ${nmax} pauses allowed have been consumed, no more pauses allowed, resuming the game`);
+                } else { // timeout = pausetimeTimeout = config.maxpausetime
+                    // we send an ingame sendchat to notify the user of pause settings allowed, in human readable time
+                    conn_log(`The game has been paused, pausetime allowed : ${timespanToDisplayString(timeout)}, remaining pauses allowed : ${n}`);
+                    this.sendchat(`The game has been paused, pausetime allowed : ${timespanToDisplayString(timeout)}, remaining pauses allowed : ${n}`);
+
+                    if (i < nmax) { // as long as pause periods remain
+                        setTimeout('',timeout); // wait until timeout time for the pause period to end
+                        i+=1;          //consumed pause periods
+                        n = nmax - i; // remaining pause periods
+                        conn_log(`Just consumed one allowed pause, remaining allowed pauses number is : ${n}`);
+                        this.sendchat(`Just consumed one allowed pause, remaining allowed pauses number is : ${n}`);
+                    }
+                }
+            }
+        pausetimeTimeout(this.pausesNumberRemaining, this.pausesNumberConsumed, this.pausesNumberMax, this.pausetimeTimeout);
 
         this.log("Connecting to game.");
 
@@ -112,40 +143,6 @@ class Game {
                 if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
                 this.resumeGame();
             }
-
-            // the code below can be viewed as a maxperiods + maxperiodtime problem, where period=pause
-            // if maxpausetime and 
-            if ((config.maxpausetime || config.maxpauses) && clock.pause.paused && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-
-                let pausesNumberConsumed = 0; // max is config.maxpauses
-                let remainingPausesNumber = config.maxpauses - pausesNumberConsumed; // when = 0, no more pauses allowed
-        
-                function pausetimeCountdown() {
-                    if (remainingPausesNumber = 0) {
-                        conn_log(`All ${config.maxpauses} have been consumed, no more pauses allowed, resuming the game`);
-                        this.sendchat(`All ${config.maxpauses} pauses allowed have been consumed, no more pauses allowed, resuming the game`);
-                    } else {
-                        let i = Date.now(); // current time, will be refreshed every 1 minutes in the loop
-                        let pausetimeInitialTime = Date.now(); // date at which we start pausing the game
-                        let pausetimeMaxTime = config.maxpausetime + Date.now(); // after the pause starts, the human player has  config.maxpausetime seconds before the game resumes
-                        // we send an ingame sendchat to notify the user of pause settings allowed, in human readable time
-                        conn_log(`The game has been paused, pausetime allowed : ${timespanToDisplayString(config.maxpausetime)}, remaining pauses allowed : ${timespanToDisplayString(config.maxpauses)}`);
-                        this.sendchat(`The game has been paused, pausetime allowed : ${timespanToDisplayString(config.maxpausetime)}, remaining pauses allowed : ${timespanToDisplayString(config.maxpauses)}`);
-
-                        let pausetimeCheck = function() {
-                            if (i >= pausetimeMaxTime) { // when all allowed pause time is consumed
-                                pausesNumberConsumed+=1;
-                                remainingPausesNumber = config.maxpauses - pausesNumberConsumed;
-                                conn_log(`Just consumed one allowed pause, remaining allowed pauses number is : ${remainingPausesNumber}`);
-                                this.sendchat(`Just consumed one allowed pause, remaining allowed pauses number is : ${remainingPausesNumber}`);
-                            } else {
-                                setTimeout(pausetimeCheck, 60000000); //re check every 1 minutes until all pause time is consumed
-                            }
-                        }
-                        pausetimeCheck(); // the code will halt here until one pause period is consumed
-                    }
-                }
-            pausetimeCountdown();
       
         }
 
@@ -487,6 +484,17 @@ function encodeMove(move) { /* {{{ */
     if (move['x'] == -1) 
         return "..";
     return num2char(move['x']) + num2char(move['y']);
+} /* }}} */
+function timespanToDisplayString(timespan) {
+    let ss = timespan % 60;
+    let mm = Math.floor(timespan / 60 % 60);
+    let hh = Math.floor(timespan / (60*60) % 24);
+    let dd = Math.floor(timespan / (60*60*24));
+    let text = ["days", "hours", "minutes", "seconds"];
+    return [dd, hh, mm, ss]
+    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
+    .filter(e => e !== "")
+    .join(" ");
 } /* }}} */
 
 Game.moves_processing = 0;
