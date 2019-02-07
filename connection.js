@@ -386,20 +386,61 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheight };
         }
 
-        if (config.noautohandicap && notification.handicap == -1) {
+        if (notification.handicap == -1 && config.noautohandicap) {
             conn_log("no autohandicap, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (config.noautohandicapranked && notification.handicap == -1 && notification.ranked) {
+        if (notification.handicap == -1 && config.noautohandicapranked && notification.ranked) {
             conn_log("no autohandicap for ranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (config.noautohandicapunranked && notification.handicap == -1 && !notification.ranked) {
+        if (notification.handicap == -1 && config.noautohandicapunranked && !notification.ranked) {
             conn_log("no autohandicap for unranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
+
+        if (notification.handicap == -1 && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) { 
+            // below is dynamic behaviour of autohandicap when handicap is automatic 
+            // and no --noautohandicap and co are set
+            let rankDifference = Math.abs(user.ranking - player.ranking);
+            // first, if ranked game, we eliminate > 9 rank difference
+            if (notification.ranked) {
+                if (rankDifference >= 9) {
+                    conn_log("Rank difference > 9 in a ranked game would be 10+ handicap stones, not allowed");
+                    return {reject: true, msg: "Rank difference too high to play a ranked handicap game, unranked is still possible"};
+                }
+            }
+            // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
+            // we eliminate all unwanted values, everything not forbidden is allowed
+            if (config.minhandicap || config.minhandicapranked || config.minhandicapunranked || config.maxhandicap || config.maxhandicapranked || config.maxhandicapunranked) {
+                if (config.minhandicap && (rankDifference < config.minhandicap)) {
+                    conn_log("Automatic handicap " + rankDifference + " stones is too low, minimum handicap stone number is " + config.minhandicap);
+                    return {reject: true, msg: "Automatic handicap " + rankDifference + " stones is too low, minimum handicap stone number is " + config.minhandicap + ", please increase the number of handicap stones in -custom handicap-"};
+                }
+                if (config.minhandicapranked && notification.ranked && (rankDifference < config.minhandicapranked)) {
+                    conn_log("Automatic handicap " + rankDifference + " stones is too low, minimum handicap stone number for ranked games is " + config.minhandicapranked);
+                    return {reject: true, msg: "Automatic handicap " + rankDifference + " stones is too low, minimum handicap stone number for ranked games is " + config.minhandicapranked + ", please increase the number of handicap stones in -custom handicap-"};
+                }
+                if (config.minhandicapunranked && !notification.ranked && (rankDifference < config.minhandicapunranked)) {
+                    conn_log("Automatic handicap " + rankDifference + " stones is too low, minimum handicap stone number for unranked games is " + config.minhandicapunranked);
+                    return {reject: true, msg: "Automatic handicap " + rankDifference + " stones is too low, minimum handicap stone number for unranked games is " + config.minhandicapunranked + ", please increase the number of handicap stones in -custom handicap-"};
+                }
+                if (config.maxhandicap && (rankDifference > config.maxhandicap)) {
+                    conn_log("Automatic handicap " + rankDifference + " stones is too high, maximum handicap stone number is " + config.maxhandicap);
+                    return {reject: true, msg: "Automatic handicap " + rankDifference + " stones is too high, maximum handicap stone number is " + config.maxhandicap + ", please reduce the number of handicap stones in -custom handicap-"};
+                }
+                if (config.maxhandicapranked && notification.ranked && (rankDifference > config.maxhandicapranked)) {
+                    conn_log("Automatic handicap " + rankDifference + " stones is too high, maximum handicap stone number for ranked games is " + config.maxhandicapranked);
+                    return {reject: true, msg: "Automatic handicap " + rankDifference + " stones is too high, maximum handicap stone number for ranked games is " + config.maxhandicapranked + ", please reduce the number of handicap stones in -custom handicap-"};
+                }
+                if (config.maxhandicapunranked && !notification.ranked && (rankDifference > config.maxhandicapunranked)) {
+                    conn_log("Automatic handicap " + rankDifference + " stones is too high, maximum handicap stone number for unranked games is " + config.maxhandicapunranked);
+                    return {reject: true, msg: "Automatic handicap " + rankDifference + " stones is too high, maximum handicap stone number for unranked games is " + config.maxhandicapunranked + ", please reduce the number of handicap stones in -custom handicap-"};
+                }
+            }
+        }
 
         if (notification.handicap < config.minhandicap) {
             conn_log("Min handicap is " + config.minhandicap);
