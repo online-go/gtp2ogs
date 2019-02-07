@@ -54,6 +54,7 @@ class Game {
                 }
             }
         pausetimeTimeout(this.pausesNumberRemaining, this.pausesNumberConsumed, this.pausesNumberMax, this.pausetimeTimeout);
+        }
 
         this.log("Connecting to game.");
 
