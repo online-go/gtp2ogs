@@ -145,7 +145,6 @@ class Game {
                 this.resumeGame();
             }
       
-        }
 
             //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
