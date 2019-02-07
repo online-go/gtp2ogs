@@ -406,11 +406,9 @@ class Connection {
             // and no --noautohandicap and co are set
             let rankDifference = Math.abs(user.ranking - player.ranking);
             // first, if ranked game, we eliminate > 9 rank difference
-            if (notification.ranked) {
-                if (rankDifference >= 9) {
+            if (notification.ranked && (rankDifference > 9)) {
                     conn_log("Rank difference > 9 in a ranked game would be 10+ handicap stones, not allowed");
-                    return {reject: true, msg: "Rank difference too high to play a ranked handicap game, unranked is still possible"};
-                }
+                    return {reject: true, msg: "Rank difference between you and this bot is " + rankDifference + "\n The difference is too big to play a ranked game with handicap, but handicap game in unranked is still possible"};
             }
             // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
             // we eliminate all unwanted values, everything not forbidden is allowed
