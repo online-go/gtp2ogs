@@ -66,7 +66,11 @@ exports.updateFromArgv = function() {
         .alias('maxtotalgames', '1tg')
         .alias('maxactivegames', '1ag')
         .alias('minrank', '0r')
+        .alias('minrankranked', '0rr')
+        .alias('minrankunranked', '0ru')
         .alias('maxrank', '1r')
+        .alias('maxrankranked', '1rr')
+        .alias('maxrankunranked', '1ru')
         .alias('minmaintime', '0mt')
         .alias('maxmaintime', '1mt')
         .alias('minmaintimeranked', '0mtr')
@@ -172,7 +176,15 @@ exports.updateFromArgv = function() {
         .describe('maxperiodsunranked', 'Maximum number of unranked periods')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
+        .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
+        .string('minrankranked')
+        .describe('minrankunranked', 'Minimum opponent rank to accept for unranked games (ex: 15k)')
+        .string('minrankunranked')
         .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
+        .string('maxrank')
+        .describe('maxrankranked', 'Maximum opponent rank to accept for ranked games (ex: 1d)')
+        .string('maxrankranked')
+        .describe('maxrankunranked', 'Maximum opponent rank to accept for unranked games(ex: 1d)')
         .string('maxrank')
         .describe('greeting', 'Greeting message to appear in chat at first move (ex: "Hello, have a nice game")')
         .string('greeting')
@@ -243,6 +255,14 @@ if (argv.maxperiodtime && (argv.maxperiodtimeranked || argv.maxperiodtimeunranke
 
 if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranked)) {
     console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked and/or --minperiodtimeunranked.\nUse either --minperiodtime alone, OR --minperiodtimeranked with --minperiodtimeunranked.\nBut don't use the 3 minperiodtime arguments at the same time.");
+}
+
+if (argv.minrank && (argv.minrankranked || argv.minrankunranked)) {
+    console.log("Warning: You are using --minrank in combination with --minrankranked and/or --minrankunranked. \n Use either --minrank alone, OR --minrankranked with --minrankunranked.\nBut don't use the 3 minrank arguments at the same time.");
+}
+
+if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
+    console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
 }
 
 if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
@@ -413,6 +433,50 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
+    if (argv.minrankranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.minrank.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.minrankranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.minrankranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.minrankranked = 36 + parseInt(results[1]);
+                exports.proonly = true;
+            } else {
+                console.error("Invalid minrankranked " + argv.minrankranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse minrankranked " + argv.minrankranked);
+            process.exit();
+        }
+    }
+
+    if (argv.minrankunranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.minrankunranked.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.minrankunranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.minrankunranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.minrankunranked = 36 + parseInt(results[1]);
+                exports.proonly = true;
+            } else {
+                console.error("Invalid minrankunranked " + argv.minrankunranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse minrankunranked " + argv.minrankunranked);
+            process.exit();
+        }
+    }
+
     if (argv.maxrank) {
         let re = /(\d+)([kdp])/;
         let results = argv.maxrank.toLowerCase().match(re);
@@ -430,6 +494,48 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
             }
         } else {
             console.error("Could not parse maxrank " + argv.maxrank);
+            process.exit();
+        }
+    }
+
+    if (argv.maxrankranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.maxrankranked.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.maxrankranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.maxrankranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.maxrankranked = 36 + parseInt(results[1]);
+            } else {
+                console.error("Invalid maxrankranked " + argv.maxrankranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse maxrankranked " + argv.maxrankranked);
+            process.exit();
+        }
+    }
+
+    if (argv.maxrankunranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.maxrankunranked.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.maxrankunranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.maxrankunranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.maxrankunranked = 36 + parseInt(results[1]);
+            } else {
+                console.error("Invalid maxrankunranked " + argv.maxrankunranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse maxrankunranked " + argv.maxrankunranked);
             process.exit();
         }
     }
