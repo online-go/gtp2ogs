@@ -63,8 +63,8 @@ exports.updateFromArgv = function() {
         .alias('boardsizewidth', 'bw')
         .alias('boardsizeheight', 'bh')
         // for below aliases : 0 is min , 1 is max,
-        .alias('maxtotalgames', '1tg')
-        .alias('maxactivegames', '1ag')
+        .alias('maxconnectedgames', '1cg')
+        .alias('maxconnectedgamesperuser', '1cgpu')
         .alias('minrank', '0r')
         .alias('minrankranked', '0rr')
         .alias('minrankunranked', '0ru')
@@ -114,13 +114,14 @@ exports.updateFromArgv = function() {
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('persist', 'Bot process remains running between moves')
         .describe('corrqueue', 'Process correspondence games one at a time')
-        .describe('maxtotalgames', 'Maximum number of total games')
-        .default('maxtotalgames', 20)
-        // maxtotalgames is actually the maximum total number of connected games for your bot 
-        // which means the maximum number of games your bot can play at the same time (choose a low number to regulate your GPU use)
+        .describe('maxconnectedgames', 'Maximum number of total games')
+        .default('maxconnectedgames', 20)
+        // maxconnectedgames is actually the maximum total number of connected games for all users 
+        // against your bot, which means the maximum number of games your bot can play at the same time 
+        // (choose a low number to regulate your computer performance and stability)
         // (correspondence games are currently included in the total connected games count if you use `--persist` )
-        .describe('maxactivegames', 'Maximum number of active games per player against this bot')
-        .default('maxactivegames', 3)
+        .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
+        .default('maxconnectedgamesperuser', 3)
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
         .default('startupbuffer', 5)
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
@@ -320,7 +321,15 @@ if (argv.maxunrankedhandicap) {
     console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
 }
 
-if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap) {
+if (argv.maxtotalgames) {
+    console.log("Warning: --maxtotalgames argument has been renamed to --maxconnectedgames. Use --maxconnectedgames instead.");
+}
+
+if (argv.maxactivegames) {
+    console.log("Warning: --maxactivegames argument has been renamed to --maxconnectedgamesperuser. Use --maxconnectedgamesperuser instead.");
+}
+
+if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames) {
     console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
 }
 

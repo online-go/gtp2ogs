@@ -143,12 +143,12 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>```
 section. Put a space in between options when there are more than one.  
 Also put a space in between the option and the parameter, for example :
 
-  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxactivegames 1 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
+  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxconnectedgames 10 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
   
 or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/NOTES.md#g-) for details), 
 the same example becomes :
   
-  ```--sb 2 --bb 13,19 --nc --uo --1ag 1 --1mt 1200 --b UserX,playerY --1pr 5```
+  ```--sb 2 --bb 13,19 --nc --uo --1cgpu 1 --1cg 10 --1mt 1200 --b UserX,playerY --1pr 5```
   
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
 specify them, such as `--komi` which default is automatic even if you dont specify it !
@@ -190,14 +190,14 @@ output to a text file
 
   ```--corrqueue``` or ```--cq``` Process correspondence games one at a time
 
-  ```--maxtotalgames``` or ```--1tg``` Maximum number of total games, maxtotalgames 
-is actually the maximum total number of connected games for your bot (correspondence 
-games are currently included in the connected games count if you use `--persist` ) , 
-which means the maximum number of games your bot can play at the same time (choose 
-a low number to regulate your GPU use) (default 20)
+  ```--maxconnectedgames``` or ```--1cg``` Maximum number of total connected games 
+for all users against your bot (correspondence games are currently included in the 
+connected games count if you use `--persist` ) , which means the maximum number of 
+games your bot can play at the same time (choose a low number to regulate your 
+computer performance and stability) (default 20)
 
-  ```--maxactivegames``` or ```--1ag``` Maximum number of active games per player 
-against this bot (default 3)
+  ```--maxconnectedgamesperuser``` or ```--1cgpu``` Maximum number of connected games 
+per user against this bot (default 3)
 
   ```--startupbuffer``` or ```--sb``` Subtract this many seconds from time available 
 on first move (default 5)

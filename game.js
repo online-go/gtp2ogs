@@ -90,7 +90,7 @@ class Game {
                 }
             }
 
-            // active_game isn't handling this for us any more. If it is our move, call makeMove.
+            // connected_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
                 if (config.corrqueue && this.state.time_control.speed == "correspondence" && Game.corr_moves_processing > 0) {

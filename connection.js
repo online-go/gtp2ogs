@@ -38,7 +38,7 @@ class Connection {
 
         this.connected_games = {};
         this.connected_game_timeouts = {};
-        this.games_by_player = {};     // Keep track of active games per player
+        this.games_by_player = {};     // Keep track of connected games per player
         this.connected = false;
 
         this.connect_timeout = setTimeout(()=>{
@@ -138,8 +138,8 @@ class Connection {
             }
         });
 
-        socket.on('active_game', (gamedata) => {
-            if (config.DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
+        socket.on('connected_game', (gamedata) => {
+            if (config.DEBUG) conn_log("connected_game:", JSON.stringify(gamedata));
 
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
@@ -162,7 +162,7 @@ class Connection {
             let game = this.connectToGame(gamedata.id);
 
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
-                // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
+                // Going to make moves based on gamedata or moves coming in for now on, instead of connected_game updates
                 // game.makeMove(gamedata.move_number);
 
                 if (config.timeout)
@@ -178,15 +178,15 @@ class Connection {
                 }
             }
 
-            // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
-            // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
+            // When a game ends, we don't get a "finished" connected_game.phase. Probably since the game is no
+            // longer connected.(Update: We do get finished connected_game events? Unclear why I added prior note.)
             //
             if (gamedata.phase == "finished") {
                 if (config.DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
 
                 // XXX We want to disconnect right away here, but there's a game over race condition
                 //     on server side: sometimes /gamedata event with game outcome is sent after
-                //     active_game, so it's lost since there's no game to handle it anymore...
+                //     connected_game, so it's lost since there's no game to handle it anymore...
                 //     Work around it with a timeout for now.
                 setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
             } else {
@@ -294,10 +294,10 @@ class Connection {
             return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
         }
 
-        let active_games = this.gamesForPlayer(notification.user.id);
-        if (config.maxactivegames && active_games >= config.maxactivegames) {
-            conn_log("Too many active games.");
-            return { reject: true, msg: "Maximum number of active games allowed per player against this bot is " + config.maxactivegames + " , please reduce your number of active games against this bot, and try again" };
+        let connected_games_per_user = this.gamesForPlayer(notification.user.id);
+        if (config.maxconnectedgamesperuser && connected_games_per_user >= config.maxconnectedgamesperuser) {
+            conn_log("Too many connected games for this user.");
+            return { reject: true, msg: "Maximum number of simultaneous games allowed per player against this bot is " + config.maxconnectedgamesperuser + " , please reduce your number of connected games against this bot, and try again" };
         }
 
         if (this.connected_games) {
@@ -306,9 +306,9 @@ class Connection {
             if (config.DEBUG) console.log("There are no connected games");
         }
 
-        if (config.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= config.maxtotalgames){
-            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + config.maxtotalgames);
-            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxtotalgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
+        if (config.maxconnectedgames && this.connected_games && Object.keys(this.connected_games).length >= config.maxconnectedgames){
+            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + config.maxconnectedgames);
+            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxconnectedgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
         if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
