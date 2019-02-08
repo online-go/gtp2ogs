@@ -299,7 +299,19 @@ unranked games (per stone in canadian)
 
   ```--minrank```  or ```--0r``` Minimum opponent rank to accept (e.g. 15k)
 
+  ```--minrankranked```  or ```--0rr``` Minimum opponent rank to accept for 
+ranked games (e.g. 15k)
+
+  ```--minrankunranked```  or ```--0ru``` Minimum opponent rank to accept for 
+unranked games (e.g. 15k)
+
   ```--maxrank```  or ```--1r``` Maximum opponent rank to accept (e.g. 1d)
+
+  ```--maxrankranked```  or ```--1rr``` Maximum opponent rank to accept for 
+ranked games (e.g. 1d)
+
+  ```--maxrankunranked```  or ```--1ru``` Maximum opponent rank to accept for 
+unranked games (e.g. 1d)
 
   ```--greeting "Hello, have a nice game"```  or ```--g "Hello, have a nice game"``` 
 Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
