@@ -311,7 +311,7 @@ class Connection {
             return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxtotalgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
-        if (user.ranking < config.minrank) {
+        if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMinRank = rankToString(config.minrank);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
@@ -332,7 +332,7 @@ class Connection {
             return { reject: true, msg: "Minimum rank for unranked games is " + humanReadableMinRank + ", your rank is too low" };
         }
 
-        if (user.ranking > config.maxrank) {
+        if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
@@ -415,7 +415,7 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheight };
         }
 
-        if (config.noautohandicap && notification.handicap == -1) {
+        if (config.noautohandicap && notification.handicap == -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
             conn_log("no autohandicap, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
@@ -430,12 +430,12 @@ class Connection {
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (notification.handicap < config.minhandicap) {
+        if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
             conn_log("Min handicap is " + config.minhandicap);
             return { reject: true, msg: "Minimum handicap is " + config.minhandicap + " , please increase the number of handicap stones " };
         }
 
-        if (notification.handicap > config.maxhandicap) {
+        if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
             conn_log("Max handicap is " + config.maxhandicap);
             return { reject: true, msg: "Maximum handicap is " + config.maxhandicap + " , please reduce the number of handicap stones " };
         }
@@ -501,7 +501,7 @@ class Connection {
                 universalMaintimeMinimumMaximumSentence = "Minimum ";
                 universalMaintimeIncreaseDecreaseSentence = ", please increase ";
                 let universalMaintimeConnSentence = user.username + " wanted main time below minimum main time ";
-                if (config.minmaintime) {
+                if (config.minmaintime && !config.minmaintimeranked && !config.minmaintimeunranked) {
                     universalMaintimeNumber = config.minmaintime;
                     universalMaintimeToString = timespanToDisplayString(config.minmaintime);
                     universalMaintimeForRankedUnrankedSentence = "is ";
@@ -553,7 +553,7 @@ class Connection {
                 universalMaintimeMinimumMaximumSentence = "Maximum ";
                 universalMaintimeIncreaseDecreaseSentence = ", please reduce ";
                 let universalMaintimeConnSentence = user.username + " wanted main time above maximum main time ";
-                if (config.maxmaintime) {
+                if (config.maxmaintime && !config.maxmaintimeranked && !config.maxmaintimeunranked) {
                     universalMaintimeNumber = config.maxmaintime;
                     universalMaintimeToString = timespanToDisplayString(config.maxmaintime);
                     universalMaintimeForRankedUnrankedSentence = "is ";
@@ -603,7 +603,7 @@ class Connection {
         }
         ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
-        if (config.minperiods && (t.periods < config.minperiods)) {
+        if (config.minperiods && (t.periods < config.minperiods) && !config.minperiodsranked && !config.minperiodsunranked) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
             return { reject: true, msg: "Minimum number of periods is " + config.minperiods + " , please increase the number of periods" };
         }
@@ -618,17 +618,17 @@ class Connection {
             return { reject: true, msg: "Minimum number of periods for unranked games is " + config.minperiodsunranked + " , please increase the number of periods" };
         }
 
-        if (t.periods > config.maxperiods) {
+        if (config.maxperiods && (t.periods > config.maxperiods) && !config.maxperiodsranked && !config.maxperiodsunranked) {
             conn_log(user.username + " wanted too many periods: " + t.periods);
             return { reject: true, msg: "Maximum number of periods is " + config.maxperiods + " , please reduce the number of periods" };
         }
 
-        if (t.periods > config.maxperiodsranked && notification.ranked) {
+        if (config.maxperiodsranked && (t.periods > config.maxperiodsranked) && notification.ranked) {
             conn_log(user.username + " wanted too many periods ranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for ranked games is " + config.maxperiodsranked + " , please reduce the number of periods" };
         }
 
-        if (t.periods > config.maxperiodsunranked && !notification.ranked) {
+        if (config.maxperiodsunranked && (t.periods > config.maxperiodsunranked) && !notification.ranked) {
             conn_log(user.username + " wanted too many periods unranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for unranked games is " + config.maxperiodsunranked + " , please reduce the number of periods" };
         }
@@ -663,7 +663,7 @@ class Connection {
                 universalPeriodtimeMinimumMaximumSentence = "Minimum ";
                 universalPeriodtimeIncreaseDecreaseSentence = ", please increase ";
                 let universalPeriodtimeConnSentence = user.username + " wanted period time below minimum period time ";
-                if (config.minperiodtime) {
+                if (config.minperiodtime && !config.minperiodtimeranked && !config.minperiodtimeunranked) {
                     universalPeriodtimeNumber = config.minperiodtime;
                     universalPeriodtimeToString = timespanToDisplayString(config.minperiodtime);
                     universalPeriodtimeForRankedUnrankedSentence = "is ";
@@ -710,7 +710,7 @@ class Connection {
                         // canadian period time is already for n number of stones, dont divide by stone
                         // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
                         // first we reconvert displayedTimeToString
-                        if (config.minperiodtime) {
+                        if (config.minperiodtime && !config.minperiodtimeranked && !config.minperiodtimeunranked) {
                             universalPeriodtimeNumber = (config.minperiodtime * t.stones_per_period);
                             universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
                         }
@@ -736,7 +736,7 @@ class Connection {
                 universalPeriodtimeMinimumMaximumSentence = "Maximum ";
                 universalPeriodtimeIncreaseDecreaseSentence = ", please reduce ";
                 let universalPeriodtimeConnSentence = user.username + " wanted period time above maximum period time ";
-                if (config.maxperiodtime) {
+                if (config.maxperiodtime && !config.maxperiodtimeranked && !config.maxperiodtimeunranked) {
                     universalPeriodtimeNumber = config.maxperiodtime;
                     universalPeriodtimeToString = timespanToDisplayString(config.maxperiodtime);
                     universalPeriodtimeForRankedUnrankedSentence = "is ";
@@ -782,7 +782,7 @@ class Connection {
                         // canadian period time is already for n number of stones, dont divide by stone
                         // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
                         // first we reconvert displayedTimeToString
-                        if (config.maxperiodtime) {
+                        if (config.maxperiodtime && !config.maxperiodtimeranked && !config.maxperiodtimeunranked) {
                             universalPeriodtimeNumber = (config.maxperiodtime * t.stones_per_period);
                             universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
                         }

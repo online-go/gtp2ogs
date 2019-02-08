@@ -115,10 +115,12 @@ exports.updateFromArgv = function() {
         .describe('persist', 'Bot process remains running between moves')
         .describe('corrqueue', 'Process correspondence games one at a time')
         .describe('maxtotalgames', 'Maximum number of total games')
+        .default('maxtotalgames', 20)
         // maxtotalgames is actually the maximum total number of connected games for your bot 
         // which means the maximum number of games your bot can play at the same time (choose a low number to regulate your GPU use)
         // (correspondence games are currently included in the total connected games count if you use `--persist` )
         .describe('maxactivegames', 'Maximum number of active games per player against this bot')
+        .default('maxactivegames', 3)
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
         .default('startupbuffer', 5)
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
@@ -159,19 +161,25 @@ exports.updateFromArgv = function() {
         .describe('timecontrol', 'Time control(s) to accept')
         .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
         .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
+        .default('minmaintime', 60)
         .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
+        .default('maxmaintime', 1800)
         .describe('minmaintimeranked', 'Minimum seconds of main time for ranked games (rejects time control simple and none)')
         .describe('maxmaintimeranked', 'Maximum seconds of main time for ranked games (rejects time control simple and none)')
         .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
         .describe('maxmaintimeunranked', 'Maximum seconds of main time for unranked games (rejects time control simple and none)')
         .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
+        .default('minperiodtime', 5)
         .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
+        .default('minperiodtime', 120)
         .describe('minperiodtimeranked', 'Minimum seconds per period for ranked games (per stone in canadian)')
         .describe('maxperiodtimeranked', 'Maximum seconds per period for unranked games (per stone in canadian)')
         .describe('minperiods', 'Minimum number of periods')
+        .default('minperiods', 3)
         .describe('minperiodsranked', 'Minimum number of ranked periods')
         .describe('minperiodsunranked', 'Minimum number of unranked periods')
         .describe('maxperiods', 'Maximum number of periods')
+        .default('maxperiods', 20)
         .describe('maxperiodsranked', 'Maximum number of ranked periods')
         .describe('maxperiodsunranked', 'Maximum number of unranked periods')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
@@ -220,7 +228,7 @@ console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest deve
 
 // console : warnings //
 
-// - warning : dont use 3 settings of the same family (all, ranked, unranked) at the same time
+// - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
 if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
     console.log("Warning: You are using --maxhandicap in combination with --maxhandicapranked and/or --maxhandicapunranked.\nUse either --maxhandicap alone, OR --maxhandicapranked with --maxhandicapunranked.\nBut don't use the 3 maxhandicap arguments at the same time.");
 }
@@ -265,56 +273,22 @@ if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
     console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
 }
 
+if (argv.ban && (argv.banranked || argv.banunranked)) {
+    console.log("Warning: You are using --ban in combination with --banranked and/or --banunranked. \n Use either --ban alone, OR --banranked with --banunranked.\nBut don't use the 3 ban arguments at the same time.");
+}
+
 if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
 }
 
 console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
 
-// - warning : avoid infinite games, or very short games timeout
-
-if (!argv.minperiods && !argv.minperiodsranked && !argv.minperiodsunranked) {
-    console.log("Warning: No min periods setting detected, games are likely to timeout");
-}
-
-if (!argv.maxperiods && !argv.maxperiodsranked && !argv.maxperiodsunranked) {
-    console.log("Warning: No max periods setting detected, games are likely to last forever");
-}
-
-if (!argv.minperiodtime && !argv.minperiodtimeranked && !argv.minperiodtimeunranked) {
-    console.log("Warning: No min period time setting detected, your bot is likely to timeout");
-}
-
-if (!argv.maxperiodtime && !argv.maxperiodtimeranked && !argv.maxperiodtimeunranked) {
-    console.log("Warning: No max period time setting detected, games are likely to last forever");
-}
-
-if (!argv.minmaintime && !argv.minmaintimeranked && !argv.minmaintimeunranked) {
-    console.log("Warning: No min main time setting detected, your bot is likely to timeout");
-}
-
-if (!argv.maxmaintime && !argv.maxmaintimeranked && !argv.maxmaintimeunranked) {
-    console.log("Warning: No max main time setting detected, games are likely to last forever");
-}
+// - warning : avoid infinite games
 
 if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-    console.log("Warning : No nopause setting detected, games are likely to last forever");
+    console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpaustime and co gets implemented, replace with "are likely to last for a long time"
 }
 console.log("\n"); /*after last warning, we skip a line to make it more pretty*/
-
-// - warning : avoid bot overload
-
-if (!argv.maxactivegames) {
-    console.log("Warning : No max games per user limit set with --maxactivegames, your bot is likely to be overloaded with games by one user");
-}
-
-if (!argv.maxtotalgames) {
-    console.log("Warning : No max games for all users limit set with --maxtotalgames, your bot is likely to be overloaded with games by all users");
-}
-
-if (!argv.maxactivegames || !argv.maxtotalgames) {
-    console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
-}
 
 // - warning : depreciated features if used
 
@@ -393,7 +367,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         return false;
     }
 
-    if (argv.ban) {
+    if (argv.ban && !argv.banranked && !argv.banunranked) {
         for (let i of argv.ban.split(',')) {
             exports.banned_users[i] = true;
         }
@@ -411,7 +385,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
-    if (argv.minrank) {
+    if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
         let re = /(\d+)([kdp])/;
         let results = argv.minrank.toLowerCase().match(re);
 
@@ -477,7 +451,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
-    if (argv.maxrank) {
+    if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
         let re = /(\d+)([kdp])/;
         let results = argv.maxrank.toLowerCase().match(re);
 

@@ -105,10 +105,20 @@ class Game {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            if ((config.nopause || (config.nopauseranked && this.state.ranked) || (config.nopauseunranked && this.state.ranked == false))
+            if (config.nopause && !config.nopauseranked && !config.nopauseunranked 
                 && clock.pause && clock.pause.paused && clock.pause.pause_control
                 && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
                 && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
+                if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
+                this.resumeGame();
+            }
+
+            if (config.nopauseranked && this.state.ranked) {
+                if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
+                this.resumeGame();
+            }
+
+            if (config.nopauseunranked && (this.state.ranked == false)) {
                 if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
                 this.resumeGame();
             }

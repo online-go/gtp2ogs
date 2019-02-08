@@ -152,7 +152,14 @@ the same example becomes :
   
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
 specify them, such as `--komi` which default is automatic even if you dont specify it !
-  
+(default value is overwritten when you set your own value)
+
+note 2 : if an argument has ranked and unranked in the same "family", use:
+- either the general argument alone,
+- OR, if you want to specify different settings for ranked and unranked games, use 
+both the ranked and the unranked argument with wanted values, and then don't use the 
+general argument ! (see [notes H-](/NOTES.md#h-) for details)
+
   below is a list of all possible to use gtp2ogs arguments, use the ones you want only, 
   no need to use them all !
 
@@ -160,7 +167,8 @@ specify them, such as `--komi` which default is automatic even if you dont speci
 
   ```--port``` OGS Port to connect to (default 443)
 
-  ```--timeout``` or ```--t``` Disconnect from a game after this many seconds (if set) (default 0)
+  ```--timeout``` or ```--t``` Disconnect from a game after this many seconds (if set) 
+(default 0)
 
   ```--insecure```  Don't use ssl to connect to the ggs/rest servers
 
@@ -186,15 +194,16 @@ output to a text file
 is actually the maximum total number of connected games for your bot (correspondence 
 games are currently included in the connected games count if you use `--persist` ) , 
 which means the maximum number of games your bot can play at the same time (choose 
-a low number to regulate your GPU use)
+a low number to regulate your GPU use) (default 20)
 
   ```--maxactivegames``` or ```--1ag``` Maximum number of active games per player 
-against this bot
+against this bot (default 3)
 
   ```--startupbuffer``` or ```--sb``` Subtract this many seconds from time available 
 on first move (default 5)
 
-  ```--rejectnew``` or ```--r``` Reject all new challenges with the default reject message
+  ```--rejectnew``` or ```--r``` Reject all new challenges with the default reject 
+message
 
   ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` or 
 ```--r --rm "not accepting games because blablablah"``` if you add the rejectnewmsg 
@@ -209,8 +218,8 @@ file exists (checked each time, can use for load-balancing)
   ```--boardsize``` or ```--bb``` Possible boardsize values `all` (allows ALL 
 boardsizes, use only if your bot can handle it !), `custom` (allows specified custom 
 boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size 
-written in numbers comma separated (for example 9x9, 13x13, 19x19, default is 
-`9,13,19`), see [notes E-](/NOTES.md#e-) for details
+written in numbers comma separated (default is `9,13,19` which is 9x9, 13x13, 19x19), 
+see [notes E-](/NOTES.md#e-) for details
 
   ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or 
 ```--bb custom --bw 25 --bh 1,2,3``` Allows custom board size (if your bot can 
@@ -223,7 +232,7 @@ in this example 25x1 25x2 25x3 are all allowed boardsizes, see
 When `all` is used alone, all komi values are allowed. When an argument other 
 than `all` is used, only the chosen argument komi values are allowed and all other 
 komi values are rejected see [notes C-](/NOTES.md#c-) and [notes D-](/NOTES.md#d-) 
-for details
+for details (default auto)
 
   ```--ban```  or ```--b``` Comma separated list of user names or IDs 
 (e.g.  UserA,UserB,UserC  do not put spaces in between)
@@ -241,10 +250,10 @@ are banned from playing unranked game
 byoyomi,simple,canadian,absolute,none)
 
   ```--minmaintime```  or ```--0mt``` Minimum seconds of main time (rejects time 
-control simple and none)
+control simple and none) (default 60)
 
   ```--maxmaintime```  or ```--1mt``` Maximum seconds of main time (rejects time 
-control simple and none)
+control simple and none) (default 1800)
 
   ```--minmaintimeranked```  or ```--0mtr``` Minimum seconds of main time for 
 ranked games (rejects time control simple and none)
@@ -259,10 +268,10 @@ for unranked games (rejects time control simple and none)
 unranked games (rejects time control simple and none)
 
   ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
-in canadian)
+in canadian) (default 5)
 
   ```--maxperiodtime```  or ```--1pt``` Maximum seconds per period (per stone 
-in canadian)
+in canadian) (default 120)
 
   ```--minperiodtimeranked```  or ```--0ptr``` Minimum seconds per period for 
 ranked games (per stone in canadian)
@@ -276,13 +285,13 @@ unranked games (per stone in canadian)
   ```--maxperiodtimeunranked```  or ```--1ptu``` Maximum seconds per period for 
 unranked games (per stone in canadian)
 
-  ```--minperiods```  or ```--0p``` Minimum number of periods
+  ```--minperiods```  or ```--0p``` Minimum number of periods (default 3)
 
   ```--minperiodsranked```  or ```--0pr``` Minimum number of ranked periods
 
   ```--minperiodsunranked```  or ```--0pu``` Minimum number of unranked periods
 
-  ```--maxperiods```  or ```--1p``` Maximum number of periods
+  ```--maxperiods```  or ```--1p``` Maximum number of periods (default 20)
 
   ```--maxperiodsranked```  or ```--1pr``` Maximum number of ranked periods
 

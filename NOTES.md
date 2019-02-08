@@ -107,3 +107,21 @@ mean that the gtp2ogs arguments can be abriged like that :
 - `--minperiodtime` -> `--0pt`
 - `--noautohandicap` -> `--nah`
 - `--maxmaintimeranked` -> `--1mtr`
+
+#### H :
+
+For example, if you can either use :
+- `--maxmaintime 600` , the general argument alone**
+- OR, if you want different settings for ranked and unranked games, use for example 
+`--maxmaintimeranked 300 --maxmaintimeunranked 1800` but if you do that then don't use 
+`--minmaintime` !
+  
+in this example, if `--maxmaintimeranked 300 --maxmaintimeunranked 1800` is set, then 
+the general value `--maxmaintime 600` is not taken into account, it will be either 300
+seconds (5 minutes) for ranked games, or 1800 seconds (30 minutes) for unranked games
+
+note that some gtp2ogs arguments come with a default general value : for the same reason, 
+in that case, the default general value will not be taken into account if you set a 
+specific value for ranked and unranked games
+
+
