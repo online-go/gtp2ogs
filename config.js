@@ -114,9 +114,9 @@ exports.updateFromArgv = function() {
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('persist', 'Bot process remains running between moves')
         .describe('corrqueue', 'Process correspondence games one at a time')
-        .describe('maxconnectedgames', 'Maximum number of total games')
+        .describe('maxconnectedgames', 'Maximum number of connected games for all users')
         .default('maxconnectedgames', 20)
-        // maxconnectedgames is actually the maximum total number of connected games for all users 
+        // maxconnectedgames is actually the maximum number of connected games for all users 
         // against your bot, which means the maximum number of games your bot can play at the same time 
         // (choose a low number to regulate your computer performance and stability)
         // (correspondence games are currently included in the total connected games count if you use `--persist` )
@@ -170,7 +170,7 @@ exports.updateFromArgv = function() {
         .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
         .describe('maxmaintimeunranked', 'Maximum seconds of main time for unranked games (rejects time control simple and none)')
         .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
-        .default('minperiodtime', 5)
+        .default('minperiodtime', 10)
         .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
         .default('minperiodtime', 120)
         .describe('minperiodtimeranked', 'Minimum seconds per period for ranked games (per stone in canadian)')

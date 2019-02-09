@@ -138,8 +138,8 @@ class Connection {
             }
         });
 
-        socket.on('connected_game', (gamedata) => {
-            if (config.DEBUG) conn_log("connected_game:", JSON.stringify(gamedata));
+        socket.on('active_game', (gamedata) => {
+            if (config.DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
 
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
@@ -162,7 +162,7 @@ class Connection {
             let game = this.connectToGame(gamedata.id);
 
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
-                // Going to make moves based on gamedata or moves coming in for now on, instead of connected_game updates
+                // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
                 // game.makeMove(gamedata.move_number);
 
                 if (config.timeout)
@@ -178,15 +178,15 @@ class Connection {
                 }
             }
 
-            // When a game ends, we don't get a "finished" connected_game.phase. Probably since the game is no
-            // longer connected.(Update: We do get finished connected_game events? Unclear why I added prior note.)
+            // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
+            // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
             //
             if (gamedata.phase == "finished") {
                 if (config.DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
 
                 // XXX We want to disconnect right away here, but there's a game over race condition
                 //     on server side: sometimes /gamedata event with game outcome is sent after
-                //     connected_game, so it's lost since there's no game to handle it anymore...
+                //     active_game, so it's lost since there's no game to handle it anymore...
                 //     Work around it with a timeout for now.
                 setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
             } else {

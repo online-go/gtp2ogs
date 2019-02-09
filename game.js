@@ -90,7 +90,7 @@ class Game {
                 }
             }
 
-            // connected_game isn't handling this for us any more. If it is our move, call makeMove.
+            // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
                 if (config.corrqueue && this.state.time_control.speed == "correspondence" && Game.corr_moves_processing > 0) {
@@ -114,12 +114,12 @@ class Game {
             }
 
             if (config.nopauseranked && this.state.ranked) {
-                if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
+                if (config.DEBUG) this.log("Pausing for ranked games not allowed. Resuming game.");
                 this.resumeGame();
             }
 
             if (config.nopauseunranked && (this.state.ranked == false)) {
-                if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
+                if (config.DEBUG) this.log("Pausing for unranked games not allowed. Resuming game.");
                 this.resumeGame();
             }
 

@@ -124,4 +124,3 @@ note that some gtp2ogs arguments come with a default general value : for the sam
 in that case, the default general value will not be taken into account if you set a 
 specific value for ranked and unranked games
 
-

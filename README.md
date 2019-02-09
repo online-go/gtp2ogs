@@ -190,20 +190,20 @@ output to a text file
 
   ```--corrqueue``` or ```--cq``` Process correspondence games one at a time
 
-  ```--maxconnectedgames``` or ```--1cg``` Maximum number of total connected games 
-for all users against your bot (correspondence games are currently included in the 
-connected games count if you use `--persist` ) , which means the maximum number of 
-games your bot can play at the same time (choose a low number to regulate your 
-computer performance and stability) (default 20)
+  ```--maxconnectedgames``` or ```--1cg``` Maximum number of connected games 
+for all users against your bot (correspondence games are currently included in 
+the connected games count if you use `--persist` ) , which means the maximum 
+number of games your bot can play at the same time (choose a low number to 
+regulate your computer performance and stability) (default 20)
 
-  ```--maxconnectedgamesperuser``` or ```--1cgpu``` Maximum number of connected games 
-per user against this bot (default 3)
+  ```--maxconnectedgamesperuser``` or ```--1cgpu``` Maximum number of 
+connected games per user against this bot (default 3)
 
-  ```--startupbuffer``` or ```--sb``` Subtract this many seconds from time available 
-on first move (default 5)
+  ```--startupbuffer``` or ```--sb``` Subtract this many seconds from time 
+available on first move (default 5)
 
-  ```--rejectnew``` or ```--r``` Reject all new challenges with the default reject 
-message
+  ```--rejectnew``` or ```--r``` Reject all new challenges with the default 
+reject message
 
   ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` or 
 ```--r --rm "not accepting games because blablablah"``` if you add the rejectnewmsg 
@@ -268,7 +268,7 @@ for unranked games (rejects time control simple and none)
 unranked games (rejects time control simple and none)
 
   ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
-in canadian) (default 5)
+in canadian) (default 10)
 
   ```--maxperiodtime```  or ```--1pt``` Maximum seconds per period (per stone 
 in canadian) (default 120)
