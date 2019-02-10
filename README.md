@@ -12,7 +12,8 @@ Programming knowledge is needed only to add extra features such as displaying
 and sending winrates and variations at every move, for example.
 
 Note that some contributors already provide their custom gtp2ogs branches 
-so you can download them directly or ask them if you want these features
+so you can download them directly or ask them if you want these features, see 
+[custom branches](#custom-branches)
 
 When you have a bot on OGS, you have total control over it : 
 you put it online when you want only, and there are many settings to choose 
@@ -192,9 +193,10 @@ output to a text file
 
   ```--maxconnectedgames``` or ```--1cg``` Maximum number of connected games 
 for all users against your bot (correspondence games are currently included in 
-the connected games count if you use `--persist` ) , which means the maximum 
-number of games your bot can play at the same time (choose a low number to 
-regulate your computer performance and stability) (default 20)
+the connected games count, see [#59](https://github.com/online-go/gtp2ogs/issues/59) 
+for details) , which means the maximum number of games your bot can play at the 
+same time (choose a low number to regulate your computer performance and 
+stability) (default 20)
 
   ```--maxconnectedgamesperuser``` or ```--1cgpu``` Maximum number of 
 connected games per user against this bot (default 3)
@@ -253,7 +255,7 @@ byoyomi,simple,canadian,absolute,none)
 control simple and none) (default 60)
 
   ```--maxmaintime```  or ```--1mt``` Maximum seconds of main time (rejects time 
-control simple and none) (default 1800)
+control simple and none) (default 7200)
 
   ```--minmaintimeranked```  or ```--0mtr``` Minimum seconds of main time for 
 ranked games (rejects time control simple and none)
@@ -362,6 +364,13 @@ shown in
 ## Notes :
 
 A page summarizing the notes and details about gtp2ogs use can be viewed [here](/NOTES.md)
+
+# Custom branches
+
+Some branches add some nice features like 
+**displaying variations (PV) ingame for Leela zero and PhoenixGo**
+
+See [Custom Branches](/CUSTOM-BRANCHES.md)
 
 # Discord chat : 
 

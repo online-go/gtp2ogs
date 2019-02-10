@@ -164,7 +164,7 @@ exports.updateFromArgv = function() {
         .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
         .default('minmaintime', 60)
         .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
-        .default('maxmaintime', 1800)
+        .default('maxmaintime', 7200)
         .describe('minmaintimeranked', 'Minimum seconds of main time for ranked games (rejects time control simple and none)')
         .describe('maxmaintimeranked', 'Maximum seconds of main time for ranked games (rejects time control simple and none)')
         .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
