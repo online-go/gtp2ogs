@@ -113,13 +113,17 @@ class Game {
                 this.resumeGame();
             }
 
-            if (config.nopauseranked && this.state.ranked) {
-                if (config.DEBUG) this.log("Pausing for ranked games not allowed. Resuming game.");
+            if (config.nopauseranked && this.state.ranked && clock.pause && clock.pause.paused && clock.pause.pause_control
+                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
+                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
+                if (config.DEBUG) this.log("Pausing not allowed for ranked games. Resuming game.");
                 this.resumeGame();
             }
 
-            if (config.nopauseunranked && (this.state.ranked == false)) {
-                if (config.DEBUG) this.log("Pausing for unranked games not allowed. Resuming game.");
+            if (config.nopauseunranked && (this.state.ranked == false) && clock.pause && clock.pause.paused && clock.pause.pause_control
+                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
+                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
+                if (config.DEBUG) this.log("Pausing not allowed for unranked games. Resuming game.");
                 this.resumeGame();
             }
 
