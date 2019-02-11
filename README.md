@@ -117,7 +117,7 @@ note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of th
 [OGS server](https://online-go.com/), add the `-- beta` argument
 
 note 4 : it is possible to use ISSA (intuitive semi-syllabic aliases) to write 
-your gtp2ogs arguments in a much smaller size, see [notes G-](/NOTES.md#g-) 
+your gtp2ogs arguments in a much smaller size, see [notes G-](/docs/NOTES.md#g-) 
 for details
 
 ### Extra : add features by editing gtp2ogs files
@@ -136,17 +136,17 @@ Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
   ```--username``` or `--u` Specify the username of the bot, for example `--username GnuGo`, 
 currently there is no profile number log in support on ogs, see 
-[notes A-](/NOTES.md#a-) for details
+[notes A-](/docs/NOTES.md#a-) for details
 
   ```--apikey``` or ```--a``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
 Then, the following options are placed in the above ```<gtp2ogsarguments>``` 
-section. Put a space in between options when there are more than one.  
+section. Put a space in between options when there are more than one.
 Also put a space in between the option and the parameter, for example :
 
   ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxconnectedgames 10 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
   
-or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/NOTES.md#g-) for details), 
+or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/docs/NOTES.md#g-) for details), 
 the same example becomes :
   
   ```--sb 2 --bb 13,19 --nc --uo --1cgpu 1 --1cg 10 --1mt 1200 --b UserX,playerY --1pr 5```
@@ -159,7 +159,7 @@ note 2 : if an argument has ranked and unranked in the same "family", use:
 - either the general argument alone,
 - OR, if you want to specify different settings for ranked and unranked games, use 
 both the ranked and the unranked argument with wanted values, and then don't use the 
-general argument ! (see [notes H-](/NOTES.md#h-) for details)
+general argument ! (see [notes H-](/docs/NOTES.md#h-) for details)
 
   below is a list of all possible to use gtp2ogs arguments, use the ones you want only, 
   no need to use them all !
@@ -221,19 +221,19 @@ file exists (checked each time, can use for load-balancing)
 boardsizes, use only if your bot can handle it !), `custom` (allows specified custom 
 boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size 
 written in numbers comma separated (default is `9,13,19` which is 9x9, 13x13, 19x19), 
-see [notes E-](/NOTES.md#e-) for details
+see [notes E-](/docs/docs/NOTES.md#e-) for details
 
   ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or 
 ```--bb custom --bw 25 --bh 1,2,3``` Allows custom board size (if your bot can 
 handle it), it is needed to use `custom` followed by comma separated value(s), 
 in this example 25x1 25x2 25x3 are all allowed boardsizes, see 
-[notes E-](/NOTES.md#e-) for details
+[notes E-](/docs/docs/NOTES.md#e-) for details
 
   ```--komi``` or ```--k``` Possible komi values `auto` (allows Automatic komi), 
 `all` (allows all komi values), and for example `7.5` (allows komi value 7.5). 
 When `all` is used alone, all komi values are allowed. When an argument other 
 than `all` is used, only the chosen argument komi values are allowed and all other 
-komi values are rejected see [notes C-](/NOTES.md#c-) and [notes D-](/NOTES.md#d-) 
+komi values are rejected see [notes C-](/docs/docs/NOTES.md#c-) and [notes D-](/docs/docs/NOTES.md#d-) 
 for details (default auto)
 
   ```--ban```  or ```--b``` Comma separated list of user names or IDs 
@@ -359,18 +359,18 @@ computer" bot list (but it can still accept challenges)
 After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
 to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
 shown in 
-[Most common usage earlier](/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
+[Most common usage earlier](/docs/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
 ## Notes :
 
-A page summarizing the notes and details about gtp2ogs use can be viewed [here](/NOTES.md)
+A page summarizing the notes and details about gtp2ogs use can be viewed [here](/docs/NOTES.md)
 
 # Custom branches
 
 Some branches add some nice features like 
 **displaying variations (PV) ingame for Leela zero and PhoenixGo**
 
-See [Custom Branches](/CUSTOM-BRANCHES.md)
+See [Custom Branches](/docs/CUSTOM-BRANCHES.md)
 
 # Discord chat : 
 
@@ -401,5 +401,5 @@ Welcome !
 
 come help us all make gtp2ogs more awesome than it already is ! 
 
-Read Contributing instructions [here](/CONTRIBUTING.md)
+Read Contributing instructions [here](/docs/CONTRIBUTING.md)
 
