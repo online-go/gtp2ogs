@@ -129,18 +129,31 @@ However, some contributors freely provide their custom branches, see
 
 Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
-  ```--username Specify the username of the bot, for example `--username GnuGo`, 
+  ```--username``` Specify the username of the bot, for example `--username GnuGo`, 
 currently there is no profile number log in support on ogs, see 
 [notes A-](/docs/NOTES.md#a-) for details
 
-  ```--apikey Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
+  ```--apikey``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
 Then, the following options are placed in the above ```<gtp2ogsarguments>``` 
 section. Put a space in between options when there are more than one.
 Also put a space in between the option and the parameter, for example :
 
   ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --ban UserX,playerY ---maxperiodsranked 5```
-  
+
+**You can find a list of all possible to use gtp2ogs arguments here**
+
+**[List of all Options](/docs/OPTIONS-LIST.md)**
+
+(Since the list takes a lot of place, it has been moved on a separate page)
+
+use the ones you want only, no need to use them all !
+
+After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
+to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
+shown in 
+[Most common usage earlier](/docs/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
+
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
 specify them, such as `--komi` which default is automatic even if you dont specify it !
 (default value is overwritten when you set your own value)
@@ -150,18 +163,6 @@ note 2 : if an argument has ranked and unranked in the same "family", use:
 - OR, if you want to specify different settings for ranked and unranked games, use 
 both the ranked and the unranked argument with wanted values, and then don't use the 
 general argument ! (see [notes H-](/docs/NOTES.md#h-) for details)
-
-**You can find a list of all possible to use gtp2ogs arguments here**
-**[List of all Options](/docs/OPTIONS.md)**
-
-Since they take a lot of place all the list has been moved on a separate page
-
-use the ones you want only, no need to use them all !
-
-After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
-to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
-shown in 
-[Most common usage earlier](/docs/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
 ## Notes :
 
