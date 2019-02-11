@@ -470,140 +470,325 @@ class Connection {
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed, please choose one of these allowed time controls : " + config.timecontrol };
         }
 
-        ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
-        ///// for maintime 
-        if (config.minmaintime || config.minmaintimeranked || config.minmaintimeunranked || config.maxmaintime || config.maxmaintimeranked || config.maxmaintimeunranked) {
-            // later the t.time_control can't be used for rule detection for some reason,
-            // so storing it now in a string while we can
-            // also, whenever before TimecontrolString is going to be tested,
-            // we always make sure it has the latest value
-            // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
-            // e.g. stuck on "absolute"  
+        ////// begining of *** UHMAEAT v2: Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 2.0 for maintimes
+        if (config.minmaintimeblitz || config.minmaintimeblitzranked || config.minmaintimeblitzunranked || config.maxmaintimeblitz || config.maxmaintimeblitzranked || config.maxmaintimeblitzunranked || config.minmaintimelive || config.minmaintimeliveranked || config.minmaintimeliveunranked || config.maxmaintimelive || config.maxmaintimeliveranked || config.maxmaintimeliveunranked || config.minmaintimecorr || config.minmaintimecorrranked || config.minmaintimecorrunranked || config.maxmaintimecorr || config.maxmaintimecorrranked || config.maxmaintimecorrunranked) {
+            // later the t.time_control and t.speed can't be used for rule detection for some reason,
+            // so storing them now in strings while we can
+            // also, whenever before TimecontrolString and SpeedString are going to be tested,
+            // we always make sure they have the latest refreshed value
+            // this avoids TimecontrolString and SpeedString being frozen on the same value independently 
+            // from what user chooses, e.g. stuck on "fischer" and "blitz"
 
-            // for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            // for fischer, byoyomi, or canadian, we use our UHMAEAT for maintimes !
             // simple time is not included in reject messages for maintime : no main time, only period time !
-            let universalMaintimeMinimumMaximumSentence = "";    // minimum
-            let universalMaintimeTimecontrolSentence = "";       // main time - initial time and/or max time, etc..
-            let universalMaintimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
-            let universalMaintimeNumber = 0;                     // for example 600 (600 seconds)
-            let universalMaintimeToString = "";                  // for example "10 minutes"  = timespanToDisplayString(config.xxx)
-            let universalMaintimeIncreaseDecreaseSentence = "";  // , please increase/decrease
-                                                                 // main time - MaintimeTimecontrolSentence again
-            let universalMaintimeEndingSentence = "";            // optionnal, for example in canadian, adds explanation
-            let universalMaintimeTimecontrolString = String(t.time_control);/*
-            "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+            let universalMaintime = {
+                MinimumMaximumSentence : "",            // minimum/maximum
+                TimecontrolSentence : "",               // main time - initial time and/or max time, etc..
+                SpeedSentence : "",                     // for blitz , live , and corr
+                RankedUnrankedGamesIs : "",             // +/- ranked/unranked games is
+                TimeNumber : 0,                         // for example 600 (600 seconds)
+                ToString : "",                          // for example "10 minutes"  = timespanToDisplayString(config.xxx)
+                IncreaseDecreaseSentence : "",          // , please increase/decrease
+                                                        // main time - MaintimeTimecontrolSentence again
+                EndingSentence : "",                    // optionnal, for example in canadian, adds explanation
+                ConnBelowAboveSentence : "",            // for conn_log : below/above
+                ConnSentence : "",                      // for conn_log sentence
+                TimecontrolString : "",                 /*"fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
+                SpeedString : "",                       /* "blitz" , "live" , "corr" */
+            };
 
-            if (config.minmaintime || config.minmaintimeranked || config.minmaintimeunranked) {
-                universalMaintimeMinimumMaximumSentence = "Minimum ";
-                universalMaintimeIncreaseDecreaseSentence = ", please increase ";
-                let universalMaintimeConnSentence = user.username + " wanted main time below minimum main time ";
-                if (config.minmaintime && !config.minmaintimeranked && !config.minmaintimeunranked) {
-                    universalMaintimeNumber = config.minmaintime;
-                    universalMaintimeToString = timespanToDisplayString(config.minmaintime);
-                    universalMaintimeForRankedUnrankedSentence = "is ";
+            // before starting, information : 
+            // 1) simple time doesn't have a main time, only a period time, 
+            // so we let it slide from maintime rejects
+            // 2) fischer : doesnt have a minperiods or maxperiods
+            // 3) while using gedit "find and replace", make sure you dont replace
+            // t.max_time to t.min_time ! (it doesnt exist !)
+
+            // before starting, make sures : we refresh values //
+            // now just before TimecontrolString is being tested, we again make sure it has the latest value
+            /*"fischer", "byoyomi", "canadian", "simple" */
+            this.TimecontrolString = String(t.time_control);
+            // now just before SpeedString is being tested, we again make sure it has the latest value
+            /* "live", "correspondence" */
+            this.SpeedString = String(t.speed);
+
+            // before starting, sanity checks //
+            // sanity check : if not fischer, not byoyomi, not canadian, not simple
+            if ((this.TimecontrolString !== "fischer") && (this.TimecontrolString !== "byoyomi") && (this.TimecontrolString !== "canadian") && (this.TimecontrolString !== "simple")) {
+                conn_log ("error, could not find allowed time control in " + t.time_control);
+                return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
+            }
+            // sanity check : if not "blitz" , not "live" , not "correspondence"
+            if ((this.SpeedString !== "blitz") && (this.SpeedString !== "live") && (this.SpeedString !== "correspondence")) {
+                conn_log ("error, could not find allowed game speed in " + t.speed);
+                return { reject : true, msg: "error, could not find allowed game speed in " + t.speed};
+            }
+            // -> then if sanity checks all pass :      
+
+            //////////// for blitz games : "blitz" //////////////////
+            // min
+            if ((config.minmaintimeblitz || config.minmaintimeblitzranked || config.minmaintimeblitzunranked) && (this.SpeedString === "blitz")) {
+                this.MinimumMaximumSentence = "Minimum ";
+                this.SpeedSentence = "for " + this.SpeedString + " ";
+                this.IncreaseDecreaseSentence = ", please increase ";
+                this.ConnBelowAboveSentence = " below ";
+                this.ConnSentence = user.username + " wanted " + this.TimecontrolString + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence ;
+                if (config.minmaintimeblitz && !config.minmaintimeblitzranked && !config.minmaintimeblitzunranked) {
+                    this.NumberValue = config.minmaintimeblitz;
+                    this.ToString = timespanToDisplayString(config.minmaintimeblitz);
+                    this.RankedUnrankedGamesIsSentence = "games is ";
                 }
-                if (config.minmaintimeranked && notification.ranked) {
-                    universalMaintimeNumber = config.minmaintimeranked;
-                    universalMaintimeToString = timespanToDisplayString(config.minmaintimeranked);
-                    universalMaintimeForRankedUnrankedSentence = "for ranked games is ";
+                if (config.minmaintimeblitzranked && notification.ranked) {
+                    this.NumberValue = config.minmaintimeblitzranked;
+                    this.ToString = timespanToDisplayString(config.minmaintimeblitzranked);
+                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
                 }
-                if (config.minmaintimeunranked && !notification.ranked) {
-                    universalMaintimeNumber = config.minmaintimeunranked;
-                    universalMaintimeToString = timespanToDisplayString(config.minmaintimeunranked);
-                    universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
-                 }
-                // now just before TimecontrolString is being tested, we again make sure it has the latest value
-                universalMaintimeTimecontrolString = String(t.time_control);/*
-                "fischer", "byoyomi", "canadian", "simple" */
+                if (config.minmaintimeblitzunranked && !notification.ranked) {
+                    this.NumberValue = config.minmaintimeblitzunranked;
+                    this.ToString = timespanToDisplayString(config.minmaintimeblitzunranked);
+                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
+                }
 
-                // sanity check : if not fischer, not byoyomi, not canadian, not simple
-                // time control peculiarities : 
-                // - fischer : doesnt have a minperiods or maxperiods
-                // - simple : doesnt have a maintime, only periodtime, so we let it slide for main time reject
-                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian") && (universalMaintimeTimecontrolString !== "simple")) {
-                    conn_log ("error, could not find allowed time control in " + t.time_control);
-                    return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
-                }                
-
-                // if sanity check passes :
-                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) { // as said earlier, simple time doesn't use a main time, let it slide from maintime rejects
-                    if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time < universalMaintimeNumber) || (t.max_time < universalMaintimeNumber))) {
-                        universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
-                        universalMaintimeEndingSentence = ".";
-                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
-                    }
-                    if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time < universalMaintimeNumber) {
-                        universalMaintimeTimecontrolSentence = "Main Time ";
-                        universalMaintimeEndingSentence = ".";
-                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
-                    }
-                    if (universalMaintimeTimecontrolString === "canadian" && t.main_time < universalMaintimeNumber) {
-                        universalMaintimeTimecontrolSentence = "Main Time ";
-                        universalMaintimeEndingSentence = ".";
-                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
-                    }
+                if ((this.TimecontrolString === "fischer") && ((t.initial_time < this.NumberValue) || (t.max_time < this.NumberValue))) {
+                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "byoyomi") && t.main_time < this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "canadian") && t.main_time < this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
                 }
             }
 
-            if (config.maxmaintime || config.maxmaintimeranked || config.maxmaintimeunranked) {
-                universalMaintimeMinimumMaximumSentence = "Maximum ";
-                universalMaintimeIncreaseDecreaseSentence = ", please reduce ";
-                let universalMaintimeConnSentence = user.username + " wanted main time above maximum main time ";
-                if (config.maxmaintime && !config.maxmaintimeranked && !config.maxmaintimeunranked) {
-                    universalMaintimeNumber = config.maxmaintime;
-                    universalMaintimeToString = timespanToDisplayString(config.maxmaintime);
-                    universalMaintimeForRankedUnrankedSentence = "is ";
+            // max
+            if ((config.maxmaintimeblitz || config.maxmaintimeblitzranked || config.maxmaintimeblitzunranked) && (this.SpeedString === "blitz")) {
+                this.MinimumMaximumSentence = "Maximum ";
+                this.SpeedSentence = "for " + this.SpeedString + " ";
+                this.IncreaseDecreaseSentence = ", please reduce ";
+                this.ConnBelowAboveSentence = " above ";
+                this.ConnSentence = user.username + " wanted " + this.TimecontrolString + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence ;
+                if (config.maxmaintimeblitz && !config.maxmaintimeblitzranked && !config.maxmaintimeblitzunranked) {
+                    this.NumberValue = config.maxmaintimeblitz;
+                    this.ToString = timespanToDisplayString(config.maxmaintimeblitz);
+                    this.RankedUnrankedGamesIsSentence = "games is ";
                 }
-                if (config.maxmaintimeranked && notification.ranked) {
-                    universalMaintimeNumber = config.maxmaintimeranked;
-                    universalMaintimeToString = timespanToDisplayString(config.maxmaintimeranked);
-                    universalMaintimeForRankedUnrankedSentence = "for ranked games is ";
+                if (config.maxmaintimeblitzranked && notification.ranked) {
+                    this.NumberValue = config.maxmaintimeblitzranked;
+                    this.ToString = timespanToDisplayString(config.maxmaintimeblitzranked);
+                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
                 }
-                if (config.maxmaintimeunranked && !notification.ranked) {
-                    universalMaintimeNumber = config.maxmaintimeunranked;
-                    universalMaintimeToString = timespanToDisplayString(config.maxmaintimeunranked);
-                    universalMaintimeForRankedUnrankedSentence = "for unranked games is ";
+                if (config.maxmaintimeblitzunranked && !notification.ranked) {
+                    this.NumberValue = config.maxmaintimeblitzunranked;
+                    this.ToString = timespanToDisplayString(config.maxmaintimeblitzunranked);
+                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
                 }
-                // now just before TimecontrolString is being tested, we again make sure it has the latest value
-                universalMaintimeTimecontrolString = String(t.time_control);/*
-                "fischer", "byoyomi", "canadian", "simple" */
 
-                // sanity check : if not fischer, not byoyomi, not canadian, not simple
-                // time control peculiarities : 
-                // - fischer : doesnt have a minperiods or maxperiods
-                // - simple : doesnt have a maintime, only periodtime, so we let it slide for main time reject
-                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian") && (universalMaintimeTimecontrolString !== "simple")) { // simple is part of allowed timecontrols
-                    conn_log ("error, could not find allowed time control in " + t.time_control);
-                    return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
-                }                
+                if ((this.TimecontrolString === "fischer") && ((t.initial_time > this.NumberValue) || (t.max_time > this.NumberValue))) {
+                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "byoyomi") && t.main_time > this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "canadian") && t.main_time > this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+            }      
 
-                // if sanity check passes :
-                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) { // as said earlier, simple time doesn't use a main time, let it slide from maintime rejects
-                    if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time > universalMaintimeNumber) || (t.max_time > universalMaintimeNumber))) {
-                        universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
-                        universalMaintimeEndingSentence = ".";
-                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
-                    }
-                    if (universalMaintimeTimecontrolString === "byoyomi" && t.main_time > universalMaintimeNumber) {
-                        universalMaintimeTimecontrolSentence = "Main Time ";
-                        universalMaintimeEndingSentence = ".";
-                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
-                    }
-                    if (universalMaintimeTimecontrolString === "canadian" && t.main_time > universalMaintimeNumber) {
-                        universalMaintimeTimecontrolSentence = "Main Time ";
-                        universalMaintimeEndingSentence = ".";
-                        conn_log(universalMaintimeConnSentence + universalMaintimeToString + " in " + universalMaintimeTimecontrolString);
-                        return { reject : true, msg:  `${universalMaintimeMinimumMaximumSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeForRankedUnrankedSentence} ${universalMaintimeToString} ${universalMaintimeIncreaseDecreaseSentence} ${universalMaintimeTimecontrolSentence} ${universalMaintimeEndingSentence}` };
-                    } 
+            //////////// for live games : "live" //////////////////
+            // min
+            if ((config.minmaintimelive || config.minmaintimeliveranked || config.minmaintimeliveunranked) && (this.SpeedString === "live")) {
+                this.MinimumMaximumSentence = "Minimum ";
+                this.SpeedSentence = "for " + this.SpeedString + " ";
+                this.IncreaseDecreaseSentence = ", please increase ";
+                this.ConnBelowAboveSentence = " below ";
+                this.ConnSentence = user.username + " wanted " + this.TimecontrolString + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence ;
+                if (config.minmaintimelive && !config.minmaintimeliveranked && !config.minmaintimeliveunranked) {
+                    this.NumberValue = config.minmaintimelive;
+                    this.ToString = timespanToDisplayString(config.minmaintimelive);
+                    this.RankedUnrankedGamesIsSentence = "games is ";
+                }
+                if (config.minmaintimeliveranked && notification.ranked) {
+                    this.NumberValue = config.minmaintimeliveranked;
+                    this.ToString = timespanToDisplayString(config.minmaintimeliveranked);
+                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
+                }
+                if (config.minmaintimeliveunranked && !notification.ranked) {
+                    this.NumberValue = config.minmaintimeliveunranked;
+                    this.ToString = timespanToDisplayString(config.minmaintimeliveunranked);
+                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
+                }
+
+                if ((this.TimecontrolString === "fischer") && ((t.initial_time < this.NumberValue) || (t.max_time < this.NumberValue))) {
+                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "byoyomi") && t.main_time < this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "canadian") && t.main_time < this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+            }
+
+            // max
+            if ((config.maxmaintimelive || config.maxmaintimeliveranked || config.maxmaintimeliveunranked) && (this.SpeedString === "live")) {
+                this.MinimumMaximumSentence = "Maximum ";
+                this.SpeedSentence = "for " + this.SpeedString + " ";
+                this.IncreaseDecreaseSentence = ", please reduce ";
+                this.ConnBelowAboveSentence = " above ";
+                this.ConnSentence = user.username + " wanted " + this.TimecontrolString + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence ;
+                if (config.maxmaintimelive && !config.maxmaintimeliveranked && !config.maxmaintimeliveunranked) {
+                    this.NumberValue = config.maxmaintimelive;
+                    this.ToString = timespanToDisplayString(config.maxmaintimelive);
+                    this.RankedUnrankedGamesIsSentence = "games is ";
+                }
+                if (config.maxmaintimeliveranked && notification.ranked) {
+                    this.NumberValue = config.maxmaintimeliveranked;
+                    this.ToString = timespanToDisplayString(config.maxmaintimeliveranked);
+                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
+                }
+                if (config.maxmaintimeliveunranked && !notification.ranked) {
+                    this.NumberValue = config.maxmaintimeliveunranked;
+                    this.ToString = timespanToDisplayString(config.maxmaintimeliveunranked);
+                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
+                }
+
+                if ((this.TimecontrolString === "fischer") && ((t.initial_time > this.NumberValue) || (t.max_time > this.NumberValue))) {
+                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "byoyomi") && t.main_time > this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "canadian") && t.main_time > this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+            }
+
+            //////////// for correspondence games : "correspondence" //////////////////
+            // min
+            if ((config.minmaintimecorr || config.minmaintimecorrranked || config.minmaintimecorrunranked) && (this.SpeedString === "correspondence")) {
+                this.MinimumMaximumSentence = "Minimum ";
+                this.SpeedSentence = "for " + this.SpeedString + " ";
+                this.IncreaseDecreaseSentence = ", please increase ";
+                this.ConnBelowAboveSentence = " below ";
+                this.ConnSentence = user.username + " wanted " + this.TimecontrolString + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence ;
+                if (config.minmaintimecorr && !config.minmaintimecorrranked && !config.minmaintimecorrunranked) {
+                    this.NumberValue = config.minmaintimecorr;
+                    this.ToString = timespanToDisplayString(config.minmaintimecorr);
+                    this.RankedUnrankedGamesIsSentence = "games is ";
+                }
+                if (config.minmaintimecorrranked && notification.ranked) {
+                    this.NumberValue = config.minmaintimecorrranked;
+                    this.ToString = timespanToDisplayString(config.minmaintimecorrranked);
+                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
+                }
+                if (config.minmaintimecorrunranked && !notification.ranked) {
+                    this.NumberValue = config.minmaintimecorrunranked;
+                    this.ToString = timespanToDisplayString(config.minmaintimecorrunranked);
+                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
+                }
+
+                if ((this.TimecontrolString === "fischer") && ((t.initial_time < this.NumberValue) || (t.max_time < this.NumberValue))) {
+                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "byoyomi") && t.main_time < this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "canadian") && t.main_time < this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+            }
+
+            // max
+            if ((config.maxmaintimecorr || config.maxmaintimecorrranked || config.maxmaintimecorrunranked) && (this.SpeedString === "correspondence")) {
+                this.MinimumMaximumSentence = "Maximum ";
+                this.SpeedSentence = "for " + this.SpeedString + " ";
+                this.IncreaseDecreaseSentence = ", please reduce ";
+                this.ConnBelowAboveSentence = " above ";
+                this.ConnSentence = user.username + " wanted " + this.TimecontrolString + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence ;
+                if (config.maxmaintimecorr && !config.maxmaintimecorrranked && !config.maxmaintimecorrunranked) {
+                    this.NumberValue = config.maxmaintimecorr;
+                    this.ToString = timespanToDisplayString(config.maxmaintimecorr);
+                    this.RankedUnrankedGamesIsSentence = "games is ";
+                }
+                if (config.maxmaintimecorrranked && notification.ranked) {
+                    this.NumberValue = config.maxmaintimecorrranked;
+                    this.ToString = timespanToDisplayString(config.maxmaintimecorrranked);
+                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
+                }
+                if (config.maxmaintimecorrunranked && !notification.ranked) {
+                    this.NumberValue = config.maxmaintimecorrunranked;
+                    this.ToString = timespanToDisplayString(config.maxmaintimecorrunranked);
+                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
+                }
+
+                if ((this.TimecontrolString === "fischer") && ((t.initial_time > this.NumberValue) || (t.max_time > this.NumberValue))) {
+                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "byoyomi") && t.main_time > this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
+                }
+                if ((this.TimecontrolString === "canadian") && t.main_time > this.NumberValue) {
+                    this.TimecontrolSentence = "Main Time ";
+                    this.EndingSentence = ".";
+                    conn_log(this.ConnSentence + this.ToString + " in " + this.TimecontrolString);
+                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.ToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
                 }
             }
         }
-        ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 2.0 for maintimes
+        ////// end of *** UHMAEAT v2 : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (config.minperiods && (t.periods < config.minperiods) && !config.minperiodsranked && !config.minperiodsunranked) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
@@ -636,7 +821,7 @@ class Connection {
         }
 
         ////// begining of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
-        // for period time //
+        // version 1.0 for period times //
 
         if (config.minperiodtime || config.minperiodtimeranked || config.minperiodtimeunranked || config.maxperiodtime || config.maxperiodtimeranked || config.maxperiodtimeunranked) {
             // later the t.time_control can't be used for rule detection for some reason,
@@ -824,6 +1009,7 @@ class Connection {
                 }
             }
         }
+        ////// version 1.0 for period times //////
         ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
         return { reject: false };  // Ok !
