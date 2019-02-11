@@ -212,7 +212,7 @@ class Connection {
                 continue;
             }
             if ((state.clock.current_player != this.bot_id) && (state.clock.last_move + config.timeout < now)) {
-                if (config.DEBUG) conn_log("Disconnecting from game, other player has been idling for", config.timeout);
+                if (config.DEBUG) conn_log("Disconnecting from game, other player has been idling for ", config.timeout);
                 this.disconnectFromGame(game_id);
             }
         }

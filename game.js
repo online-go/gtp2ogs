@@ -117,7 +117,7 @@ class Game {
             if (this.state) {
                 this.state.clock = clock;
             } else {
-                if (config.DEBUG) console.error("Received clock for " + this.game_id + "but no state exists");
+                if (config.DEBUG) console.error("Received clock for " + this.game_id + " but no state exists");
             }
 
             // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
