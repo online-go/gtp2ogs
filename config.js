@@ -305,20 +305,8 @@ if (argv.id) {
     console.log("Warning: --id alias is no longer supported. Use --username instead.");
 }
 
-if (argv.minrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
-}
-
-if (argv.maxrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapranked instead.");
-}
-
-if (argv.minunrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead.");
-}
-
-if (argv.maxunrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
+if (argv.minrankedhandicap || argv.minunrankedhandicap || argv.maxrankedhandicap || argv.maxunrankedhandicap) {
+    console.log("Warning: --min/max*+/-ranked/unranked*handicap argument is no longer supported.\nUse --min/max*handicap*+/-ranked/unranked instead.");
 }
 
 if (argv.maxtotalgames) {
