@@ -40,7 +40,7 @@ class Bot {
                 return;
             }
             if (config.DEBUG) {
-                this.log("<<<", stdout_buffer);
+                this.log("<<<", stdout_buffer.trim());
             }
 
             let lines = stdout_buffer.split("\n");
