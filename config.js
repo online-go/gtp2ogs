@@ -279,7 +279,7 @@ if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
 }
 
-if (argv.minhandicap || argv.maxhandicap || argv.noautohandicap || argv.minperiods || argv.maxperiods || argv.minrank || argv.maxrank || argv.ban || argv.nopause) {
+if (argv.minhandicap || argv.maxhandicap || argv.noautohandicap || argv.minperiods || argv.maxperiods || argv.minrank || argv.maxrank || argv.nopause) {
     console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
 }
 
