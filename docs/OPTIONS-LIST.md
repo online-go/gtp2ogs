@@ -74,6 +74,15 @@ than `all` is used, only the chosen argument komi values are allowed and all oth
 komi values are rejected see [notes C-](/docs/docs/NOTES.md#c-) and [notes D-](/docs/docs/NOTES.md#d-) 
 for details (default auto)
 
+The "ban" arguments are an exception to the general rule of using only general 
+argument alone, or specific ranked/unranked instead :
+
+Because, since ban is a string, we allow both general value `--ban A,B` AND 
+specific values at the same time too `--banranked X,Y --banunranked Z`, the 
+result will be Players banned : 
+- for ranked games : A,B,X,Y
+- for unranked games : A,B,Z 
+
   ```--ban``` Comma separated list of user names or IDs 
 (e.g.  UserA,UserB,UserC  do not put spaces in between)
 

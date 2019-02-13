@@ -164,6 +164,10 @@ note 2 : if an argument has ranked and unranked in the same "family", use:
 - OR, if you want to specify different settings for ranked and unranked games, use 
 both the ranked and the unranked argument with wanted values, and then don't use the 
 general argument ! (see [notes H-](/docs/NOTES.md#h-) for details)
+- the exception that confirms this rule is `--ban` : since ban is a string, we allow 
+both general value `--ban A,B` AND specific values at the same time too 
+`--banranked X,Y --banunranked Z` , see [Options-List](/docs/OPTIONS-LIST.md) 
+for details
 
 ## Notes :
 

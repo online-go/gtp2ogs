@@ -91,6 +91,12 @@ exports.updateFromArgv = function() {
         .string('banranked')
         .describe('banunranked', 'Comma separated list of user names or IDs')
         .string('banunranked')
+        /* exception : since ban is a string, we allow both general
+        value --ban A,B AND specific values at the same time too 
+        --banranked X,Y --banunranked Z , the result will be 
+        Players banned : - for ranked games : A,B,X,Y
+                         - for unranked games : A,B,Z 
+        */
         .describe('speed', 'Game speed(s) to accept')
         .default('speed', 'blitz,live,correspondence')
         .describe('timecontrol', 'Time control(s) to accept')
@@ -231,10 +237,6 @@ if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
     console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
 }
 
-if (argv.ban && (argv.banranked || argv.banunranked)) {
-    console.log("Warning: You are using --ban in combination with --banranked and/or --banunranked. \n Use either --ban alone, OR --banranked with --banunranked.\nBut don't use the 3 ban arguments at the same time.");
-}
-
 if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
 }
@@ -331,7 +333,8 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         return false;
     }
 
-    if (argv.ban && !argv.banranked && !argv.banunranked) {
+    if (argv.ban) { /* exception : ban allows both general and specific values 
+                    at the same time, see README for details */
         for (let i of argv.ban.split(',')) {
             exports.banned_users[i] = true;
         }
