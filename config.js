@@ -103,7 +103,8 @@ exports.updateFromArgv = function() {
         .default('timecontrol', 'fischer,byoyomi,simple,canadian')
         // 1- for "absolute", bot admin can allow absolute if want, but then 
         // make sure to increase minmaintimeblitz and minmaintimelive to high values
-        // 2 - "none" (unlimited time) is banned from OGS bots, impossible to manage
+        // 2 - "none" is not default, can be manually allowed in timecontrol argument
+        // but then games will be very very long
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
         .default('minmaintimeblitz', '15') // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')

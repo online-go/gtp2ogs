@@ -117,8 +117,18 @@ are banned from playing unranked game
 (default blitz,live,correspondence)
 
 #### timecontrol
+
   ```--timecontrol``` Time control(s) to accept (default fischer,
-byoyomi,simple,canadian,absolute,none)
+byoyomi,simple,canadian)
+
+"absolute" and/or "none" can be manually allowed by bot admin in 
+timecontrol if want, but then : 
+
+- for absolute games : make sure you increase minmaintime a lot 
+higher than default (with current defaults, bot will timeout in just 
+a few moves)
+
+- for "none" : games would be very very long
 
 #### minmaintime
   ```--minmaintimeblitz``` Minimum seconds of main time for 

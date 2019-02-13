@@ -335,16 +335,7 @@ class Connection {
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
 
-        // ** first we eliminate "none" time control :
-        // infinite time is not supportable on OGS bots
-        /* "fischer" , "simple", "byoyomi" , "canadian" , "absolute", "none" */
-        let TimeControlString = String(t.time_control);
-        if (TimeControlString === "none") {
-            conn_log("The " + TimeControlString + " time control is impossible to manage for bots on OGS, not allowed : ");
-            return { reject: true, msg: "The " + TimeControlString + " time control is -unlimited time-, impossible to manage for bots on OGS, so not allowed.\nPlease choose a time control that has a limited time, such as " + config.timecontrol };
-        }
-
-        if (!config.allowed_timecontrols[t.time_control]) {
+        if (!config.allowed_timecontrols[t.time_control]) { // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
             conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + config.timecontrol);
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrol };
         }
@@ -465,13 +456,13 @@ class Connection {
             };
 
             // before starting, general information : 
-            // 0) "none" dont have a period time, so it is rejected before the UHMAEATs
+            // 0) "none" doesnt have a period time, so we let it slide from both maintime and 
+            // periodtime rejects
             // (we have sanity checks just in case)
-            // 1) simple time doesn't have a main time, only a period time, 
-            // so we let it slide from maintime rejects
+            // 1) simple time doesn't have a main time, only a period time, so we let it slide 
+            // from maintime rejects
             // 2) fischer : doesnt have a minperiods or maxperiods
-            // 3) absolute doesnt have a period time
-            // so we let it slide from periodtime rejects
+            // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
             // 4) while using gedit "find and replace", make sure you dont replace
             // t.max_time to t.min_time ! (it doesnt exist !)
 
@@ -860,13 +851,13 @@ class Connection {
             };
 
             // before starting, general information : 
-            // 0) "none" dont have a period time, so it is rejected before the UHMAEATs
+            // 0) "none" doesnt have a period time, so we let it slide from both maintime and 
+            // periodtime rejects
             // (we have sanity checks just in case)
-            // 1) simple time doesn't have a main time, only a period time, 
-            // so we let it slide from maintime rejects
+            // 1) simple time doesn't have a main time, only a period time, so we let it slide 
+            // from maintime rejects
             // 2) fischer : doesnt have a minperiods or maxperiods
-            // 3) absolute doesnt have a period time
-            // so we let it slide from periodtime rejects
+            // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
             // 4) while using gedit "find and replace", make sure you dont replace
             // t.max_time to t.min_time ! (it doesnt exist !)
 
