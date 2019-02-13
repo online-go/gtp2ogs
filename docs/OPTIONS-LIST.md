@@ -4,6 +4,9 @@ Since they take a lot of place all the list has been moved here
 
 use the ones you want only, no need to use them all !
 
+The options below are clickable links, so that you can share the 
+link to the wanted option :
+
 #### host
 ```--host``` OGS Host to connect to (default online-go.com)
 
@@ -73,11 +76,15 @@ if your bot is busy playing a tournament, etc...)
 file exists (checked each time, can use for load-balancing)
 
 #### boardsize
-  ```--boardsize``` Possible boardsize values `all` (allows ALL 
-boardsizes, use only if your bot can handle it !), `custom` (allows specified custom 
-boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size 
-written in numbers comma separated (default is `9,13,19` which is 9x9, 13x13, 19x19), 
-see [notes E-](/docs/docs/NOTES.md#e-) for details
+  ```--boardsize```
+
+Possible boardsize values :
+
+- `all` (allows ALL boardsizes, use only if your bot can handle it !), 
+- `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 
+3x2, etc..), 
+- and square board size written in numbers comma separated (default is `9,13,19` 
+which is 9x9, 13x13, 19x19), see [notes E-](/docs/docs/NOTES.md#e-) for details
 
   ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom 
 board size (if your bot can handle it), it is needed to use `custom` followed by 
@@ -85,9 +92,14 @@ comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsi
 see [notes E-](/docs/docs/NOTES.md#e-) for details
 
 #### komi 
-  ```--komi``` Possible komi values `auto` (allows Automatic komi), 
-`all` (allows all komi values), and for example `7.5` (allows komi value 7.5). 
-When `all` is used alone, all komi values are allowed. 
+```--komi```
+ 
+Possible komi values : 
+- `auto` (allows Automatic komi), 
+- `all` (allows all komi values), When `all` is used alone, all 
+komi values are allowed. 
+- comma separated values, for example `7.5` (allows 
+komi value 7.5), or `7.5,6.5,0.5,auto` 
 
 When an argument other than `all` is used, only the chosen argument komi 
 values are allowed and all other komi values are rejected see 
@@ -95,14 +107,6 @@ values are allowed and all other komi values are rejected see
 for details (default auto)
 
 #### ban
-The "ban" arguments are an exception to the general rule of using only general 
-argument alone, or specific ranked/unranked instead :
-
-Because, since ban is a string, we allow both general value `--ban A,B` AND 
-specific values at the same time too `--banranked X,Y --banunranked Z`, the 
-result will be Players banned : 
-- for ranked games : A,B,X,Y
-- for unranked games : A,B,Z 
 
   ```--ban``` Comma separated list of user names or IDs 
 (e.g.  UserA,UserB,UserC  do not put spaces in between)
@@ -112,6 +116,18 @@ are banned from playing ranked games
 
   ```--banunranked``` Comma separated list of user names or IDs who 
 are banned from playing unranked game
+
+The "ban" arguments are an exception to the general rule of using only general 
+argument alone, or specific ranked/unranked instead :
+
+Because, since ban is a string, we allow both general value `--ban A,B` AND 
+specific values at the same time too `--banranked X,Y --banunranked Z`, the 
+result will be Players banned : 
+
+- for ranked games : A,B,X,Y
+- for unranked games : A,B,Z 
+
+#### speed
 
   ```--speed``` Comma separated list of Game speed(s) to accept 
 (default blitz,live,correspondence)
