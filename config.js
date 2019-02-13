@@ -24,7 +24,6 @@ exports.allow_all_sizes = false;
 exports.allow_custom_sizes = false;
 exports.allowed_custom_boardsizewidth = [];
 exports.allowed_custom_boardsizeheight = [];
-exports.allowed_sizes = [];
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
@@ -483,24 +482,6 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
     }
 
     if (argv.boardsize) {
-        for (let i of argv.boardsize.split(',')) {
-            exports.allowed_sizes[i] = true;
-        }
-    }
-
-    if (argv.komi) {
-        for (let komi of argv.komi.split(',')) {
-            if (komi == "all") {
-                exports.allow_all_komi = true;
-            } else if (komi == "auto") {
-                exports.allowed_komi[null] = true;
-            } else {
-                exports.allowed_komi[komi] = true;
-            }
-        }
-    }
-
-    if (argv.boardsize) {
         for (let boardsize of argv.boardsize.split(',')) {
             if (boardsize == "all") {
                 exports.allow_all_sizes = true;
@@ -514,6 +495,18 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
                 }
             } else {
                 exports.allowed_sizes[boardsize] = true;
+            }
+        }
+    }
+
+    if (argv.komi) {
+        for (let komi of argv.komi.split(',')) {
+            if (komi == "all") {
+                exports.allow_all_komi = true;
+            } else if (komi == "auto") {
+                exports.allowed_komi[null] = true;
+            } else {
+                exports.allowed_komi[komi] = true;
             }
         }
     }
