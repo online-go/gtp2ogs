@@ -72,42 +72,72 @@ message instead of the default message. This message has to be included in
 "not accepting games because blablablah" (for example to explain why, for how long, 
 if your bot is busy playing a tournament, etc...)
 
+#### rejectnewfile
   ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
 
 #### boardsize
-  ```--boardsize```
+  ```--boardsize``` Board size(s) to accept
+
+  ```--boardsizeranked``` Board size(s) to accept for ranked games
+
+  ```--boardsizeunranked``` Board size(s) to accept for unranked games
 
 Possible boardsize values :
 
 - `all` (allows ALL boardsizes, use only if your bot can handle it !), 
-- `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 15x15, 
-3x2, etc..), 
-- and square board size written in numbers comma separated (default is `9,13,19` 
+- `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 
+15x15, 3x2, etc..), 
+- or square board size written in numbers comma separated (default is `9,13,19` 
 which is 9x9, 13x13, 19x19), see [notes E-](/docs/docs/NOTES.md#e-) for details
 
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` Allows custom 
-board size (if your bot can handle it), it is needed to use `custom` followed by 
-comma separated value(s), in this example 25x1 25x2 25x3 are all allowed boardsizes, 
-see [notes E-](/docs/docs/NOTES.md#e-) for details
+#### boardsize custom 
+if ```--boardsize custom``` is chosen, then you need to specify these new 
+options as well :
+
+  ```--boardsizewidth``` For custom board size(s), specify boardsize width(s) 
+to accept, for example 25
+
+  ```--boardsizewidthranked``` For custom board size(s), specify boardsize 
+width(s) to accept for ranked games, for example 25
+
+  ```--boardsizewidthunranked``` For custom board size(s), specify boardsize 
+width(s) to accept for unranked games, for example 25
+
+  ```--boardsizeheight``` For custom board size(s), specify boardsize height(s) 
+to accept, for example 1,2,3
+
+  ```--boardsizeheightranked``` For custom board size(s), specify boardsize 
+height(s) to accept for ranked games, for example 1,2,3
+
+  ```--boardsizeheightunranked``` For custom board size(s), specify boardsize 
+height(s) to accept, for example 1,2,3
+
+for example :
+
+  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` 
+Allows custom board sizes 25x1 25x2 25x3 in that example, see 
+[notes E-](/docs/docs/NOTES.md#e-) for details
 
 #### komi 
-```--komi```
+```--komi``` Allowed komi values  (default auto)
+
+```--komiranked``` Allowed komi values for ranked games
+
+```--komiunranked``` Allowed komi values for unranked games
  
 Possible komi values : 
 - `auto` (allows Automatic komi), 
 - `all` (allows all komi values), When `all` is used alone, all 
 komi values are allowed. 
-- comma separated values, for example `7.5` (allows 
-komi value 7.5), or `7.5,6.5,0.5,auto` 
+- comma separated values, for example `7.5`, or `7.5,6.5,0.5,auto` 
 
 When an argument other than `all` is used, only the chosen argument komi 
 values are allowed and all other komi values are rejected see 
 [notes C-](/docs/docs/NOTES.md#c-) and [notes D-](/docs/docs/NOTES.md#d-) 
-for details (default auto)
+for details
 
 #### ban
-
   ```--ban``` Comma separated list of user names or IDs 
 (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
@@ -128,22 +158,31 @@ result will be Players banned :
 - for unranked games : A,B,Z 
 
 #### speed
-
   ```--speed``` Comma separated list of Game speed(s) to accept 
 (default blitz,live,correspondence)
 
-#### timecontrol
+  ```--speedranked``` Comma separated list of Game speed(s) to 
+accept for ranked games
 
+  ```--speedunranked``` Comma separated list of Game speed(s) to 
+accept for unranked games
+
+#### timecontrol
   ```--timecontrol``` Time control(s) to accept (default fischer,
 byoyomi,simple,canadian)
 
-"absolute" and/or "none" can be manually allowed by bot admin in 
-timecontrol if want, but then : 
+  ```--timecontrolranked``` Time control(s) to accept for ranked 
+games
+
+  ```--timecontrolunranked``` Time control(s) to accept for unranked 
+games
+
+note : "absolute" and/or "none" can be manually allowed by bot 
+admin in timecontrol if want, but then : 
 
 - for absolute games : make sure you increase minmaintime a lot 
 higher than default (with current defaults, bot will timeout in just 
 a few moves)
-
 - for "none" : games would be very very long
 
 #### minmaintime
@@ -217,8 +256,8 @@ correspondence unranked games
   ```--maxperiodsunranked``` Maximum number of unranked periods
 
 #### minperiodtime
- For period times below, if timecontrol is canadian, divide the period time 
-by the number of stones per period, 
+ For period times below, if timecontrol is canadian, divide the period 
+time by the number of stones per period, 
 
 for example max periodtime 
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 

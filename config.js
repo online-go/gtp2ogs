@@ -15,15 +15,33 @@ exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_ranked_users = {};
 exports.banned_unranked_users = {};
-exports.allow_all_komi = false;
-exports.allowed_komi = [];
 exports.allowed_sizes = [];
-exports.allowed_timecontrols = {};
-exports.allowed_speeds = {};
 exports.allow_all_sizes = false;
 exports.allow_custom_sizes = false;
 exports.allowed_custom_boardsizewidth = [];
 exports.allowed_custom_boardsizeheight = [];
+exports.allowed_sizes_ranked = [];
+exports.allow_all_sizes_ranked = false;
+exports.allow_custom_sizes_ranked = false;
+exports.allowed_custom_boardsizewidth_ranked = [];
+exports.allowed_custom_boardsizeheight_ranked = [];
+exports.allowed_sizes_unranked = [];
+exports.allow_all_sizes_unranked = false;
+exports.allow_custom_sizes_unranked = false;
+exports.allowed_custom_boardsizewidth_unranked = [];
+exports.allowed_custom_boardsizeheight_unranked = [];
+exports.allow_all_komi = false;
+exports.allowed_komi = [];
+exports.allow_all_komi_ranked = false;
+exports.allowed_komi_ranked = [];
+exports.allow_all_komi_unranked = false;
+exports.allowed_komi_unranked = [];
+exports.allowed_timecontrols = {};
+exports.allowed_timecontrols_ranked = {};
+exports.allowed_timecontrols_unranked = {};
+exports.allowed_speeds = {};
+exports.allowed_speeds_ranked = {};
+exports.allowed_speeds_unranked = {};
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
@@ -67,10 +85,22 @@ exports.updateFromArgv = function() {
         .describe('boardsize', 'Board size(s) to accept')
         .string('boardsize')
         .default('boardsize', '9,13,19')
+        .describe('boardsizeranked', 'Board size(s) to accept for ranked games')
+        .string('boardsizeranked')
+        .describe('boardsizeunranked', 'Board size(s) to accept for unranked games')
+        .string('boardsizeunranked')
+        .describe('boardsizewidth', 'For custom board size(s), specify boardsize width to accept, for example 25')
         .string('boardsizewidth')
-        .describe('boardsizewidth', 'For custom board size(s) to accept, specify boardsize width, for example 25')
+        .describe('boardsizeheight', 'For custom board size(s), specify boardsize height to accept, for example 1')
         .string('boardsizeheight')
-        .describe('boardsizeheight', 'For custom board size(s) to accept, specify boardsize height, for example 1')
+        .describe('boardsizewidthranked', 'For custom board size(s), specify boardsize width to accept for ranked games, for example 25')
+        .string('boardsizewidthranked')
+        .describe('boardsizeheightranked', 'For custom board size(s), specify boardsize height to accept for ranked games, for example 1')
+        .string('boardsizeheightranked')
+        .describe('boardsizewidthunranked', 'For custom board size(s), specify boardsize width to accept for unranked games, for example 25')
+        .string('boardsizewidthunranked')
+        .describe('boardsizeheightunranked', 'For custom board size(s), specify boardsize height to accept for unranked games, for example 1')
+        .string('boardsizeheightunranked')
         // behaviour : --boardsize can be specified as 
         // "custom" (allows board with custom size width x height),
         // "all" (allows ALL boardsizes), 
@@ -79,6 +109,10 @@ exports.updateFromArgv = function() {
         .describe('komi', 'Allowed komi values')
         .string('komi')
         .default('komi', 'auto')
+        .describe('komiranked', 'Allowed komi values for ranked games')
+        .string('komiranked')
+        .describe('komiunranked', 'Allowed komi values for unranked games')
+        .string('komiunranked')
         // behaviour: --komi may be specified as 
         // "auto" (Automatic), 
         // "all" (accept all komi values), 
@@ -98,8 +132,12 @@ exports.updateFromArgv = function() {
         */
         .describe('speed', 'Game speed(s) to accept')
         .default('speed', 'blitz,live,correspondence')
+        .describe('speedranked', 'Game speed(s) to accept for ranked games')
+        .describe('speedunranked', 'Game speed(s) to accept for unranked games')
         .describe('timecontrol', 'Time control(s) to accept')
         .default('timecontrol', 'fischer,byoyomi,simple,canadian')
+        .describe('timecontrolranked', 'Time control(s) to accept for ranked games')
+        .describe('timecontrolunranked', 'Time control(s) to accept for unranked games')
         // 1- for "absolute", bot admin can allow absolute if want, but then 
         // make sure to increase minmaintimeblitz and minmaintimelive to high values
         // 2 - "none" is not default, can be manually allowed in timecontrol argument
@@ -499,6 +537,42 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
+    if (argv.boardsizeranked) {
+        for (let boardsizeranked of argv.boardsizeranked.split(',')) {
+            if (boardsizeranked == "all") {
+                exports.allow_all_sizes_ranked = true;
+            } else if (boardsizeranked == "custom") {
+                exports.allow_custom_sizes_ranked = true;
+                for (let boardsizewidthranked of argv.boardsizewidthranked.split(',')) {
+                    exports.allowed_custom_boardsizewidth_ranked[boardsizewidthranked] = true;
+                }
+                for (let boardsizeheightranked of argv.boardsizeheightranked.split(',')) {
+                    exports.allowed_custom_boardsizeheight_ranked[boardsizeheightranked] = true;
+                }
+            } else {
+                exports.allowed_sizes_ranked[boardsizeranked] = true;
+            }
+        }
+    }
+
+    if (argv.boardsizeunranked) {
+        for (let boardsizeunranked of argv.boardsizeunranked.split(',')) {
+            if (boardsizeunranked == "all") {
+                exports.allow_all_sizes_unranked = true;
+            } else if (boardsizeunranked == "custom") {
+                exports.allow_custom_sizes_unranked = true;
+                for (let boardsizewidthunranked of argv.boardsizewidthunranked.split(',')) {
+                    exports.allowed_custom_boardsizewidth_unranked[boardsizewidthunranked] = true;
+                }
+                for (let boardsizeheightunranked of argv.boardsizeheightunranked.split(',')) {
+                    exports.allowed_custom_boardsizeheight_unranked[boardsizeheightunranked] = true;
+                }
+            } else {
+                exports.allowed_sizes_unranked[boardsizeunranked] = true;
+            }
+        }
+    }
+
     if (argv.komi) {
         for (let komi of argv.komi.split(',')) {
             if (komi == "all") {
@@ -511,16 +585,63 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
+    if (argv.komiranked) {
+        for (let komiranked of argv.komiranked.split(',')) {
+            if (komiranked == "all") {
+                exports.allow_all_komi_ranked = true;
+            } else if (komiranked == "auto") {
+                exports.allowed_komi_ranked[null] = true;
+            } else {
+                exports.allowed_komi_ranked[komiranked] = true;
+            }
+        }
+    }
+
+    if (argv.komiunranked) {
+        for (let komiunranked of argv.komiunranked.split(',')) {
+            if (komiunranked == "all") {
+                exports.allow_all_komi_unranked = true;
+            } else if (komiunranked == "auto") {
+                exports.allowed_komi_unranked[null] = true;
+            } else {
+                exports.allowed_komi_unranked[komiunranked] = true;
+            }
+        }
+    }
+
     if (argv.timecontrol) {
         for (let i of argv.timecontrol.split(',')) {
             exports.allowed_timecontrols[i] = true;
         }
     }
 
+    if (argv.timecontrolranked) {
+        for (let i of argv.timecontrolranked.split(',')) {
+            exports.allowed_timecontrols_ranked[i] = true;
+        }
+    }
+
+    if (argv.timecontrolunranked) {
+        for (let i of argv.timecontrolunranked.split(',')) {
+            exports.allowed_timecontrols_unranked[i] = true;
+        }
+    }
 
     if (argv.speed) {
         for (let i of argv.speed.split(',')) {
             exports.allowed_speeds[i] = true;
+        }
+    }
+
+    if (argv.speedranked) {
+        for (let i of argv.speedranked.split(',')) {
+            exports.allowed_speeds_ranked[i] = true;
+        }
+    }
+
+    if (argv.speedunranked) {
+        for (let i of argv.speedunranked.split(',')) {
+            exports.allowed_speeds_unranked[i] = true;
         }
     }
 
