@@ -389,7 +389,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
 
     if (argv.banunranked) {
         for (let i of argv.banunranked.split(',')) {
-            banned_unranked_users[i] = true;
+            exports.banned_unranked_users[i] = true;
         }
     }
 
