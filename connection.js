@@ -341,12 +341,12 @@ class Connection {
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrol };
         }
 
-        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked) { 
+        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && !config.timecontrol) { 
             conn_log(user.username + " wanted time control for ranked games " + t.time_control + ", not in: " + config.timecontrolranked);
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for ranked games, please choose one of these allowed time controls for ranked games : " + config.timecontrolranked };
         }
 
-        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked) { 
+        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && !config.timecontrol) { 
             conn_log(user.username + " wanted time control for unranked games " + t.time_control + ", not in: " + config.timecontrolunranked);
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolunranked };
         }
@@ -356,12 +356,12 @@ class Connection {
             return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speed };
         }
 
-        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked) {
+        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && !config.speed) {
             conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedranked);
             return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedranked };
         }
 
-        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked) {
+        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && !config.speed) {
             conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedunranked);
             return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedunranked };
         }
@@ -494,12 +494,12 @@ class Connection {
             return { reject: true, msg: "komi " + notification.komi + " is not allowed, please choose one of these allowed komi : " + config.komi };
         }
 
-        if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked) {
+        if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && !config.komi) {
             conn_log("komi value " + notification.komi + " is not allowed for ranked games, allowed komi for ranked games are: " + config.komiranked);
             return { reject: true, msg: "komi " + notification.komi + " is not allowed for ranked games, please choose one of these allowed komi for ranked games: " + config.komiranked };
         }
 
-        if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked) {
+        if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && !config.komi) {
             conn_log("komi value " + notification.komi + " is not allowed for unranked games, allowed komi for unranked games are: " + config.komiunranked);
             return { reject: true, msg: "komi " + notification.komi + " is not allowed for unranked games, please choose one of these allowed komi for unranked games: " + config.komiunranked };
         }
