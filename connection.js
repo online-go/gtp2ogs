@@ -498,18 +498,36 @@ class Connection {
         }
 
         if (!config.allowed_komi[notification.komi] && !config.allow_all_komi && !config.komiranked && !config.komiunranked) {
-            conn_log("komi value " + notification.komi + " is not allowed, allowed komi are: " + config.komi);
-            return { reject: true, msg: "komi " + notification.komi + " is not allowed, please choose one of these allowed komi : " + config.komi };
+            let notificationKomiString = "";
+            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+                notificationKomiString = "Automatic";
+            } else {
+                notificationKomiString = notification.komi;
+            }
+            conn_log("komi value " + notificationKomiString + " is not allowed, allowed komi are: " + config.komi);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed, please choose one of these allowed komi : " + config.komi};
         }
 
         if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && config.komiranked) {
-            conn_log("komi value " + notification.komi + " is not allowed for ranked games, allowed komi for ranked games are: " + config.komiranked);
-            return { reject: true, msg: "komi " + notification.komi + " is not allowed for ranked games, please choose one of these allowed komi for ranked games: " + config.komiranked };
+            let notificationKomiString = "";
+            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+                notificationKomiString = "Automatic";
+            } else {
+                notificationKomiString = notification.komi;
+            }
+            conn_log("komi value " + notificationKomiString + " is not allowed for ranked games, allowed komi for ranked games are: " + config.komiranked);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for ranked games, please choose one of these allowed komi for ranked games: " + config.komiranked};
         }
 
         if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && config.komiunranked) {
-            conn_log("komi value " + notification.komi + " is not allowed for unranked games, allowed komi for unranked games are: " + config.komiunranked);
-            return { reject: true, msg: "komi " + notification.komi + " is not allowed for unranked games, please choose one of these allowed komi for unranked games: " + config.komiunranked };
+            let notificationKomiString = "";
+            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+                notificationKomiString = "Automatic";
+            } else {
+                notificationKomiString = notification.komi;
+            }
+            conn_log("komi value " + notificationKomiString + " is not allowed for unranked games, allowed komi for unranked games are: " + config.komiunranked);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for unranked games, please choose one of these allowed komi for unranked games: " + config.komiunranked};
         }
 
         ////// begining of *** UHMAEAT v2: Universal Highly Modulable And Expandable Argv Tree ***
