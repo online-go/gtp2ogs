@@ -21,9 +21,10 @@ a list of gtp2ogs arguments is also available
 #### C : 
 
 on OGS, black player will always get the handicap stones regardless of rank difference 
-(if auto (automatic) komi is selected, the komi will be 0.5) 
+(if "Automatic" komi is selected, the komi will be 0.5) 
 
-but you can restrict allowed komi for example to only 7.5 or auto with `--komi 7.5,auto`
+but you can restrict allowed komi for example to only 7.5 or Automatic with 
+`--komi 7.5,Automatic`
 
 or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi, if your bot 
 does not support 0.5 komi value.
@@ -32,12 +33,12 @@ does not support 0.5 komi value.
 
 explanation on how to use komi argument:
 
-- `--komi auto,0.5,7.5` for example, will allow any of these komi values : 
-automatic(auto), 0.5, or 7.5, and will reject any other value
+- `--komi Automatic,0.5,7.5` for example, will allow any of these komi values : 
+Automatic, 0.5, or 7.5, and will reject any other value
 
 - another example `--komi 7.5` will only accept komi value 7.5 and will reject 
-any other value. In that example, note that if `auto` (automatic) komi happens 
-to have the value 7.5, the auto value will be set to 7.5 and will be accepted 
+any other value. In that example, note that if `Automatic` komi happens 
+to have the value 7.5, the Automatic value will be set to 7.5 and will be accepted 
 and game will start (bots will always replace any rules with chinese rules, so 
 a non handicap game 19x19 on ogs against a bot will always have the komi 7.5)
 

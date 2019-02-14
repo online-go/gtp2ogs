@@ -108,16 +108,16 @@ exports.updateFromArgv = function() {
         // The default is "9,13,19" (square board sizes only), see README for details
         .describe('komi', 'Allowed komi values')
         .string('komi')
-        .default('komi', 'auto')
+        .default('komi', 'Automatic')
         .describe('komiranked', 'Allowed komi values for ranked games')
         .string('komiranked')
         .describe('komiunranked', 'Allowed komi values for unranked games')
         .string('komiunranked')
         // behaviour: --komi may be specified as 
-        // "auto" (Automatic), 
+        // "Automatic" (accept Automatic komi), 
         // "all" (accept all komi values), 
         // or comma separated list of explicit values.
-        // The default is "auto", see README for details
+        // The default is "Automatic", see README for details
         .describe('ban', 'Comma separated list of user names or IDs')
         .string('ban')
         .describe('banranked', 'Comma separated list of user names or IDs')
@@ -322,6 +322,27 @@ if (argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || ar
 
 if (argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
     console.log("Warning: --min/max*periodtime*+/-ranked/unranked is not supported anymore\n Use --min/max*periodtime*blitz/live/corr*+/-ranked/unranked");
+}
+
+if (argv.komi) {
+    if (argv.komi.includes(`auto`)) {
+        console.log("Warning: /--komi auto/ has been renamed to /--komi Automatic/\n");
+        // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+    }
+}
+
+if (argv.komiranked) {
+    if (argv.komiranked.includes(`auto`)) {
+        console.log("Warning: /--komiranked auto/ has been renamed to /--komiranked Automatic/\n");
+        // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+    }
+}
+
+if (argv.komiunranked) {
+    if (argv.komiunranked.includes(`auto`)) {
+        console.log("Warning: /--komiunranked auto/ has been renamed to /--komiunranked Automatic/\n");
+        // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+    }
 }
 
 if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
@@ -577,7 +598,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         for (let komi of argv.komi.split(',')) {
             if (komi == "all") {
                 exports.allow_all_komi = true;
-            } else if (komi == "auto") {
+            } else if (komi == "Automatic") {
                 exports.allowed_komi[null] = true;
             } else {
                 exports.allowed_komi[komi] = true;
@@ -589,7 +610,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         for (let komiranked of argv.komiranked.split(',')) {
             if (komiranked == "all") {
                 exports.allow_all_komi_ranked = true;
-            } else if (komiranked == "auto") {
+            } else if (komiranked == "Automatic") {
                 exports.allowed_komi_ranked[null] = true;
             } else {
                 exports.allowed_komi_ranked[komiranked] = true;
@@ -601,7 +622,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         for (let komiunranked of argv.komiunranked.split(',')) {
             if (komiunranked == "all") {
                 exports.allow_all_komi_unranked = true;
-            } else if (komiunranked == "auto") {
+            } else if (komiunranked == "Automatic") {
                 exports.allowed_komi_unranked[null] = true;
             } else {
                 exports.allowed_komi_unranked[komiunranked] = true;

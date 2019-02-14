@@ -156,8 +156,8 @@ shown in
 [Most common usage earlier](#4-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
-specify them, such as `--komi` which default is automatic even if you dont specify it !
-(default value is overwritten when you set your own value)
+specify them, such as `--komi` which default is "Automatic" even if you dont specify 
+it ! (default value is overwritten when you set your own value)
 
 note 2 : if an argument has ranked and unranked in the same "family", use:
 - either the general argument alone,
