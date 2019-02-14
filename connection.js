@@ -341,12 +341,17 @@ class Connection {
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrol };
         }
 
-        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && !config.timecontrol) { 
+        // for all the allowed_family options below (timecontrols, speeds, komi, boardsizes, 
+        // we need to add a "family guard" 
+        // && config.familyranked for ranked games 
+        // && config.familyunranked for unranked games
+        // else the allowed_ is always false and always rejects
+        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolranked) { 
             conn_log(user.username + " wanted time control for ranked games " + t.time_control + ", not in: " + config.timecontrolranked);
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for ranked games, please choose one of these allowed time controls for ranked games : " + config.timecontrolranked };
         }
 
-        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && !config.timecontrol) { 
+        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolunranked) { 
             conn_log(user.username + " wanted time control for unranked games " + t.time_control + ", not in: " + config.timecontrolunranked);
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolunranked };
         }
@@ -356,12 +361,12 @@ class Connection {
             return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speed };
         }
 
-        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && !config.speed) {
+        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedranked) {
             conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedranked);
             return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedranked };
         }
 
-        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && !config.speed) {
+        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedunranked) {
             conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedunranked);
             return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedunranked };
         }
@@ -420,12 +425,12 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + config.boardsizewidth };
         }
 
-        if (!config.allow_all_sizes_ranked && config.allow_custom_sizes_ranked && !config.allowed_custom_boardsizewidth_ranked[notification.width] && notification.ranked && !config.boardsizewidth) {
+        if (!config.allow_all_sizes_ranked && config.allow_custom_sizes_ranked && !config.allowed_custom_boardsizewidth_ranked[notification.width] && notification.ranked && config.boardsizewidthranked) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width for ranked games");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board WIDTH values for ranked games : " + config.boardsizewidthranked };
         }
 
-        if (!config.allow_all_sizes_unranked && config.allow_custom_sizes_unranked && !config.allowed_custom_boardsizewidth_unranked[notification.width] && !notification.ranked && !config.boardsizewidth) {
+        if (!config.allow_all_sizes_unranked && config.allow_custom_sizes_unranked && !config.allowed_custom_boardsizewidth_unranked[notification.width] && !notification.ranked && config.boardsizewidthunranked) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width for unranked games");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board WIDTH values for unranked games : " + config.boardsizewidthunranked };
         }
@@ -436,12 +441,12 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheight };
         }
 
-        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && notification.ranked && !config.boardsizeheight) {
+        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && notification.ranked && config.boardsizeheightranked) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height for ranked games ");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board HEIGHT values for ranked games: " + config.boardsizeheight };
         }
 
-        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && !notification.ranked && !config.boardsizeheight) {
+        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && !notification.ranked && config.boardsizeheightunranked) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height for unranked games ");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board HEIGHT values for unranked games: " + config.boardsizeheight };
         }
@@ -497,12 +502,12 @@ class Connection {
             return { reject: true, msg: "komi " + notification.komi + " is not allowed, please choose one of these allowed komi : " + config.komi };
         }
 
-        if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && !config.komi) {
+        if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && config.komiranked) {
             conn_log("komi value " + notification.komi + " is not allowed for ranked games, allowed komi for ranked games are: " + config.komiranked);
             return { reject: true, msg: "komi " + notification.komi + " is not allowed for ranked games, please choose one of these allowed komi for ranked games: " + config.komiranked };
         }
 
-        if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && !config.komi) {
+        if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && config.komiunranked) {
             conn_log("komi value " + notification.komi + " is not allowed for unranked games, allowed komi for unranked games are: " + config.komiunranked);
             return { reject: true, msg: "komi " + notification.komi + " is not allowed for unranked games, please choose one of these allowed komi for unranked games: " + config.komiunranked };
         }
