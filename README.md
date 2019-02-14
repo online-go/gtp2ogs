@@ -62,21 +62,7 @@ default path install is something like this :
 On all operating systems, gtp2ogs will be installed in 2 different directories, but 
 **the one that needs to be run with node is gtp2ogs.js in node_modules directory**
 
-### 3. Optional : install any missing node.js packages
- 
-**This step can be skipped unless you have issues or bugs**
-
-you may need to install extra tools if the 
-[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) 
-below fails, such as (run as `sudo` for linux, and as admin for windows)
- 
-```
-npm install -g socket.io-client
-npm install -g optimist
-npm install -g tracer
-  ```
-
-### 4. Recommended : Upgrade to devel branch
+### 3. Recommended : Upgrade to devel branch
 
 This step is **is recommended**
 
@@ -92,7 +78,7 @@ When you upgrade you need to copy all the gtp2ogs files (bot.js, config.js, etc.
 and overwrite the old files (you can backup your old files so that you can go back 
 to the old version if you want later)
 
-### 5. Most common usage : start gtp2ogs.js using nodejs
+### 4. Most common usage : start gtp2ogs.js using nodejs
 
 For linux (preferably as sudo) :
 
@@ -116,6 +102,20 @@ you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
+
+### 5. Optional : install any missing node.js packages
+ 
+**This step can be skipped unless you have issues or bugs**
+
+You may need to install some missing packages if the 
+[Most common usage](#4-most-common-usage--start-gtp2ogsjs-using-nodejs) fails
+
+To do that, you can just run (as admin on windows, as sudo on linux) :
+
+```npm install```
+
+This command will automatically detect all missing packages needed 
+from package.json and install them
 
 ### Extra : add features by editing gtp2ogs files
 
@@ -153,7 +153,7 @@ use the ones you want only, no need to use them all !
 After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
 to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
 shown in 
-[Most common usage earlier](/docs/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
+[Most common usage earlier](#4-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
 specify them, such as `--komi` which default is automatic even if you dont specify it !
