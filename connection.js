@@ -397,17 +397,17 @@ class Connection {
         /* if square, check if square board size is allowed*/
         if (!config.allowed_sizes[notification.width] && !config.allow_all_sizes && !config.allow_custom_sizes && !config.boardsizeranked && !config.boardsizeunranked) {
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of the allowed square board sizes (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes : " + config.boardsize };
+            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed board sizes " + boardsizeSquareToDisplayString(config.boardsize)};
         }
 
         if (!config.allowed_sizes_ranked[notification.width] && !config.allow_all_sizes_ranked && !config.allow_custom_sizes_ranked && notification.ranked) {
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for ranked games");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for ranked games, please choose one of the allowed square board sizes for ranked games (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes for ranked games : " + config.boardsizeranked };
+            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for ranked games, please choose one of these allowed board sizes for ranked games : " + boardsizeSquareToDisplayString(config.boardsizeranked)};
         }
 
         if (!config.allowed_sizes_unranked[notification.width] && !config.allow_all_sizes_unranked && !config.allow_custom_sizes_unranked && !notification.ranked) {
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for unranked games");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for unranked games, please choose one of the allowed square board sizes for unranked games (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes for unranked games : " + config.boardsizeunranked };
+            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for unranked games, please choose one of these allowed board sizes for unranked games " + boardsizeSquareToDisplayString(config.boardsizeunranked)};
         }
 
         // for custom board sizes, including square board sizes if width == height as well //
@@ -1492,6 +1492,14 @@ function timespanToDisplayString(timespan) {
     .filter(e => e !== "")
     .join(" ");
 } /* }}} */
+
+function boardsizeSquareToDisplayString(boardsizeSquare) {
+    return boardsizeSquare
+    .split(',')
+    .map(e => e.trim())
+    .map(e => `${e}x${e}`)
+    .join(', ');
+}
 
 function conn_log() { /* {{{ */
     let arr = ["# "];
