@@ -1,3 +1,5 @@
+// vim: tw=120 softtabstop=4 shiftwidth=4
+
 let querystring = require('querystring');
 
 let io = require('socket.io-client');

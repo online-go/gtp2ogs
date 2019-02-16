@@ -1,3 +1,5 @@
+// vim: tw=120 softtabstop=4 shiftwidth=4
+
 let child_process = require('child_process');
 let console = require('./console').console;
 let config = require('./config');
@@ -307,12 +309,12 @@ class Bot {
         for (let i=0; i < moves.length; ++i) {
             let move = moves[i];
             let c = color
-    
+
             // Use set_free_handicap for handicap stones, play otherwise.
             if (doing_handicap && handicap_moves.length < state.handicap) {
                 handicap_moves.push(move);
                 if (handicap_moves.length == state.handicap)
-                this.sendHandicapMoves(handicap_moves, state.width);
+                    this.sendHandicapMoves(handicap_moves, state.width);
                 else continue;  // don't switch color.
             } else {
                 this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
@@ -323,7 +325,7 @@ class Bot {
         // This breaks PhoenixGo.
         //this.command("showboard", cb, eb);
     } /* }}} */
-    
+
     command(str, cb, eb, final_command) { /* {{{ */
         this.command_callbacks.push(cb);
         if (config.DEBUG) {
@@ -367,14 +369,14 @@ class Bot {
         //
         this.firstmove = false;
 
-	this.command(cmd, (line) => {
-	    line = typeof(line) == "string" ? line.toLowerCase() : null;
-	    let parts = line.split(/ +/);
-	    let moves = [];
-	    
-	    for (let i=0; i < parts.length; i++) {
-		let move = parts[i];
-		
+        this.command(cmd, (line) => {
+            line = typeof(line) == "string" ? line.toLowerCase() : null;
+            let parts = line.split(/ +/);
+            let moves = [];
+
+            for (let i=0; i < parts.length; i++) {
+                let move = parts[i];
+
                 let resign = move == 'resign';
                 let pass = move == 'pass';
                 let x=-1, y=-1;
@@ -388,9 +390,9 @@ class Bot {
                     }
                 }
                 moves.push({'x': x, 'y': y, 'text': move, 'resign': resign, 'pass': pass});
-	    }
+            }
 
-	    cb(moves);
+            cb(moves);
         },
             eb,
             true /* final command */
