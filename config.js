@@ -9,6 +9,8 @@ exports.GREETING = "";
 exports.FAREWELL = "";
 exports.REJECTNEWMSG = "";
 
+exports.timeout = 0;
+exports.corrqueue = false;
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_ranked_users = {};

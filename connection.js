@@ -37,7 +37,6 @@ class Connection {
         });
 
         this.connected_games = {};
-        this.connected_game_timeouts = {};
         this.games_by_player = {};     // Keep track of connected games per player
         this.connected = false;
 
@@ -48,6 +47,10 @@ class Connection {
             }
         }, (/online-go.com$/.test(config.host)) ? 5000 : 500);
 
+        if (config.timeout) {
+            this.idle_game_timeout_interval = setInterval(
+                this.disconnectIdleGames.bind(this), 1000);
+        }
 
         this.clock_drift = 0;
         this.network_latency = 0;
@@ -86,15 +89,19 @@ class Connection {
                 if (Game.corr_moves_processing == 0) {
                     // Choose a corr game to make a move
                     // TODO: Choose the game with least time remaining
-                    //
+                    let candidates = [];
                     for (let game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
-                            this.connected_games[game_id].makeMove(this.connected_games[game_id].state.moves.length);
-                            break;
+                            candidates.push(this.connected_games[game_id]);
                         }
                     }
+                    // Pick a random game that needs a move.
+                    if (candidates.length > 0) {
+                        let game = candidates[Math.floor(Math.random()*candidates.length)];
+                        game.makeMove(game.state.moves.length);
+                    }
                 }
-            }, 10000);
+            }, 1000);
         }
 
         this.notification_connect_interval = setInterval(() => {
@@ -114,13 +121,8 @@ class Connection {
             this.connected = false;
 
             conn_log("Disconnected from server");
-            if (config.timeout)
-            {
-                for (let game_id in this.connected_game_timeouts)
-                {
-                    if (config.DEBUG) conn_log("clearTimeout because disconnect from server", game_id);
-                    clearTimeout(this.connected_game_timeouts[game_id]);
-                }
+            if (config.timeout) {
+                clearInterval(this.idle_game_timeout_interval);
             }
 
             for (let game_id in this.connected_games) {
@@ -161,23 +163,6 @@ class Connection {
             //
             let game = this.connectToGame(gamedata.id);
 
-            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
-                // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
-                // game.makeMove(gamedata.move_number);
-
-                if (config.timeout)
-                {
-                    if (this.connected_game_timeouts[gamedata.id]) {
-                        clearTimeout(this.connected_game_timeouts[gamedata.id])
-                    }
-                    if (config.DEBUG) conn_log("Setting timeout for", gamedata.id);
-                    this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
-                        if (config.DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
-                        this.disconnectFromGame(gamedata.id);
-                    }, config.timeout); /* forget about game after --timeout seconds */
-                }
-            }
-
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
             // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
             //
@@ -189,17 +174,6 @@ class Connection {
                 //     active_game, so it's lost since there's no game to handle it anymore...
                 //     Work around it with a timeout for now.
                 setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
-            } else {
-                if (config.timeout)
-                {
-                    if (this.connected_game_timeouts[gamedata.id]) {
-                        clearTimeout(this.connected_game_timeouts[gamedata.id])
-                    }
-                    if (config.DEBUG) conn_log("Setting timeout for", gamedata.id);
-                    this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
-                        this.disconnectFromGame(gamedata.id);
-                    }, config.timeout); /* forget about game after --timeout seconds */
-                }
             }
         });
     }}}
@@ -213,16 +187,6 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (config.timeout)
-        {
-            if (game_id in this.connected_games) {
-                clearTimeout(this.connected_game_timeouts[game_id])
-            }
-            this.connected_game_timeouts[game_id] = setTimeout(() => {
-                this.disconnectFromGame(game_id);
-            }, config.timeout); /* forget about game after --timeout seconds */
-        }
-
         if (game_id in this.connected_games) {
             if (config.DEBUG) conn_log("Connected to game", game_id, "already");
             return this.connected_games[game_id];
@@ -234,24 +198,25 @@ class Connection {
         if (config.DEBUG) {
             conn_log("disconnectFromGame", game_id);
         }
-        if (config.timeout)
-        {
-            if (game_id in this.connected_game_timeouts)
-            {
-                if (config.DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
-                clearTimeout(this.connected_game_timeouts[game_id]);
-            }
-        }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
             delete this.connected_games[game_id];
-            delete this.connected_game_timeouts[game_id];
         }
-
-        // TODO Following 2 lines seem duplicate of above? Safe to remove?
-        delete this.connected_games[game_id];
-        if (config.timeout) delete this.connected_game_timeouts[game_id];
     }; /* }}} */
+    disconnectIdleGames() {
+        let now = Date.now();
+        for (let game_id in this.connected_games) {
+            let state = this.connected_games[game_id].state;
+            if (state == null) {
+                if (config.DEBUG) conn_log("No game state, not checking idle status for", game_id);
+                continue;
+            }
+            if ((state.clock.current_player != this.bot_id) && (state.clock.last_move + config.timeout < now)) {
+                if (config.DEBUG) conn_log("Disconnecting from game, other player has been idling for ", config.timeout);
+                this.disconnectFromGame(game_id);
+            }
+        }
+    };
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
             conn_log("Deleted notification ", notification.id);
