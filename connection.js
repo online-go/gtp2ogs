@@ -37,7 +37,7 @@ class Connection {
         });
 
         this.connected_games = {};
-        this.games_by_player = {};     // Keep track of active games per player
+        this.games_by_player = {};     // Keep track of connected games per player
         this.connected = false;
 
         this.connect_timeout = setTimeout(()=>{
@@ -259,10 +259,10 @@ class Connection {
             return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
         }
 
-        let active_games = this.gamesForPlayer(notification.user.id);
-        if (config.maxactivegames && active_games >= config.maxactivegames) {
-            conn_log("Too many active games.");
-            return { reject: true, msg: "Maximum number of active games allowed per player against this bot is " + config.maxactivegames + " , please reduce your number of active games against this bot, and try again" };
+        let connected_games_per_user = this.gamesForPlayer(notification.user.id);
+        if (config.maxconnectedgamesperuser && connected_games_per_user >= config.maxconnectedgamesperuser) {
+            conn_log("Too many connected games for this user.");
+            return { reject: true, msg: "Maximum number of simultaneous games allowed per player against this bot is " + config.maxconnectedgamesperuser + " , please reduce your number of connected games against this bot, and try again" };
         }
 
         if (this.connected_games) {
@@ -271,24 +271,53 @@ class Connection {
             if (config.DEBUG) console.log("There are no connected games");
         }
 
-        if (config.maxtotalgames && this.connected_games && Object.keys(this.connected_games).length >= config.maxtotalgames){
-            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + config.maxtotalgames);
-            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxtotalgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
+        if (config.maxconnectedgames && this.connected_games && Object.keys(this.connected_games).length >= config.maxconnectedgames){
+            conn_log(Object.keys(this.connected_games).length + " games being played, maximum is " + config.maxconnectedgames);
+            return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxconnectedgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
-        if (user.ranking < config.minrank) {
+        if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMinRank = rankToString(config.minrank);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
             return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + ", your rank is too low." };
         }
 
-        if (user.ranking > config.maxrank) {
+        if ((user.ranking < config.minrankranked) && notification.ranked) {
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMinRank = rankToString(config.minrankranked);
+            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min for ranked games is " + humanReadableMinRank);
+            return { reject: true, msg: "Minimum rank for ranked games is " + humanReadableMinRank + ", your rank is too low, try unranked game" };
+        }
+
+        if ((user.ranking < config.minrankunranked) && !notification.ranked) {
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMinRank = rankToString(config.minrankunranked);
+            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min for ranked games is " + humanReadableMinRank);
+            return { reject: true, msg: "Minimum rank for unranked games is " + humanReadableMinRank + ", your rank is too low" };
+        }
+
+        if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
             return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + ", your rank is too high." };
         }
+
+        if ((user.ranking > config.maxrankranked) && notification.ranked) {
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMaxRank = rankToString(config.maxrank);
+            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max for ranked games is " + humanReadableMaxRank);
+            return { reject: true, msg: "Maximum rank for ranked games is " + humanReadableMaxRank + ", your rank is too high, try unranked game" };
+        }
+
+        if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMaxRank = rankToString(config.maxrank);
+            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max for unranked games is " + humanReadableMaxRank);
+            return { reject: true, msg: "Maximum rank for unranked games is " + humanReadableMaxRank + ", your rank is too high" };
+        }
+
 
         return { reject: false }; // OK !
 
@@ -305,19 +334,14 @@ class Connection {
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
 
-        // ** first we eliminate absolute and simple time control : they don't support the use of a period time
-        // using absolute or simple (no period time) is likely to make bots timeout or play way too fast 
+        // ** first we eliminate "absolute" time control : no support for the use of a maintime + periodtime
+        // using "absolute" (no period time) is likely to make bots timeout or play way too fast 
         /* "fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
         let TimeControlString = String(t.time_control);
         if (TimeControlString === "absolute") {
             conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
-            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian." };
+            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian." }; // simple is possible too, but we dont want to promote it
         }
-    
-        if (TimeControlString === "simple") {
-            conn_log("Minimum and Maximum main time is not supported in time control " + TimeControlString);
-            return { reject: true, msg: "Period time management is not supported in the time control " + TimeControlString + " , please choose a time control that supports the use of a period time, such as byoyomi,fischer,canadian. \n You can keep using the same time as in "  + TimeControlString + " time, just add a period time on top of it, for example 20 minutes + 5 x 30 seconds" };
-        }  
 
         if (config.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
@@ -351,7 +375,7 @@ class Connection {
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheight };
         }
 
-        if (config.noautohandicap && notification.handicap == -1) {
+        if (config.noautohandicap && notification.handicap == -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
             conn_log("no autohandicap, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
@@ -366,12 +390,12 @@ class Connection {
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (notification.handicap < config.minhandicap) {
+        if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
             conn_log("Min handicap is " + config.minhandicap);
             return { reject: true, msg: "Minimum handicap is " + config.minhandicap + " , please increase the number of handicap stones " };
         }
 
-        if (notification.handicap > config.maxhandicap) {
+        if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
             conn_log("Max handicap is " + config.maxhandicap);
             return { reject: true, msg: "Maximum handicap is " + config.maxhandicap + " , please reduce the number of handicap stones " };
         }
@@ -422,6 +446,7 @@ class Connection {
             // e.g. stuck on "absolute"  
 
             // for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            // simple time is not included in reject messages for maintime : no main time, only period time !
             let universalMaintimeMinimumMaximumSentence = "";    // minimum
             let universalMaintimeTimecontrolSentence = "";       // main time - initial time and/or max time, etc..
             let universalMaintimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
@@ -437,7 +462,7 @@ class Connection {
                 universalMaintimeMinimumMaximumSentence = "Minimum ";
                 universalMaintimeIncreaseDecreaseSentence = ", please increase ";
                 let universalMaintimeConnSentence = user.username + " wanted main time below minimum main time ";
-                if (config.minmaintime) {
+                if (config.minmaintime && !config.minmaintimeranked && !config.minmaintimeunranked) {
                     universalMaintimeNumber = config.minmaintime;
                     universalMaintimeToString = timespanToDisplayString(config.minmaintime);
                     universalMaintimeForRankedUnrankedSentence = "is ";
@@ -454,16 +479,19 @@ class Connection {
                  }
                 // now just before TimecontrolString is being tested, we again make sure it has the latest value
                 universalMaintimeTimecontrolString = String(t.time_control);/*
-                "fischer", "byoyomi", "canadian" */
+                "fischer", "byoyomi", "canadian", "simple" */
 
-                // sanity check : if not fischer, not byoyomi, not canadian
-                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
-                    conn_log ("error, could not find time control in " + t.time_control);
-                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                // sanity check : if not fischer, not byoyomi, not canadian, not simple
+                // time control peculiarities : 
+                // - fischer : doesnt have a minperiods or maxperiods
+                // - simple : doesnt have a maintime, only periodtime, so we let it slide for main time reject
+                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian") && (universalMaintimeTimecontrolString !== "simple")) {
+                    conn_log ("error, could not find allowed time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
                 }                
 
                 // if sanity check passes :
-                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) {
+                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) { // as said earlier, simple time doesn't use a main time, let it slide from maintime rejects
                     if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time < universalMaintimeNumber) || (t.max_time < universalMaintimeNumber))) {
                         universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
                         universalMaintimeEndingSentence = ".";
@@ -489,7 +517,7 @@ class Connection {
                 universalMaintimeMinimumMaximumSentence = "Maximum ";
                 universalMaintimeIncreaseDecreaseSentence = ", please reduce ";
                 let universalMaintimeConnSentence = user.username + " wanted main time above maximum main time ";
-                if (config.maxmaintime) {
+                if (config.maxmaintime && !config.maxmaintimeranked && !config.maxmaintimeunranked) {
                     universalMaintimeNumber = config.maxmaintime;
                     universalMaintimeToString = timespanToDisplayString(config.maxmaintime);
                     universalMaintimeForRankedUnrankedSentence = "is ";
@@ -506,16 +534,19 @@ class Connection {
                 }
                 // now just before TimecontrolString is being tested, we again make sure it has the latest value
                 universalMaintimeTimecontrolString = String(t.time_control);/*
-                "fischer", "byoyomi", "canadian" */
+                "fischer", "byoyomi", "canadian", "simple" */
 
-                // sanity check : if not fischer, not byoyomi, not canadian
-                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian")) {
-                    conn_log ("error, could not find time control in " + t.time_control);
-                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                // sanity check : if not fischer, not byoyomi, not canadian, not simple
+                // time control peculiarities : 
+                // - fischer : doesnt have a minperiods or maxperiods
+                // - simple : doesnt have a maintime, only periodtime, so we let it slide for main time reject
+                if ((universalMaintimeTimecontrolString !== "fischer") && (universalMaintimeTimecontrolString !== "byoyomi") && (universalMaintimeTimecontrolString !== "canadian") && (universalMaintimeTimecontrolString !== "simple")) { // simple is part of allowed timecontrols
+                    conn_log ("error, could not find allowed time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
                 }                
 
                 // if sanity check passes :
-                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) {
+                if ((universalMaintimeTimecontrolString === "fischer") || (universalMaintimeTimecontrolString === "byoyomi") || (universalMaintimeTimecontrolString === "canadian")) { // as said earlier, simple time doesn't use a main time, let it slide from maintime rejects
                     if ((universalMaintimeTimecontrolString === "fischer") && ((t.initial_time > universalMaintimeNumber) || (t.max_time > universalMaintimeNumber))) {
                         universalMaintimeTimecontrolSentence = "Initial Time and/or Max Time ";
                         universalMaintimeEndingSentence = ".";
@@ -539,7 +570,7 @@ class Connection {
         }
         ////// end of *** UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 
-        if (config.minperiods && (t.periods < config.minperiods)) {
+        if (config.minperiods && (t.periods < config.minperiods) && !config.minperiodsranked && !config.minperiodsunranked) {
             conn_log(user.username + " wanted too few periods: " + t.periods);
             return { reject: true, msg: "Minimum number of periods is " + config.minperiods + " , please increase the number of periods" };
         }
@@ -554,17 +585,17 @@ class Connection {
             return { reject: true, msg: "Minimum number of periods for unranked games is " + config.minperiodsunranked + " , please increase the number of periods" };
         }
 
-        if (t.periods > config.maxperiods) {
+        if (config.maxperiods && (t.periods > config.maxperiods) && !config.maxperiodsranked && !config.maxperiodsunranked) {
             conn_log(user.username + " wanted too many periods: " + t.periods);
             return { reject: true, msg: "Maximum number of periods is " + config.maxperiods + " , please reduce the number of periods" };
         }
 
-        if (t.periods > config.maxperiodsranked && notification.ranked) {
+        if (config.maxperiodsranked && (t.periods > config.maxperiodsranked) && notification.ranked) {
             conn_log(user.username + " wanted too many periods ranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for ranked games is " + config.maxperiodsranked + " , please reduce the number of periods" };
         }
 
-        if (t.periods > config.maxperiodsunranked && !notification.ranked) {
+        if (config.maxperiodsunranked && (t.periods > config.maxperiodsunranked) && !notification.ranked) {
             conn_log(user.username + " wanted too many periods unranked: " + t.periods);
             return { reject: true, msg: "Maximum number of periods for unranked games is " + config.maxperiodsunranked + " , please reduce the number of periods" };
         }
@@ -580,7 +611,7 @@ class Connection {
             // this avoids TimecontrolString being frozen on the same value independently from what user chooses, 
             // e.g. stuck on "absolute"  
 
-            // for fischer, byoyomi, or canadian, we use our UHMAEAT !
+            // for fischer, byoyomi, canadian, simple, we use our UHMAEAT !
             let universalPeriodtimeMinimumMaximumSentence = "";    // minimum
             let universalPeriodtimeTimecontrolSentence = "";       // period time - initial time and/or max time, etc..
             let universalPeriodtimeForRankedUnrankedSentence = ""; // +/- for ranked/unranked games is
@@ -599,7 +630,7 @@ class Connection {
                 universalPeriodtimeMinimumMaximumSentence = "Minimum ";
                 universalPeriodtimeIncreaseDecreaseSentence = ", please increase ";
                 let universalPeriodtimeConnSentence = user.username + " wanted period time below minimum period time ";
-                if (config.minperiodtime) {
+                if (config.minperiodtime && !config.minperiodtimeranked && !config.minperiodtimeunranked) {
                     universalPeriodtimeNumber = config.minperiodtime;
                     universalPeriodtimeToString = timespanToDisplayString(config.minperiodtime);
                     universalPeriodtimeForRankedUnrankedSentence = "is ";
@@ -616,16 +647,19 @@ class Connection {
                  }
                 // now just before TimecontrolString is being tested, we again make sure it has the latest value
                 universalPeriodtimeTimecontrolString = String(t.time_control);/*
-                "fischer", "byoyomi", "canadian" */
+                "fischer", "byoyomi", "canadian", "simple" */
 
-                // sanity check : if not fischer, not byoyomi, not canadian
-                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian")) {
-                    conn_log ("error, could not find time control in " + t.time_control);
-                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                // sanity check : if not fischer, not byoyomi, not canadian, not simple
+                // time control peculiarities : 
+                // - fischer : doesnt have a minperiods or maxperiods
+                // - simple : doesnt have a maintime, only periodtime
+                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian") && (universalPeriodtimeTimecontrolString !== "simple")) { // simple is part of allowed timecontrols
+                    conn_log ("error, could not find allowed time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
                 }                
 
                 // if sanity check passes :
-                if ((universalPeriodtimeTimecontrolString === "fischer") || (universalPeriodtimeTimecontrolString === "byoyomi") || (universalPeriodtimeTimecontrolString === "canadian")) {
+                if ((universalPeriodtimeTimecontrolString === "fischer") || (universalPeriodtimeTimecontrolString === "byoyomi") || (universalPeriodtimeTimecontrolString === "canadian") || (universalPeriodtimeTimecontrolString === "simple")) {
                     if ((universalPeriodtimeTimecontrolString === "fischer") && (t.time_increment < universalPeriodtimeNumber)) {
                         universalPeriodtimeTimecontrolSentence = "Increment Time ";
                         universalPeriodtimeEndingSentence = ".";
@@ -638,15 +672,21 @@ class Connection {
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
                         return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     }
+                    if (universalPeriodtimeTimecontrolString === "simple" && t.per_move < universalPeriodtimeNumber) {
+                        universalPeriodtimeTimecontrolSentence = "Time per move ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
                     if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) < universalPeriodtimeNumber)) {
-                        universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
+                        universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones ";
                         universalPeriodtimeEndingSentence = ".";
 
                         // for canadian we add a small explanation how to understand period for all stones //
                         // canadian period time is already for n number of stones, dont divide by stone
                         // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
                         // first we reconvert displayedTimeToString
-                        if (config.minperiodtime) {
+                        if (config.minperiodtime && !config.minperiodtimeranked && !config.minperiodtimeunranked) {
                             universalPeriodtimeNumber = (config.minperiodtime * t.stones_per_period);
                             universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
                         }
@@ -659,7 +699,7 @@ class Connection {
                             universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
                         }
                         // then we add the wanted explanation for canadian number of stones
-                        canadianPeriodtimeSentence = `for all the ${t.stones_per_period} stones`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+                        canadianPeriodtimeSentence = "for all the " + t.stones_per_period + " stones"; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
 
                         universalPeriodtimeEndingSentence = ".";
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
@@ -672,7 +712,7 @@ class Connection {
                 universalPeriodtimeMinimumMaximumSentence = "Maximum ";
                 universalPeriodtimeIncreaseDecreaseSentence = ", please reduce ";
                 let universalPeriodtimeConnSentence = user.username + " wanted period time above maximum period time ";
-                if (config.maxperiodtime) {
+                if (config.maxperiodtime && !config.maxperiodtimeranked && !config.maxperiodtimeunranked) {
                     universalPeriodtimeNumber = config.maxperiodtime;
                     universalPeriodtimeToString = timespanToDisplayString(config.maxperiodtime);
                     universalPeriodtimeForRankedUnrankedSentence = "is ";
@@ -689,12 +729,15 @@ class Connection {
                 }
                 // now just before TimecontrolString is being tested, we again make sure it has the latest value
                 universalPeriodtimeTimecontrolString = String(t.time_control);/*
-                "fischer", "byoyomi", "canadian" */
+                "fischer", "byoyomi", "canadian", "simple" */
 
-                // sanity check : if not fischer, not byoyomi, not canadian
-                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian")) {
-                    conn_log ("error, could not find time control in " + t.time_control);
-                    return { reject : true, msg: "error, could not find time control in " + t.timecontrol};
+                // sanity check : if not fischer, not byoyomi, not canadian, not simple
+                // time control peculiarities : 
+                // - fischer : doesnt have a minperiods or maxperiods
+                // - simple : doesnt have a maintime, only periodtime, so we let it slide for main time reject
+                if ((universalPeriodtimeTimecontrolString !== "fischer") && (universalPeriodtimeTimecontrolString !== "byoyomi") && (universalPeriodtimeTimecontrolString !== "canadian") && (universalPeriodtimeTimecontrolString !== "simple")) {
+                    conn_log ("error, could not find allowed time control in " + t.time_control);
+                    return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
                 }                
 
                 // if sanity check passes :
@@ -711,6 +754,12 @@ class Connection {
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
                         return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
                     }
+                    if (universalPeriodtimeTimecontrolString === "simple" && t.per_move > universalPeriodtimeNumber) {
+                        universalPeriodtimeTimecontrolSentence = "Time per move ";
+                        universalPeriodtimeEndingSentence = ".";
+                        conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);
+                        return { reject : true, msg:  `${universalPeriodtimeMinimumMaximumSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeForRankedUnrankedSentence} ${universalPeriodtimeToString} ${universalPeriodtimeIncreaseDecreaseSentence} ${universalPeriodtimeTimecontrolSentence} ${universalPeriodtimeEndingSentence}` };
+                    }
                     if (universalPeriodtimeTimecontrolString === "canadian" && ((t.period_time / t.stones_per_period) > universalPeriodtimeNumber)) {
                         universalPeriodtimeTimecontrolSentence = "Period Time for " + t.stones_per_period + " stones " ;
 
@@ -718,7 +767,7 @@ class Connection {
                         // canadian period time is already for n number of stones, dont divide by stone
                         // e.g. 300 seconds divided by 25 stones = 12 seconds / stone
                         // first we reconvert displayedTimeToString
-                        if (config.maxperiodtime) {
+                        if (config.maxperiodtime && !config.maxperiodtimeranked && !config.maxperiodtimeunranked) {
                             universalPeriodtimeNumber = (config.maxperiodtime * t.stones_per_period);
                             universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
                         }
@@ -731,7 +780,7 @@ class Connection {
                             universalPeriodtimeToString = timespanToDisplayString(universalPeriodtimeNumber);
                         }
                         // then we add the wanted explanation for canadian number of stones
-                        canadianPeriodtimeSentence = `for all the ${t.stones_per_period} stones`; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
+                        canadianPeriodtimeSentence = "for all the " + t.stones_per_period + " stones"; // e.g. "12 seconds per stone, same as 300 seconds for all the 25 stones"
 
                         universalPeriodtimeEndingSentence = ".";
                         conn_log(universalPeriodtimeConnSentence + universalPeriodtimeToString + " in " + universalPeriodtimeTimecontrolString);

@@ -65,10 +65,14 @@ exports.updateFromArgv = function() {
         .alias('boardsizewidth', 'bw')
         .alias('boardsizeheight', 'bh')
         // for below aliases : 0 is min , 1 is max,
-        .alias('maxtotalgames', '1tg')
-        .alias('maxactivegames', '1ag')
+        .alias('maxconnectedgames', '1cg')
+        .alias('maxconnectedgamesperuser', '1cgpu')
         .alias('minrank', '0r')
+        .alias('minrankranked', '0rr')
+        .alias('minrankunranked', '0ru')
         .alias('maxrank', '1r')
+        .alias('maxrankranked', '1rr')
+        .alias('maxrankunranked', '1ru')
         .alias('minmaintime', '0mt')
         .alias('maxmaintime', '1mt')
         .alias('minmaintimeranked', '0mtr')
@@ -112,11 +116,14 @@ exports.updateFromArgv = function() {
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('persist', 'Bot process remains running between moves')
         .describe('corrqueue', 'Process correspondence games one at a time')
-        .describe('maxtotalgames', 'Maximum number of total games')
-        // maxtotalgames is actually the maximum total number of connected games for your bot 
-        // which means the maximum number of games your bot can play at the same time (choose a low number to regulate your GPU use)
+        .describe('maxconnectedgames', 'Maximum number of connected games for all users')
+        .default('maxconnectedgames', 20)
+        // maxconnectedgames is actually the maximum number of connected games for all users 
+        // against your bot, which means the maximum number of games your bot can play at the same time 
+        // (choose a low number to regulate your computer performance and stability)
         // (correspondence games are currently included in the total connected games count if you use `--persist` )
-        .describe('maxactivegames', 'Maximum number of active games per player against this bot')
+        .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
+        .default('maxconnectedgamesperuser', 3)
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
         .default('startupbuffer', 5)
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
@@ -157,24 +164,38 @@ exports.updateFromArgv = function() {
         .describe('timecontrol', 'Time control(s) to accept')
         .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
         .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
+        .default('minmaintime', 60)
         .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
+        .default('maxmaintime', 7200)
         .describe('minmaintimeranked', 'Minimum seconds of main time for ranked games (rejects time control simple and none)')
         .describe('maxmaintimeranked', 'Maximum seconds of main time for ranked games (rejects time control simple and none)')
         .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
         .describe('maxmaintimeunranked', 'Maximum seconds of main time for unranked games (rejects time control simple and none)')
         .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
+        .default('minperiodtime', 10)
         .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
+        .default('minperiodtime', 120)
         .describe('minperiodtimeranked', 'Minimum seconds per period for ranked games (per stone in canadian)')
         .describe('maxperiodtimeranked', 'Maximum seconds per period for unranked games (per stone in canadian)')
         .describe('minperiods', 'Minimum number of periods')
+        .default('minperiods', 3)
         .describe('minperiodsranked', 'Minimum number of ranked periods')
         .describe('minperiodsunranked', 'Minimum number of unranked periods')
         .describe('maxperiods', 'Maximum number of periods')
+        .default('maxperiods', 20)
         .describe('maxperiodsranked', 'Maximum number of ranked periods')
         .describe('maxperiodsunranked', 'Maximum number of unranked periods')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
+        .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
+        .string('minrankranked')
+        .describe('minrankunranked', 'Minimum opponent rank to accept for unranked games (ex: 15k)')
+        .string('minrankunranked')
         .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
+        .string('maxrank')
+        .describe('maxrankranked', 'Maximum opponent rank to accept for ranked games (ex: 1d)')
+        .string('maxrankranked')
+        .describe('maxrankunranked', 'Maximum opponent rank to accept for unranked games(ex: 1d)')
         .string('maxrank')
         .describe('greeting', 'Greeting message to appear in chat at first move (ex: "Hello, have a nice game")')
         .string('greeting')
@@ -210,7 +231,7 @@ console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest deve
 
 // console : warnings //
 
-// - warning : dont use 3 settings of the same family (all, ranked, unranked) at the same time
+// - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
 if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
     console.log("Warning: You are using --maxhandicap in combination with --maxhandicapranked and/or --maxhandicapunranked.\nUse either --maxhandicap alone, OR --maxhandicapranked with --maxhandicapunranked.\nBut don't use the 3 maxhandicap arguments at the same time.");
 }
@@ -247,56 +268,30 @@ if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranke
     console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked and/or --minperiodtimeunranked.\nUse either --minperiodtime alone, OR --minperiodtimeranked with --minperiodtimeunranked.\nBut don't use the 3 minperiodtime arguments at the same time.");
 }
 
+if (argv.minrank && (argv.minrankranked || argv.minrankunranked)) {
+    console.log("Warning: You are using --minrank in combination with --minrankranked and/or --minrankunranked. \n Use either --minrank alone, OR --minrankranked with --minrankunranked.\nBut don't use the 3 minrank arguments at the same time.");
+}
+
+if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
+    console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
+}
+
+if (argv.ban && (argv.banranked || argv.banunranked)) {
+    console.log("Warning: You are using --ban in combination with --banranked and/or --banunranked. \n Use either --ban alone, OR --banranked with --banunranked.\nBut don't use the 3 ban arguments at the same time.");
+}
+
 if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
 }
 
 console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
 
-// - warning : avoid infinite games, or very short games timeout
-
-if (!argv.minperiods && !argv.minperiodsranked && !argv.minperiodsunranked) {
-    console.log("Warning: No min periods setting detected, games are likely to timeout");
-}
-
-if (!argv.maxperiods && !argv.maxperiodsranked && !argv.maxperiodsunranked) {
-    console.log("Warning: No max periods setting detected, games are likely to last forever");
-}
-
-if (!argv.minperiodtime && !argv.minperiodtimeranked && !argv.minperiodtimeunranked) {
-    console.log("Warning: No min period time setting detected, your bot is likely to timeout");
-}
-
-if (!argv.maxperiodtime && !argv.maxperiodtimeranked && !argv.maxperiodtimeunranked) {
-    console.log("Warning: No max period time setting detected, games are likely to last forever");
-}
-
-if (!argv.minmaintime && !argv.minmaintimeranked && !argv.minmaintimeunranked) {
-    console.log("Warning: No min main time setting detected, your bot is likely to timeout");
-}
-
-if (!argv.maxmaintime && !argv.maxmaintimeranked && !argv.maxmaintimeunranked) {
-    console.log("Warning: No max main time setting detected, games are likely to last forever");
-}
+// - warning : avoid infinite games
 
 if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-    console.log("Warning : No nopause setting detected, games are likely to last forever");
+    console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpaustime and co gets implemented, replace with "are likely to last for a long time"
 }
 console.log("\n"); /*after last warning, we skip a line to make it more pretty*/
-
-// - warning : avoid bot overload
-
-if (!argv.maxactivegames) {
-    console.log("Warning : No max games per user limit set with --maxactivegames, your bot is likely to be overloaded with games by one user");
-}
-
-if (!argv.maxtotalgames) {
-    console.log("Warning : No max games for all users limit set with --maxtotalgames, your bot is likely to be overloaded with games by all users");
-}
-
-if (!argv.maxactivegames || !argv.maxtotalgames) {
-    console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
-}
 
 // - warning : depreciated features if used
 
@@ -312,23 +307,19 @@ if (argv.id) {
     console.log("Warning: --id alias is no longer supported. Use --username instead.");
 }
 
-if (argv.minrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapranked instead.");
+if (argv.minrankedhandicap || argv.minunrankedhandicap || argv.maxrankedhandicap || argv.maxunrankedhandicap) {
+    console.log("Warning: --min/max*+/-ranked/unranked*handicap argument is no longer supported.\nUse --min/max*handicap*+/-ranked/unranked instead.");
 }
 
-if (argv.maxrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapranked instead.");
+if (argv.maxtotalgames) {
+    console.log("Warning: --maxtotalgames argument has been renamed to --maxconnectedgames. Use --maxconnectedgames instead.");
 }
 
-if (argv.minunrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --minhandicapunranked instead.");
+if (argv.maxactivegames) {
+    console.log("Warning: --maxactivegames argument has been renamed to --maxconnectedgamesperuser. Use --maxconnectedgamesperuser instead.");
 }
 
-if (argv.maxunrankedhandicap) {
-    console.log("Warning: --minrankedhandicap argument is no longer supported. Use --maxhandicapunranked instead.");
-}
-
-if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap) {
+if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames) {
     console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
 }
 
@@ -375,7 +366,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         return false;
     }
 
-    if (argv.ban) {
+    if (argv.ban && !argv.banranked && !argv.banunranked) {
         for (let i of argv.ban.split(',')) {
             exports.banned_users[i] = true;
         }
@@ -393,7 +384,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
-    if (argv.minrank) {
+    if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
         let re = /(\d+)([kdp])/;
         let results = argv.minrank.toLowerCase().match(re);
 
@@ -415,7 +406,51 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         }
     }
 
-    if (argv.maxrank) {
+    if (argv.minrankranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.minrank.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.minrankranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.minrankranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.minrankranked = 36 + parseInt(results[1]);
+                exports.proonly = true;
+            } else {
+                console.error("Invalid minrankranked " + argv.minrankranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse minrankranked " + argv.minrankranked);
+            process.exit();
+        }
+    }
+
+    if (argv.minrankunranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.minrankunranked.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.minrankunranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.minrankunranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.minrankunranked = 36 + parseInt(results[1]);
+                exports.proonly = true;
+            } else {
+                console.error("Invalid minrankunranked " + argv.minrankunranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse minrankunranked " + argv.minrankunranked);
+            process.exit();
+        }
+    }
+
+    if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
         let re = /(\d+)([kdp])/;
         let results = argv.maxrank.toLowerCase().match(re);
 
@@ -432,6 +467,48 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
             }
         } else {
             console.error("Could not parse maxrank " + argv.maxrank);
+            process.exit();
+        }
+    }
+
+    if (argv.maxrankranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.maxrankranked.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.maxrankranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.maxrankranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.maxrankranked = 36 + parseInt(results[1]);
+            } else {
+                console.error("Invalid maxrankranked " + argv.maxrankranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse maxrankranked " + argv.maxrankranked);
+            process.exit();
+        }
+    }
+
+    if (argv.maxrankunranked) {
+        let re = /(\d+)([kdp])/;
+        let results = argv.maxrankunranked.toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] == "k") {
+                exports.maxrankunranked = 30 - parseInt(results[1]);
+            } else if (results[2] == "d") {
+                exports.maxrankunranked = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] == "p") {
+                exports.maxrankunranked = 36 + parseInt(results[1]);
+            } else {
+                console.error("Invalid maxrankunranked " + argv.maxrankunranked);
+                process.exit();
+            }
+        } else {
+            console.error("Could not parse maxrankunranked " + argv.maxrankunranked);
             process.exit();
         }
     }
