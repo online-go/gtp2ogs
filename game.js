@@ -1,3 +1,5 @@
+// vim: tw=120 softtabstop=4 shiftwidth=4
+
 let sprintf = require('sprintf-js').sprintf;
 
 let Bot = require('./bot').Bot;
@@ -36,7 +38,7 @@ class Game {
             if (!this.connected) return;
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
-    
+
             let prev_phase = (this.state ? this.state.phase : null);
             this.state = gamedata;
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
@@ -292,25 +294,25 @@ class Game {
     // Send move to server.
     // 
     uploadMove(move) { /* {{{ */
-    if (move.resign) {
-        this.log("Resigning");
-        this.socket.emit('game/resign', this.auth({
-            'game_id': this.state.game_id
-        }));
-        return;
-    }
+        if (move.resign) {
+            this.log("Resigning");
+            this.socket.emit('game/resign', this.auth({
+                'game_id': this.state.game_id
+            }));
+            return;
+        }
 
-    if (config.DEBUG) this.log("Playing " + move.text, move);
-    else       this.log("Playing " + move.text);
+        if (config.DEBUG) this.log("Playing " + move.text, move);
+        else this.log("Playing " + move.text);
         this.socket.emit('game/move', this.auth({
-        'game_id': this.state.game_id,
-        'move': encodeMove(move)
+            'game_id': this.state.game_id,
+            'move': encodeMove(move)
         }));
         //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
-    if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-        this.sendChat( config.GREETING, "discussion");
-        this.greeted = true;
-    }
+        if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
+            this.sendChat( config.GREETING, "discussion");
+            this.greeted = true;
+        }
     } /* }}} */
 
     // Get move from bot and upload to server.
@@ -324,47 +326,46 @@ class Game {
         if (this.state.phase != 'play')
             return;
 
-    let sendPass = () => {  this.uploadMove({'x': -1});  };
-    let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
-        this.state.moves.length < this.state.handicap);
+        let sendPass = () => {  this.uploadMove({'x': -1});  };
+        let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
+            this.state.moves.length < this.state.handicap);
 
-    if (!doing_handicap) {  // Regular genmove ...
-        let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
-        this.getBotMoves("genmove " + this.my_color, sendTheMove, sendPass);
-        return;
-    }
-
-    // Already have handicap stones ? Return next one.
-    if (this.handicap_moves.length) {
-        this.uploadMove(this.handicap_moves.shift());
-        return;
-    }
-
-    let warnAndResign = (msg) => {
-        this.log(msg);
-        if (this.bot) this.bot.kill();
-        this.bot = null;
-        this.uploadMove({'resign': true});
-    }
-
-    // Get handicap stones from bot and return first one.
-    let storeMoves = (moves) => {
-        if (moves.length != this.state.handicap) {  // Sanity check
-            warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
+        if (!doing_handicap) {  // Regular genmove ...
+            let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+            this.getBotMoves("genmove " + this.my_color, sendTheMove, sendPass);
             return;
         }
-        for (let i in moves)                     // Sanity check
-            if (moves[i].pass || moves[i].x < 0) {
-                warnAndResign("place_free_handicap returned a pass, resigning.");
+
+        // Already have handicap stones ? Return next one.
+        if (this.handicap_moves.length) {
+            this.uploadMove(this.handicap_moves.shift());
+            return;
+        }
+
+        let warnAndResign = (msg) => {
+            this.log(msg);
+            if (this.bot) this.bot.kill();
+            this.bot = null;
+            this.uploadMove({'resign': true});
+        }
+
+        // Get handicap stones from bot and return first one.
+        let storeMoves = (moves) => {
+            if (moves.length != this.state.handicap) {  // Sanity check
+                warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
                 return;
             }
-   
-        this.handicap_moves = moves;
-        this.uploadMove(this.handicap_moves.shift());
-    };
+            for (let i in moves)                     // Sanity check
+                if (moves[i].pass || moves[i].x < 0) {
+                    warnAndResign("place_free_handicap returned a pass, resigning.");
+                    return;
+                }
 
-    this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, sendPass);
+            this.handicap_moves = moves;
+            this.uploadMove(this.handicap_moves.shift());
+        };
 
+        this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, sendPass);
     } /* }}} */
 
     auth(obj) { /* {{{ */

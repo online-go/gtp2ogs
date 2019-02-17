@@ -1,3 +1,5 @@
+// vim: tw=120 softtabstop=4 shiftwidth=4
+
 let fs = require('fs')
 let tracer = require('tracer');
 
