@@ -276,10 +276,6 @@ if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
     console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
 }
 
-if (argv.ban && (argv.banranked || argv.banunranked)) {
-    console.log("Warning: You are using --ban in combination with --banranked and/or --banunranked. \n Use either --ban alone, OR --banranked with --banunranked.\nBut don't use the 3 ban arguments at the same time.");
-}
-
 if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
     console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
 }
@@ -366,7 +362,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         return false;
     }
 
-    if (argv.ban && !argv.banranked && !argv.banunranked) {
+    if (argv.ban) {
         for (let i of argv.ban.split(',')) {
             exports.banned_users[i] = true;
         }
