@@ -13,8 +13,8 @@ Programming knowledge is needed only to add extra features such as displaying
 and sending winrates and variations at every move, for example.
 
 Note that some contributors already provide their custom gtp2ogs branches 
-so you can download them directly or ask them if you want these features, see 
-[custom branches](#custom-branches)
+so you can download them directly or ask them if you want these features, 
+see [custom branches](#custom-branches)
 
 When you have a bot on OGS, you have total control over it : 
 you put it online when you want only, and there are many settings to choose 
@@ -62,21 +62,7 @@ default path install is something like this :
 On all operating systems, gtp2ogs will be installed in 2 different directories, but 
 **the one that needs to be run with node is gtp2ogs.js in node_modules directory**
 
-### 3. Optional : install any missing node.js packages
- 
-**This step can be skipped unless you have issues or bugs**
-
-you may need to install extra tools if the 
-[Most common usage](https://github.com/wonderingabout/gtp2ogs/blob/clearer-devel/README.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs) 
-below fails, such as (run as `sudo` for linux, and as admin for windows)
- 
-```
-npm install -g socket.io-client
-npm install -g optimist
-npm install -g tracer
-  ```
-
-### 4. Recommended : Upgrade to devel branch
+### 3. Recommended : Upgrade to devel branch
 
 This step is **is recommended**
 
@@ -92,7 +78,7 @@ When you upgrade you need to copy all the gtp2ogs files (bot.js, config.js, etc.
 and overwrite the old files (you can backup your old files so that you can go back 
 to the old version if you want later)
 
-### 5. Most common usage : start gtp2ogs.js using nodejs
+### 4. Most common usage : start gtp2ogs.js using nodejs
 
 For linux (preferably as sudo) :
 
@@ -117,9 +103,19 @@ you want
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `-- beta` argument
 
-note 4 : it is possible to use ISSA (intuitive semi-syllabic aliases) to write 
-your gtp2ogs arguments in a much smaller size, see [notes G-](/NOTES.md#g-) 
-for details
+### 5. Optional : install any missing node.js packages
+ 
+**This step can be skipped unless you have issues or bugs**
+
+You may need to install some missing packages if the 
+[Most common usage](#4-most-common-usage--start-gtp2ogsjs-using-nodejs) fails
+
+To do that, you can just run (as admin on windows, as sudo on linux) :
+
+```npm install```
+
+This command will automatically detect all missing packages needed 
+from package.json and install them
 
 ### Extra : add features by editing gtp2ogs files
 
@@ -127,251 +123,62 @@ This step is totally not needed but can be much appreciated
 
 To do that, programming knowledge is needed (or you can ask for help)
 
-For example you can program gtp2ogs so that it sends winrate and 
-playouts/visits information at every move, or even clickable variations, 
-such as what [some bots](https://online-go.com/game/15926249) use for example.
+However, some contributors freely provide their custom branches, see 
+[custom branches](#custom-branches)
 
 # Options
 
 Before putting `<gtp2ogsarguments>`, you have to put these options first :
 
-  ```--username``` or `--u` Specify the username of the bot, for example `--username GnuGo`, 
+  ```--username``` Specify the username of the bot, for example `--username GnuGo`, 
 currently there is no profile number log in support on ogs, see 
-[notes A-](/NOTES.md#a-) for details
+[notes A-](/docs/NOTES.md#a-) for details
 
-  ```--apikey``` or ```--a``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
+  ```--apikey``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
 
 Then, the following options are placed in the above ```<gtp2ogsarguments>``` 
-section. Put a space in between options when there are more than one.  
+section. Put a space in between options when there are more than one.
 Also put a space in between the option and the parameter, for example :
 
-  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxconnectedgames 10 --maxmaintime 1200 --ban UserX,playerY ---maxperiodsranked 5```
-  
-or with ISSA (intuitive semi-syllabic aliases) (see [notes G-](/NOTES.md#g-) for details), 
-the same example becomes :
-  
-  ```--sb 2 --bb 13,19 --nc --uo --1cgpu 1 --1cg 10 --1mt 1200 --b UserX,playerY --1pr 5```
-  
+  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --ban UserX,playerY ---maxperiodsranked 5```
+
+**You can find a list of all possible to use gtp2ogs arguments here**
+
+**[List of all Options](/docs/OPTIONS-LIST.md)**
+
+(Since the list takes a lot of place, it has been moved on a separate page)
+
+use the ones you want only, no need to use them all !
+
+After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
+to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
+shown in 
+[Most common usage earlier](#4-most-common-usage--start-gtp2ogsjs-using-nodejs)
+
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
-specify them, such as `--komi` which default is automatic even if you dont specify it !
-(default value is overwritten when you set your own value)
+specify them, such as `--komi` which default is "Automatic" even if you dont specify 
+it ! (default value is overwritten when you set your own value)
 
 note 2 : if an argument has ranked and unranked in the same "family", use:
 - either the general argument alone,
 - OR, if you want to specify different settings for ranked and unranked games, use 
 both the ranked and the unranked argument with wanted values, and then don't use the 
-general argument ! (see [notes H-](/NOTES.md#h-) for details)
-
-  below is a list of all possible to use gtp2ogs arguments, use the ones you want only, 
-  no need to use them all !
-
-  ```--host```  OGS Host to connect to (default online-go.com)
-
-  ```--port``` OGS Port to connect to (default 443)
-
-  ```--timeout``` or ```--t``` Disconnect from a game after this many seconds (if set) 
-(default 0)
-
-  ```--insecure```  Don't use ssl to connect to the ggs/rest servers
-
-  ```--beta```  Connect to the [beta server](https://beta.online-go.com/) instead of 
-[OGS](https://online-go.com/) (sets ggs/rest hosts to the beta server)
-
-  ```--debug``` or ```--d```  Output GTP command and responses from your Go engine
-
-  ```--logfile``` or ```--l``` In addition to logging to the console, also log gtp2ogs 
-output to a text file
-
-  ```--json``` or ```--j```  Send and receive GTP commands in a JSON encoded format
-
-  ```--kgstime```  Set this if bot understands the kgs-time_settings command
-
-  ```--noclock```  or ```--nc``` Do not send any clock/time data to the bot
-
-  ```--persist``` or ```--p```  Bot process remains running between moves
-
-  ```--corrqueue``` or ```--cq``` Process correspondence games one at a time
-
-  ```--maxconnectedgames``` or ```--1cg``` Maximum number of connected games 
-for all users against your bot (correspondence games are currently included in 
-the connected games count, see [#59](https://github.com/online-go/gtp2ogs/issues/59) 
-for details) , which means the maximum number of games your bot can play at the 
-same time (choose a low number to regulate your computer performance and 
-stability) (default 20)
-
-  ```--maxconnectedgamesperuser``` or ```--1cgpu``` Maximum number of 
-connected games per user against this bot (default 3)
-
-  ```--startupbuffer``` or ```--sb``` Subtract this many seconds from time 
-available on first move (default 5)
-
-  ```--rejectnew``` or ```--r``` Reject all new challenges with the default 
-reject message
-
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` or 
-```--r --rm "not accepting games because blablablah"``` if you add the rejectnewmsg 
-argument, Reject all new challenges with a customized message instead of the default 
-message. This message has to be included in "not accepting games because blablablah" 
-(for example to explain why, for how long, 
-if your bot is busy playing a tournament, etc...)
-
-  ```--rejectnewfile ~/rejectnew.status```  or ```--rf``` Reject new challenges if 
-file exists (checked each time, can use for load-balancing)
-
-  ```--boardsize``` or ```--bb``` Possible boardsize values `all` (allows ALL 
-boardsizes, use only if your bot can handle it !), `custom` (allows specified custom 
-boardsize (for example 25x1, 9x9, 17x2 , 15x15, 3x2, etc..), and square board size 
-written in numbers comma separated (default is `9,13,19` which is 9x9, 13x13, 19x19), 
-see [notes E-](/NOTES.md#e-) for details
-
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` or 
-```--bb custom --bw 25 --bh 1,2,3``` Allows custom board size (if your bot can 
-handle it), it is needed to use `custom` followed by comma separated value(s), 
-in this example 25x1 25x2 25x3 are all allowed boardsizes, see 
-[notes E-](/NOTES.md#e-) for details
-
-  ```--komi``` or ```--k``` Possible komi values `auto` (allows Automatic komi), 
-`all` (allows all komi values), and for example `7.5` (allows komi value 7.5). 
-When `all` is used alone, all komi values are allowed. When an argument other 
-than `all` is used, only the chosen argument komi values are allowed and all other 
-komi values are rejected see [notes C-](/NOTES.md#c-) and [notes D-](/NOTES.md#d-) 
-for details (default auto)
-
-  ```--ban```  or ```--b``` Comma separated list of user names or IDs 
-(e.g.  UserA,UserB,UserC  do not put spaces in between)
-
-  ```--banranked```  or ```--br``` Comma separated list of user names or IDs who 
-are banned from playing ranked games
-
-  ```--banunranked```  or ```--bu``` Comma separated list of user names or IDs who 
-are banned from playing unranked game
-
-  ```--speed```  or ```--s``` Comma separated list of Game speed(s) to accept 
-(default blitz,live,correspondence)
-
-  ```--timecontrol```  or ```--tc``` Time control(s) to accept (default fischer,
-byoyomi,simple,canadian,absolute,none)
-
-  ```--minmaintime```  or ```--0mt``` Minimum seconds of main time (rejects time 
-control simple and none) (default 60)
-
-  ```--maxmaintime```  or ```--1mt``` Maximum seconds of main time (rejects time 
-control simple and none) (default 7200)
-
-  ```--minmaintimeranked```  or ```--0mtr``` Minimum seconds of main time for 
-ranked games (rejects time control simple and none)
-
-  ```--maxmaintimeranked```  or ```--1mtr``` Maximum seconds of main time for 
-ranked games (rejects time control simple and none)
-
-  ```--minmaintimeunranked```  or ```--0mtu``` Minimum seconds of main time 
-for unranked games (rejects time control simple and none)
-
-  ```--maxmaintimeunranked```  or ```--1mtu``` Maximum seconds of main time for 
-unranked games (rejects time control simple and none)
-
-  ```--minperiodtime```  or ```--0pt``` Minimum seconds per period (per stone 
-in canadian) (default 10)
-
-  ```--maxperiodtime```  or ```--1pt``` Maximum seconds per period (per stone 
-in canadian) (default 120)
-
-  ```--minperiodtimeranked```  or ```--0ptr``` Minimum seconds per period for 
-ranked games (per stone in canadian)
-
-  ```--maxperiodtimeranked```  or ```--1ptr``` Maximum seconds per period for 
-ranked games (per stone in canadian)
-
-  ```--minperiodtimeunranked```  or ```--0ptu``` Minimum seconds per period for 
-unranked games (per stone in canadian)
-
-  ```--maxperiodtimeunranked```  or ```--1ptu``` Maximum seconds per period for 
-unranked games (per stone in canadian)
-
-  ```--minperiods```  or ```--0p``` Minimum number of periods (default 3)
-
-  ```--minperiodsranked```  or ```--0pr``` Minimum number of ranked periods
-
-  ```--minperiodsunranked```  or ```--0pu``` Minimum number of unranked periods
-
-  ```--maxperiods```  or ```--1p``` Maximum number of periods (default 20)
-
-  ```--maxperiodsranked```  or ```--1pr``` Maximum number of ranked periods
-
-  ```--maxperiodsunranked```  or ```--1pu``` Maximum number of unranked periods
-
-  ```--minrank```  or ```--0r``` Minimum opponent rank to accept (e.g. 15k)
-
-  ```--minrankranked```  or ```--0rr``` Minimum opponent rank to accept for 
-ranked games (e.g. 15k)
-
-  ```--minrankunranked```  or ```--0ru``` Minimum opponent rank to accept for 
-unranked games (e.g. 15k)
-
-  ```--maxrank```  or ```--1r``` Maximum opponent rank to accept (e.g. 1d)
-
-  ```--maxrankranked```  or ```--1rr``` Maximum opponent rank to accept for 
-ranked games (e.g. 1d)
-
-  ```--maxrankunranked```  or ```--1ru``` Maximum opponent rank to accept for 
-unranked games (e.g. 1d)
-
-  ```--greeting "Hello, have a nice game"```  or ```--g "Hello, have a nice game"``` 
-Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
-
-  ```--farewell "Thank you for playing"```  or ```--f "Thank you for playing"``` 
-Thank you message to appear in chat at end of game (ex: "Thank you for playing")
-
-  ```--proonly```  or ```--po``` Only accept matches from professionals
-
-  ```--rankedonly```  or ```--ro``` Only accept ranked matches
-
-  ```--unrankedonly``` or ```--uo```  Only accept unranked matches
-
-  ```--minhandicap``` or ```--0h```  Min handicap for all games
-
-  ```--maxhandicap``` or ```--1h```  Max handicap for all games
-
-  ```--minhandicapranked``` or ```--0hr```  Min handicap for ranked games
-
-  ```--maxhandicapranked```  or ```--1hr``` Max handicap for ranked games
-
-  ```--minhandicapunranked```  or ```--0hu``` Min handicap for unranked games
-
-  ```--maxhandicapranked```  or ```--0hr``` Max handicap for unranked games
-  
-  ```--noautohandicap``` or ```--nah``` Do not allow handicap to be set to -automatic-
-
-  ```--noautohandicapranked``` or ```--nahr``` Do not allow handicap to be set to 
--automatic- for ranked games
-  
-  ```--noautohandicapunranked``` or ```--nahu``` Do not allow handicap to be set to 
--automatic- for unranked games
-
-  ```--nopause``` or ```--np```  Do not allow games to be paused
-
-  ```--nopauseranked```  or ```--npr``` Do not allow ranked games to be paused
-
-  ```--nopauseunranked```  or ```--npu``` Do not allow unranked games to be paused
-
-  ```--hidden``` or ```--h``` Hides the botname from the OGS game "Play against 
-computer" bot list (but it can still accept challenges)
-
-After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
-to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
-shown in 
-[Most common usage earlier](/NOTES.md#5-most-common-usage--start-gtp2ogsjs-using-nodejs)
+general argument ! (see [notes H-](/docs/NOTES.md#h-) for details)
+- the exception that confirms this rule is `--ban` : since ban is a string, we allow 
+both general value `--ban A,B` AND specific values at the same time too 
+`--banranked X,Y --banunranked Z` , see [Options-List](/docs/OPTIONS-LIST.md) 
+for details
 
 ## Notes :
 
-A page summarizing the notes and details about gtp2ogs use can be viewed [here](/NOTES.md)
+A page summarizing the notes and details about gtp2ogs use can be viewed [here](/docs/NOTES.md)
 
 # Custom branches
 
 Some branches add some nice features like 
 **displaying variations (PV) ingame for Leela zero and PhoenixGo**
 
-See [Custom Branches](/CUSTOM-BRANCHES.md)
+See [Custom Branches](/docs/CUSTOM-BRANCHES.md)
 
 # Discord chat : 
 
@@ -402,5 +209,5 @@ Welcome !
 
 come help us all make gtp2ogs more awesome than it already is ! 
 
-Read Contributing instructions [here](/CONTRIBUTING.md)
+Read Contributing instructions [here](/docs/CONTRIBUTING.md)
 

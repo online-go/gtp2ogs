@@ -21,9 +21,10 @@ a list of gtp2ogs arguments is also available
 #### C : 
 
 on OGS, black player will always get the handicap stones regardless of rank difference 
-(if auto (automatic) komi is selected, the komi will be 0.5) 
+(if "Automatic" komi is selected, the komi will be 0.5) 
 
-but you can restrict allowed komi for example to only 7.5 or auto with `--komi 7.5,auto`
+but you can restrict allowed komi for example to only 7.5 or Automatic with 
+`--komi 7.5,Automatic`
 
 or only 7.5 komi with `--komi 7.5` to play handicap games with 7.5 komi, if your bot 
 does not support 0.5 komi value.
@@ -32,12 +33,12 @@ does not support 0.5 komi value.
 
 explanation on how to use komi argument:
 
-- `--komi auto,0.5,7.5` for example, will allow any of these komi values : 
-automatic(auto), 0.5, or 7.5, and will reject any other value
+- `--komi Automatic,0.5,7.5` for example, will allow any of these komi values : 
+Automatic, 0.5, or 7.5, and will reject any other value
 
 - another example `--komi 7.5` will only accept komi value 7.5 and will reject 
-any other value. In that example, note that if `auto` (automatic) komi happens 
-to have the value 7.5, the auto value will be set to 7.5 and will be accepted 
+any other value. In that example, note that if `Automatic` komi happens 
+to have the value 7.5, the Automatic value will be set to 7.5 and will be accepted 
 and game will start (bots will always replace any rules with chinese rules, so 
 a non handicap game 19x19 on ogs against a bot will always have the komi 7.5)
 
@@ -47,7 +48,6 @@ the value 7.5 for example (and not 0.5)
 #### E : 
 
 example : `--boardsize 19` or `--boardsize 9,19` (most common sizes : 19x19 and 9x9) 
-or `--bb 19`
 
 or `--boardsize all` (if you made some fancy bot)
     
@@ -76,51 +76,26 @@ these special characters have been tested to work on messages, among others :  `
 
 #### G : 
 
-for some `gtp2ogsarguments`, it is possible to use a shorter version of the argument 
-to write faster and with less command length, it is also called "aliases"
+the ISSA (intuitive semi-syllabic aliases) have now been removed : 
+will use a config file with all needed options from now on
 
-The list of aliases can also be found inside [config.js file](/config.js)
-
-For these aliases, the format chosen was ISSA : "intuitive semi-syllabic aliases" 
-(easy to write them just by ear : one word one letter, 2 words 2 letters, `0` is min , 
-`1` is max )
-
-note : `--farewell` is 2 syllabes but only one word, so only one letter (semi-syllabic) , 
-
-For example, these lines on gtp2ogs.js 
-
-```
-    .alias('farewell', 'f')
-    .alias('noclock', 'nc')
-    .alias('unrankedonly', 'uo')
-    .alias('minperiodtime', '0pt')
-    .alias('noautohandicap', 'nah')
-    .alias('maxmaintimeunranked', '1mtu')
-
-```
-
-mean that the gtp2ogs arguments can be abriged like that : 
-
-- `--farewell` -> `--f`
-- `--noclock` -> `--nc`
-- `--unrankedonly` -> `--uo`
-- `--minperiodtime` -> `--0pt`
-- `--noautohandicap` -> `--nah`
-- `--maxmaintimeranked` -> `--1mtr`
+So no need to input arguments in command line anymore, just modify your 
+config file(s)
 
 #### H :
 
 For example, if you can either use :
-- `--maxmaintime 600` , the general argument alone**
-- OR, if you want different settings for ranked and unranked games, use for example 
-`--maxmaintimeranked 300 --maxmaintimeunranked 1800` but if you do that then don't use 
-`--minmaintime` !
+- `--maxmaintimelive 600` , the general argument alone**
+- OR, if you want different settings for live ranked and unranked games, use for 
+example `--maxmaintimeliveranked 300 --maxmaintimeliveunranked 1800` but if you 
+do that then don't use `--minmaintimelive` !
   
-in this example, if `--maxmaintimeranked 300 --maxmaintimeunranked 1800` is set, then 
-the general value `--maxmaintime 600` is not taken into account, it will be either 300
-seconds (5 minutes) for ranked games, or 1800 seconds (30 minutes) for unranked games
+in this example, if `--maxmaintimeliveranked 300 --maxmaintimeliveunranked 1800` 
+is set, then the general value `--maxmaintimelive 600` is not taken into account, 
+it will be either 300 seconds (5 minutes) for ranked games, or 1800 seconds 
+(30 minutes) for live unranked games
 
-note that some gtp2ogs arguments come with a default general value : for the same reason, 
-in that case, the default general value will not be taken into account if you set a 
-specific value for ranked and unranked games
+note that some gtp2ogs arguments come with a default general value : for the 
+same reason, in that case, the default general value will not be taken into 
+account if you set a specific value for ranked and unranked games
 

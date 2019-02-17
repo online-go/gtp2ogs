@@ -52,17 +52,21 @@ using `--fast1 90 --fast2 95` :
 - at gear 1 (10s per move) if winrate is >90% but <95%
 - at gear 2 (1s per move) if winrate is >= 95%
 
-You also need to install split2 to use this branch 
-(as admin on windows, as sudo on linux) :
-
-```npm install -g split2```
-
-You can download it here (download ZIP) : 
+You can download this custom branch here (download ZIP) : 
 
 https://github.com/Dorus/gtp2ogs/tree/dorus
 
 Note : currently, dorus's branch does not support pondering yet (need to disable 
 it)
+
+Note 2 : You need to install split2 to use this branch.
+
+To do that, you can just run (as admin on windows, as sudo on linux) :
+
+```npm install```
+
+This command will automatically detect all missing packages needed 
+from package.json and install them
 
 ## roy7/roy7-live branch :  
 
