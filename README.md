@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
 
+
 This javascript tool allows Go bots that support GTP 
 [(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
 to communicate with OGS [(Online-Go.com Server)](https://online-go.com/)
