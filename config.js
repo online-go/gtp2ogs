@@ -26,7 +26,6 @@ exports.allow_all_sizes = false;
 exports.allow_custom_sizes = false;
 exports.allowed_custom_boardsizewidth = [];
 exports.allowed_custom_boardsizeheight = [];
-exports.allowed_sizes = [];
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
@@ -472,12 +471,6 @@ exports.updateFromArgv = function() {
         } else {
             console.error("Could not parse maxrankunranked " + argv.maxrankunranked);
             process.exit();
-        }
-    }
-
-    if (argv.boardsize) {
-        for (let i of argv.boardsize.split(',')) {
-            exports.allowed_sizes[i] = true;
         }
     }
 
