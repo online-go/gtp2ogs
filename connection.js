@@ -372,19 +372,19 @@ class Connection {
 
         /* if square, check if square board size is allowed*/
         if (!config.allowed_sizes[notification.width] && !config.allow_all_sizes && !config.allow_custom_sizes && !config.boardsizeranked && !config.boardsizeunranked) {
-            let boardsizeSquareString = String(config.boardsize); // we convert the value to a string to avoid undefined error later
+            let boardsizeSquareString = config.boardsize;
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed board sizes " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
         if (!config.allowed_sizes_ranked[notification.width] && !config.allow_all_sizes_ranked && !config.allow_custom_sizes_ranked && notification.ranked && config.boardsizeranked) {
-            let boardsizeSquareString = String(config.boardsizeranked); // we convert the value to a string to avoid undefined error later
+            let boardsizeSquareString = config.boardsizeranked;
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for ranked games");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for ranked games, please choose one of these allowed board sizes for ranked games : " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
         if (!config.allowed_sizes_unranked[notification.width] && !config.allow_all_sizes_unranked && !config.allow_custom_sizes_unranked && !notification.ranked  && config.boardsizeunranked) {
-            let boardsizeSquareString = String(config.boardsizeunranked); // we convert the value to a string to avoid undefined error later
+            let boardsizeSquareString = config.boardsizeunranked;
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for unranked games");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for unranked games, please choose one of these allowed board sizes for unranked games " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
@@ -470,7 +470,7 @@ class Connection {
 
         if (!config.allowed_komi[notification.komi] && !config.allow_all_komi && !config.komiranked && !config.komiunranked) {
             let notificationKomiString = "";
-            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+            if (notification.komi === null) {
                 notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
@@ -481,7 +481,7 @@ class Connection {
 
         if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && config.komiranked) {
             let notificationKomiString = "";
-            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+            if (notification.komi === null) {
                 notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
@@ -492,7 +492,7 @@ class Connection {
 
         if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && config.komiunranked) {
             let notificationKomiString = "";
-            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+            if (notification.komi === null) {
                 notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;

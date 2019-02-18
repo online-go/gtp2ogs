@@ -339,9 +339,9 @@ exports.updateFromArgv = function() {
         console.log("Warning: --maxactivegames argument has been renamed to --maxconnectedgamesperuser. Use --maxconnectedgamesperuser instead.");
     }
 
-if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
-    console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
-}
+    if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
+        console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
+    }
 
     // end of console messages
 
