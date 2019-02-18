@@ -18,12 +18,24 @@ exports.banned_users = {};
 exports.banned_ranked_users = {};
 exports.banned_unranked_users = {};
 exports.allow_all_komi = false;
-exports.allowed_komi = [];
 exports.allowed_sizes = [];
-exports.allowed_timecontrols = {};
-exports.allowed_speeds = {};
 exports.allow_all_sizes = false;
 exports.allow_custom_sizes = false;
+exports.allowed_custom_boardsizewidth = [];
+exports.allowed_custom_boardsizeheight = [];
+exports.allowed_sizes_ranked = [];
+exports.allow_all_sizes_ranked = false;
+exports.allow_custom_sizes_ranked = false;
+exports.allowed_custom_boardsizewidth_ranked = [];
+exports.allowed_custom_boardsizeheight_ranked = [];
+exports.allowed_sizes_unranked = [];
+exports.allow_all_sizes_unranked = false;
+exports.allow_custom_sizes_unranked = false;
+exports.allowed_custom_boardsizewidth_unranked = [];
+exports.allowed_custom_boardsizeheight_unranked = [];
+exports.allowed_komi = [];
+exports.allowed_timecontrols = {};
+exports.allowed_speeds = {};
 exports.allowed_custom_boardsizewidth = [];
 exports.allowed_custom_boardsizeheight = [];
 
@@ -67,12 +79,25 @@ exports.updateFromArgv = function() {
         // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('boardsize', 'Board size(s) to accept')
+        .describe('boardsize', 'Board size(s) to accept')
         .string('boardsize')
         .default('boardsize', '9,13,19')
+        .describe('boardsizeranked', 'Board size(s) to accept for ranked games')
+        .string('boardsizeranked')
+        .describe('boardsizeunranked', 'Board size(s) to accept for unranked games')
+        .string('boardsizeunranked')
+        .describe('boardsizewidth', 'For custom board size(s), specify boardsize width to accept, for example 25')
         .string('boardsizewidth')
-        .describe('boardsizewidth', 'For custom board size(s) to accept, specify boardsize width, for example 25')
+        .describe('boardsizeheight', 'For custom board size(s), specify boardsize height to accept, for example 1')
         .string('boardsizeheight')
-        .describe('boardsizeheight', 'For custom board size(s) to accept, specify boardsize height, for example 1')
+        .describe('boardsizewidthranked', 'For custom board size(s), specify boardsize width to accept for ranked games, for example 25')
+        .string('boardsizewidthranked')
+        .describe('boardsizeheightranked', 'For custom board size(s), specify boardsize height to accept for ranked games, for example 1')
+        .string('boardsizeheightranked')
+        .describe('boardsizewidthunranked', 'For custom board size(s), specify boardsize width to accept for unranked games, for example 25')
+        .string('boardsizewidthunranked')
+        .describe('boardsizeheightunranked', 'For custom board size(s), specify boardsize height to accept for unranked games, for example 1')
+        .string('boardsizeheightunranked')
         // behaviour : --boardsize can be specified as 
         // "custom" (allows board with custom size width x height),
         // "all" (allows ALL boardsizes), 
@@ -511,12 +536,41 @@ exports.updateFromArgv = function() {
         }
     }
 
-    if (argv.timecontrol) {
-        for (let i of argv.timecontrol.split(',')) {
-            exports.allowed_timecontrols[i] = true;
+    if (argv.boardsizeranked) {
+        for (let boardsizeranked of argv.boardsizeranked.split(',')) {
+            if (boardsizeranked == "all") {
+                exports.allow_all_sizes_ranked = true;
+            } else if (boardsizeranked == "custom") {
+                exports.allow_custom_sizes_ranked = true;
+                for (let boardsizewidthranked of argv.boardsizewidthranked.split(',')) {
+                    exports.allowed_custom_boardsizewidth_ranked[boardsizewidthranked] = true;
+                }
+                for (let boardsizeheightranked of argv.boardsizeheightranked.split(',')) {
+                    exports.allowed_custom_boardsizeheight_ranked[boardsizeheightranked] = true;
+                }
+            } else {
+                exports.allowed_sizes_ranked[boardsizeranked] = true;
+            }
         }
     }
 
+    if (argv.boardsizeunranked) {
+        for (let boardsizeunranked of argv.boardsizeunranked.split(',')) {
+            if (boardsizeunranked == "all") {
+                exports.allow_all_sizes_unranked = true;
+            } else if (boardsizeunranked == "custom") {
+                exports.allow_custom_sizes_unranked = true;
+                for (let boardsizewidthunranked of argv.boardsizewidthunranked.split(',')) {
+                    exports.allowed_custom_boardsizewidth_unranked[boardsizewidthunranked] = true;
+                }
+                for (let boardsizeheightunranked of argv.boardsizeheightunranked.split(',')) {
+                    exports.allowed_custom_boardsizeheight_unranked[boardsizeheightunranked] = true;
+                }
+            } else {
+                exports.allowed_sizes_unranked[boardsizeunranked] = true;
+            }
+        }
+    }
 
     if (argv.speed) {
         for (let i of argv.speed.split(',')) {
