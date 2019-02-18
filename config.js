@@ -85,7 +85,6 @@ exports.updateFromArgv = function() {
         // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('boardsize', 'Board size(s) to accept')
-        .describe('boardsize', 'Board size(s) to accept')
         .string('boardsize')
         .default('boardsize', '9,13,19')
         .describe('boardsizeranked', 'Board size(s) to accept for ranked games')
