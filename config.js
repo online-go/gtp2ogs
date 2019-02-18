@@ -17,7 +17,6 @@ exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_ranked_users = {};
 exports.banned_unranked_users = {};
-exports.allow_all_komi = false;
 exports.allowed_sizes = [];
 exports.allow_all_sizes = false;
 exports.allow_custom_sizes = false;
@@ -33,7 +32,12 @@ exports.allow_all_sizes_unranked = false;
 exports.allow_custom_sizes_unranked = false;
 exports.allowed_custom_boardsizewidth_unranked = [];
 exports.allowed_custom_boardsizeheight_unranked = [];
+exports.allow_all_komi = false;
 exports.allowed_komi = [];
+exports.allow_all_komi_ranked = false;
+exports.allowed_komi_ranked = [];
+exports.allow_all_komi_unranked = false;
+exports.allowed_komi_unranked = [];
 exports.allowed_timecontrols = {};
 exports.allowed_speeds = {};
 exports.allowed_custom_boardsizewidth = [];
@@ -106,6 +110,10 @@ exports.updateFromArgv = function() {
         .describe('komi', 'Allowed komi values')
         .string('komi')
         .default('komi', 'Automatic')
+        .describe('komiranked', 'Allowed komi values for ranked games')
+        .string('komiranked')
+        .describe('komiunranked', 'Allowed komi values for unranked games')
+        .string('komiunranked')
         // behaviour: --komi may be specified as 
         // "Automatic" (accept Automatic komi)
         // "all" (accept all komi values), 
@@ -273,6 +281,20 @@ exports.updateFromArgv = function() {
     if (argv.komi) {
         if (argv.komi.includes(`auto`)) {
             console.log("Warning: /--komi auto/ has been renamed to /--komi Automatic/\n");
+            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+        }
+    }
+
+    if (argv.komiranked) {
+        if (argv.komiranked.includes(`auto`)) {
+            console.log("Warning: /--komiranked auto/ has been renamed to /--komiranked Automatic/\n");
+            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+        }
+    }
+
+    if (argv.komiunranked) {
+        if (argv.komiunranked.includes(`auto`)) {
+            console.log("Warning: /--komiunranked auto/ has been renamed to /--komiunranked Automatic/\n");
             // we skip a line here, not below, because this argv may be undefined if not used by bot admin
         }
     }
@@ -506,18 +528,6 @@ exports.updateFromArgv = function() {
         }
     }
 
-    if (argv.komi) {
-        for (let komi of argv.komi.split(',')) {
-            if (komi == "all") {
-                exports.allow_all_komi = true;
-            } else if (komi == "Automatic") {
-                exports.allowed_komi[null] = true;
-            } else {
-                exports.allowed_komi[komi] = true;
-            }
-        }
-    }
-
     if (argv.boardsize) {
         for (let boardsize of argv.boardsize.split(',')) {
             if (boardsize == "all") {
@@ -568,6 +578,42 @@ exports.updateFromArgv = function() {
                 }
             } else {
                 exports.allowed_sizes_unranked[boardsizeunranked] = true;
+            }
+        }
+    }
+
+    if (argv.komi) {
+        for (let komi of argv.komi.split(',')) {
+            if (komi == "all") {
+                exports.allow_all_komi = true;
+            } else if (komi == "Automatic") {
+                exports.allowed_komi[null] = true;
+            } else {
+                exports.allowed_komi[komi] = true;
+            }
+        }
+    }
+
+    if (argv.komiranked) {
+        for (let komiranked of argv.komiranked.split(',')) {
+            if (komiranked == "all") {
+                exports.allow_all_komi_ranked = true;
+            } else if (komiranked == "Automatic") {
+                exports.allowed_komi_ranked[null] = true;
+            } else {
+                exports.allowed_komi_ranked[komiranked] = true;
+            }
+        }
+    }
+
+    if (argv.komiunranked) {
+        for (let komiunranked of argv.komiunranked.split(',')) {
+            if (komiunranked == "all") {
+                exports.allow_all_komi_unranked = true;
+            } else if (komiunranked == "Automatic") {
+                exports.allowed_komi_unranked[null] = true;
+            } else {
+                exports.allowed_komi_unranked[komiunranked] = true;
             }
         }
     }
