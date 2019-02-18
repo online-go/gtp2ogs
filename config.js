@@ -110,16 +110,16 @@ exports.updateFromArgv = function() {
         // The default is "9,13,19" (square board sizes only), see README for details
         .describe('komi', 'Allowed komi values')
         .string('komi')
-        .default('komi', 'Automatic')
+        .default('komi', 'automatic')
         .describe('komiranked', 'Allowed komi values for ranked games')
         .string('komiranked')
         .describe('komiunranked', 'Allowed komi values for unranked games')
         .string('komiunranked')
         // behaviour: --komi may be specified as 
-        // "Automatic" (accept Automatic komi)
+        // "automatic" (accept automatic komi)
         // "all" (accept all komi values), 
         // or comma separated list of explicit values.
-        // The default is "Automatic", see README and OPTIONS-LIST for details
+        // The default is "automatic", see README and OPTIONS-LIST for details
         .describe('ban', 'Comma separated list of user names or IDs')
         .string('ban')
         .describe('banranked', 'Comma separated list of user names or IDs')
@@ -285,21 +285,21 @@ exports.updateFromArgv = function() {
 
     if (argv.komi) {
         if (argv.komi.includes(`auto`)) {
-            console.log("Warning: /--komi auto/ has been renamed to /--komi Automatic/\n");
+            console.log("Warning: /--komi auto/ has been renamed to /--komi automatic/\n");
             // we skip a line here, not below, because this argv may be undefined if not used by bot admin
         }
     }
 
     if (argv.komiranked) {
         if (argv.komiranked.includes(`auto`)) {
-            console.log("Warning: /--komiranked auto/ has been renamed to /--komiranked Automatic/\n");
+            console.log("Warning: /--komiranked auto/ has been renamed to /--komiranked automatic/\n");
             // we skip a line here, not below, because this argv may be undefined if not used by bot admin
         }
     }
 
     if (argv.komiunranked) {
         if (argv.komiunranked.includes(`auto`)) {
-            console.log("Warning: /--komiunranked auto/ has been renamed to /--komiunranked Automatic/\n");
+            console.log("Warning: /--komiunranked auto/ has been renamed to /--komiunranked automatic/\n");
             // we skip a line here, not below, because this argv may be undefined if not used by bot admin
         }
     }
@@ -591,7 +591,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         for (let komi of argv.komi.split(',')) {
             if (komi == "all") {
                 exports.allow_all_komi = true;
-            } else if (komi == "Automatic") {
+            } else if (komi == "automatic") {
                 exports.allowed_komi[null] = true;
             } else {
                 exports.allowed_komi[komi] = true;
@@ -603,7 +603,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         for (let komiranked of argv.komiranked.split(',')) {
             if (komiranked == "all") {
                 exports.allow_all_komi_ranked = true;
-            } else if (komiranked == "Automatic") {
+            } else if (komiranked == "automatic") {
                 exports.allowed_komi_ranked[null] = true;
             } else {
                 exports.allowed_komi_ranked[komiranked] = true;
@@ -615,7 +615,7 @@ if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxranke
         for (let komiunranked of argv.komiunranked.split(',')) {
             if (komiunranked == "all") {
                 exports.allow_all_komi_unranked = true;
-            } else if (komiunranked == "Automatic") {
+            } else if (komiunranked == "automatic") {
                 exports.allowed_komi_unranked[null] = true;
             } else {
                 exports.allowed_komi_unranked[komiunranked] = true;

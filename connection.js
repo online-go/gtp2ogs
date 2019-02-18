@@ -471,7 +471,7 @@ class Connection {
         if (!config.allowed_komi[notification.komi] && !config.allow_all_komi && !config.komiranked && !config.komiunranked) {
             let notificationKomiString = "";
             if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
-                notificationKomiString = "Automatic";
+                notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
             }
@@ -482,7 +482,7 @@ class Connection {
         if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && config.komiranked) {
             let notificationKomiString = "";
             if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
-                notificationKomiString = "Automatic";
+                notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
             }
@@ -493,7 +493,7 @@ class Connection {
         if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && config.komiunranked) {
             let notificationKomiString = "";
             if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
-                notificationKomiString = "Automatic";
+                notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
             }
