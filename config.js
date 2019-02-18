@@ -38,8 +38,10 @@ exports.allow_all_komi_ranked = false;
 exports.allowed_komi_ranked = [];
 exports.allow_all_komi_unranked = false;
 exports.allowed_komi_unranked = [];
-exports.allowed_timecontrols = {};
 exports.allowed_speeds = {};
+exports.allowed_speeds_ranked = {};
+exports.allowed_speeds_unranked = {};
+exports.allowed_timecontrols = {};
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
@@ -125,6 +127,8 @@ exports.updateFromArgv = function() {
         .string('banunranked')
         .describe('speed', 'Game speed(s) to accept')
         .default('speed', 'blitz,live,correspondence')
+        .describe('speedranked', 'Game speed(s) to accept for ranked games')
+        .describe('speedunranked', 'Game speed(s) to accept for unranked games')
         .describe('timecontrol', 'Time control(s) to accept')
         .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
         // 1- for "absolute", bot admin can allow absolute if want, but then 
@@ -619,6 +623,18 @@ exports.updateFromArgv = function() {
     if (argv.speed) {
         for (let i of argv.speed.split(',')) {
             exports.allowed_speeds[i] = true;
+        }
+    }
+
+    if (argv.speedranked) {
+        for (let i of argv.speedranked.split(',')) {
+            exports.allowed_speeds_ranked[i] = true;
+        }
+    }
+
+    if (argv.speedunranked) {
+        for (let i of argv.speedunranked.split(',')) {
+            exports.allowed_speeds_unranked[i] = true;
         }
     }
 

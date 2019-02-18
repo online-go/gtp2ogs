@@ -508,9 +508,19 @@ class Connection {
             return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for unranked games, please choose one of these allowed komi for unranked games: " + config.komiunranked};
         }
 
-        if (!config.allowed_speeds[t.speed]) {
+        if (!config.allowed_speeds[t.speed] && !config.speedranked && !config.speedunranked) {
             conn_log(user.username + " wanted speed " + t.speed + ", not in: " + config.speed);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed, please choose one of these allowed game speeds : " + config.speed };
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speed };
+        }
+
+        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedranked) {
+            conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedranked);
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedranked };
+        }
+
+        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedunranked) {
+            conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedunranked);
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedunranked };
         }
 
         if (!config.allowed_timecontrols[t.time_control]) {
