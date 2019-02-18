@@ -352,27 +352,34 @@ class Connection {
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
 
-        // for square board sizes only
+        /******** begining of BOARDSIZES *********/
+        // for square board sizes only //
+        /* if not square*/
         if (notification.width != notification.height && !config.allow_all_sizes && !config.allow_custom_sizes) {
             conn_log("board was not square, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), Board was not square, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
+        /* if square, check if square board size is allowed*/
         if (!config.allowed_sizes[notification.width] && !config.allow_all_sizes && !config.allow_custom_sizes) {
-            conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size, rejecting challenge");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of the allowed square board sizes (same width and height, for example if allowed boardsizes are 9,13,19, it means you can play only 9x9 , 13x13, and 19x19), these are the allowed square board sizes : " + config.boardsize };
+            let boardsizeSquareString = String(config.boardsize); // we convert the value to a string to avoid undefined error later
+            conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size");
+            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed board sizes " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
-        // for custom board sizes, including square board sizes if width == height as well
+        // for custom board sizes, including square board sizes if width == height as well //
+        /* if custom, check width */
         if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizewidth[notification.width]) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + config.boardsizewidth };
         }
 
+        /* if custom, check height */
         if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height]) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height, rejecting challenge");
             return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheight };
         }
+        /******** end of BOARDSIZES *********/
 
         if (config.noautohandicap && notification.handicap == -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
             conn_log("no autohandicap, rejecting challenge") ;
@@ -1526,7 +1533,7 @@ function rankToString(r) { /* {{{ */
     else          return (30-r) + 'k'; // r<30 : 1 kyu or weaker
 } /* }}} */
 
-function timespanToDisplayString(timespan) {
+function timespanToDisplayString(timespan) { /* {{{ */
     let ss = timespan % 60;
     let mm = Math.floor(timespan / 60 % 60);
     let hh = Math.floor(timespan / (60*60) % 24);
@@ -1536,6 +1543,14 @@ function timespanToDisplayString(timespan) {
     .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
     .filter(e => e !== "")
     .join(" ");
+} /* }}} */
+
+function boardsizeSquareToDisplayString(boardsizeSquare) { /* {{{ */
+    return boardsizeSquare
+    .split(',')
+    .map(e => e.trim())
+    .map(e => `${e}x${e}`)
+    .join(', ');
 } /* }}} */
 
 function conn_log() { /* {{{ */
