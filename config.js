@@ -80,12 +80,12 @@ exports.updateFromArgv = function() {
         // The default is "9,13,19" (square board sizes only), see README for details
         .describe('komi', 'Allowed komi values')
         .string('komi')
-        .default('komi', 'auto')
+        .default('komi', 'Automatic')
         // behaviour: --komi may be specified as 
-        // "auto" (Automatic), 
+        // "Automatic" (accept Automatic komi)
         // "all" (accept all komi values), 
         // or comma separated list of explicit values.
-        // The default is "auto", see README for details
+        // The default is "Automatic", see README and OPTIONS-LIST for details
         .describe('ban', 'Comma separated list of user names or IDs')
         .string('ban')
         .describe('banranked', 'Comma separated list of user names or IDs')
@@ -243,6 +243,13 @@ exports.updateFromArgv = function() {
 
     if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
         console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
+    }
+
+    if (argv.komi) {
+        if (argv.komi.includes(`auto`)) {
+            console.log("Warning: /--komi auto/ has been renamed to /--komi Automatic/\n");
+            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+        }
     }
 
     console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
@@ -478,7 +485,7 @@ exports.updateFromArgv = function() {
         for (let komi of argv.komi.split(',')) {
             if (komi == "all") {
                 exports.allow_all_komi = true;
-            } else if (komi == "auto") {
+            } else if (komi == "Automatic") {
                 exports.allowed_komi[null] = true;
             } else {
                 exports.allowed_komi[komi] = true;
