@@ -26,79 +26,10 @@ exports.allow_all_sizes = false;
 exports.allow_custom_sizes = false;
 exports.allowed_custom_boardsizewidth = [];
 exports.allowed_custom_boardsizeheight = [];
-exports.allowed_sizes = [];
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
-        .alias('username', 'u')
-        .alias('apikey', 'a')
-        .alias('debug', 'd')
-        .alias('logfile', 'l')
-        .alias('json', 'j')
-        .alias('hidden', 'h')
-        .alias('greeting', 'g')
-        .alias('farewell', 'f')
-        .alias('persist', 'p')
-        .alias('timeout', 't')
-        .alias('speed', 's')
-        .alias('komi', 'k')
-        .alias('rejectnew', 'r')
-        .alias('rejectnewmsg', 'rm')
-        .alias('rejectnewfile', 'rf')
-        .alias('noclock', 'nc')
-        .alias('nopause', 'np')
-        .alias('nopauseranked', 'npr')
-        .alias('nopauseunranked', 'npu')
-        .alias('noautohandicap', 'nah')
-        .alias('noautohandicapranked', 'nahr')
-        .alias('noautohandicapunranked', 'nahu')
-        .alias('rankedonly', 'ro')
-        .alias('unrankedonly', 'uo')
-        .alias('proonly', 'po')
-        .alias('ban', 'b')
-        .alias('banranked', 'br')
-        .alias('banunranked', 'bu')
-        .alias('corrqueue', 'cq')
-        .alias('startupbuffer', 'sb')
-        .alias('timecontrol', 'tc')
-        // alias bb is for square boardsizes only, hence the double b (width x height)
-        .alias('boardsize', 'bb')
-        .alias('boardsizewidth', 'bw')
-        .alias('boardsizeheight', 'bh')
-        // for below aliases : 0 is min , 1 is max,
-        .alias('maxconnectedgames', '1cg')
-        .alias('maxconnectedgamesperuser', '1cgpu')
-        .alias('minrank', '0r')
-        .alias('minrankranked', '0rr')
-        .alias('minrankunranked', '0ru')
-        .alias('maxrank', '1r')
-        .alias('maxrankranked', '1rr')
-        .alias('maxrankunranked', '1ru')
-        .alias('minmaintime', '0mt')
-        .alias('maxmaintime', '1mt')
-        .alias('minmaintimeranked', '0mtr')
-        .alias('maxmaintimeranked', '1mtr')
-        .alias('minmaintimeunranked', '0mtu')
-        .alias('maxmaintimeunranked', '1mtu')
-        .alias('minperiodtime', '0pt')
-        .alias('maxperiodtime', '1pt')
-        .alias('minperiodtimeranked', '0ptr')
-        .alias('maxperiodtimeranked', '1ptr')
-        .alias('minperiodtimeunranked', '0ptu')
-        .alias('maxperiodtimeunranked', '1ptu')
-        .alias('minperiods', '0p')
-        .alias('maxperiods', '1p')
-        .alias('minperiodsranked', '0pr')
-        .alias('minperiodsunranked', '0pu')
-        .alias('maxperiodsranked', '1pr')
-        .alias('maxperiodsunranked', '1pu')
-        .alias('minhandicap', '0h')
-        .alias('maxhandicap', '1h')
-        .alias('minhandicapranked', '0hr')
-        .alias('minhandicapunranked', '0hu')
-        .alias('maxhandicapranked', '1hr')
-        .alias('maxhandicapunranked', '1hu')
         .demand('username')
         .demand('apikey')
         .describe('username', 'Specify the username of the bot, for example GnuGo')
@@ -165,20 +96,60 @@ exports.updateFromArgv = function() {
         .default('speed', 'blitz,live,correspondence')
         .describe('timecontrol', 'Time control(s) to accept')
         .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
-        .describe('minmaintime', 'Minimum seconds of main time (rejects time control simple and none)')
-        .default('minmaintime', 60)
-        .describe('maxmaintime', 'Maximum seconds of main time (rejects time control simple and none)')
-        .default('maxmaintime', 7200)
-        .describe('minmaintimeranked', 'Minimum seconds of main time for ranked games (rejects time control simple and none)')
-        .describe('maxmaintimeranked', 'Maximum seconds of main time for ranked games (rejects time control simple and none)')
-        .describe('minmaintimeunranked', 'Minimum seconds of main time for unranked games (rejects time control simple and none)')
-        .describe('maxmaintimeunranked', 'Maximum seconds of main time for unranked games (rejects time control simple and none)')
-        .describe('minperiodtime', 'Minimum seconds per period (per stone in canadian)')
-        .default('minperiodtime', 10)
-        .describe('maxperiodtime', 'Maximum seconds per period (per stone in canadian)')
-        .default('minperiodtime', 120)
-        .describe('minperiodtimeranked', 'Minimum seconds per period for ranked games (per stone in canadian)')
-        .describe('maxperiodtimeranked', 'Maximum seconds per period for unranked games (per stone in canadian)')
+        // 1- for "absolute", bot admin can allow absolute if want, but then 
+        // make sure to increase minmaintimeblitz and minmaintimelive to high values
+        // 2 - "none" is not default, can be manually allowed in timecontrol argument
+        // but then games will be very very long
+        .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
+        .default('minmaintimeblitz', '15') // 15 seconds
+        .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')
+        .default('maxmaintimeblitz', '300') // 5 minutes 
+        .describe('minmaintimeblitzranked', 'Minimum seconds of main time for blitz ranked games ')
+        .describe('maxmaintimeblitzranked', 'Maximum seconds of main time for blitz ranked games ')
+        .describe('minmaintimeblitzunranked', 'Minimum seconds of main time for blitz unranked games ')
+        .describe('maxmaintimeblitzunranked', 'Maximum seconds of main time for blitz unranked games ')
+        .describe('minmaintimelive', 'Minimum seconds of main time for live AND blitz ')
+        .default('minmaintimelive', '60') // 1 minute
+        .describe('maxmaintimelive', 'Maximum seconds of main time for live AND blitz ')
+        .default('maxmaintimelive', '7200') // 2 hours 
+        .describe('minmaintimeliveranked', 'Minimum seconds of main time for live AND blitz ranked games ')
+        .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live AND blitz ranked games ')
+        .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live AND blitz unranked games ')
+        .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live AND blitz unranked games ')
+        .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence ')
+        .default('minmaintimecorr', '259200') // 3 days
+        .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence ')
+        .default('maxmaintimecorr', '604800') // 7 days
+        .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games ')
+        .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games ')
+        .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games ')
+        .describe('maxmaintimecorrunranked', 'Maximum seconds of main time for correspondence unranked games ')
+        // for canadian period times, divide the period time by the number of stones per period
+        // for example max periodtime 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12
+        .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
+        .default('minperiodtimeblitz', '5') // 5 seconds (average time per stone if time control is canadian)
+        .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
+        .default('maxperiodtimeblitz', '10') // 10 seconds (max)  (average time per stone if time control is canadian)
+        .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games ')
+        .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games ')
+        .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games ')
+        .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games ')
+        .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
+        .default('minperiodtimelive', '10') // 10 seconds (average time per stone if time control is canadian)
+        .describe('maxperiodtimelive', 'Maximum seconds of period time for live games ')
+        .default('maxperiodtimelive', '120') // 2 minutes  (average time per stone if time control is canadian)
+        .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games ')
+        .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games ')
+        .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
+        .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
+        .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
+        .default('minperiodtimecorr', '14400') // 4 hours (average time per stone if time control is canadian)
+        .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
+        .default('maxperiodtimecorr', '259200') // 3 days (average time per stone if time control is canadian)
+        .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games ')
+        .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games ')
+        .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games ')
+        .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games ')
         .describe('minperiods', 'Minimum number of periods')
         .default('minperiods', 3)
         .describe('minperiodsranked', 'Minimum number of ranked periods')
@@ -246,12 +217,12 @@ exports.updateFromArgv = function() {
         console.log("Warning: You are using --noautohandicap in combination with --noautohandicapranked and/or --noautohandicapunranked.\nUse either --noautohandicap alone, OR --noautohandicapranked with --noautohandicapunranked.\nBut don't use the 3 noautohandicap arguments at the same time.");
     }
 
-    if (argv.maxmaintime && (argv.maxmaintimeranked || argv.maxmaintimeunranked)) {
-        console.log("Warning: You are using --maxmaintime in combination with --maxmaintimeranked and/or --maxmaintimeunranked.\nUse either --maxmaintime alone, OR --maxmaintimeranked with --maxmaintimeunranked.\nBut don't use the 3 maxmaintime arguments at the same time.");
+    if (argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked) {
+        console.log("Warning: --min/max*maintime*+/-ranked/unranked is not supported anymore\n Use --min/max*maintime*blitz/live/corr*+/-ranked/unranked");
     }
 
-    if (argv.minmaintime && (argv.minmaintimeranked || argv.minmaintimeunranked)) {
-        console.log("Warning: You are using --minmaintime in combination with --minmaintimeranked and/or --minmaintimeunranked.\nUse either --minmaintime alone, OR --minmaintimeranked with --minmaintimeunranked.\nBut don't use the 3 minmaintime arguments at the same time.");
+    if (argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
+        console.log("Warning: --min/max*periodtime*+/-ranked/unranked is not supported anymore\n Use --min/max*periodtime*blitz/live/corr*+/-ranked/unranked");
     }
 
     if (argv.maxperiods && (argv.maxperiodsranked || argv.maxperiodsunranked)) {
@@ -260,14 +231,6 @@ exports.updateFromArgv = function() {
 
     if (argv.minperiods && (argv.minperiodsranked || argv.minperiodsunranked)) {
         console.log("Warning: You are using --minperiods in combination with --minperiodsranked and/or --minperiodsunranked.\nUse either --minperiods alone, OR --minperiodsranked with --minperiodsunranked.\nBut don't use the 3 minperiods arguments at the same time.");
-    }
-
-    if (argv.maxperiodtime && (argv.maxperiodtimeranked || argv.maxperiodtimeunranked)) {
-        console.log("Warning: You are using --maxperiodtime in combination with --maxperiodtimeranked and/or --maxperiodtimeunranked.\nUse either --maxperiodtime alone, OR --maxperiodtimeranked with --maxperiodtimeunranked.\nBut don't use the 3 maxperiodtime arguments at the same time.");
-    }
-
-    if (argv.minperiodtime && (argv.minperiodtimeranked || argv.minperiodtimeunranked)) {
-        console.log("Warning: You are using --minperiodtime in combination with --minperiodtimeranked and/or --minperiodtimeunranked.\nUse either --minperiodtime alone, OR --minperiodtimeranked with --minperiodtimeunranked.\nBut don't use the 3 minperiodtime arguments at the same time.");
     }
 
     if (argv.minrank && (argv.minrankranked || argv.minrankunranked)) {
@@ -508,12 +471,6 @@ exports.updateFromArgv = function() {
         } else {
             console.error("Could not parse maxrankunranked " + argv.maxrankunranked);
             process.exit();
-        }
-    }
-
-    if (argv.boardsize) {
-        for (let i of argv.boardsize.split(',')) {
-            exports.allowed_sizes[i] = true;
         }
     }
 
