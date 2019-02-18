@@ -420,8 +420,14 @@ class Connection {
         }
 
         if (!config.allowed_komi[notification.komi] && !config.allow_all_komi) {
-            conn_log("komi value " + notification.komi + " is not an allowed komi, allowed komi are: " + config.komi + ", rejecting challenge");
-            return { reject: true, msg: "komi " + notification.komi + " is not an allowed komi, please choose one of these allowed komi : " + config.komi };
+            let notificationKomiString = "";
+            if (String(notification.komi) === "null") { // we need to declare this as a string or the test fails
+                notificationKomiString = "Automatic";
+            } else {
+                notificationKomiString = notification.komi;
+            }
+            conn_log("komi value " + notificationKomiString + " is not allowed, allowed komi are: " + config.komi);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed, please choose one of these allowed komi : " + config.komi};
         }
 
         if (!config.allowed_speeds[t.speed]) {
