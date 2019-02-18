@@ -42,6 +42,8 @@ exports.allowed_speeds = {};
 exports.allowed_speeds_ranked = {};
 exports.allowed_speeds_unranked = {};
 exports.allowed_timecontrols = {};
+exports.allowed_timecontrols_ranked = {};
+exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
@@ -130,7 +132,9 @@ exports.updateFromArgv = function() {
         .describe('speedranked', 'Game speed(s) to accept for ranked games')
         .describe('speedunranked', 'Game speed(s) to accept for unranked games')
         .describe('timecontrol', 'Time control(s) to accept')
-        .default('timecontrol', 'fischer,byoyomi,simple,canadian,absolute,none')
+        .default('timecontrol', 'fischer,byoyomi,simple,canadian')
+        .describe('timecontrolranked', 'Time control(s) to accept for ranked games')
+        .describe('timecontrolunranked', 'Time control(s) to accept for unranked games')
         // 1- for "absolute", bot admin can allow absolute if want, but then 
         // make sure to increase minmaintimeblitz and minmaintimelive to high values
         // 2 - "none" is not default, can be manually allowed in timecontrol argument
@@ -336,9 +340,9 @@ exports.updateFromArgv = function() {
         console.log("Warning: --maxactivegames argument has been renamed to --maxconnectedgamesperuser. Use --maxconnectedgamesperuser instead.");
     }
 
-    if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames) {
-        console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
-    }
+if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
+    console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
+}
 
     // end of console messages
 
@@ -635,6 +639,24 @@ exports.updateFromArgv = function() {
     if (argv.speedunranked) {
         for (let i of argv.speedunranked.split(',')) {
             exports.allowed_speeds_unranked[i] = true;
+        }
+    }
+
+    if (argv.timecontrol) {
+        for (let i of argv.timecontrol.split(',')) {
+            exports.allowed_timecontrols[i] = true;
+        }
+    }
+
+    if (argv.timecontrolranked) {
+        for (let i of argv.timecontrolranked.split(',')) {
+            exports.allowed_timecontrols_ranked[i] = true;
+        }
+    }
+
+    if (argv.timecontrolunranked) {
+        for (let i of argv.timecontrolunranked.split(',')) {
+            exports.allowed_timecontrols_unranked[i] = true;
         }
     }
 

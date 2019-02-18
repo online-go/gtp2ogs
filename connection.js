@@ -336,19 +336,6 @@ class Connection {
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
 
-        // for all the allowed_family options ranked and unranked options below 
-        // (timecontrols, speeds, komi, boardsizes)
-        // we need to add a "family guard" :
-        // - && config.familyranked for ranked games 
-        // - && config.familyunranked for unranked games
-        // else the allowed_ is always false and always rejects
-
-        // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
-        if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolranked && !config.timecontrolunranked) { 
-            conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + config.timecontrol);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrol };
-        }
-
         if (config.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
             return { reject: true, msg: "This bot accepts ranked games only. " };
@@ -358,6 +345,12 @@ class Connection {
             conn_log("Unranked games only");
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
+
+        // for all the allowed_family options below (timecontrols, speeds, komi, boardsizes) 
+        // we need to add a "family guard" 
+        // && config.familyranked for ranked games 
+        // && config.familyunranked for unranked games
+        // else the allowed_ is always false and always rejects
 
         /******** begining of BOARDSIZES *********/
         // for square board sizes only //
@@ -510,22 +503,33 @@ class Connection {
 
         if (!config.allowed_speeds[t.speed] && !config.speedranked && !config.speedunranked) {
             conn_log(user.username + " wanted speed " + t.speed + ", not in: " + config.speed);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speed };
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speed};
         }
 
         if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedranked) {
             conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedranked);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedranked };
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedranked};
         }
 
         if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedunranked) {
             conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedunranked);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedunranked };
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedunranked};
         }
 
-        if (!config.allowed_timecontrols[t.time_control]) {
+        // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
+        if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolranked && !config.timecontrolunranked) { 
             conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + config.timecontrol);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed, please choose one of these allowed time controls : " + config.timecontrol };
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrol };
+        }
+
+        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolranked) { 
+            conn_log(user.username + " wanted time control for ranked games " + t.time_control + ", not in: " + config.timecontrolranked);
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for ranked games, please choose one of these allowed time controls for ranked games : " + config.timecontrolranked };
+        }
+
+        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolunranked) { 
+            conn_log(user.username + " wanted time control for unranked games " + t.time_control + ", not in: " + config.timecontrolunranked);
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolunranked };
         }
 
         ////// begining of *** UHMAEAT v2.2: Universal Highly Modulable And Expandable Argv Tree ***
