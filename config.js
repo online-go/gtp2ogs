@@ -40,8 +40,6 @@ exports.allow_all_komi_unranked = false;
 exports.allowed_komi_unranked = [];
 exports.allowed_timecontrols = {};
 exports.allowed_speeds = {};
-exports.allowed_custom_boardsizewidth = [];
-exports.allowed_custom_boardsizeheight = [];
 
 exports.updateFromArgv = function() {
     let optimist = require("optimist")
