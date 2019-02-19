@@ -120,17 +120,17 @@ Allows custom board sizes 25x1 25x2 25x3 in that example, see
 [notes E-](/docs/docs/NOTES.md#e-) for details
 
 #### komi 
-```--komi``` Allowed komi values  (default Automatic)
+```--komi``` Allowed komi values  (default automatic)
 
 ```--komiranked``` Allowed komi values for ranked games
 
 ```--komiunranked``` Allowed komi values for unranked games
  
 Possible komi values : 
-- `Automatic` (allows Automatic komi), 
+- `automatic` (allows automatic komi), 
 - `all` (allows all komi values), When `all` is used alone, all 
 komi values are allowed. 
-- comma separated values, for example `7.5`, or `7.5,6.5,0.5,Automatic` 
+- comma separated values, for example `7.5`, or `7.5,6.5,0.5,automatic` 
 
 When an argument other than `all` is used, only the chosen argument komi 
 values are allowed and all other komi values are rejected see 
