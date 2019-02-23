@@ -225,6 +225,13 @@ class Game {
         this.socket.emit('game/connect', this.auth({
             'game_id': game_id
         }));
+
+        this.connect_timeout = setTimeout(()=>{
+            if (!this.state) {
+                this.log("No gamedata after 1s, reqesting again");
+                this.scheduleRetry();
+            }
+        }, 1000);
     } /* }}} */
 
     // Kill the bot, if it is currently running.
@@ -252,7 +259,7 @@ class Game {
             // This bot keeps on failing, give up on the game.
             this.log("Bot has crashed too many times, resigining game");
             this.socket.emit('game/resign', this.auth({
-                'game_id': this.state.game_id
+                'game_id': this.game_id
             }));
             if (eb) eb();
             return false;
@@ -321,10 +328,10 @@ class Game {
             this.log("We may need to move but were not able to. Re-connect to trigger action based on game state.");
         }
         this.socket.emit('game/disconnect', this.auth({
-            'game_id': this.state.game_id,
+            'game_id': this.game_id,
         }));
         this.socket.emit('game/connect', this.auth({
-            'game_id': this.state.game_id,
+            'game_id': this.game_id,
         }));
     }
     // Send move to server.
@@ -333,7 +340,7 @@ class Game {
         if (move.resign) {
             this.log("Resigning");
             this.socket.emit('game/resign', this.auth({
-                'game_id': this.state.game_id
+                'game_id': this.game_id
             }));
             return;
         }
@@ -341,7 +348,7 @@ class Game {
         if (config.DEBUG) this.log("Playing " + move.text, move);
         else this.log("Playing " + move.text);
         this.socket.emit('game/move', this.auth({
-            'game_id': this.state.game_id,
+            'game_id': this.game_id,
             'move': encodeMove(move)
         }));
         //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
@@ -426,7 +433,7 @@ class Game {
     }; /* }}} */
     gameOver() /* {{{ */
     {
-        if (config.farewell && this.state && this.state.game_id)
+        if (config.farewell && this.state)
             this.sendChat(config.FAREWELL, "discussion");
 
         // Display result
@@ -475,7 +482,7 @@ class Game {
         if (!this.connected) return;
 
         this.socket.emit('game/chat', this.auth({
-            'game_id': this.state.game_id,
+            'game_id': this.game_id,
             'player_id': this.conn.user_id,
             'body': str,
             'move_number': move_number,
@@ -485,7 +492,7 @@ class Game {
     }
     resumeGame() {
         this.socket.emit('game/resume', this.auth({
-            'game_id': this.state.game_id,
+            'game_id': this.game_id,
             'player_id': this.conn.bot_id
         }));
     }    

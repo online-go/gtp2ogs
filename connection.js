@@ -228,24 +228,26 @@ class Connection {
             let game = this.connected_games[game_id];
             let msg = [];
             msg.push('game_id=' + game_id + ':');
-            if (game.state == null) {
+            if (game.state === null) {
                 msg.push('no_state');
                 conn_log(...msg);
                 continue;
             }
             msg.push('black=' + game.state.players.black.username);
             msg.push('white=' + game.state.players.white.username);
-            if (game.state.clock.current_player == this.bot_id) {
+            if (game.state.clock.current_player === this.bot_id) {
                 msg.push('bot_turn');
             }
             let idle_time = (Date.now() - game.state.clock.last_move) / 1000;
             msg.push('idle_time=' + idle_time + 's');
-            if (game.bot == null) {
+            if (game.bot === null) {
                 msg.push('no_bot');
                 conn_log(...msg);
                 continue;
             }
-            msg.push('bot.proc.pid=' + game.bot.proc.pid);
+            msg.push('bot.proc.pid=' + game.bot.pid());
+            msg.push('bot.dead=' + game.bot.dead);
+            msg.push('bot.failed=' + game.bot.failed);
             conn_log(...msg);
         }
         conn_log('Dump complete');
