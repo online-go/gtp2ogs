@@ -50,8 +50,8 @@ class Connection {
         }, (/online-go.com$/.test(config.host)) ? 5000 : 500);
 
         if (config.timeout) {
-            this.idle_game_timeout_interval = setInterval(
-                this.disconnectIdleGames.bind(this), 1000);
+            this.idle_timeout_interval = setInterval(
+                this.disconnectIdleGames.bind(this), 10000);
         }
 
         this.clock_drift = 0;
@@ -123,9 +123,6 @@ class Connection {
             this.connected = false;
 
             conn_log("Disconnected from server");
-            if (config.timeout) {
-                clearInterval(this.idle_game_timeout_interval);
-            }
 
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
@@ -194,7 +191,7 @@ class Connection {
             return this.connected_games[game_id];
         }
 
-        return this.connected_games[game_id] = new Game(this, game_id);;
+        return this.connected_games[game_id] = new Game(this, game_id);
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
         if (config.DEBUG) {
@@ -206,6 +203,7 @@ class Connection {
         }
     }; /* }}} */
     disconnectIdleGames() {
+        if (config.DEBUG) conn_log("Looking for idle games to disconnect");
         let now = Date.now();
         for (let game_id in this.connected_games) {
             let state = this.connected_games[game_id].state;
@@ -213,8 +211,9 @@ class Connection {
                 if (config.DEBUG) conn_log("No game state, not checking idle status for", game_id);
                 continue;
             }
-            if ((state.clock.current_player != this.bot_id) && (state.clock.last_move + config.timeout < now)) {
-                if (config.DEBUG) conn_log("Disconnecting from game, other player has been idling for ", config.timeout);
+            let idle_time = now - state.clock.last_move;
+            if ((state.clock.current_player != this.bot_id) && (idle_time > config.timeout)) {
+                if (config.DEBUG) conn_log("Found idle game", game_id, ", other player has been idling for", idle_time, ">", config.timeout);
                 this.disconnectFromGame(game_id);
             }
         }

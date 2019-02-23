@@ -165,7 +165,7 @@ function base_challenge(overrides) {
         aga_rated: false,
         aux_delivered: 0,
         read: 0,
-        timestamp: 0, // TODO: now
+        timestamp: 0,
         read_timestamp: 0,
     }
     return Object.assign({}, base, overrides);
@@ -222,14 +222,14 @@ function base_gamedata(overrides) {
             time_increment: 30,
             speed: 'live',
         },
-        start_time: 0,  // TODO: now.
+        start_time: 0,
         clock: {
             game_id: 1,
             current_player: 1,
             black_player_id: 1,
             white_player_id: 2,
             title: 'Friendly Match',
-            last_move: Date.now(),
+            last_move: 0,
             expiration: 0, // TODO
             black_time: { thinking_time: 30, skip_bonus: false },
             white_time: { thinking_time: 30, skip_bonus: false },
@@ -279,13 +279,19 @@ function base_gamedata(overrides) {
     return Object.assign({}, base, overrides);
 }
 
+function stub_console() {
+    sinon.stub(console, 'log');
+    sinon.stub(console, 'debug');
+}
+
 afterEach(function () {
     sinon.restore();
 });
 
 describe('A single game', () => {
     it('works end-to-end', function() {
-        sinon.stub(console, 'log');
+        stub_console();
+        let clock = sinon.useFakeTimers();
 
         let fake_socket = new FakeSocket();
         let fake_api = new FakeAPI();
@@ -375,7 +381,7 @@ describe('A single game', () => {
 
 describe('Games do not hang', () => {
     function setupStubs() {
-        sinon.stub(console, 'log');
+        stub_console();
         let clock = sinon.useFakeTimers();
 
         let fake_socket = new FakeSocket();
@@ -485,6 +491,61 @@ describe('Games do not hang', () => {
         for (var i = 1; i <= games; i++) {
             assert.equal(seen_moves[i] > 0, true, 'Game '+i+' has seen no moves');
         }
+
+        conn.terminate();
+    });
+});
+
+describe('Periodic actions', () => {
+    it('clean up idle games', () => {
+        stub_console();
+        // Idle games should be removed after 5 seconds.
+        sinon.stub(config, 'timeout').value(5000);
+        let clock = sinon.useFakeTimers();
+
+        let fake_socket = new FakeSocket();
+        fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
+        let fake_api = new FakeAPI();
+        sinon.stub(https, 'request').callsFake(fake_api.request);
+        let fake_gtp = new FakeGTP();
+        sinon.stub(child_process, 'spawn').returns(fake_gtp);
+
+        fake_socket.on_emit('game/connect', (connect) => {
+            let gamedata = base_gamedata({ id: connect.game_id })
+            // Base gamedata indicates the last move was at time point 0, which is where the fake clock starts at, too.
+            // Turn for the human to play.
+            gamedata.clock.current_player = 2;
+            fake_socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
+        });
+
+        let conn = new connection.Connection(() => { return fake_socket; });
+        fake_socket.inject('connect');
+
+        // Create 10 games.
+        for (var i = 0; i < 10; i++) {
+            fake_socket.inject('active_game', base_active_game({ id: i }));
+        }
+        assert.equal(Object.keys(conn.connected_games).length, 10, 'Did not connect to all 10 games');
+
+        // Advance the clock for half the games to have made a move at the 5th second.
+        for (var i = 0; i < 5; i++) {
+            let game_clock = base_gamedata().clock;
+            game_clock.current_player = 2;
+            game_clock.last_move = 5000;
+            fake_socket.inject('game/'+i+'/clock', game_clock);
+        }
+
+        // Half the games are idle now.
+        clock.tick(5100);
+        setImmediate(conn.disconnectIdleGames.bind(conn));
+        clock.next();
+        assert.equal(Object.keys(conn.connected_games).length, 5, 'Did not disconnect half of the games');
+
+        // All the games are idle now.
+        clock.tick(5100);
+        setImmediate(conn.disconnectIdleGames.bind(conn));
+        clock.next();
+        assert.equal(Object.keys(conn.connected_games).length, 0, 'Did not disconnect all the games');
 
         conn.terminate();
     });
