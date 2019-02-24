@@ -101,10 +101,10 @@ here only 2 were shown but it possible to use for example 3,4,5 , or as many as
 you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
-[OGS server](https://online-go.com/), add the `-- beta` argument
+[OGS server](https://online-go.com/), add the `--beta` argument
 
 ### 5. Optional : install any missing node.js packages
- 
+
 **This step can be skipped unless you have issues or bugs**
 
 You may need to install some missing packages if the 
