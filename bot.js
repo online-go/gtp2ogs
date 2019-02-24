@@ -52,7 +52,7 @@ class Bot {
                 }
             }
 
-            if (!stdout_buffer || stdout_buffer[stdout_buffer.length-1] != '\n') {
+            if (!stdout_buffer || stdout_buffer[stdout_buffer.length-1] !== '\n') {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
@@ -64,20 +64,20 @@ class Bot {
             stdout_buffer = "";
             for (let i=0; i < lines.length; ++i) {
                 let line = lines[i];
-                if (line.trim() == "") {
+                if (line.trim() === "") {
                     continue;
                 }
-                if (line[0] == '=') {
-                    while (lines[i].trim() != "") {
+                if (line[0] === '=') {
+                    while (lines[i].trim() !== "") {
                         ++i;
                     }
                     let cb = this.command_callbacks.shift();
                     this.command_error_callbacks.shift();
                     if (cb) cb(line.substr(1).trim());
                 }
-                else if (line.trim()[0] == '?') {
+                else if (line.trim()[0] === '?') {
                     this.log(line);
-                    while (lines[i].trim() != "") {
+                    while (lines[i].trim() !== "") {
                         ++i;
                         this.log(lines[i]);
                     }
@@ -174,13 +174,13 @@ class Bot {
         //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
         let now = Date.now() - this.conn.clock_drift;
 
-        if (state.clock.current_player == state.clock.black_player_id) {
-            black_offset = ((this.firstmove==true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
+        if (state.clock.current_player === state.clock.black_player_id) {
+            black_offset = ((this.firstmove===true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         } else {
-            white_offset = ((this.firstmove==true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
+            white_offset = ((this.firstmove===true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         }
 
-        if (state.time_control.system == 'byoyomi') {
+        if (state.time_control.system === 'byoyomi') {
             // GTP spec says time_left should have 0 for stones until main_time has run out.
             //
             // If the bot connects in the middle of a byoyomi period, it won't know how much time it has left before the period expires.
@@ -208,19 +208,19 @@ class Bot {
                 // Restarting the bot can make a time left so small the bot makes a rushed terrible move. If we have less than half a period
                 // to think and extra periods left, lets go ahead and use the period up.
                 //
-                if (state.clock.black_time.thinking_time == 0 && state.clock.black_time.periods > 1 && black_timeleft < state.time_control.period_time / 2) {
+                if (state.clock.black_time.thinking_time === 0 && state.clock.black_time.periods > 1 && black_timeleft < state.time_control.period_time / 2) {
                     black_timeleft = Math.max( Math.floor(state.time_control.period_time - black_offset) + state.time_control.period_time, 0 );
                     state.clock.black_time.periods--;
                 }
 
-                if (state.clock.white_time.thinking_time == 0 && state.clock.white_time.periods > 1 && white_timeleft < state.time_control.period_time / 2) {
+                if (state.clock.white_time.thinking_time === 0 && state.clock.white_time.periods > 1 && white_timeleft < state.time_control.period_time / 2) {
                     white_timeleft = Math.max( Math.floor(state.time_control.period_time - white_offset) + state.time_control.period_time, 0 );
                     state.clock.white_time.periods--;
                 }
 
                 this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
                     + Math.floor(state.time_control.period_time -
-                        (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset)
+                        (state.clock.current_player === state.clock.black_player_id ? black_offset : white_offset)
                     )
                     + " " + state.time_control.periods);
 
@@ -240,7 +240,7 @@ class Bot {
 
                 this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
                     + Math.floor(state.time_control.period_time -
-                        (state.clock.current_player == state.clock.black_player_id
+                        (state.clock.current_player === state.clock.black_player_id
                             ? (black_timeleft > 0 ? 0 : black_offset) : (white_timeleft > 0 ? 0 : white_offset)
                         )
                     )
@@ -252,7 +252,7 @@ class Bot {
                 this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
                     : Math.floor(state.time_control.period_time - white_offset) + " 1") );
             }
-        } else if (state.time_control.system == 'canadian') {
+        } else if (state.time_control.system === 'canadian') {
             // Canadian Byoyomi is the only time controls GTP v2 officially supports.
             // 
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
@@ -270,7 +270,7 @@ class Bot {
                 : Math.floor(state.clock.black_time.block_time - black_offset) + " " + state.clock.black_time.moves_left));
             this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
                 : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
-        } else if (state.time_control.system == 'fischer') {
+        } else if (state.time_control.system === 'fischer') {
             // Not supported by kgs-time_settings and I assume most bots. A better way than absolute is to handle this with
             // a fake Canadian byoyomi. This should let the bot know a good approximation of how to handle
             // the time remaining.
@@ -291,7 +291,7 @@ class Bot {
             //
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
-        } else if (state.time_control.system == 'simple') {
+        } else if (state.time_control.system === 'simple') {
             // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
             //
             this.command("time_settings 0 " + state.time_control.per_move + " 1");
@@ -306,7 +306,7 @@ class Bot {
                 this.command("time_left black 1 1");
                 this.command("time_left white " + white_timeleft + " 1");
             }
-        } else if (state.time_control.system == 'absolute') {
+        } else if (state.time_control.system === 'absolute') {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
@@ -320,7 +320,7 @@ class Bot {
         }
         // OGS doesn't actually send 'none' time control type
         //
-        /* else if (state.time_control.system == 'none') {
+        /* else if (state.time_control.system === 'none') {
             if (config.KGSTIME) {
                 this.command("kgs-time_settings none");
             } else {
@@ -370,14 +370,14 @@ class Bot {
             // Use set_free_handicap for handicap stones, play otherwise.
             if (doing_handicap && handicap_moves.length < state.handicap) {
                 handicap_moves.push(move);
-                if (handicap_moves.length == state.handicap)
+                if (handicap_moves.length === state.handicap)
                     this.sendHandicapMoves(handicap_moves, state.width);
                 else continue;  // don't switch color.
             } else {
                 this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
             }
 
-            color = color == 'black' ? 'white' : 'black';
+            color = color === 'black' ? 'white' : 'black';
         }
         if (config.SHOWBOARD) {
             this.command("showboard", cb, eb);
@@ -441,15 +441,15 @@ class Bot {
         this.firstmove = false;
 
         this.command(cmd, (line) => {
-            line = typeof(line) == "string" ? line.toLowerCase() : null;
+            line = typeof(line) === "string" ? line.toLowerCase() : null;
             let parts = line.split(/ +/);
             let moves = [];
 
             for (let i=0; i < parts.length; i++) {
                 let move = parts[i];
 
-                let resign = move == 'resign';
-                let pass = move == 'pass';
+                let resign = move === 'resign';
+                let pass = move === 'pass';
                 let x=-1, y=-1;
                 if (!resign && !pass) {
                     if (move && move[0]) {
@@ -524,7 +524,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
 
     if (move_obj instanceof Array) {
-        if (move_obj.length && typeof(move_obj[0]) == 'number') {
+        if (move_obj.length && typeof(move_obj[0]) === 'number') {
             ret.push(decodeSingleMoveArray(move_obj));
         }
         else {
@@ -539,7 +539,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             }
         }
     } 
-    else if (typeof(move_obj) == "string") {
+    else if (typeof(move_obj) === "string") {
 
         if (/[a-zA-Z][0-9]/.test(move_obj)) {
             /* coordinate form, used from human input. */
@@ -554,7 +554,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
                     if ((height && y >= height) || y < 0) x = y = -1;
                     ret.push({"x": x, "y": y, "edited": false, "color": 0});
                 } else {
-                    if (moves[i] != "") { 
+                    if (moves[i] !== "") { 
                         throw "Unparsed move input: " + moves[i];
                     }
                 }
@@ -566,7 +566,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             for (let i=0; i < move_string.length-1; i += 2) {
                 let edited = false;
                 let color = 0;
-                if (move_string[i+0] == '!') {
+                if (move_string[i+0] === '!') {
                     edited = true;
                     color = parseInt(move_string[i+1]);
                     i += 2;
@@ -588,19 +588,19 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     return ret;
 }; /* }}} */
 function char2num(ch) { /* {{{ */
-    if (ch == ".") return -1;
+    if (ch === ".") return -1;
     return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
 }; /* }}} */
 function pretty_char2num(ch) { /* {{{ */
-    if (ch == ".") return -1;
+    if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 }; /* }}} */
 function num2char(num) { /* {{{ */
-    if (num == -1) return ".";
+    if (num === -1) return ".";
     return "abcdefghijklmnopqrstuvwxyz"[num];
 }; /* }}} */
 function encodeMove(move) { /* {{{ */
-    if (move['x'] == -1) 
+    if (move['x'] === -1) 
         return "..";
     return num2char(move['x']) + num2char(move['y']);
 } /* }}} */
@@ -611,12 +611,12 @@ function move2gtpvertex(move, board_size) { /* {{{ */
     return num2gtpchar(move['x']) + (board_size-move['y'])
 } /* }}} */
 function gtpchar2num(ch) { /* {{{ */
-    if (ch == "." || !ch)
+    if (ch === "." || !ch)
         return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 } /* }}} */
 function num2gtpchar(num) { /* {{{ */
-    if (num == -1) 
+    if (num === -1) 
         return ".";
     return "abcdefghjklmnopqrstuvwxyz"[num];
 } /* }}} */
