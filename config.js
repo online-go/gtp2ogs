@@ -6,6 +6,7 @@ let console = require('console');
 exports.DEBUG = false;
 exports.PERSIST = false;
 exports.KGSTIME = false;
+exports.SHOWBOARD = false;
 exports.NOCLOCK = false;
 exports.GREETING = "";
 exports.FAREWELL = "";
@@ -64,6 +65,7 @@ exports.updateFromArgv = function() {
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
+        .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('persist', 'Bot process remains running between moves')
         .describe('corrqueue', 'Process correspondence games one at a time')
@@ -373,6 +375,10 @@ exports.updateFromArgv = function() {
     // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
     if (argv.kgstime) {
         exports.KGSTIME = true;
+    }
+
+    if (argv.showboard) {
+        exports.SHOWBOARD = true;
     }
 
     if (argv.noclock) {

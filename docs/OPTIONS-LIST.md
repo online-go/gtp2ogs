@@ -21,8 +21,9 @@ link to the wanted option :
 ```--insecure```  Don't use ssl to connect to the ggs/rest servers
 
 #### beta
-```--beta```  Connect to the [beta server](https://beta.online-go.com/) instead of 
-[OGS](https://online-go.com/) (sets ggs/rest hosts to the beta server)
+```--beta```  Connect to the [beta server](https://beta.online-go.com/) 
+instead of [OGS](https://online-go.com/) (sets ggs/rest hosts to the 
+beta server)
 
 #### debug
 ```--debug```  Output GTP command and responses from your Go engine
@@ -36,6 +37,15 @@ output to a text file
 
 #### kgstime
   ```--kgstime```  Set this if bot understands the kgs-time_settings command
+
+#### showboard
+  ```--showboard```  Set this if bot understands the showboard GTP command, 
+and if you want to display the showboard output
+
+- This breaks some bots which dont support it 
+- And this makes the log much bigger, so may not be desired even if supported
+
+So default is disabled
 
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot

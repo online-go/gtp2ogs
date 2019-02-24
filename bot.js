@@ -379,8 +379,9 @@ class Bot {
 
             color = color == 'black' ? 'white' : 'black';
         }
-        // This breaks PhoenixGo.
-        //this.command("showboard", cb, eb);
+        if (config.SHOWBOARD) {
+            this.command("showboard", cb, eb);
+        }
         return true;
     } /* }}} */
 
