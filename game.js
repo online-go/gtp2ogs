@@ -250,7 +250,8 @@ class Game {
 
         if (this.bot_failures >= 5) {
             // This bot keeps on failing, give up on the game.
-            this.log("Bot has crashed too many times, resigining game");
+            this.log("Bot has crashed too many times, resigning game");
+            this.sendChat("Bot has crashed too many times, resigning game"); // we notify user of this in ingame chat
             this.socket.emit('game/resign', this.auth({
                 'game_id': this.state.game_id
             }));
@@ -299,7 +300,8 @@ class Game {
         }
 
         if (!this.ensureBotStarted(botError)) {
-            this.log("Failed to start the bot, can not make a move");
+            this.log("Failed to start the bot, can not make a move, trying to restart");
+            this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
             return;
         }
 
