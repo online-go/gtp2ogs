@@ -233,7 +233,7 @@ exports.updateFromArgv = function() {
     ;
     let argv = optimist.argv;
 
-    if (!argv._ || argv._.length == 0) {
+    if (!argv._ || argv._.length === 0) {
         optimist.showHelp();
         process.exit();
     }
@@ -415,11 +415,11 @@ exports.updateFromArgv = function() {
         let results = argv.minrank.toLowerCase().match(re);
 
         if (results) {
-            if (results[2] == "k") {
+            if (results[2] === "k") {
                 exports.minrank = 30 - parseInt(results[1]);
-            } else if (results[2] == "d") {
+            } else if (results[2] === "d") {
                 exports.minrank = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] == "p") {
+            } else if (results[2] === "p") {
                 exports.minrank = 36 + parseInt(results[1]);
                 exports.proonly = true;
             } else {
@@ -437,11 +437,11 @@ exports.updateFromArgv = function() {
         let results = argv.minrank.toLowerCase().match(re);
 
         if (results) {
-            if (results[2] == "k") {
+            if (results[2] === "k") {
                 exports.minrankranked = 30 - parseInt(results[1]);
-            } else if (results[2] == "d") {
+            } else if (results[2] === "d") {
                 exports.minrankranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] == "p") {
+            } else if (results[2] === "p") {
                 exports.minrankranked = 36 + parseInt(results[1]);
                 exports.proonly = true;
             } else {
@@ -459,11 +459,11 @@ exports.updateFromArgv = function() {
         let results = argv.minrankunranked.toLowerCase().match(re);
 
         if (results) {
-            if (results[2] == "k") {
+            if (results[2] === "k") {
                 exports.minrankunranked = 30 - parseInt(results[1]);
-            } else if (results[2] == "d") {
+            } else if (results[2] === "d") {
                 exports.minrankunranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] == "p") {
+            } else if (results[2] === "p") {
                 exports.minrankunranked = 36 + parseInt(results[1]);
                 exports.proonly = true;
             } else {
@@ -481,11 +481,11 @@ exports.updateFromArgv = function() {
         let results = argv.maxrank.toLowerCase().match(re);
 
         if (results) {
-            if (results[2] == "k") {
+            if (results[2] === "k") {
                 exports.maxrank = 30 - parseInt(results[1]);
-            } else if (results[2] == "d") {
+            } else if (results[2] === "d") {
                 exports.maxrank = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] == "p") {
+            } else if (results[2] === "p") {
                 exports.maxrank = 36 + parseInt(results[1]);
             } else {
                 console.error("Invalid maxrank " + argv.maxrank);
@@ -502,11 +502,11 @@ exports.updateFromArgv = function() {
         let results = argv.maxrankranked.toLowerCase().match(re);
 
         if (results) {
-            if (results[2] == "k") {
+            if (results[2] === "k") {
                 exports.maxrankranked = 30 - parseInt(results[1]);
-            } else if (results[2] == "d") {
+            } else if (results[2] === "d") {
                 exports.maxrankranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] == "p") {
+            } else if (results[2] === "p") {
                 exports.maxrankranked = 36 + parseInt(results[1]);
             } else {
                 console.error("Invalid maxrankranked " + argv.maxrankranked);
@@ -523,11 +523,11 @@ exports.updateFromArgv = function() {
         let results = argv.maxrankunranked.toLowerCase().match(re);
 
         if (results) {
-            if (results[2] == "k") {
+            if (results[2] === "k") {
                 exports.maxrankunranked = 30 - parseInt(results[1]);
-            } else if (results[2] == "d") {
+            } else if (results[2] === "d") {
                 exports.maxrankunranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] == "p") {
+            } else if (results[2] === "p") {
                 exports.maxrankunranked = 36 + parseInt(results[1]);
             } else {
                 console.error("Invalid maxrankunranked " + argv.maxrankunranked);
@@ -541,9 +541,9 @@ exports.updateFromArgv = function() {
 
     if (argv.boardsize) {
         for (let boardsize of argv.boardsize.split(',')) {
-            if (boardsize == "all") {
+            if (boardsize === "all") {
                 exports.allow_all_sizes = true;
-            } else if (boardsize == "custom") {
+            } else if (boardsize === "custom") {
                 exports.allow_custom_sizes = true;
                 for (let boardsizewidth of argv.boardsizewidth.split(',')) {
                     exports.allowed_custom_boardsizewidth[boardsizewidth] = true;
@@ -559,9 +559,9 @@ exports.updateFromArgv = function() {
 
     if (argv.boardsizeranked) {
         for (let boardsizeranked of argv.boardsizeranked.split(',')) {
-            if (boardsizeranked == "all") {
+            if (boardsizeranked === "all") {
                 exports.allow_all_sizes_ranked = true;
-            } else if (boardsizeranked == "custom") {
+            } else if (boardsizeranked === "custom") {
                 exports.allow_custom_sizes_ranked = true;
                 for (let boardsizewidthranked of argv.boardsizewidthranked.split(',')) {
                     exports.allowed_custom_boardsizewidth_ranked[boardsizewidthranked] = true;
@@ -577,9 +577,9 @@ exports.updateFromArgv = function() {
 
     if (argv.boardsizeunranked) {
         for (let boardsizeunranked of argv.boardsizeunranked.split(',')) {
-            if (boardsizeunranked == "all") {
+            if (boardsizeunranked === "all") {
                 exports.allow_all_sizes_unranked = true;
-            } else if (boardsizeunranked == "custom") {
+            } else if (boardsizeunranked === "custom") {
                 exports.allow_custom_sizes_unranked = true;
                 for (let boardsizewidthunranked of argv.boardsizewidthunranked.split(',')) {
                     exports.allowed_custom_boardsizewidth_unranked[boardsizewidthunranked] = true;
@@ -595,9 +595,9 @@ exports.updateFromArgv = function() {
 
     if (argv.komi) {
         for (let komi of argv.komi.split(',')) {
-            if (komi == "all") {
+            if (komi === "all") {
                 exports.allow_all_komi = true;
-            } else if (komi == "automatic") {
+            } else if (komi === "automatic") {
                 exports.allowed_komi[null] = true;
             } else {
                 exports.allowed_komi[komi] = true;
@@ -607,9 +607,9 @@ exports.updateFromArgv = function() {
 
     if (argv.komiranked) {
         for (let komiranked of argv.komiranked.split(',')) {
-            if (komiranked == "all") {
+            if (komiranked === "all") {
                 exports.allow_all_komi_ranked = true;
-            } else if (komiranked == "automatic") {
+            } else if (komiranked === "automatic") {
                 exports.allowed_komi_ranked[null] = true;
             } else {
                 exports.allowed_komi_ranked[komiranked] = true;
@@ -619,9 +619,9 @@ exports.updateFromArgv = function() {
 
     if (argv.komiunranked) {
         for (let komiunranked of argv.komiunranked.split(',')) {
-            if (komiunranked == "all") {
+            if (komiunranked === "all") {
                 exports.allow_all_komi_unranked = true;
-            } else if (komiunranked == "automatic") {
+            } else if (komiunranked === "automatic") {
                 exports.allowed_komi_unranked[null] = true;
             } else {
                 exports.allowed_komi_unranked[komiunranked] = true;

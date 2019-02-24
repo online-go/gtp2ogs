@@ -80,10 +80,10 @@ class FakeAPI {
             statusCode: 200,
             setEncoding: () => {},
             on: (ev, cb) => {
-                if (ev == 'data') {
+                if (ev === 'data') {
                     cb(response);
                 }
-                if (ev == 'end') {
+                if (ev === 'end') {
                     cb();
                 }
             },

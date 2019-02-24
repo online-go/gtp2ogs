@@ -88,7 +88,7 @@ class Connection {
             this.corr_queue_interval = setInterval(() => {
                 // If a game needs a move and we aren't already working on one, make a move
                 //
-                if (Game.corr_moves_processing == 0) {
+                if (Game.corr_moves_processing === 0) {
                     // Choose a corr game to make a move
                     // TODO: Choose the game with least time remaining
                     let candidates = [];
@@ -110,7 +110,7 @@ class Connection {
             /* if we're sitting there bored, make sure we don't have any move
              * notifications that got lost in the shuffle... and maybe someday
              * we'll get it figured out how this happens in the first place. */
-            if (Game.moves_processing == 0) {
+            if (Game.moves_processing === 0) {
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
@@ -147,15 +147,15 @@ class Connection {
             // Eventually might want OGS to not auto score, or make it bot-optional to enforce.
             // Some bots can handle stone removal process.
             //
-            /* if (gamedata.phase == 'stone removal'
-                && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
-                ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
+            /* if (gamedata.phase === 'stone removal'
+                && ((!gamedata.black.accepted && gamedata.black.id === this.bot_id)
+                ||  (!gamedata.white.accepted && gamedata.white.id === this.bot_id))
                ) {
                 this.processMove(gamedata);
             } */
 
             // Don't connect to old finished games.
-            if (gamedata.phase == "finished" && !(gamedata.id in this.connected_games))
+            if (gamedata.phase === "finished" && !(gamedata.id in this.connected_games))
                 return;
 
             // Set up the game so it can listen for events.
@@ -165,8 +165,8 @@ class Connection {
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
             // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
             //
-            if (gamedata.phase == "finished") {
-                if (config.DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
+            if (gamedata.phase === "finished") {
+                if (config.DEBUG) conn_log(gamedata.id, "gamedata.phase === finished");
 
                 // XXX We want to disconnect right away here, but there's a game over race condition
                 //     on server side: sometimes /gamedata event with game outcome is sent after
@@ -207,7 +207,7 @@ class Connection {
         let now = Date.now();
         for (let game_id in this.connected_games) {
             let state = this.connected_games[game_id].state;
-            if (state == null) {
+            if (state === null) {
                 if (config.DEBUG) conn_log("No game state, not checking idle status for", game_id);
                 continue;
             }
@@ -388,7 +388,7 @@ class Connection {
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for unranked games, please choose one of these allowed board sizes for unranked games " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
-        // for custom board sizes, including square board sizes if width == height as well //
+        // for custom board sizes, including square board sizes if width === height as well //
         /* if custom, check width */
         if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizewidth[notification.width] && !config.boardsizewidthranked && !config.boardsizewidthunranked) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width");
@@ -422,17 +422,17 @@ class Connection {
         }
         /******** end of BOARDSIZES *********/
 
-        if (config.noautohandicap && notification.handicap == -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
+        if (config.noautohandicap && notification.handicap === -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
             conn_log("no autohandicap, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (config.noautohandicapranked && notification.handicap == -1 && notification.ranked) {
+        if (config.noautohandicapranked && notification.handicap === -1 && notification.ranked) {
             conn_log("no autohandicap for ranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (config.noautohandicapunranked && notification.handicap == -1 && !notification.ranked) {
+        if (config.noautohandicapunranked && notification.handicap === -1 && !notification.ranked) {
             conn_log("no autohandicap for unranked games, rejecting challenge") ;
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
@@ -1575,10 +1575,10 @@ class Connection {
     removeGameForPlayer(game_id) { /* {{{ */
         for (let player in this.games_by_player) {
             let idx = this.games_by_player[player].indexOf(game_id);
-            if (idx == -1)  continue;
+            if (idx === -1)  continue;
 
             this.games_by_player[player].splice(idx, 1);  // Remove element
-            if (this.games_by_player[player].length == 0)
+            if (this.games_by_player[player].length === 0)
                 delete this.games_by_player[player];
             return;
         }
@@ -1642,7 +1642,7 @@ function conn_log() { /* {{{ */
     let errlog = false;
     for (let i=0; i < arguments.length; ++i) {
         let param = arguments[i];
-        if (typeof(param) == 'object' && 'error' in param) {
+        if (typeof(param) === 'object' && 'error' in param) {
             errlog = true;
             arr.push(param.error);
         } else {
@@ -1672,7 +1672,7 @@ function request(method, host, port, path, data) { /* {{{ */
 
         let enc_data_type = "application/x-www-form-urlencoded";
         for (let k in data) {
-            if (typeof(data[k]) == "object") {
+            if (typeof(data[k]) === "object") {
                 enc_data_type = "application/json";
             }
         }
@@ -1685,7 +1685,7 @@ function request(method, host, port, path, data) { /* {{{ */
         }
 
         let enc_data = null;
-        if (enc_data_type == "application/json") {
+        if (enc_data_type === "application/json") {
             enc_data = JSON.stringify(data);
         } else {
             enc_data = querystring.stringify(data);
