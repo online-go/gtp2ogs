@@ -387,20 +387,20 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.ban) {
-        for (let i of argv.ban.split(',')) {
-            exports.banned_users[i] = true;
+        for (let e of argv.ban.split(',')) {
+            exports.banned_users[e] = true;
         }
     }
 
     if (argv.banranked) {
-        for (let i of argv.banranked.split(',')) {
-            exports.banned_ranked_users[i] = true;
+        for (let e of argv.banranked.split(',')) {
+            exports.banned_ranked_users[e] = true;
         }
     }
 
     if (argv.banunranked) {
-        for (let i of argv.banunranked.split(',')) {
-            exports.banned_unranked_users[i] = true;
+        for (let e of argv.banunranked.split(',')) {
+            exports.banned_unranked_users[e] = true;
         }
     }
 
@@ -534,128 +534,128 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.boardsize) {
-        for (let boardsize of argv.boardsize.split(',')) {
-            if (boardsize == "all") {
+        for (let e of argv.boardsize.split(',')) {
+            if (e == "all") {
                 exports.allow_all_sizes = true;
-            } else if (boardsize == "custom") {
+            } else if (e == "custom") {
                 exports.allow_custom_sizes = true;
-                for (let boardsizewidth of argv.boardsizewidth.split(',')) {
-                    exports.allowed_custom_boardsizewidth[boardsizewidth] = true;
+                for (let e of argv.boardsizewidth.split(',')) {
+                    exports.allowed_custom_boardsizewidth[e] = true;
                 }
-                for (let boardsizeheight of argv.boardsizeheight.split(',')) {
-                    exports.allowed_custom_boardsizeheight[boardsizeheight] = true;
+                for (let e of argv.boardsizeheight.split(',')) {
+                    exports.allowed_custom_boardsizeheight[e] = true;
                 }
             } else {
-                exports.allowed_sizes[boardsize] = true;
+                exports.allowed_sizes[e] = true;
             }
         }
     }
 
     if (argv.boardsizeranked) {
-        for (let boardsizeranked of argv.boardsizeranked.split(',')) {
-            if (boardsizeranked == "all") {
+        for (let e of argv.boardsizeranked.split(',')) {
+            if (e == "all") {
                 exports.allow_all_sizes_ranked = true;
-            } else if (boardsizeranked == "custom") {
+            } else if (e == "custom") {
                 exports.allow_custom_sizes_ranked = true;
-                for (let boardsizewidthranked of argv.boardsizewidthranked.split(',')) {
-                    exports.allowed_custom_boardsizewidth_ranked[boardsizewidthranked] = true;
+                for (let e of argv.boardsizewidthranked.split(',')) {
+                    exports.allowed_custom_boardsizewidth_ranked[e] = true;
                 }
-                for (let boardsizeheightranked of argv.boardsizeheightranked.split(',')) {
-                    exports.allowed_custom_boardsizeheight_ranked[boardsizeheightranked] = true;
+                for (let e of argv.boardsizeheightranked.split(',')) {
+                    exports.allowed_custom_boardsizeheight_ranked[e] = true;
                 }
             } else {
-                exports.allowed_sizes_ranked[boardsizeranked] = true;
+                exports.allowed_sizes_ranked[e] = true;
             }
         }
     }
 
     if (argv.boardsizeunranked) {
-        for (let boardsizeunranked of argv.boardsizeunranked.split(',')) {
-            if (boardsizeunranked == "all") {
+        for (let e of argv.boardsizeunranked.split(',')) {
+            if (e == "all") {
                 exports.allow_all_sizes_unranked = true;
-            } else if (boardsizeunranked == "custom") {
+            } else if (e == "custom") {
                 exports.allow_custom_sizes_unranked = true;
-                for (let boardsizewidthunranked of argv.boardsizewidthunranked.split(',')) {
-                    exports.allowed_custom_boardsizewidth_unranked[boardsizewidthunranked] = true;
+                for (let e of argv.boardsizewidthunranked.split(',')) {
+                    exports.allowed_custom_boardsizewidth_unranked[e] = true;
                 }
-                for (let boardsizeheightunranked of argv.boardsizeheightunranked.split(',')) {
-                    exports.allowed_custom_boardsizeheight_unranked[boardsizeheightunranked] = true;
+                for (let e of argv.boardsizeheightunranked.split(',')) {
+                    exports.allowed_custom_boardsizeheight_unranked[e] = true;
                 }
             } else {
-                exports.allowed_sizes_unranked[boardsizeunranked] = true;
+                exports.allowed_sizes_unranked[e] = true;
             }
         }
     }
 
     if (argv.komi) {
-        for (let komi of argv.komi.split(',')) {
-            if (komi == "all") {
+        for (let e of argv.komi.split(',')) {
+            if (e == "all") {
                 exports.allow_all_komi = true;
-            } else if (komi == "automatic") {
+            } else if (e == "automatic") {
                 exports.allowed_komi[null] = true;
             } else {
-                exports.allowed_komi[komi] = true;
+                exports.allowed_komi[e] = true;
             }
         }
     }
 
     if (argv.komiranked) {
-        for (let komiranked of argv.komiranked.split(',')) {
-            if (komiranked == "all") {
+        for (let e of argv.komiranked.split(',')) {
+            if (e == "all") {
                 exports.allow_all_komi_ranked = true;
-            } else if (komiranked == "automatic") {
+            } else if (e == "automatic") {
                 exports.allowed_komi_ranked[null] = true;
             } else {
-                exports.allowed_komi_ranked[komiranked] = true;
+                exports.allowed_komi_ranked[e] = true;
             }
         }
     }
 
     if (argv.komiunranked) {
-        for (let komiunranked of argv.komiunranked.split(',')) {
-            if (komiunranked == "all") {
+        for (let e of argv.komiunranked.split(',')) {
+            if (e == "all") {
                 exports.allow_all_komi_unranked = true;
-            } else if (komiunranked == "automatic") {
+            } else if (e == "automatic") {
                 exports.allowed_komi_unranked[null] = true;
             } else {
-                exports.allowed_komi_unranked[komiunranked] = true;
+                exports.allowed_komi_unranked[e] = true;
             }
         }
     }
 
     if (argv.speed) {
-        for (let i of argv.speed.split(',')) {
-            exports.allowed_speeds[i] = true;
+        for (let e of argv.speed.split(',')) {
+            exports.allowed_speeds[e] = true;
         }
     }
 
     if (argv.speedranked) {
-        for (let i of argv.speedranked.split(',')) {
-            exports.allowed_speeds_ranked[i] = true;
+        for (let e of argv.speedranked.split(',')) {
+            exports.allowed_speeds_ranked[e] = true;
         }
     }
 
     if (argv.speedunranked) {
-        for (let i of argv.speedunranked.split(',')) {
-            exports.allowed_speeds_unranked[i] = true;
+        for (let e of argv.speedunranked.split(',')) {
+            exports.allowed_speeds_unranked[e] = true;
         }
     }
 
     if (argv.timecontrol) {
-        for (let i of argv.timecontrol.split(',')) {
-            exports.allowed_timecontrols[i] = true;
+        for (let e of argv.timecontrol.split(',')) {
+            exports.allowed_timecontrols[e] = true;
         }
     }
 
     if (argv.timecontrolranked) {
-        for (let i of argv.timecontrolranked.split(',')) {
-            exports.allowed_timecontrols_ranked[i] = true;
+        for (let e of argv.timecontrolranked.split(',')) {
+            exports.allowed_timecontrols_ranked[e] = true;
         }
     }
 
     if (argv.timecontrolunranked) {
-        for (let i of argv.timecontrolunranked.split(',')) {
-            exports.allowed_timecontrols_unranked[i] = true;
+        for (let e of argv.timecontrolunranked.split(',')) {
+            exports.allowed_timecontrols_unranked[e] = true;
         }
     }
 
