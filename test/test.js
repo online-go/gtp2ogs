@@ -5,6 +5,7 @@ let sinon = require('sinon');
 let util = require('util');
 
 let connection = require('../connection');
+let bot = require('../bot');
 let config = require('../config');
 let console = require('../console').console;
 
@@ -30,7 +31,7 @@ class FakeSocket {
     }
 
     on(ev, cb) {
-        console.log('client on: ' + ev)
+        console.log('client subscribe: ' + ev)
         this.on_callbacks[ev] = cb;
     }
 
@@ -53,6 +54,7 @@ class FakeSocket {
     }
 
     on_emit(ev, cb) {
+        console.log('server subscribe: ' + ev);
         this.emit_callbacks[ev] = cb;
     }
 }
@@ -107,6 +109,9 @@ class FakeGTP {
             this.callbacks.stdout = cb;
         }};
         this.stdin = {
+            on: (_, cb) => {
+                this.callbacks.stdin = cb;
+            },
             end: () => {},
             write: (data) => {
                 if (config.DEBUG) {
@@ -122,12 +127,31 @@ class FakeGTP {
         };
     }
 
+    on(ev, cb) {
+        this.callbacks[ev] = cb;
+    }
+
     on_cmd(cmd, cb) {
+        console.log('GTP: ', cmd);
         this.cmd_callbacks[cmd] = cb;
     }
 
     gtp_response(data) {
         this.callbacks.stdout('= ' + data + "\n\n");
+    }
+
+    gtp_error(data) {
+        this.callbacks.stdout('? ' + data + "\n\n");
+    }
+
+    exit(code) {
+        if (this.callbacks.exit) {
+            this.callbacks.exit({ code: code, signal: null });
+        }
+    }
+
+    kill() {
+        this.exit(1);
     }
 }
 
@@ -548,5 +572,132 @@ describe('Periodic actions', () => {
         assert.equal(Object.keys(conn.connected_games).length, 0, 'Did not disconnect all the games');
 
         conn.terminate();
+    });
+});
+
+describe("Retrying bot failures", () => {
+    function setupStubs() {
+        sinon.stub(console, 'log');
+        let fake_clock = sinon.useFakeTimers();
+
+        let fake_socket = new FakeSocket();
+        fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
+
+        let retry = sinon.spy();
+        fake_socket.on_emit('game/connect', (move) => {
+            retry();
+            setTimeout(() => {
+                fake_socket.inject('game/1/gamedata', base_gamedata());
+            }, 1000);
+        });
+
+        let fake_gtp = new FakeGTP();
+        sinon.stub(child_process, 'spawn').returns(fake_gtp);
+
+        return {
+            clock: fake_clock,
+            socket: fake_socket,
+            gtp: fake_gtp,
+            failure: sinon.spy(),
+            retry: retry,
+            success: sinon.spy(),
+        };
+    }
+
+    function ensureRetry(fakes) {
+        let conn = new connection.Connection(() => { return fakes.socket; });
+        fakes.socket.inject('connect');
+        fakes.socket.inject('active_game', base_active_game());
+        fakes.socket.inject('game/1/gamedata', base_gamedata());
+
+        for (let i = 0; i < 10; i++) {
+            fakes.clock.tick(1000);
+        }
+
+        assert.equal(fakes.failure.called, true, 'Bot failure not reached');
+        assert.equal(fakes.retry.called, true, 'Retry not attempted');
+        assert.equal(fakes.success.called, true, 'Retry does not succeed');
+
+        conn.terminate();
+    }
+
+    it("crash at startup", () => {
+        let fakes = setupStubs();
+
+        child_process.spawn.restore();
+        sinon.stub(child_process, 'spawn').callsFake(() => {
+            child_process.spawn.restore();
+            sinon.stub(child_process, 'spawn').returns(fakes.gtp);
+            fakes.failure();
+            throw new Error('spawn nosuchcommand ENOENT');
+        });
+        fakes.gtp.on_cmd('genmove', () => {
+            fakes.success();
+            fakes.gtp.gtp_result('Q4');
+        });
+
+        ensureRetry(fakes);
+    }); 
+
+    it("crash at write", () => {
+        let fakes = setupStubs();
+
+        fakes.gtp.on_cmd('genmove', () => {
+            fakes.gtp.on_cmd('genmove', () => {
+                fakes.success()
+                fakes.gtp.gtp_result('Q4');
+            });
+            fakes.failure()
+            setImmediate(fakes.gtp.callbacks.stdin, new Error('write EPIPE'));
+        });
+
+        ensureRetry(fakes);
+    });
+
+    it("silent crash during genmove", () => {
+        let fakes = setupStubs();
+
+        fakes.gtp.on_cmd('genmove', () => {
+            fakes.gtp.on_cmd('genmove', () => {
+                fakes.success()
+                fakes.gtp.gtp_result('Q4');
+            });
+            fakes.failure();
+            fakes.gtp.exit(1);
+        });
+
+        ensureRetry(fakes);
+    });
+
+    it("error during genmove", () => {
+        let fakes = setupStubs();
+
+        fakes.gtp.on_cmd('genmove', () => {
+            fakes.gtp.on_cmd('genmove', () => {
+                fakes.success()
+                fakes.gtp.gtp_result('Q4');
+            });
+            fakes.failure();
+            fakes.gtp.gtp_error('failed to generate');
+        });
+
+        ensureRetry(fakes);
+    });
+
+    it("giving up eventually", () => {
+        let fakes = setupStubs();
+
+        let resign = sinon.spy();
+        fakes.gtp.on_cmd('genmove', () => {
+            fakes.failure();
+            fakes.gtp.gtp_error('failed to generate');
+        });
+        let cb = fakes.socket.emit_callbacks['game/move'];
+        fakes.socket.on_emit('game/resign', (resign) => {
+            // In this case, we eventually want to see the bot resign, so that is the "success" we are looking for.
+            fakes.success();
+        });
+
+        ensureRetry(fakes);
     });
 });
