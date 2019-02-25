@@ -216,7 +216,7 @@ class Connection {
                 continue;
             }
             let idle_time = now - state.clock.last_move;
-            if ((state.clock.current_player != this.bot_id) && (idle_time > config.timeout)) {
+            if ((state.clock.current_player !== this.bot_id) && (idle_time > config.timeout)) {
                 if (config.DEBUG) conn_log("Found idle game", game_id, ", other player has been idling for", idle_time, ">", config.timeout);
                 this.disconnectFromGame(game_id);
             }
@@ -388,17 +388,17 @@ class Connection {
         /******** begining of BOARDSIZES *********/
         // for square board sizes only //
         /* if not square*/
-        if (notification.width != notification.height && !config.allow_all_sizes && !config.allow_custom_sizes && !config.boardsizeranked && !config.boardsizeunranked) {
+        if (notification.width !== notification.height && !config.allow_all_sizes && !config.allow_custom_sizes && !config.boardsizeranked && !config.boardsizeunranked) {
             conn_log("board was not square, not allowed");
             return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if (notification.width != notification.height && !config.allow_all_sizes_ranked && !config.allow_custom_sizes_ranked && notification.ranked) {
+        if (notification.width !== notification.height && !config.allow_all_sizes_ranked && !config.allow_custom_sizes_ranked && notification.ranked) {
             conn_log("board was not square, not allowed for ranked games");
             return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for ranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if (notification.width != notification.height && !config.allow_all_sizes_unranked && !config.allow_custom_sizes_unranked && !notification.ranked) {
+        if (notification.width !== notification.height && !config.allow_all_sizes_unranked && !config.allow_custom_sizes_unranked && !notification.ranked) {
             conn_log("board was not square, not allowed for unranked games");
             return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for unranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
@@ -1602,7 +1602,7 @@ class Connection {
             this.games_by_player[player] = [ game_id ];
             return;
         }
-        if (this.games_by_player[player].indexOf(game_id) != -1)  // Already have it ?
+        if (this.games_by_player[player].indexOf(game_id) !== -1)  // Already have it ?
             return;
         this.games_by_player[player].push(game_id);
     } /* }}} */
