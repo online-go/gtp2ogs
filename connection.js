@@ -54,6 +54,10 @@ class Connection {
                 this.disconnectIdleGames.bind(this), 10000);
         }
 
+        if (config.DEBUG) {
+            setInterval(this.dumpStatus.bind(this), 15*60*1000);
+        }
+
         this.clock_drift = 0;
         this.network_latency = 0;
         this.ping_interval = setInterval(this.ping.bind(this), 10000);
@@ -217,6 +221,36 @@ class Connection {
                 this.disconnectFromGame(game_id);
             }
         }
+    };
+    dumpStatus() {
+        conn_log('Dumping status of all connected games');
+        for (let game_id in this.connected_games) {
+            let game = this.connected_games[game_id];
+            let msg = [];
+            msg.push('game_id=' + game_id + ':');
+            if (game.state === null) {
+                msg.push('no_state');
+                conn_log(...msg);
+                continue;
+            }
+            msg.push('black=' + game.state.players.black.username);
+            msg.push('white=' + game.state.players.white.username);
+            if (game.state.clock.current_player === this.bot_id) {
+                msg.push('bot_turn');
+            }
+            let idle_time = (Date.now() - game.state.clock.last_move) / 1000;
+            msg.push('idle_time=' + idle_time + 's');
+            if (game.bot === null) {
+                msg.push('no_bot');
+                conn_log(...msg);
+                continue;
+            }
+            msg.push('bot.proc.pid=' + game.bot.pid());
+            msg.push('bot.dead=' + game.bot.dead);
+            msg.push('bot.failed=' + game.bot.failed);
+            conn_log(...msg);
+        }
+        conn_log('Dump complete');
     };
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {

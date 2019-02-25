@@ -518,6 +518,33 @@ describe('Games do not hang', () => {
 
         conn.terminate();
     });
+
+    it('due to a missing gamedata', () => {
+        let fakes = setupStubs();
+
+        let genmove = sinon.spy();
+        let fake_gtp = new FakeGTP();
+        fake_gtp.on_cmd('genmove', () => {
+            genmove();
+            fake_gtp.gtp_response('Q4');
+        });
+        child_process.spawn.restore();
+        sinon.stub(child_process, 'spawn').returns(fake_gtp);
+
+        let conn = new connection.Connection(() => { return fakes.socket; });
+        fakes.socket.inject('connect');
+        fakes.socket.inject('active_game', base_active_game());
+        assert.equal(genmove.called, false, 'Genmove called with missing gamedata');
+
+        // Assume gamedata is sent on connection retry.
+        fakes.socket.on_emit('game/connect', (connect) => {
+            fakes.socket.inject('game/'+connect.game_id+'/gamedata', base_gamedata());
+        });
+        fakes.clock.tick(5000);
+        assert.equal(genmove.called, true, 'Genmove called after retry');
+
+        conn.terminate();
+    });
 });
 
 describe('Periodic actions', () => {
