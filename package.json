@@ -21,11 +21,13 @@
     "tracer": "=0.8.7"
   },
   "devDependencies": {
+    "eslint": "5.14.1",
     "mocha": "5.2.0",
     "sinon": "7.2.3"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "eslint \"./**/*.js\""
   },
   "repository": {
     "type": "git",
