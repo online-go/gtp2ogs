@@ -2,10 +2,8 @@
 
 let assert = require('assert');
 let sinon = require('sinon');
-let util = require('util');
 
 let connection = require('../connection');
-let bot = require('../bot');
 let config = require('../config');
 let console = require('../console').console;
 
@@ -315,7 +313,7 @@ afterEach(function () {
 describe('A single game', () => {
     it('works end-to-end', function() {
         stub_console();
-        let clock = sinon.useFakeTimers();
+        sinon.useFakeTimers();
 
         let fake_socket = new FakeSocket();
         let fake_api = new FakeAPI();
@@ -392,7 +390,7 @@ describe('A single game', () => {
             move: [3, 3],
         });
 
-        gamedata = base_gamedata({
+        let gamedata = base_gamedata({
             phase: 'finished',
             winner: 1,
             outcome: 'Resignation',
@@ -443,7 +441,6 @@ describe('Games do not hang', () => {
         let seen_moves = {};
 
         fakes.socket.on_emit('game/move', (move) => {
-            let move_number = seen_moves[move.game_id];
             fakes.socket.inject('game/'+move.game_id+'/move', {
                 move_number: ++seen_moves[move.game_id],
                 move: [15, 15],
@@ -472,18 +469,18 @@ describe('Games do not hang', () => {
 
         // Set up the games.
         let games = 5;
-        for (var i = 1; i <= games; i++) {
+        for (let i = 1; i <= games; i++) {
             seen_moves[i] = 0;
             fakes.socket.inject('active_game', base_active_game({ id: i }));
         }
 
         // Simulate time passing
-        for (var i = 0; i < 500; i++) {
+        for (let i = 0; i < 500; i++) {
             fakes.clock.tick(100);
         }
 
         // All games must have seen a move.
-        for (var i = 1; i <= games; i++) {
+        for (let i = 1; i <= games; i++) {
             assert.equal(seen_moves[i] > 0, true, 'Game '+i+' has seen no moves');
         }
 
@@ -501,7 +498,7 @@ describe('Games do not hang', () => {
 
         // Set up the games.
         let games = 5;
-        for (var i = 1; i <= games; i++) {
+        for (let i = 1; i <= games; i++) {
             seen_moves[i] = 0;
             fakes.socket.inject('active_game', base_active_game({ id: i }));
         }
@@ -512,7 +509,7 @@ describe('Games do not hang', () => {
         }
 
         // All games must have seen a move.
-        for (var i = 1; i <= games; i++) {
+        for (let i = 1; i <= games; i++) {
             assert.equal(seen_moves[i] > 0, true, 'Game '+i+' has seen no moves');
         }
 
@@ -579,7 +576,7 @@ describe('Periodic actions', () => {
         assert.equal(Object.keys(conn.connected_games).length, 10, 'Did not connect to all 10 games');
 
         // Advance the clock for half the games to have made a move at the 5th second.
-        for (var i = 0; i < 5; i++) {
+        for (let i = 0; i < 5; i++) {
             let game_clock = base_gamedata().clock;
             game_clock.current_player = 2;
             game_clock.last_move = 5000;
@@ -611,7 +608,7 @@ describe("Retrying bot failures", () => {
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
 
         let retry = sinon.spy();
-        fake_socket.on_emit('game/connect', (move) => {
+        fake_socket.on_emit('game/connect', () => {
             retry();
             setTimeout(() => {
                 fake_socket.inject('game/1/gamedata', base_gamedata());
@@ -714,13 +711,11 @@ describe("Retrying bot failures", () => {
     it("giving up eventually", () => {
         let fakes = setupStubs();
 
-        let resign = sinon.spy();
         fakes.gtp.on_cmd('genmove', () => {
             fakes.failure();
             fakes.gtp.gtp_error('failed to generate');
         });
-        let cb = fakes.socket.emit_callbacks['game/move'];
-        fakes.socket.on_emit('game/resign', (resign) => {
+        fakes.socket.on_emit('game/resign', () => {
             // In this case, we eventually want to see the bot resign, so that is the "success" we are looking for.
             fakes.success();
         });

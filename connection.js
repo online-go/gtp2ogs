@@ -164,7 +164,7 @@ class Connection {
 
             // Set up the game so it can listen for events.
             //
-            let game = this.connectToGame(gamedata.id);
+            this.connectToGame(gamedata.id);
 
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
             // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
@@ -196,7 +196,7 @@ class Connection {
         }
 
         return this.connected_games[game_id] = new Game(this, game_id);
-    }; /* }}} */
+    } /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
         if (config.DEBUG) {
             conn_log("disconnectFromGame", game_id);
@@ -205,7 +205,7 @@ class Connection {
             this.connected_games[game_id].disconnect();
             delete this.connected_games[game_id];
         }
-    }; /* }}} */
+    } /* }}} */
     disconnectIdleGames() {
         if (config.DEBUG) conn_log("Looking for idle games to disconnect");
         let now = Date.now();
@@ -221,7 +221,7 @@ class Connection {
                 this.disconnectFromGame(game_id);
             }
         }
-    };
+    }
     dumpStatus() {
         conn_log('Dumping status of all connected games');
         for (let game_id in this.connected_games) {
@@ -251,12 +251,12 @@ class Connection {
             conn_log(...msg);
         }
         conn_log('Dump complete');
-    };
+    }
     deleteNotification(notification) { /* {{{ */
-        this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
+        this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), () => {
             conn_log("Deleted notification ", notification.id);
         });
-    }; /* }}} */
+    } /* }}} */
     connection_reset() { /* {{{ */
         for (let game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
@@ -264,7 +264,7 @@ class Connection {
         if (this.socket) this.socket.emit('notification/connect', this.auth({}), (x) => {
             conn_log(x);
         });
-    }; /* }}} */
+    } /* }}} */
     on_friendRequest(notification) { /* {{{ */
         console.log("Friend request from ", notification.user.username);
         post(api1("me/friends/invitations"), this.auth({ 'from_user': notification.user.id }))
@@ -356,7 +356,7 @@ class Connection {
 
         return { reject: false }; // OK !
 
-    }; /* }}} */
+    } /* }}} */
     // Check game settings are acceptable
     //
     checkGameSettings(notification) { /* {{{ */
@@ -565,8 +565,8 @@ class Connection {
             return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolunranked };
         }
 
-        ////// begining of *** UHMAEAT v2.2: Universal Highly Modulable And Expandable Argv Tree ***
-        ///// version 2.2 for maintimes
+        ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 2.3 for maintimes
         if (config.minmaintimeblitz || config.minmaintimeblitzranked || config.minmaintimeblitzunranked || config.maxmaintimeblitz || config.maxmaintimeblitzranked || config.maxmaintimeblitzunranked || config.minmaintimelive || config.minmaintimeliveranked || config.minmaintimeliveunranked || config.maxmaintimelive || config.maxmaintimeliveranked || config.maxmaintimeliveunranked || config.minmaintimecorr || config.minmaintimecorrranked || config.minmaintimecorrunranked || config.maxmaintimecorr || config.maxmaintimecorrranked || config.maxmaintimecorrunranked) {
             // later the t.time_control and t.speed can't be used for rule detection for some reason,
             // so storing them now in strings while we can
@@ -577,22 +577,23 @@ class Connection {
 
             // for fischer, byoyomi, or canadian, we use our UHMAEAT for maintimes !
             // simple time is not included in reject messages for maintime : no main time, only period time !
-            let universalMaintime = {
-                MinimumMaximumSentence : "",        // minimum/maximum
-                TimecontrolSentence : "",           // main time - initial time and/or max time, etc..
-                SpeedSentence : "",                 // for blitz , live , and corr
-                RankedUnrankedGamesIs : "",         // +/- ranked/unranked games is
-                TimeNumber : 0,                     // for example 600 (600 seconds)
-                TimeToString : "",                  // for example "10 minutes"  = timespanToDisplayString(config.xxx)
-                TimeNotificationToString : "",      // for example user wants "1 seconds" = timespanToDisplayString(t.xxx)
-                IncreaseDecreaseSentence : "",      // , please increase/decrease
-                                                    // main time - MaintimeTimecontrolSentence again
-                EndingSentence : "",                // optionnal, for example in canadian, adds explanation
-                ConnBelowAboveSentence : "",        // for conn_log : below/above
-                ConnSentence : "",                  // for conn_log sentence
-                TimecontrolString : "",             /*"fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
-                SpeedString : "",                   /* "blitz" , "live" , "corr" */
-            };
+
+            /* here is a list of all properties used for maintime rejects : 
+            MinimumMaximumSentence    - minimum/maximum
+            TimecontrolSentence       - main time - initial time and/or max time, etc..
+            SpeedSentence             - for blitz/live/corr
+            RankedUnrankedGamesIs     - (+/-ranked/unranked) games is
+            TimeNumber                - for example 600 (600 seconds)
+            TimeToString              - for example "10 minutes"  = timespanToDisplayString(config.xxx)
+            TimeNotificationToString  - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
+            IncreaseDecreaseSentence  - , please increase/decrease
+                                        main time - TimecontrolSentence again
+            EndingSentence            - optional, currently only a "."
+            ConnBelowAboveSentence    - for conn_log : below/above
+            ConnSentence              - for conn_log sentence
+            TimecontrolString         - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
+            SpeedString               - "blitz" , "live" , "corr"
+            */
 
             /////////////////////////////////////////////////////////////////////////////////////
             // before starting, general information : 
@@ -973,8 +974,8 @@ class Connection {
                 }
             }
         }
-        ///// version 2.2 for maintimes
-        ////// end of *** UHMAEAT v2.2 : Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 2.3 for maintimes
+        ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
 
 
         if (config.minperiods && (t.periods < config.minperiods) && !config.minperiodsranked && !config.minperiodsunranked) {
@@ -1007,8 +1008,8 @@ class Connection {
             return { reject: true, msg: "Maximum number of periods for unranked games is " + config.maxperiodsunranked + " , please reduce the number of periods" };
         }
 
-        ////// begining of *** UHMAEAT v2.2: Universal Highly Modulable And Expandable Argv Tree ***
-        ///// version 2.2 for periodtimes
+        ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 2.3 for periodtimes
         if (config.minperiodtimeblitz || config.minperiodtimeblitzranked || config.minperiodtimeblitzunranked || config.maxperiodtimeblitz || config.maxperiodtimeblitzranked || config.maxperiodtimeblitzunranked || config.minperiodtimelive || config.minperiodtimeliveranked || config.minperiodtimeliveunranked || config.maxperiodtimelive || config.maxperiodtimeliveranked || config.maxperiodtimeliveunranked || config.minperiodtimecorr || config.minperiodtimecorrranked || config.minperiodtimecorrunranked || config.maxperiodtimecorr || config.maxperiodtimecorrranked || config.maxperiodtimecorrunranked) {
             // later the t.time_control and t.speed can't be used for rule detection for some reason,
             // so storing them now in strings while we can
@@ -1019,22 +1020,23 @@ class Connection {
 
             // for fischer, byoyomi, or canadian, we use our UHMAEAT for periodtimes !
             // simple time is not included in reject messages for periodtime : no period time, only period time !
-            let universalPeriodtime = {
-                MinimumMaximumSentence : "",        // minimum/maximum
-                TimecontrolSentence : "",           // period time, period time for X stones, increment time, etc..
-                SpeedSentence : "",                 // for blitz , live , and corr
-                RankedUnrankedGamesIs : "",         // +/- ranked/unranked games is
-                TimeNumber : 0,                     // for example 600 (600 seconds)
-                TimeToString : "",                  // for example "10 minutes"  = timespanToDisplayString(config.xxx)
-                TimeNotificationToString : "",      // for example user wants "1 seconds" = timespanToDisplayString(t.xxx)
-                IncreaseDecreaseSentence : "",      // , please increase/decrease
-                                                    // period time - PeriodtimeTimecontrolSentence again
-                EndingSentence : "",                // optionnal, for example in canadian, adds explanation
-                ConnBelowAboveSentence : "",        // for conn_log : below/above
-                ConnSentence : "",                  // for conn_log sentence
-                TimecontrolString : "",             /*"fischer" , "simple", "byoyomi" , "canadian" , "absolute"*/
-                SpeedString : "",                   /* "blitz" , "live" , "corr" */
-            };
+
+            /* here is a list of all properties used for periodtime rejects :
+            MinimumMaximumSentence   - minimum/maximum
+            TimecontrolSentence      - period time, period time for X stones, increment time, etc..
+            SpeedSentence            - for blitz/live/corr
+            RankedUnrankedGamesIs    - (+/-ranked/unranked) games is
+            TimeNumber               - for example 600 (600 seconds)
+            TimeToString             - for example "10 minutes"  = timespanToDisplayString(config.xxx)
+            TimeNotificationToString - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
+            IncreaseDecreaseSentence - , please increase/decrease
+                                       period time - TimecontrolSentence again
+            EndingSentence           - optional, currently only a "."
+            ConnBelowAboveSentence   - for conn_log : below/above
+            ConnSentence             - for conn_log sentence
+            TimecontrolString        - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
+            SpeedString              - "blitz" , "live" , "corr"
+            */
 
             /////////////////////////////////////////////////////////////////////////////////////
             // before starting, general information : 
@@ -1529,8 +1531,8 @@ class Connection {
                 }
             }
         }
-        ///// version 2.2 for periodtimes
-        ////// end of *** UHMAEAT v2.2 : Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 2.3 for periodtimes
+        ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
         return { reject: false };  // Ok !
 
     } /* }}} */
@@ -1565,7 +1567,7 @@ class Connection {
         if (!c.reject) {
             post(api1('me/challenges/' + notification.challenge_id+'/accept'), this.auth({ }))
             .then(ignore)
-            .catch((err) => {
+            .catch(() => {
                 conn_log("Error accepting challenge, declining it");
                 post(api1('me/challenges/' + notification.challenge_id), this.auth({ 
                     'delete': true,
@@ -1583,20 +1585,20 @@ class Connection {
             .then(ignore)
             .catch(conn_log)
         }
-    }; /* }}} */
+    } /* }}} */
     processMove(gamedata) { /* {{{ */
         let game = this.connectToGame(gamedata.id)
         game.makeMove(gamedata.move_number);
-    }; /* }}} */
+    } /* }}} */
     processStoneRemoval(gamedata) { /* {{{ */
         return this.processMove(gamedata);
-    }; /* }}} */
-    on_delete(notification) { /* {{{ */
+    } /* }}} */
+    on_delete() { /* {{{ */
         /* don't care about delete notifications */
-    }; /* }}} */
-    on_gameStarted(notification) { /* {{{ */
+    } /* }}} */
+    on_gameStarted() { /* {{{ */
         /* don't care about gameStarted notifications */
-    }; /* }}} */
+    } /* }}} */
     addGameForPlayer(game_id, player) { /* {{{ */
         if (!this.games_by_player[player]) {
             this.games_by_player[player] = [ game_id ];
@@ -1695,9 +1697,6 @@ function conn_log() { /* {{{ */
 function ignore() {}
 function api1(str) { return "/api/v1/" + str; }
 function post(path, data, cb, eb) { return request("POST", config.host, config.port, path, data, cb, eb); }
-function get(path, data, cb, eb) { return request("GET", config.host, config.port, path, data, cb, eb); }
-function put(path, data, cb, eb) { return request("PUT", config.host, config.port, path, data, cb, eb); }
-function del(path, data, cb, eb) { return request("DELETE", config.host, config.port, path, data, cb, eb); }
 function request(method, host, port, path, data) { /* {{{ */
     return new Promise((resolve, reject) => {
         if (config.DEBUG) {
@@ -1713,7 +1712,7 @@ function request(method, host, port, path, data) { /* {{{ */
 
         let headers = null;
         if (data._headers) {
-            data = dup(data)
+            data = JSON.parse(JSON.stringify(data));
             headers = data._headers;
             delete data._headers;
         }

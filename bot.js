@@ -124,7 +124,7 @@ class Bot {
             return -1;
         }
     }
-    log(str) { /* {{{ */
+    log() { /* {{{ */
         let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
@@ -132,7 +132,7 @@ class Bot {
 
         console.log.apply(null, arr);
     } /* }}} */
-    error(str) { /* {{{ */
+    error() { /* {{{ */
         let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
@@ -140,7 +140,7 @@ class Bot {
 
         console.error.apply(null, arr);
     } /* }}} */
-    verbose(str) { /* {{{ */
+    verbose() { /* {{{ */
         let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
@@ -586,23 +586,14 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
 
     return ret;
-}; /* }}} */
+} /* }}} */
 function char2num(ch) { /* {{{ */
     if (ch === ".") return -1;
     return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
-}; /* }}} */
+} /* }}} */
 function pretty_char2num(ch) { /* {{{ */
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-}; /* }}} */
-function num2char(num) { /* {{{ */
-    if (num === -1) return ".";
-    return "abcdefghijklmnopqrstuvwxyz"[num];
-}; /* }}} */
-function encodeMove(move) { /* {{{ */
-    if (move['x'] === -1) 
-        return "..";
-    return num2char(move['x']) + num2char(move['y']);
 } /* }}} */
 function move2gtpvertex(move, board_size) { /* {{{ */
     if (move.x < 0) {

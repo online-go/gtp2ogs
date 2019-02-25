@@ -275,7 +275,6 @@ class Game {
                 this.log("State loaded for new bot");
             }
         }, eb);
-        return true;
     } /* }}} */
 
     // Send @cmd to bot and call @cb with returned moves.
@@ -413,7 +412,7 @@ class Game {
 
     auth(obj) { /* {{{ */
         return this.conn.auth(obj);
-    }; /* }}} */
+    } /* }}} */
     disconnect() { /* {{{ */
         this.conn.removeGameForPlayer(this.game_id);
 
@@ -432,7 +431,7 @@ class Game {
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
         }));
-    }; /* }}} */
+    } /* }}} */
     gameOver() /* {{{ */
     {
         if (config.farewell && this.state)
@@ -470,7 +469,7 @@ class Game {
         // XXX doesn't work, getting garbage ranks here ...
         // let rank = rankToString(player.rank);
     } /* }}} */
-    log(str) { /* {{{ */
+    log() { /* {{{ */
         let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
         let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
         let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
@@ -509,7 +508,7 @@ class Game {
 function num2char(num) { /* {{{ */
     if (num === -1) return ".";
     return "abcdefghijklmnopqrstuvwxyz"[num];
-}; /* }}} */
+} /* }}} */
 function encodeMove(move) { /* {{{ */
     if (move['x'] === -1) 
         return "..";
