@@ -238,114 +238,130 @@ exports.updateFromArgv = function() {
         process.exit();
     }
 
-    // console : greeting //
-
+    // console : boot message //
     console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n");
 
-    // console : warnings //
+    /*** console : DEPRECIATIONS ***/
+    console.log("-----DEPRECIATIONS-----");
+    this.indicatorConsoleDepreciation = false;
 
-    // - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
-        console.log("Warning: You are using --maxhandicap in combination with --maxhandicapranked and/or --maxhandicapunranked.\nUse either --maxhandicap alone, OR --maxhandicapranked with --maxhandicapunranked.\nBut don't use the 3 maxhandicap arguments at the same time.");
-    }
-
-    if (argv.minhandicap && (argv.minhandicapranked || argv.minhandicapunranked)) {
-        console.log("Warning: You are using --minhandicap in combination with --minhandicapranked and/or --minhandicapunranked.\nUse either --minhandicap alone, OR --minhandicapranked with --minhandicapunranked. \nBut don't use the 3 minhandicap arguments at the same time.");
-    }
-
-    if (argv.noautohandicap && (argv.noautohandicapranked || argv.noautohandicapunranked)) {
-        console.log("Warning: You are using --noautohandicap in combination with --noautohandicapranked and/or --noautohandicapunranked.\nUse either --noautohandicap alone, OR --noautohandicapranked with --noautohandicapunranked.\nBut don't use the 3 noautohandicap arguments at the same time.");
-    }
-
-    if (argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked) {
-        console.log("Warning: --min/max*maintime*+/-ranked/unranked is not supported anymore\n Use --min/max*maintime*blitz/live/corr*+/-ranked/unranked");
-    }
-
-    if (argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
-        console.log("Warning: --min/max*periodtime*+/-ranked/unranked is not supported anymore\n Use --min/max*periodtime*blitz/live/corr*+/-ranked/unranked");
-    }
-
-    if (argv.maxperiods && (argv.maxperiodsranked || argv.maxperiodsunranked)) {
-        console.log("Warning: You are using --maxperiods in combination with --maxperiodsranked and/or --maxperiodsunranked.\nUse either --maxperiods alone, OR --maxperiodsranked with --maxperiodsunranked.\nBut don't use the 3 maxperiods arguments at the same time.");
-    }
-
-    if (argv.minperiods && (argv.minperiodsranked || argv.minperiodsunranked)) {
-        console.log("Warning: You are using --minperiods in combination with --minperiodsranked and/or --minperiodsunranked.\nUse either --minperiods alone, OR --minperiodsranked with --minperiodsunranked.\nBut don't use the 3 minperiods arguments at the same time.");
-    }
-
-    if (argv.minrank && (argv.minrankranked || argv.minrankunranked)) {
-        console.log("Warning: You are using --minrank in combination with --minrankranked and/or --minrankunranked. \n Use either --minrank alone, OR --minrankranked with --minrankunranked.\nBut don't use the 3 minrank arguments at the same time.");
-    }
-
-    if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
-        console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
-    }
-
-    if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
-        console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
-    }
-
-    if (argv.komi) {
-        if (argv.komi.includes(`auto`)) {
-            console.log("Warning: /--komi auto/ has been renamed to /--komi automatic/\n");
-            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+    function depreciatedArgumentIsUsedNewArgumentToUseInstead(depreciatedArgumentUsed, newArgumentToUseInstead, indicatorDepreciation) {
+        if (depreciatedArgumentUsed) {
+            indicatorDepreciation = true;
+            console.log(`Warning: --${depreciatedArgumentUsed} is no longer supported. Use --${newArgumentToUseInstead} instead.\nRead latest up to date available gtp2ogs arguments in OPTIONS-LIST (devel branch) for details : https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`);
         }
     }
 
-    if (argv.komiranked) {
-        if (argv.komiranked.includes(`auto`)) {
-            console.log("Warning: /--komiranked auto/ has been renamed to /--komiranked automatic/\n");
-            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.botid, argv.username, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.bot, argv.username, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.id, argv.username, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.minrankedhandicap, argv.minhandicapranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.minunrankedhandicap, argv.minhandicapunranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.maxrankedhandicap, argv.maxhandicapranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.maxunrankedhandicap, argv.maxhandicapunranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.maxtotalgames, argv.maxconnectedgames, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInstead(argv.maxactivegames, argv.maxconnectedgamesperuser, this.indicatorConsoleDepreciation);
+
+    function depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(depreciatedArgumentUsed, newArgumentToUseInsteadOne, newArgumentToUseInsteadTwo, newArgumentToUseInsteadThree, indicatorDepreciation) {
+        if (depreciatedArgumentUsedOne) {
+            indicatorDepreciation = true;
+            console.log(`Warning: --${depreciatedArgumentUsed} is no longer supported. Use --${newArgumentToUseInsteadOne} and/or --${newArgumentToUseInsteadTwo} and/or --${newArgumentToUseInsteadThree} instead.\nDefaults are provided for all the new arguments, so you dont need to use them all\nRead latest up to date available gtp2ogs arguments in OPTIONS-LIST (devel branch) for details : https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`);
         }
     }
 
-    if (argv.komiunranked) {
-        if (argv.komiunranked.includes(`auto`)) {
-            console.log("Warning: /--komiunranked auto/ has been renamed to /--komiunranked automatic/\n");
-            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.minmaintime, argv.minmaintimeblitz, argv.minmaintimelive, argv.minmaintimecorr, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.minmaintimeranked, argv.minmaintimeblitzranked, argv.minmaintimeliveranked, argv.minmaintimecorrranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.minmaintimeunranked, argv.minmaintimeblitzunranked, argv.minmaintimeliveunranked, argv.minmaintimecorrunranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.maxmaintime, argv.maxmaintimeblitz, argv.maxmaintimelive, argv.maxmaintimecorr, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.maxmaintimeranked, argv.maxmaintimeblitzranked, argv.maxmaintimeliveranked, argv.maxmaintimecorrranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.maxmaintimeunranked, argv.maxmaintimeblitzunranked, argv.maxmaintimeliveunranked, argv.maxmaintimecorrunranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.minperiodtime, argv.minperiodtimeblitz, argv.minperiodtimelive, argv.minperiodtimecorr, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.minperiodtimeranked, argv.minperiodtimeblitzranked, argv.minperiodtimeliveranked, argv.minperiodtimecorrranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.minperiodtimeunranked, argv.minperiodtimeblitzunranked, argv.minperiodtimeliveunranked, argv.minperiodtimecorrunranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.maxperiodtime, argv.maxperiodtimeblitz, argv.maxperiodtimelive, argv.maxperiodtimecorr, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.maxperiodtimeranked, argv.maxperiodtimeblitzranked, argv.maxperiodtimeliveranked, argv.maxperiodtimecorrranked, this.indicatorConsoleDepreciation);
+    depreciatedArgumentIsUsedNewArgumentToUseInsteadUpToThree(argv.maxperiodtimeunranked, argv.maxperiodtimeblitzunranked, argv.maxperiodtimeliveunranked, argv.maxperiodtimecorrunranked, this.indicatorConsoleDepreciation);
+
+    function isArgumentToArrayEqualToAuto(argumentToTest, indicatorDepreciation) {
+        /* we add a if(argumentToTest) before the "auto" test
+        so that we do the test only if argument is defined (used by bot admin) */
+        if (argumentToTest) {
+            for (let e of argumentToTest.split(",")) {
+                if (e === "auto") {
+                    indicatorDepreciation = true;
+                    console.log(`Warning: /--${argumentToTest} auto/ has been renamed to /--${argumentToTest} automatic/\nRead latest up to date available gtp2ogs arguments in OPTIONS-LIST (devel branch) for details : https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`); 
+                }
+                if (e === "null") {
+                    indicatorDepreciation = true;
+                    console.log(`Warning: /--${argumentToTest} null/ has been renamed to /--${argumentToTest} automatic/\nRead latest up to date available gtp2ogs arguments in OPTIONS-LIST (devel branch) for details : https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`); 
+                }
+            }
         }
     }
 
-    console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
+    isArgumentToArrayEqualToAuto(argv.komi, this.indicatorConsoleDepreciation);
+    isArgumentToArrayEqualToAuto(argv.komiranked, this.indicatorConsoleDepreciation);
+    isArgumentToArrayEqualToAuto(argv.komiunranked, this.indicatorConsoleDepreciation);
 
-    // - warning : avoid infinite games
+    // final DEPRECIATIONS [OK!] check indicator : display result
+    if (this.indicatorConsoleDepreciation) {
+        console.log("result : [DEPRECIATIONS ERROR(S)]\n");
+    
+    } else {
+        console.log("result : [OK!]\n");
+    }
 
+    /*** console : WARNINGS, dont use 3 settings of the same family (general, ranked, unranked) at the same time ***/
+    console.log("-----GENERAL/RANKED/UNRANKED-----");
+    this.indicatorConsoleWarningGeneralRankedUnranked = false;
+
+    function generalArgumentIsUsedWithSpecificAtTheSameTime(generalArgument,rankedArgument,unrankedArgument, indicatorWarningsGeneralRankedUnranked) {
+        if (generalArgument && (rankedArgument || unrankedArgument)) {
+            indicatorWarningsGeneralRankedUnranked = true;
+            console.log(`Warning: You are using --${generalArgument} in combination with --${rankedArgument} and/or --${unrankedArgument}.\n Use either --${generalArgument} alone, OR --${rankedArgument} with --${unrankedArgument}.\nBut dont use both general and specific ranked/unranked arguments at the same time`);
+        }
+    }
+
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.minrank, argv.minrankranked, argv.minrankunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.maxrank, argv.maxrankranked, argv.maxrankunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.boardsize, argv.boardsizeranked, argv.boardsizeunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.komi, argv.komiranked, argv.komiunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.speed, argv.speedranked, argv.speedunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.timecontrol, argv.timecontrolranked, argv.timecontrolunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.minhandicap, argv.minhandicapranked, argv.minhandicapunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.maxhandicap, argv.maxhandicapranked, argv.maxhandicapunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.noautohandicap, argv.noautohandicapranked, argv.noautohandicapunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.minperiods, argv.minperiodsranked, argv.minperiodsunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.maxperiods, argv.maxperiodsranked, argv.maxperiodsunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+    generalArgumentIsUsedWithSpecificAtTheSameTime(argv.nopause, argv.nopauseranked, argv.nopauseunranked, this.indicatorConsoleWarningGeneralRankedUnranked);
+
+    // final WARNINGS GENERAL/RANKED/UNRANKED [OK!] check indicator : display result
+    if (this.indicatorConsoleWarningGeneralRankedUnranked) {
+        console.log("result : [GENERAL/RANKED/UNRANKED ERROR(S)]\n");
+    
+    } else {
+        console.log("result : [OK!]\n");
+    }
+
+    /*** console : OTHER WARNINGS ***/
+    console.log("-----OTHER WARNINGS-----");
+    this.indicatorConsoleOtherWarnings = false;
+
+    // - other warning : avoid infinite games
     if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpaustime and co gets implemented, replace with "are likely to last for a long time"
-    }
-    console.log("\n"); /*after last warning, we skip a line to make it more pretty*/
-
-    // - warning : depreciated features if used
-
-    if (argv.botid) {
-        console.log("Warning: --botid alias is no longer supported. Use --username instead.");
+        this.indicatorConsoleOtherWarnings = true;
+        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpausetime gets implemented, replace with "are likely to last for a long time"
     }
 
-    if (argv.bot) {
-        console.log("Warning: --bot alias is no longer supported. Use --username instead.");
+    // final OTHER WARNINGS [OK!] check indicator : display result
+    if (this.indicatorConsoleOtherWarnings) {
+        console.log("result : [OTHER WARNINGS ERROR(S)]\n");
+    
+    } else {
+        console.log("result : [OK!]\n");
     }
 
-    if (argv.id) {
-        console.log("Warning: --id alias is no longer supported. Use --username instead.");
-    }
-
-    if (argv.minrankedhandicap || argv.minunrankedhandicap || argv.maxrankedhandicap || argv.maxunrankedhandicap) {
-        console.log("Warning: --min/max*+/-ranked/unranked*handicap argument is no longer supported.\nUse --min/max*handicap*+/-ranked/unranked instead.");
-    }
-
-    if (argv.maxtotalgames) {
-        console.log("Warning: --maxtotalgames argument has been renamed to --maxconnectedgames. Use --maxconnectedgames instead.");
-    }
-
-    if (argv.maxactivegames) {
-        console.log("Warning: --maxactivegames argument has been renamed to --maxconnectedgamesperuser. Use --maxconnectedgamesperuser instead.");
-    }
-
-    if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
-        console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
-    }
-
-    // end of console messages
+    /*** end of console boot messages***/
 
     // Set all the argv
     for(var k in argv) exports[k] = argv[k];
