@@ -257,14 +257,6 @@ exports.updateFromArgv = function() {
         console.log("Warning: You are using --noautohandicap in combination with --noautohandicapranked and/or --noautohandicapunranked.\nUse either --noautohandicap alone, OR --noautohandicapranked with --noautohandicapunranked.\nBut don't use the 3 noautohandicap arguments at the same time.");
     }
 
-    if (argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked) {
-        console.log("Warning: --min/max*maintime*+/-ranked/unranked is not supported anymore\n Use --min/max*maintime*blitz/live/corr*+/-ranked/unranked");
-    }
-
-    if (argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
-        console.log("Warning: --min/max*periodtime*+/-ranked/unranked is not supported anymore\n Use --min/max*periodtime*blitz/live/corr*+/-ranked/unranked");
-    }
-
     if (argv.maxperiods && (argv.maxperiodsranked || argv.maxperiodsunranked)) {
         console.log("Warning: You are using --maxperiods in combination with --maxperiodsranked and/or --maxperiodsunranked.\nUse either --maxperiods alone, OR --maxperiodsranked with --maxperiodsunranked.\nBut don't use the 3 maxperiods arguments at the same time.");
     }
@@ -313,37 +305,41 @@ exports.updateFromArgv = function() {
     if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
         console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpaustime and co gets implemented, replace with "are likely to last for a long time"
     }
-    console.log("\n"); /*after last warning, we skip a line to make it more pretty*/
+    
 
-    // - warning : depreciated features if used
-
-    if (argv.botid) {
-        console.log("Warning: --botid alias is no longer supported. Use --username instead.");
+    function testDeprecated(oldName, newName) {
+      if (argv[oldName]) console.log(`Warning: --${oldName} is deprecated, use --${newName} instead.`)
     }
 
-    if (argv.bot) {
-        console.log("Warning: --bot alias is no longer supported. Use --username instead.");
+    const deprecatedArgs = [["botid", "username"],
+      ["bot", "username"],
+      ["id", "username"],
+      ["minrankedhandicap", "minhandicapranked"],
+      ["minunrankedhandicap", "minhandicapunranked"],
+      ["maxrankedhandicap", "maxhandicapranked"],
+      ["maxunrankedhandicap", "maxhandicapunranked"],
+      ["maxtotalgames", "maxconnectedgames"],
+      ["maxactivegames", "maxconnectedgamesperuser"],
+      ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
+      ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
+      ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
+      ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
+      ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
+      ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
+      ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
+      ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
+      ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
+      ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
+      ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
+      ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"]
+      ]
+    deprecatedArgs.forEach(ar => testDeprecated(...ar))
+    
+    if (deprecatedArgs.some(e => argv[e[0]])) {
+      console.log("\n");
     }
-
-    if (argv.id) {
-        console.log("Warning: --id alias is no longer supported. Use --username instead.");
-    }
-
-    if (argv.minrankedhandicap || argv.minunrankedhandicap || argv.maxrankedhandicap || argv.maxunrankedhandicap) {
-        console.log("Warning: --min/max*+/-ranked/unranked*handicap argument is no longer supported.\nUse --min/max*handicap*+/-ranked/unranked instead.");
-    }
-
-    if (argv.maxtotalgames) {
-        console.log("Warning: --maxtotalgames argument has been renamed to --maxconnectedgames. Use --maxconnectedgames instead.");
-    }
-
-    if (argv.maxactivegames) {
-        console.log("Warning: --maxactivegames argument has been renamed to --maxconnectedgamesperuser. Use --maxconnectedgamesperuser instead.");
-    }
-
-    if (argv.botid || argv.bot || argv.id || argv.minrankedhandicap || argv.maxrankedhandicap || argv.minunrankedhandicap || argv.maxunrankedhandicap || argv.maxtotalgames || argv.maxactivegames || argv.maxmaintime || argv.maxmaintimeranked || argv.maxmaintimeunranked || argv.minmaintime || argv.minmaintimeranked || argv.minmaintimeunranked || argv.maxperiodtime || argv.maxperiodtimeranked || argv.maxperiodtimeunranked || argv.minperiodtime || argv.minperiodtimeranked || argv.minperiodtimeunranked) {
-        console.log("\n"); /*IF there is a warning, we skip a line to make it more pretty*/
-    }
+    
+    console.log("\n");
 
     // end of console messages
 
