@@ -162,8 +162,11 @@ class Connection {
             if (gamedata.phase === "finished" && !(gamedata.id in this.connected_games))
                 return;
 
+            // Don't connect if it is not our turn.
+            if (gamedata.player_to_move !== this.bot_id)
+                return;
+
             // Set up the game so it can listen for events.
-            //
             this.connectToGame(gamedata.id);
 
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
