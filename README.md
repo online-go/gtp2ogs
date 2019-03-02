@@ -69,14 +69,38 @@ This step is **is recommended**
 By default, npm installs an old branch of gtp2ogs that does not include latest 
 improvements, new features, and fixes
 
-To upgrade to devel branch (newest), see :
+An easy way to upgrade is to copy all the devel gtp2ogs files and folders 
+(bot.js, config.js, etc..) to the original directory where gtp2ogs is 
+installed, and overwrite the old existing files 
+
+note : before overwriting, you can backup your old files so that you can 
+go back to the old branch of gtp2ogs anytime later if you want
+
+Then it is needed to do the post install :
+
+The command below will automatically detect all missing packages needed 
+from the package.json of the new branch, and install all these packages
+
+- for linux :
+
+```
+cd /usr/lib/node_modules/gtp2ogs/
+sudo npm install
+```
+
+- for windows :
+
+Open a node.js command prompt as admin, then :
+
+```
+pushd C:\Users\yourwindowsusername\AppData\Roaming\npm\node_modules\gtp2ogs\
+npm install
+```
+
+For details or help, you can see :
 
 - for linux : [3A3) Recommended : Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
 - for windows : [3B3) Recommended : Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
-
-When you upgrade you need to copy all the gtp2ogs files (bot.js, config.js, etc..) 
-and overwrite the old files (you can backup your old files so that you can go back 
-to the old version if you want later)
 
 ### 4. Most common usage : start gtp2ogs.js using nodejs
 
@@ -102,20 +126,6 @@ you want
   
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `--beta` argument
-
-### 5. Optional : install any missing node.js packages
-
-**This step can be skipped unless you have issues or bugs**
-
-You may need to install some missing packages if the 
-[Most common usage](#4-most-common-usage--start-gtp2ogsjs-using-nodejs) fails
-
-To do that, you can just run (as admin on windows, as sudo on linux) :
-
-```npm install```
-
-This command will automatically detect all missing packages needed 
-from package.json and install them
 
 ### Extra : add features by editing gtp2ogs files
 
