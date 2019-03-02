@@ -277,27 +277,6 @@ exports.updateFromArgv = function() {
         console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
     }
 
-    if (argv.komi) {
-        if (argv.komi.includes(`auto`)) {
-            console.log("Warning: /--komi auto/ has been renamed to /--komi automatic/\n");
-            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
-        }
-    }
-
-    if (argv.komiranked) {
-        if (argv.komiranked.includes(`auto`)) {
-            console.log("Warning: /--komiranked auto/ has been renamed to /--komiranked automatic/\n");
-            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
-        }
-    }
-
-    if (argv.komiunranked) {
-        if (argv.komiunranked.includes(`auto`)) {
-            console.log("Warning: /--komiunranked auto/ has been renamed to /--komiunranked automatic/\n");
-            // we skip a line here, not below, because this argv may be undefined if not used by bot admin
-        }
-    }
-
     console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
 
     // - warning : avoid infinite games
@@ -334,6 +313,24 @@ exports.updateFromArgv = function() {
       ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"]
       ]
     deprecatedArgs.forEach(ar => testDeprecated(...ar))
+
+    function familyArrayFromGeneralArg(generalArg) {
+        return ["", "unranked", "ranked" ].map(e => generalArg + e);
+    }
+
+    for (let e of familyArrayFromGeneralArg("komi")) {
+        if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
+        // for example if argv[komiranked]
+            if (argv[e].split(",").includes("auto")) {
+            // we need to split the argv value into an array before the includes test
+                console.log(`Warning: /--${e} auto/ is no longer supported, use /--${e} automatic/ instead`);
+            }
+            if (argv[e].split(",").includes("null")) {
+            // we need to split the argv value into an array before the includes test
+                console.log(`Warning: /--${e} null/ is no longer supported, use /--${e} automatic/ instead`);
+            }
+        }
+    }
     
     if (deprecatedArgs.some(e => argv[e[0]])) {
       console.log("\n");
