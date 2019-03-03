@@ -1645,6 +1645,7 @@ class Connection {
     }}}
     terminate() {{{
         clearTimeout(this.connect_timeout);
+        clearTimeout(this.disconnect_timeout);
         clearInterval(this.ping_interval);
         clearInterval(this.notification_connect_interval);
         clearInterval(this.corr_queue_interval);
