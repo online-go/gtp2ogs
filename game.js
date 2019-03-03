@@ -454,7 +454,7 @@ class Game {
             this.ensureBotKilled();
         }
 
-        setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
+        if (!this.conn.disconnect_timeout) this.conn.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
     } /* }}} */
     header() { /* {{{ */
         if (!this.state)  return;

@@ -41,6 +41,7 @@ class Connection {
         this.connected_games = {};
         this.games_by_player = {};     // Keep track of connected games per player
         this.connected = false;
+        this.disconnect_timeout = null;
 
         this.connect_timeout = setTimeout(()=>{
             if (!this.connected) {
@@ -179,7 +180,7 @@ class Connection {
                 //     on server side: sometimes /gamedata event with game outcome is sent after
                 //     active_game, so it's lost since there's no game to handle it anymore...
                 //     Work around it with a timeout for now.
-                setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
+                if (!this.disconnect_timeout) this.disconnect_timeout = setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
             }
         });
     }}}
