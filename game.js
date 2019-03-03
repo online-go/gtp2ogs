@@ -453,6 +453,8 @@ class Game {
             this.bot.gameOver();
             this.ensureBotKilled();
         }
+
+        setTimeout(() => {  this.conn.disconnectFromGame(gamedata.id);  }, 1000);
     } /* }}} */
     header() { /* {{{ */
         if (!this.state)  return;
