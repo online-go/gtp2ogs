@@ -244,79 +244,55 @@ exports.updateFromArgv = function() {
 
     // console : warnings //
 
-    // - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    if (argv.maxhandicap && (argv.maxhandicapranked || argv.maxhandicapunranked)) {
-        console.log("Warning: You are using --maxhandicap in combination with --maxhandicapranked and/or --maxhandicapunranked.\nUse either --maxhandicap alone, OR --maxhandicapranked with --maxhandicapunranked.\nBut don't use the 3 maxhandicap arguments at the same time.");
+    // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
+    const familyArgs = ["boardsize", "komi", "speed", "timecontrol", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiods", "maxperiods", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
+
+    function checkThreeSameTimeFamily() {
+        for (let e of familyArgs) {
+            let familyToTest = familyArrayFromGeneralArg(e);
+            // for example ["komi", "komiranked", "komiunranked"];
+            if ((argv[familyToTest[0]]) && ((argv[familyToTest[1]]) || (argv[familyToTest[2]]))) {
+                console.log(`Warning: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR --${familyToTest[1]} with --${familyToTest[2]}.\nBut don't use the 3 ${familyToTest[0]} arguments at the same time.`);
+            }
+        }
     }
 
-    if (argv.minhandicap && (argv.minhandicapranked || argv.minhandicapunranked)) {
-        console.log("Warning: You are using --minhandicap in combination with --minhandicapranked and/or --minhandicapunranked.\nUse either --minhandicap alone, OR --minhandicapranked with --minhandicapunranked. \nBut don't use the 3 minhandicap arguments at the same time.");
-    }
-
-    if (argv.noautohandicap && (argv.noautohandicapranked || argv.noautohandicapunranked)) {
-        console.log("Warning: You are using --noautohandicap in combination with --noautohandicapranked and/or --noautohandicapunranked.\nUse either --noautohandicap alone, OR --noautohandicapranked with --noautohandicapunranked.\nBut don't use the 3 noautohandicap arguments at the same time.");
-    }
-
-    if (argv.maxperiods && (argv.maxperiodsranked || argv.maxperiodsunranked)) {
-        console.log("Warning: You are using --maxperiods in combination with --maxperiodsranked and/or --maxperiodsunranked.\nUse either --maxperiods alone, OR --maxperiodsranked with --maxperiodsunranked.\nBut don't use the 3 maxperiods arguments at the same time.");
-    }
-
-    if (argv.minperiods && (argv.minperiodsranked || argv.minperiodsunranked)) {
-        console.log("Warning: You are using --minperiods in combination with --minperiodsranked and/or --minperiodsunranked.\nUse either --minperiods alone, OR --minperiodsranked with --minperiodsunranked.\nBut don't use the 3 minperiods arguments at the same time.");
-    }
-
-    if (argv.minrank && (argv.minrankranked || argv.minrankunranked)) {
-        console.log("Warning: You are using --minrank in combination with --minrankranked and/or --minrankunranked. \n Use either --minrank alone, OR --minrankranked with --minrankunranked.\nBut don't use the 3 minrank arguments at the same time.");
-    }
-
-    if (argv.maxrank && (argv.maxrankranked || argv.maxrankunranked)) {
-        console.log("Warning: You are using --maxrank in combination with --maxrankranked and/or --maxrankunranked. \n Use either --maxrank alone, OR --maxrankranked with --maxrankunranked.\nBut don't use the 3 maxrank arguments at the same time.");
-    }
-
-    if (argv.nopause && (argv.nopauseranked || argv.nopauseunranked)) {
-        console.log("Warning: You are using --nopause in combination with --nopauseranked and/or --nopauseunranked. \n Use either --nopause alone, OR --nopauseranked with --nopauseunranked.\nBut don't use the 3 nopause arguments at the same time.");
-    }
-
+    checkThreeSameTimeFamily();
     console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
 
-    // - warning : avoid infinite games
-
+    // B - warning : avoid infinite games
     if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
         console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpaustime and co gets implemented, replace with "are likely to last for a long time"
     }
-    
 
+    // C - warning : check deprecated features    
     function testDeprecated(oldName, newName) {
-      if (argv[oldName]) console.log(`Warning: --${oldName} is deprecated, use --${newName} instead.`)
+        if (argv[oldName]) console.log(`Warning: --${oldName} is deprecated, use --${newName} instead.`)
     }
 
     const deprecatedArgs = [["botid", "username"],
-      ["bot", "username"],
-      ["id", "username"],
-      ["minrankedhandicap", "minhandicapranked"],
-      ["minunrankedhandicap", "minhandicapunranked"],
-      ["maxrankedhandicap", "maxhandicapranked"],
-      ["maxunrankedhandicap", "maxhandicapunranked"],
-      ["maxtotalgames", "maxconnectedgames"],
-      ["maxactivegames", "maxconnectedgamesperuser"],
-      ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
-      ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
-      ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
-      ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
-      ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
-      ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
-      ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
-      ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
-      ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
-      ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
-      ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-      ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"]
-      ]
+        ["bot", "username"],
+        ["id", "username"],
+        ["minrankedhandicap", "minhandicapranked"],
+        ["minunrankedhandicap", "minhandicapunranked"],
+        ["maxrankedhandicap", "maxhandicapranked"],
+        ["maxunrankedhandicap", "maxhandicapunranked"],
+        ["maxtotalgames", "maxconnectedgames"],
+        ["maxactivegames", "maxconnectedgamesperuser"],
+        ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
+        ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
+        ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
+        ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
+        ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
+        ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
+        ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
+        ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
+        ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
+        ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
+        ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
+        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"]
+        ]
     deprecatedArgs.forEach(ar => testDeprecated(...ar))
-
-    function familyArrayFromGeneralArg(generalArg) {
-        return ["", "unranked", "ranked" ].map(e => generalArg + e);
-    }
 
     for (let e of familyArrayFromGeneralArg("komi")) {
         if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
@@ -333,11 +309,10 @@ exports.updateFromArgv = function() {
     }
     
     if (deprecatedArgs.some(e => argv[e[0]])) {
-      console.log("\n");
+        console.log("\n");
     }
     
     console.log("\n");
-
     // end of console messages
 
     // Set all the argv
@@ -669,4 +644,9 @@ exports.updateFromArgv = function() {
     }
 
     exports.bot_command = argv._;
+
+    function familyArrayFromGeneralArg(generalArg) {
+        return ["", "unranked", "ranked" ].map(e => generalArg + e);
+    }
+
 }
