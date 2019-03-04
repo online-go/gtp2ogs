@@ -190,14 +190,30 @@ exports.updateFromArgv = function() {
         .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games ')
         .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games ')
         .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games ')
-        .describe('minperiods', 'Minimum number of periods')
-        .default('minperiods', 3)
-        .describe('minperiodsranked', 'Minimum number of ranked periods')
-        .describe('minperiodsunranked', 'Minimum number of unranked periods')
-        .describe('maxperiods', 'Maximum number of periods')
-        .default('maxperiods', 20)
-        .describe('maxperiodsranked', 'Maximum number of ranked periods')
-        .describe('maxperiodsunranked', 'Maximum number of unranked periods')
+        .describe('minperiodsblitz', 'Minimum number of periods for blitz games')
+        .default('minperiodsblitz', 3)
+        .describe('minperiodsblitzranked', 'Minimum number of periods for blitz ranked games')
+        .describe('minperiodsblitzunranked', 'Minimum number of periods for blitz unranked games')
+        .describe('maxperiodsblitz', 'Maximum number of periods for blitz games')
+        .default('maxperiodsblitz', 20)
+        .describe('maxperiodsblitzranked', 'Maximum number of periods for blitz ranked games')
+        .describe('maxperiodsblitzunranked', 'Maximum number of periods for blitz unranked games')
+        .describe('minperiodslive', 'Minimum number of periods for live games')
+        .default('minperiodslive', 3)
+        .describe('minperiodsliveranked', 'Minimum number of periods for live ranked games')
+        .describe('minperiodsliveunranked', 'Minimum number of periods for live unranked games')
+        .describe('maxperiodslive', 'Maximum number of periods for live games')
+        .default('maxperiodslive', 20)
+        .describe('maxperiodsliveranked', 'Maximum number of periods for live ranked games')
+        .describe('maxperiodsliveunranked', 'Maximum number of periods for live unranked games')
+        .describe('minperiodscorr', 'Minimum number of periods for correspondence games')
+        .default('minperiodscorr', 3)
+        .describe('minperiodscorrranked', 'Minimum number of periods for correspondence ranked games')
+        .describe('minperiodscorrunranked', 'Minimum number of periods for correspondence unranked games')
+        .describe('maxperiodscorr', 'Maximum number of periods for correspondence games')
+        .default('maxperiodscorr', 10)
+        .describe('maxperiodscorrranked', 'Maximum number of periods for correspondence ranked games')
+        .describe('maxperiodscorrunranked', 'Maximum number of periods for correspondence unranked games')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
@@ -245,7 +261,7 @@ exports.updateFromArgv = function() {
     // console : warnings //
 
     // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsize", "komi", "speed", "timecontrol", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiods", "maxperiods", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
+    const familyArgs = ["boardsize", "komi", "speed", "timecontrol", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
 
     function checkThreeSameTimeFamily() {
         for (let e of familyArgs) {
@@ -290,7 +306,13 @@ exports.updateFromArgv = function() {
         ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
         ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
         ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"]
+        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
+        ["maxperiods",  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
+        ["maxperiodsranked", "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
+        ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
+        ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
+        ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
+        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"]
         ]
     deprecatedArgs.forEach(ar => testDeprecated(...ar))
 
@@ -313,6 +335,7 @@ exports.updateFromArgv = function() {
     }
     
     console.log("\n");
+
     // end of console messages
 
     // Set all the argv
