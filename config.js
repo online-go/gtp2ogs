@@ -7,6 +7,9 @@ exports.DEBUG = false;
 exports.PERSIST = false;
 exports.KGSTIME = false;
 exports.SHOWBOARD = false;
+exports.UNDO = false;
+exports.UNDORANKED = false;
+exports.UNDOUNRANKED = false;
 exports.NOCLOCK = false;
 exports.GREETING = "";
 exports.FAREWELL = "";
@@ -66,6 +69,9 @@ exports.updateFromArgv = function() {
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
+        .describe('undo', 'Set this if bot understands the undo GTP command, and if you want to give opponent the ability to undo moves ingame')
+        .describe('undoranked', 'Set this if bot understands the undo GTP command, and if you want to give opponent the ability to undo moves ingame for ranked games')
+        .describe('undounranked', 'Set this if bot understands the undo GTP command, and if you want to give opponent the ability to undo moves ingame for unranked games')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('persist', 'Bot process remains running between moves')
         .describe('corrqueue', 'Process correspondence games one at a time')
@@ -261,7 +267,7 @@ exports.updateFromArgv = function() {
     // console : warnings //
 
     // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
+    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause", "undo"];
 // --bans --bansranked --bansunranked are an exception, do not include here
 
     function checkThreeSameTimeFamily() {
@@ -392,6 +398,18 @@ exports.updateFromArgv = function() {
 
     if (argv.showboard) {
         exports.SHOWBOARD = true;
+    }
+
+    if (argv.undo) {
+        exports.UNDO = true;
+    }
+
+    if (argv.undoranked) {
+        exports.UNDORANKED = true;
+    }
+
+    if (argv.undounranked) {
+        exports.UNDOUNRANKED = true;
     }
 
     if (argv.noclock) {

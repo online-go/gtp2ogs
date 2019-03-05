@@ -47,6 +47,25 @@ and if you want to display the showboard output
 
 So default is disabled
 
+#### undo
+  ```--undo```  Set this if bot understands the undo GTP command, and if you 
+want to give opponent the ability to undo moves ingame
+
+  ```--undoranked```  Set this if bot understands the undo GTP command, 
+and if you want to give opponent the ability to undo moves ingame for 
+ranked games
+
+  ```--undounranked```  Set this if bot understands the undo GTP command, 
+and if you want to give opponent the ability to undo moves ingame for 
+unranked games
+
+- This breaks some bots which dont support it 
+- And this may not be desired by bot admin for either all games, or 
+ranked games specifically, or unranked games specifically
+
+So default is disabled, and bot admin may want to allow undo 
+only for unranked games for example, by using `--undounranked`
+
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot
 

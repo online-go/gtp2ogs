@@ -31,11 +31,44 @@ class Game {
 
         this.log("Connecting to game.");
 
-        // TODO: Command line options to allow undo?
-        //
-        this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
-            this.log("Undo requested", JSON.stringify(undodata, null, 4));
-        });
+        if (config.UNDO && !config.UNDORANKED && !config.UNDOUNRANKED) {
+            this.socket.on('game/' + game_id + '/undo_requested_in_any_type_of_game', (undodata) => {
+                this.log("Undo requested in any type of game", JSON.stringify(undodata, null, 4));
+                // allow the undo and process it ..., then
+                ////
+                ////
+                this.log("Undo request allowed and processed in any type of game, unlimited number of undos remaining", JSON.stringify(undodata, null, 4));
+            });
+        }
+
+        if (config.UNDORANKED && this.state.ranked) {
+            this.socket.on('game/' + game_id + '/undo_requested_in_ranked_game', (undodata) => {
+                this.log("Undo requested in ranked game", JSON.stringify(undodata, null, 4));
+                // allow the undo and process it ..., then
+                ////
+                ////
+                this.log("Undo request allowed and processed in ranked game, unlimited number of undos remaining", JSON.stringify(undodata, null, 4));
+            });
+        }
+
+        if (config.UNDOUNRANKED && (this.state.ranked === false)) {
+            this.socket.on('game/' + game_id + '/undo_requested_in_unranked_game', (undodata) => {
+                this.log("Undo requested in unranked game", JSON.stringify(undodata, null, 4));
+                // allow the undo and process it ..., then
+                ////
+                ////
+                this.log("Undo request allowed and processed in unranked game, unlimited number of undos remaining", JSON.stringify(undodata, null, 4));
+            });
+        }
+
+        if (!config.UNDO && !config.UNDORANKED && !config.UNDOUNRANKED) {
+            this.socket.on('game/' + game_id + '/undo_requested_but_undo_is_disabled', (undodata) => {
+                this.log("Undo requested, but undo is disabled", JSON.stringify(undodata, null, 4));
+                // no need to sendChat ingame :
+                // we already notified opponent about "undo is disabled" in greeting
+                this.log("Undo request ignored : disabled on this bot", JSON.stringify(undodata, null, 4));
+            });
+        }
 
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
@@ -356,6 +389,11 @@ class Game {
         if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
             this.sendChat( config.GREETING, "discussion");
             this.greeted = true;
+            if (config.UNDO  || config.UNDORANKED || config.UNDOUNRANKED) {
+                this.sendChat("information : this bot will allow undo for this game, unlimited number");
+            } else {
+                this.sendChat("information : undo is disabled on this bot");
+            }
         }
     } /* }}} */
 
