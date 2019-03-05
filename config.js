@@ -39,6 +39,12 @@ exports.allow_all_komis_ranked = false;
 exports.allowed_komis_ranked = [];
 exports.allow_all_komis_unranked = false;
 exports.allowed_komis_unranked = [];
+exports.allowed_colors_even = {};
+exports.allowed_colors_even_ranked = {};
+exports.allowed_colors_even_unranked = {};
+exports.allowed_colors_handicap = {};
+exports.allowed_colors_handicap_ranked = {};
+exports.allowed_colors_handicap_unranked = {};
 exports.allowed_speeds = {};
 exports.allowed_speeds_ranked = {};
 exports.allowed_speeds_unranked = {};
@@ -140,6 +146,14 @@ exports.updateFromArgv = function() {
         // make sure to increase minmaintimeblitz and minmaintimelive to high values
         // 2 - "none" is not default, can be manually allowed in timecontrol argument
         // but then games will be very very long
+        .describe('colorseven', 'Opponent color(s) to accept for even (= 0 handicap) games ')
+        .default('colorseven', 'black,white,automatic,random')
+        .describe('colorsevenranked', 'Opponent color(s) to accept for even (= 0 handicap) ranked games')
+        .describe('colorsevenunranked', 'Opponent color(s) to accept for even (= 0 handicap) unranked games')
+        .describe('colorshandicap', 'Opponent color(s) to accept for handicap games')
+        .default('colorshandicap', 'black,white,automatic,random')
+        .describe('colorshandicapranked', 'Opponent color(s) to accept for handicap ranked games')
+        .describe('colorshandicapunranked', 'Opponent color(s) to accept for handicap unranked games')
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
         .default('minmaintimeblitz', '15') // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')
@@ -261,7 +275,7 @@ exports.updateFromArgv = function() {
     // console : warnings //
 
     // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
+    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "colorseven", "colorshandicap", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
 // --bans --bansranked --bansunranked are an exception, do not include here
 
     function checkThreeSameTimeFamily() {
@@ -675,6 +689,90 @@ exports.updateFromArgv = function() {
     if (argv.timecontrolsunranked) {
         for (let i of argv.timecontrolunranked.split(',')) {
             exports.allowed_timecontrols_unranked[i] = true;
+        }
+    }
+
+    if (argv.colorseven) {
+        for (let e of argv.colorseven.split(',')) {
+            if (e === "automatic") {
+                exports.allowed_colors_even[-1] = true;
+            }
+            if (e === "random") {
+                exports.allowed_colors_even[null] = true;
+            }
+            if (e === "black" || e === "white") {
+                exports.allowed_colors_even[e] = true;
+            }
+        }
+    }
+
+    if (argv.colorsevenranked) {
+        for (let e of argv.colorsevenranked.split(',')) {
+            if (e === "automatic") {
+                exports.allowed_colors_even_ranked[-1] = true;
+            }
+            if (e === "random") {
+                exports.allowed_colors_even_ranked[null] = true;
+            }
+            if (e === "black" || e === "white") {
+                exports.allowed_colors_even_ranked[e] = true;
+            }
+        }
+    }
+
+    if (argv.colorsevenunranked) {
+        for (let e of argv.colorsevenunranked.split(',')) {
+            if (e === "automatic") {
+                exports.allowed_colors_even_unranked[-1] = true;
+            }
+            if (e === "random") {
+                exports.allowed_colors_even_unranked[null] = true;
+            }
+            if (e === "black" || e === "white") {
+                exports.allowed_colors_even_unranked[e] = true;
+            }
+        }
+    }
+
+    if (argv.colorshandicap) {
+        for (let e of argv.colorshandicap.split(',')) {
+            if (e === "automatic") {
+                exports.allowed_colors_handicap[-1] = true;
+            }
+            if (e === "random") {
+                exports.allowed_colors_handicap[null] = true;
+            }
+            if (e === "black" || e === "white") {
+                exports.allowed_colors_handicap[e] = true;
+            }
+        }
+    }
+
+    if (argv.colorshandicapranked) {
+        for (let e of argv.colorshandicapranked.split(',')) {
+            if (e === "automatic") {
+                exports.allowed_colors_handicap_ranked[-1] = true;
+            }
+            if (e === "random") {
+                exports.allowed_colors_handicap_ranked[null] = true;
+            }
+            if (e === "black" || e === "white") {
+                exports.allowed_colors_handicap_ranked[e] = true;
+            }
+        }
+    }
+
+    if (argv.colorshandicapunranked) {
+        for (let e of argv.colorshandicapunranked.split(',')) {
+            if (e === "automatic") {
+                exports.allowed_colors_handicap_unranked[-1] = true;
+            }
+            if (e === "random") {
+                exports.allowed_colors_handicap_unranked[null] = true;
+            }
+            if (e === "black" || e === "white") {
+                exports.allowed_colors_handicap_unranked[e] = true;
+            }
         }
     }
 

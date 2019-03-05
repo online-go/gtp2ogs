@@ -382,7 +382,8 @@ class Connection {
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
 
-        // for all the allowed_family options below (timecontrols, speeds, komis, boardsizes) 
+        // for all the allowed_family options below 
+        // (boardsizes, komis, colorseven, colorshandicap, speeds, timecontrols) 
         // we need to add a "family guard" 
         // && config.familyranked for ranked games 
         // && config.familyunranked for unranked games
@@ -535,6 +536,36 @@ class Connection {
             }
             conn_log("komi value " + notificationKomiString + " is not allowed for unranked games, allowed komis for unranked games are: " + config.komisunranked);
             return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for unranked games, please choose one of these allowed komis for unranked games: " + config.komisunranked};
+        }
+
+        if (!config.allowed_colors_even[notification.color] && (notification.handicap = 0) && !config.colorsevenranked && !config.colorsevenunranked) {
+            conn_log("opponent color " + notification.color + " is not allowed: " + notification.color + ", allowed colors for even games are :" + config.colorseven);
+            return { reject: true, msg: "color " + notification.color + " is not allowed, please choose one of these allowed colors for even (= 0 handicap) games: " + config.colorseven};
+        }
+
+        if (!config.allowed_colors_even_ranked[notification.color] && (notification.handicap = 0) && notification.ranked && config.colorsevenranked) {
+            conn_log("opponent color " + notification.color + " is not allowed, allowed colors for even ranked games are :" + config.colorsevenranked);
+            return { reject: true, msg: "color " + notification.color + " is not allowed, please choose one of these allowed colors for even (= 0 handicap) ranked games: " + config.colorsevenranked};
+        }
+
+        if (!config.allowed_colors_even_unranked[notification.color] && (notification.handicap = 0) && !notification.ranked && config.colorsevenunranked) {
+            conn_log("opponent color " + notification.color + " is not allowed, allowed colors for even unranked games are :" + config.colorsevenunranked);
+            return { reject: true, msg: "color " + notification.color + " is not allowed, please choose one of these allowed colors for even (= 0 handicap) unranked games: " + config.colorsevenunranked};
+        }
+
+        if (!config.allowed_colors_handicap[notification.color] && (notification.handicap = 0) && !config.colorshandicapranked && !config.colorshandicapunranked) {
+            conn_log("opponent color " + notification.color + " is not allowed: " + notification.color + ", allowed colors for handicap games are :" + config.colorshandicap);
+            return { reject: true, msg: "color " + notification.color + " is not allowed, please choose one of these allowed colors for handicap (= 0 handicap) games: " + config.colorshandicap};
+        }
+
+        if (!config.allowed_colors_handicap_ranked[notification.color] && (notification.handicap = 0) && notification.ranked && config.colorshandicapranked) {
+            conn_log("opponent color " + notification.color + " is not allowed, allowed colors for handicap ranked games are :" + config.colorshandicapranked);
+            return { reject: true, msg: "color " + notification.color + " is not allowed, please choose one of these allowed colors for handicap (= 0 handicap) ranked games: " + config.colorshandicapranked};
+        }
+
+        if (!config.allowed_colors_handicap_unranked[notification.color] && (notification.handicap = 0) && !notification.ranked && config.colorshandicapunranked) {
+            conn_log("opponent color " + notification.color + " is not allowed, allowed colors for handicap unranked games are :" + config.colorshandicapunranked);
+            return { reject: true, msg: "color " + notification.color + " is not allowed, please choose one of these allowed colors for handicap (= 0 handicap) unranked games: " + config.colorshandicapunranked};
         }
 
         if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {

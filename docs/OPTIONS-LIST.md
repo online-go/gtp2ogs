@@ -167,6 +167,31 @@ values are allowed and all other komi values are rejected see
 [notes C-](/docs/docs/NOTES.md#c-) and [notes D-](/docs/docs/NOTES.md#d-) 
 for details
 
+#### colors
+
+```--colorseven``` Opponent color(s) to accept for even 
+(= 0 handicap) games (default black,white,automatic,random)
+
+```--colorsevenranked``` Opponent color(s) to accept for even 
+(= 0 handicap) ranked games
+
+```--colorsevenunranked``` Opponent color(s) to accept for even 
+(= 0 handicap) unranked games
+
+```--colorshandicap``` Opponent color(s) to accept for handicap 
+games (default black,white,automatic,random)
+
+```--colorshandicapranked``` Opponent color(s) to accept for handicap 
+ranked games
+
+```--colorshandicapunranked``` Opponent color(s) to accept for handicap 
+unranked games
+
+note that `--colorshandicap` can be particularly useful if 
+you have a very strong bot and you want it to always give 
+handicap stone to any opponent, even if this opponent is 
+higher ranked, see [notes I-](/docs/docs/NOTES.md#i-) for details
+
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
 (default blitz,live,correspondence)

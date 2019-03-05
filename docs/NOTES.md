@@ -99,3 +99,20 @@ note that some gtp2ogs arguments come with a default general value : for the
 same reason, in that case, the default general value will not be taken into 
 account if you set a specific value for ranked and unranked games
 
+#### I :
+
+note 1 : for example, ```--colorshandicap black``` will reject all 
+games where opponent is not color black, which is the same as if 
+the bot is not color white : this is especially useful if you have 
+a very strong bot and if the game is a handicap game (with 1+ stones), 
+then your bot will be able to always give handicap stones to its 
+opponent even if the bot is lower ranked (ex: 5d bot giving 4 stones 
+to a 6d opponent)
+
+note 2 : in the example in the note 1 above, if challenge color 
+chosen by "automatic" or "random" color happen to be black, the 
+bot will still reject challenge because "automatic" (`-1`) and 
+"random" (`null`) are currently not supported by server to display 
+their accurate value ("black" or "white"), same as for automatic 
+handicap (`-1`) and automatic komi (`null`)
+
