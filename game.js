@@ -26,6 +26,7 @@ class Game {
         this.corr_move_pending = false;
         this.processing = false;
         this.handicap_moves = [];    // Handicap stones waiting to be sent when bot is playing black.
+        this.disconnect_timeout = null;
 
         this.scheduleRetry = this.scheduleRetry.bind(this);
 
@@ -454,9 +455,9 @@ class Game {
             this.ensureBotKilled();
         }
 
-        if (!this.conn.disconnect_timeout) {
+        if (!this.disconnect_timeout) {
             console.log("Starting disconnect Timeout in Game " + this.game_id + " gameOver()");
-            this.conn.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
+            this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
         }
     } /* }}} */
     header() { /* {{{ */
