@@ -18,27 +18,27 @@ exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_ranked_users = {};
 exports.banned_unranked_users = {};
-exports.allowed_sizes = [];
-exports.allow_all_sizes = false;
-exports.allow_custom_sizes = false;
-exports.allowed_custom_boardsizewidth = [];
-exports.allowed_custom_boardsizeheight = [];
-exports.allowed_sizes_ranked = [];
-exports.allow_all_sizes_ranked = false;
-exports.allow_custom_sizes_ranked = false;
-exports.allowed_custom_boardsizewidth_ranked = [];
-exports.allowed_custom_boardsizeheight_ranked = [];
-exports.allowed_sizes_unranked = [];
-exports.allow_all_sizes_unranked = false;
-exports.allow_custom_sizes_unranked = false;
-exports.allowed_custom_boardsizewidth_unranked = [];
-exports.allowed_custom_boardsizeheight_unranked = [];
-exports.allow_all_komi = false;
-exports.allowed_komi = [];
-exports.allow_all_komi_ranked = false;
-exports.allowed_komi_ranked = [];
-exports.allow_all_komi_unranked = false;
-exports.allowed_komi_unranked = [];
+exports.allowed_boardsizes = [];
+exports.allow_all_boardsizes = false;
+exports.allow_custom_boardsizes = false;
+exports.allowed_custom_boardsizewidths = [];
+exports.allowed_custom_boardsizeheights = [];
+exports.allowed_boardsizes_ranked = [];
+exports.allow_all_boardsizes_ranked = false;
+exports.allow_custom_boardsizes_ranked = false;
+exports.allowed_custom_boardsizewidths_ranked = [];
+exports.allowed_custom_boardsizeheights_ranked = [];
+exports.allowed_boardsizes_unranked = [];
+exports.allow_all_boardsizes_unranked = false;
+exports.allow_custom_boardsizes_unranked = false;
+exports.allowed_custom_boardsizewidths_unranked = [];
+exports.allowed_custom_boardsizeheights_unranked = [];
+exports.allow_all_komis = false;
+exports.allowed_komis = [];
+exports.allow_all_komis_ranked = false;
+exports.allowed_komis_ranked = [];
+exports.allow_all_komis_unranked = false;
+exports.allowed_komis_unranked = [];
 exports.allowed_speeds = {};
 exports.allowed_speeds_ranked = {};
 exports.allowed_speeds_unranked = {};
@@ -86,56 +86,56 @@ exports.updateFromArgv = function() {
         // behaviour : 2. when you want to add a customized reject message, do it like that for example :
         // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
-        .describe('boardsize', 'Board size(s) to accept')
-        .string('boardsize')
-        .default('boardsize', '9,13,19')
-        .describe('boardsizeranked', 'Board size(s) to accept for ranked games')
-        .string('boardsizeranked')
-        .describe('boardsizeunranked', 'Board size(s) to accept for unranked games')
-        .string('boardsizeunranked')
-        .describe('boardsizewidth', 'For custom board size(s), specify boardsize width to accept, for example 25')
-        .string('boardsizewidth')
-        .describe('boardsizeheight', 'For custom board size(s), specify boardsize height to accept, for example 1')
-        .string('boardsizeheight')
-        .describe('boardsizewidthranked', 'For custom board size(s), specify boardsize width to accept for ranked games, for example 25')
-        .string('boardsizewidthranked')
-        .describe('boardsizeheightranked', 'For custom board size(s), specify boardsize height to accept for ranked games, for example 1')
-        .string('boardsizeheightranked')
-        .describe('boardsizewidthunranked', 'For custom board size(s), specify boardsize width to accept for unranked games, for example 25')
-        .string('boardsizewidthunranked')
-        .describe('boardsizeheightunranked', 'For custom board size(s), specify boardsize height to accept for unranked games, for example 1')
-        .string('boardsizeheightunranked')
-        // behaviour : --boardsize can be specified as 
+        .describe('bans', 'Comma separated list of usernames or IDs')
+        .string('bans')
+        .describe('bansranked', 'Comma separated list of usernames or IDs')
+        .string('bansranked')
+        .describe('bansunranked', 'Comma separated list of usernames or IDs')
+        .string('bansunranked')
+        .describe('boardsizes', 'Board size(s) to accept')
+        .string('boardsizes')
+        .default('boardsizes', '9,13,19')
+        .describe('boardsizesranked', 'Board size(s) to accept for ranked games')
+        .string('boardsizesranked')
+        .describe('boardsizesunranked', 'Board size(s) to accept for unranked games')
+        .string('boardsizesunranked')
+        .describe('boardsizewidths', 'For custom board sizes, specify boardsize width(s) to accept, for example 25')
+        .string('boardsizewidths')
+        .describe('boardsizeheights', 'For custom board sizes, specify boardsize height(s) to accept, for example 1')
+        .string('boardsizeheights')
+        .describe('boardsizewidthsranked', 'For custom board sizes, specify boardsize width(s) to accept for ranked games, for example 25')
+        .string('boardsizewidthsranked')
+        .describe('boardsizeheightsranked', 'For custom board sizes, specify boardsize height(s) to accept for ranked games, for example 1')
+        .string('boardsizeheightsranked')
+        .describe('boardsizewidthsunranked', 'For custom board sizes, specify boardsize width(s) to accept for unranked games, for example 25')
+        .string('boardsizewidthsunranked')
+        .describe('boardsizeheightsunranked', 'For custom board sizes, specify boardsize height(s) to accept for unranked games, for example 1')
+        .string('boardsizeheightsunranked')
+        // behaviour : --boardsizes can be specified as 
         // "custom" (allows board with custom size width x height),
         // "all" (allows ALL boardsizes), 
         // or for square boardsizes only (same width x height) comma separated list of explicit values.
         // The default is "9,13,19" (square board sizes only), see README for details
-        .describe('komi', 'Allowed komi values')
-        .string('komi')
-        .default('komi', 'automatic')
-        .describe('komiranked', 'Allowed komi values for ranked games')
-        .string('komiranked')
-        .describe('komiunranked', 'Allowed komi values for unranked games')
-        .string('komiunranked')
-        // behaviour: --komi may be specified as 
+        .describe('komis', 'Allowed komi values')
+        .string('komis')
+        .default('komis', 'automatic')
+        .describe('komisranked', 'Allowed komi values for ranked games')
+        .string('komisranked')
+        .describe('komisunranked', 'Allowed komi values for unranked games')
+        .string('komisunranked')
+        // behaviour: --komis may be specified as 
         // "automatic" (accept automatic komi)
         // "all" (accept all komi values), 
         // or comma separated list of explicit values.
         // The default is "automatic", see README and OPTIONS-LIST for details
-        .describe('ban', 'Comma separated list of user names or IDs')
-        .string('ban')
-        .describe('banranked', 'Comma separated list of user names or IDs')
-        .string('banranked')
-        .describe('banunranked', 'Comma separated list of user names or IDs')
-        .string('banunranked')
-        .describe('speed', 'Game speed(s) to accept')
-        .default('speed', 'blitz,live,correspondence')
-        .describe('speedranked', 'Game speed(s) to accept for ranked games')
-        .describe('speedunranked', 'Game speed(s) to accept for unranked games')
-        .describe('timecontrol', 'Time control(s) to accept')
-        .default('timecontrol', 'fischer,byoyomi,simple,canadian')
-        .describe('timecontrolranked', 'Time control(s) to accept for ranked games')
-        .describe('timecontrolunranked', 'Time control(s) to accept for unranked games')
+        .describe('speeds', 'Game speed(s) to accept')
+        .default('speeds', 'blitz,live,correspondence')
+        .describe('speedsranked', 'Game speed(s) to accept for ranked games')
+        .describe('speedsunranked', 'Game speed(s) to accept for unranked games')
+        .describe('timecontrols', 'Time control(s) to accept')
+        .default('timecontrols', 'fischer,byoyomi,simple,canadian')
+        .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
+        .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
         // 1- for "absolute", bot admin can allow absolute if want, but then 
         // make sure to increase minmaintimeblitz and minmaintimelive to high values
         // 2 - "none" is not default, can be manually allowed in timecontrol argument
@@ -261,12 +261,13 @@ exports.updateFromArgv = function() {
     // console : warnings //
 
     // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsize", "komi", "speed", "timecontrol", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
+    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
+// --bans --bansranked --bansunranked are an exception, do not include here
 
     function checkThreeSameTimeFamily() {
         for (let e of familyArgs) {
             let familyToTest = familyArrayFromGeneralArg(e);
-            // for example ["komi", "komiranked", "komiunranked"];
+            // for example ["komis", "komisranked", "komisunranked"];
             if ((argv[familyToTest[0]]) && ((argv[familyToTest[1]]) || (argv[familyToTest[2]]))) {
                 console.log(`Warning: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR --${familyToTest[1]} with --${familyToTest[2]}.\nBut don't use the 3 ${familyToTest[0]} arguments at the same time.`);
             }
@@ -278,7 +279,7 @@ exports.updateFromArgv = function() {
 
     // B - warning : avoid infinite games
     if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpaustime and co gets implemented, replace with "are likely to last for a long time"
+        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpausetime and co gets implemented, replace with "are likely to last for a long time"
     }
 
     // C - warning : check deprecated features    
@@ -312,13 +313,34 @@ exports.updateFromArgv = function() {
         ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
         ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
         ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
-        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"]
+        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
+        ["ban", "bans"],
+        ["banranked", "bansranked"],
+        ["banunranked", "bansunranked"],
+        ["boardsize", "boardsizes"],
+        ["boardsizeranked", "boardsizesranked"],
+        ["boardsizeunranked", "boardsizesunranked"],
+        ["boardsizewidth", "boardsizewidths"],
+        ["boardsizewidthranked", "boardsizewidthsranked"],
+        ["boardsizewidthunranked", "boardsizewidthsunranked"],
+        ["boardsizeheight", "boardsizeheights"],
+        ["boardsizeheightranked", "boardsizeheightsranked"],
+        ["boardsizeheightunranked", "boardsizeheightsunranked"],
+        ["komi", "komis"],
+        ["komiranked", "komisranked"],
+        ["komiunranked", "komisunranked"],
+        ["speed", "speeds"],
+        ["speedranked", "speedsranked"],
+        ["speedunranked", "speedsunranked"],
+        ["timecontrol", "timecontrols"],
+        ["timecontrolranked", "timecontrolsranked"],
+        ["timecontrolunranked", "timecontrolsunranked"]
         ]
     deprecatedArgs.forEach(ar => testDeprecated(...ar))
 
     for (let e of familyArrayFromGeneralArg("komi")) {
         if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
-        // for example if argv[komiranked]
+        // for example if argv[komisranked]
             if (argv[e].split(",").includes("auto")) {
             // we need to split the argv value into an array before the includes test
                 console.log(`Warning: /--${e} auto/ is no longer supported, use /--${e} automatic/ instead`);
@@ -383,20 +405,20 @@ exports.updateFromArgv = function() {
         return false;
     }
 
-    if (argv.ban) {
-        for (let i of argv.ban.split(',')) {
+    if (argv.bans) {
+        for (let i of argv.bans.split(',')) {
             exports.banned_users[i] = true;
         }
     }
 
-    if (argv.banranked) {
-        for (let i of argv.banranked.split(',')) {
+    if (argv.bansranked) {
+        for (let i of argv.bansranked.split(',')) {
             exports.banned_ranked_users[i] = true;
         }
     }
 
-    if (argv.banunranked) {
-        for (let i of argv.banunranked.split(',')) {
+    if (argv.bansunranked) {
+        for (let i of argv.bansunranked.split(',')) {
             exports.banned_unranked_users[i] = true;
         }
     }
@@ -530,127 +552,127 @@ exports.updateFromArgv = function() {
         }
     }
 
-    if (argv.boardsize) {
-        for (let boardsize of argv.boardsize.split(',')) {
+    if (argv.boardsizes) {
+        for (let boardsize of argv.boardsizes.split(',')) {
             if (boardsize === "all") {
-                exports.allow_all_sizes = true;
+                exports.allow_all_boardsizes = true;
             } else if (boardsize === "custom") {
-                exports.allow_custom_sizes = true;
-                for (let boardsizewidth of argv.boardsizewidth.split(',')) {
-                    exports.allowed_custom_boardsizewidth[boardsizewidth] = true;
+                exports.allow_custom_boardsizes = true;
+                for (let boardsizewidth of argv.boardsizewidths.split(',')) {
+                    exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
                 }
-                for (let boardsizeheight of argv.boardsizeheight.split(',')) {
-                    exports.allowed_custom_boardsizeheight[boardsizeheight] = true;
+                for (let boardsizeheight of argv.boardsizeheights.split(',')) {
+                    exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
                 }
             } else {
-                exports.allowed_sizes[boardsize] = true;
+                exports.allowed_boardsizes[boardsize] = true;
             }
         }
     }
 
-    if (argv.boardsizeranked) {
-        for (let boardsizeranked of argv.boardsizeranked.split(',')) {
+    if (argv.boardsizesranked) {
+        for (let boardsizeranked of argv.boardsizesranked.split(',')) {
             if (boardsizeranked === "all") {
-                exports.allow_all_sizes_ranked = true;
+                exports.allow_all_boardsizes_ranked = true;
             } else if (boardsizeranked === "custom") {
-                exports.allow_custom_sizes_ranked = true;
-                for (let boardsizewidthranked of argv.boardsizewidthranked.split(',')) {
-                    exports.allowed_custom_boardsizewidth_ranked[boardsizewidthranked] = true;
+                exports.allow_custom_boardsizes_ranked = true;
+                for (let boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
+                    exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
                 }
-                for (let boardsizeheightranked of argv.boardsizeheightranked.split(',')) {
-                    exports.allowed_custom_boardsizeheight_ranked[boardsizeheightranked] = true;
+                for (let boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
+                    exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
                 }
             } else {
-                exports.allowed_sizes_ranked[boardsizeranked] = true;
+                exports.allowed_boardsizes_ranked[boardsizeranked] = true;
             }
         }
     }
 
-    if (argv.boardsizeunranked) {
-        for (let boardsizeunranked of argv.boardsizeunranked.split(',')) {
+    if (argv.boardsizesunranked) {
+        for (let boardsizeunranked of argv.boardsizesunranked.split(',')) {
             if (boardsizeunranked === "all") {
-                exports.allow_all_sizes_unranked = true;
+                exports.allow_all_boardsizes_unranked = true;
             } else if (boardsizeunranked === "custom") {
-                exports.allow_custom_sizes_unranked = true;
-                for (let boardsizewidthunranked of argv.boardsizewidthunranked.split(',')) {
-                    exports.allowed_custom_boardsizewidth_unranked[boardsizewidthunranked] = true;
+                exports.allow_custom_boardsizes_unranked = true;
+                for (let boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
+                    exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
                 }
-                for (let boardsizeheightunranked of argv.boardsizeheightunranked.split(',')) {
-                    exports.allowed_custom_boardsizeheight_unranked[boardsizeheightunranked] = true;
+                for (let boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
+                    exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
                 }
             } else {
-                exports.allowed_sizes_unranked[boardsizeunranked] = true;
+                exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
             }
         }
     }
 
-    if (argv.komi) {
-        for (let komi of argv.komi.split(',')) {
+    if (argv.komis) {
+        for (let komi of argv.komis.split(',')) {
             if (komi === "all") {
-                exports.allow_all_komi = true;
+                exports.allow_all_komis = true;
             } else if (komi === "automatic") {
-                exports.allowed_komi[null] = true;
+                exports.allowed_komis[null] = true;
             } else {
-                exports.allowed_komi[komi] = true;
+                exports.allowed_komis[komi] = true;
             }
         }
     }
 
-    if (argv.komiranked) {
-        for (let komiranked of argv.komiranked.split(',')) {
+    if (argv.komisranked) {
+        for (let komiranked of argv.komisranked.split(',')) {
             if (komiranked === "all") {
-                exports.allow_all_komi_ranked = true;
+                exports.allow_all_komis_ranked = true;
             } else if (komiranked === "automatic") {
-                exports.allowed_komi_ranked[null] = true;
+                exports.allowed_komis_ranked[null] = true;
             } else {
-                exports.allowed_komi_ranked[komiranked] = true;
+                exports.allowed_komis_ranked[komiranked] = true;
             }
         }
     }
 
-    if (argv.komiunranked) {
-        for (let komiunranked of argv.komiunranked.split(',')) {
+    if (argv.komisunranked) {
+        for (let komiunranked of argv.komisunranked.split(',')) {
             if (komiunranked === "all") {
-                exports.allow_all_komi_unranked = true;
+                exports.allow_all_komis_unranked = true;
             } else if (komiunranked === "automatic") {
-                exports.allowed_komi_unranked[null] = true;
+                exports.allowed_komis_unranked[null] = true;
             } else {
-                exports.allowed_komi_unranked[komiunranked] = true;
+                exports.allowed_komis_unranked[komiunranked] = true;
             }
         }
     }
 
-    if (argv.speed) {
-        for (let i of argv.speed.split(',')) {
+    if (argv.speeds) {
+        for (let i of argv.speeds.split(',')) {
             exports.allowed_speeds[i] = true;
         }
     }
 
-    if (argv.speedranked) {
-        for (let i of argv.speedranked.split(',')) {
+    if (argv.speedsranked) {
+        for (let i of argv.speedsranked.split(',')) {
             exports.allowed_speeds_ranked[i] = true;
         }
     }
 
-    if (argv.speedunranked) {
-        for (let i of argv.speedunranked.split(',')) {
+    if (argv.speedsunranked) {
+        for (let i of argv.speedsunranked.split(',')) {
             exports.allowed_speeds_unranked[i] = true;
         }
     }
 
-    if (argv.timecontrol) {
-        for (let i of argv.timecontrol.split(',')) {
+    if (argv.timecontrols) {
+        for (let i of argv.timecontrols.split(',')) {
             exports.allowed_timecontrols[i] = true;
         }
     }
 
-    if (argv.timecontrolranked) {
-        for (let i of argv.timecontrolranked.split(',')) {
+    if (argv.timecontrolsranked) {
+        for (let i of argv.timecontrolsranked.split(',')) {
             exports.allowed_timecontrols_ranked[i] = true;
         }
     }
 
-    if (argv.timecontrolunranked) {
+    if (argv.timecontrolsunranked) {
         for (let i of argv.timecontrolunranked.split(',')) {
             exports.allowed_timecontrols_unranked[i] = true;
         }

@@ -382,7 +382,7 @@ class Connection {
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
 
-        // for all the allowed_family options below (timecontrols, speeds, komi, boardsizes) 
+        // for all the allowed_family options below (timecontrols, speeds, komis, boardsizes) 
         // we need to add a "family guard" 
         // && config.familyranked for ranked games 
         // && config.familyunranked for unranked games
@@ -391,71 +391,71 @@ class Connection {
         /******** begining of BOARDSIZES *********/
         // for square board sizes only //
         /* if not square*/
-        if (notification.width !== notification.height && !config.allow_all_sizes && !config.allow_custom_sizes && !config.boardsizeranked && !config.boardsizeunranked) {
+        if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
             conn_log("board was not square, not allowed");
             return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if (notification.width !== notification.height && !config.allow_all_sizes_ranked && !config.allow_custom_sizes_ranked && notification.ranked) {
+        if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
             conn_log("board was not square, not allowed for ranked games");
             return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for ranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
-        if (notification.width !== notification.height && !config.allow_all_sizes_unranked && !config.allow_custom_sizes_unranked && !notification.ranked) {
+        if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
             conn_log("board was not square, not allowed for unranked games");
             return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for unranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
         }
 
         /* if square, check if square board size is allowed*/
-        if (!config.allowed_sizes[notification.width] && !config.allow_all_sizes && !config.allow_custom_sizes && !config.boardsizeranked && !config.boardsizeunranked) {
-            let boardsizeSquareString = config.boardsize;
+        if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
+            let boardsizeSquareString = config.boardsizes;
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed board sizes " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
-        if (!config.allowed_sizes_ranked[notification.width] && !config.allow_all_sizes_ranked && !config.allow_custom_sizes_ranked && notification.ranked && config.boardsizeranked) {
-            let boardsizeSquareString = config.boardsizeranked;
+        if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
+            let boardsizeSquareString = config.boardsizesranked;
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for ranked games");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for ranked games, please choose one of these allowed board sizes for ranked games : " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
-        if (!config.allowed_sizes_unranked[notification.width] && !config.allow_all_sizes_unranked && !config.allow_custom_sizes_unranked && !notification.ranked  && config.boardsizeunranked) {
-            let boardsizeSquareString = config.boardsizeunranked;
+        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked  && config.boardsizesunranked) {
+            let boardsizeSquareString = config.boardsizesunranked;
             conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for unranked games");
             return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for unranked games, please choose one of these allowed board sizes for unranked games " + boardsizeSquareToDisplayString(boardsizeSquareString)};
         }
 
         // for custom board sizes, including square board sizes if width === height as well //
         /* if custom, check width */
-        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizewidth[notification.width] && !config.boardsizewidthranked && !config.boardsizewidthunranked) {
+        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizewidths[notification.width] && !config.boardsizewidthsranked && !config.boardsizewidthsunranked) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + config.boardsizewidth };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + config.boardsizewidths };
         }
 
-        if (!config.allow_all_sizes_ranked && config.allow_custom_sizes_ranked && !config.allowed_custom_boardsizewidth_ranked[notification.width] && notification.ranked && config.boardsizewidthranked) {
+        if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width for ranked games");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board WIDTH values for ranked games : " + config.boardsizewidthranked };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board WIDTH values for ranked games : " + config.boardsizewidthsranked };
         }
 
-        if (!config.allow_all_sizes_unranked && config.allow_custom_sizes_unranked && !config.allowed_custom_boardsizewidth_unranked[notification.width] && !notification.ranked && config.boardsizewidthunranked) {
+        if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
             conn_log("custom board width " + notification.width + " is not an allowed custom board width for unranked games");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board WIDTH values for unranked games : " + config.boardsizewidthunranked };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board WIDTH values for unranked games : " + config.boardsizewidthsunranked };
         }
 
         /* if custom, check height */
-        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && !config.boardsizeheightranked && !config.boardsizeheightunranked) {
+        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !config.boardsizeheightsranked && !config.boardsizeheightsunranked) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheight };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheights };
         }
 
-        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && notification.ranked && config.boardsizeheightranked) {
+        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height for ranked games ");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board HEIGHT values for ranked games: " + config.boardsizeheight };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board HEIGHT values for ranked games: " + config.boardsizeheights };
         }
 
-        if (!config.allow_all_sizes && config.allow_custom_sizes && !config.allowed_custom_boardsizeheight[notification.height] && !notification.ranked && config.boardsizeheightunranked) {
+        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
             conn_log("custom board height " + notification.height + " is not an allowed custom board height for unranked games ");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board HEIGHT values for unranked games: " + config.boardsizeheight };
+            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board HEIGHT values for unranked games: " + config.boardsizeheights };
         }
         /******** end of BOARDSIZES *********/
 
@@ -504,68 +504,68 @@ class Connection {
             return { reject: true, msg: "Maximum handicap for unranked games is " + config.maxhandicapunranked + " , please increase the number of handicap stones" };
         }
 
-        if (!config.allowed_komi[notification.komi] && !config.allow_all_komi && !config.komiranked && !config.komiunranked) {
+        if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
             let notificationKomiString = "";
             if (notification.komi === null) {
                 notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
             }
-            conn_log("komi value " + notificationKomiString + " is not allowed, allowed komi are: " + config.komi);
-            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed, please choose one of these allowed komi : " + config.komi};
+            conn_log("komi value " + notificationKomiString + " is not allowed, allowed komis are: " + config.komis);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed, please choose one of these allowed komis : " + config.komis};
         }
 
-        if (!config.allowed_komi_ranked[notification.komi] && notification.ranked && !config.allow_all_komi_ranked && config.komiranked) {
+        if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
             let notificationKomiString = "";
             if (notification.komi === null) {
                 notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
             }
-            conn_log("komi value " + notificationKomiString + " is not allowed for ranked games, allowed komi for ranked games are: " + config.komiranked);
-            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for ranked games, please choose one of these allowed komi for ranked games: " + config.komiranked};
+            conn_log("komi value " + notificationKomiString + " is not allowed for ranked games, allowed komis for ranked games are: " + config.komisranked);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for ranked games, please choose one of these allowed komis for ranked games: " + config.komisranked};
         }
 
-        if (!config.allowed_komi_unranked[notification.komi] && !notification.ranked && !config.allow_all_komi_unranked && config.komiunranked) {
+        if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
             let notificationKomiString = "";
             if (notification.komi === null) {
                 notificationKomiString = "automatic";
             } else {
                 notificationKomiString = notification.komi;
             }
-            conn_log("komi value " + notificationKomiString + " is not allowed for unranked games, allowed komi for unranked games are: " + config.komiunranked);
-            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for unranked games, please choose one of these allowed komi for unranked games: " + config.komiunranked};
+            conn_log("komi value " + notificationKomiString + " is not allowed for unranked games, allowed komis for unranked games are: " + config.komisunranked);
+            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for unranked games, please choose one of these allowed komis for unranked games: " + config.komisunranked};
         }
 
-        if (!config.allowed_speeds[t.speed] && !config.speedranked && !config.speedunranked) {
-            conn_log(user.username + " wanted speed " + t.speed + ", not in: " + config.speed);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speed};
+        if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {
+            conn_log(user.username + " wanted speed " + t.speed + ", not in: " + config.speeds);
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speeds};
         }
 
-        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedranked) {
-            conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedranked);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedranked};
+        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedsranked) {
+            conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedsranked);
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedsranked};
         }
 
-        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedunranked) {
-            conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedunranked);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedunranked};
+        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedsunranked) {
+            conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedsunranked);
+            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedsunranked};
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
-        if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolranked && !config.timecontrolunranked) { 
-            conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + config.timecontrol);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrol };
+        if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
+            conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + config.timecontrols);
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrols };
         }
 
-        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolranked) { 
-            conn_log(user.username + " wanted time control for ranked games " + t.time_control + ", not in: " + config.timecontrolranked);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for ranked games, please choose one of these allowed time controls for ranked games : " + config.timecontrolranked };
+        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolsranked) { 
+            conn_log(user.username + " wanted time control for ranked games " + t.time_control + ", not in: " + config.timecontrolsranked);
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for ranked games, please choose one of these allowed time controls for ranked games : " + config.timecontrolsranked };
         }
 
-        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolunranked) { 
-            conn_log(user.username + " wanted time control for unranked games " + t.time_control + ", not in: " + config.timecontrolunranked);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolunranked };
+        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolsunranked) { 
+            conn_log(user.username + " wanted time control for unranked games " + t.time_control + ", not in: " + config.timecontrolsunranked);
+            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolsunranked };
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***

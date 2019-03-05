@@ -150,7 +150,7 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>```
 section. Put a space in between options when there are more than one.
 Also put a space in between the option and the parameter, for example :
 
-  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --ban UserX,playerY --maxperiodsblitzranked 5 --maxperiodsliveranked 10 --maxperiodscorrranked 5```
+  ```--startupbuffer 2 --boardsizes 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --bans UserX,playerY --maxperiodsblitzranked 5 --maxperiodsliveranked 10 --maxperiodscorrranked 5```
 
 **You can find a list of all possible to use gtp2ogs arguments here**
 
@@ -174,9 +174,9 @@ note 2 : if an argument has ranked and unranked in the same "family", use:
 - OR, if you want to specify different settings for ranked and unranked games, use 
 both the ranked and the unranked argument with wanted values, and then don't use the 
 general argument ! (see [notes H-](/docs/NOTES.md#h-) for details)
-- the exception that confirms this rule is `--ban` : since ban is a string, we allow 
-both general value `--ban A,B` AND specific values at the same time too 
-`--banranked X,Y --banunranked Z` , see [Options-List](/docs/OPTIONS-LIST.md) 
+- the exception that confirms this rule is `--bans` : since bans is a string, we allow 
+both general value `--bans A,B` AND specific values at the same time too 
+`--bansranked X,Y --bansunranked Z` , see [Options-List](/docs/OPTIONS-LIST.md) 
 for details
 
 ## Notes :

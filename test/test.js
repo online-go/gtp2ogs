@@ -15,10 +15,10 @@ config.apikey = 'deadbeef';
 config.host = 'test';
 config.port = 80;
 config.username = 'testbot';
-config.allowed_sizes[19] = true;
+config.allowed_boardsizes[19] = true;
+config.allow_all_komis = true;
 config.allowed_speeds['live'] = true;
 config.allowed_timecontrols['fischer'] = true;
-config.allow_all_komi = true;
 config.bot_command = ['gtp-program', '--argument'];
 
 // Fake a socket.io-client
