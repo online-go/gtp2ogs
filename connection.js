@@ -314,43 +314,43 @@ class Connection {
             return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxconnectedgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
-        if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
+        if ((notification.user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
+            let humanReadableUserRank = rankToString(notification.user.ranking);
             let humanReadableMinRank = rankToString(config.minrank);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
             return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + ", your rank is too low." };
         }
 
-        if ((user.ranking < config.minrankranked) && notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
+        if ((notification.user.ranking < config.minrankranked) && notification.ranked) {
+            let humanReadableUserRank = rankToString(notification.user.ranking);
             let humanReadableMinRank = rankToString(config.minrankranked);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min for ranked games is " + humanReadableMinRank);
             return { reject: true, msg: "Minimum rank for ranked games is " + humanReadableMinRank + ", your rank is too low, try unranked game" };
         }
 
-        if ((user.ranking < config.minrankunranked) && !notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
+        if ((notification.user.ranking < config.minrankunranked) && !notification.ranked) {
+            let humanReadableUserRank = rankToString(notification.user.ranking);
             let humanReadableMinRank = rankToString(config.minrankunranked);
             conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min for ranked games is " + humanReadableMinRank);
             return { reject: true, msg: "Minimum rank for unranked games is " + humanReadableMinRank + ", your rank is too low" };
         }
 
-        if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
+        if ((notification.user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
+            let humanReadableUserRank = rankToString(notification.user.ranking);
             let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
             return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + ", your rank is too high." };
         }
 
-        if ((user.ranking > config.maxrankranked) && notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
+        if ((notification.user.ranking > config.maxrankranked) && notification.ranked) {
+            let humanReadableUserRank = rankToString(notification.user.ranking);
             let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max for ranked games is " + humanReadableMaxRank);
             return { reject: true, msg: "Maximum rank for ranked games is " + humanReadableMaxRank + ", your rank is too high, try unranked game" };
         }
 
-        if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
+        if ((notification.user.ranking > config.maxrankunranked) && !notification.ranked) {
+            let humanReadableUserRank = rankToString(notification.user.ranking);
             let humanReadableMaxRank = rankToString(config.maxrank);
             conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max for unranked games is " + humanReadableMaxRank);
             return { reject: true, msg: "Maximum rank for unranked games is " + humanReadableMaxRank + ", your rank is too high" };
