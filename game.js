@@ -454,7 +454,10 @@ class Game {
             this.ensureBotKilled();
         }
 
-        if (!this.conn.disconnect_timeout) this.conn.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
+        if (!this.conn.disconnect_timeout) {
+            console.log("Starting disconnect Timeout in Game " + this.game_id + " gameOver()");
+            this.conn.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
+        }
     } /* }}} */
     header() { /* {{{ */
         if (!this.state)  return;

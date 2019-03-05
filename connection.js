@@ -173,7 +173,10 @@ class Connection {
                 //     on server side: sometimes /gamedata event with game outcome is sent after
                 //     active_game, so it's lost since there's no game to handle it anymore...
                 //     Work around it with a timeout for now.
-                if (!this.disconnect_timeout) this.disconnect_timeout = setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
+                if (!this.disconnect_timeout) {
+                    console.log("Starting disconnect Timeout in Connection active_game for " + gamedata.id);
+                    this.disconnect_timeout = setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
+                }
             }
 
             // Don't connect if it is not our turn.
