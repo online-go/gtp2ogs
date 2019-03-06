@@ -330,7 +330,7 @@ class Game {
 
     scheduleRetry() {
         if (config.DEBUG) {
-            this.log("We may need to move but were not able to. Re-connect to trigger action based on game state.");
+            this.log("Unable to react correctly - re-connect to trigger action based on game state.");
         }
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id,
