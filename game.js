@@ -456,7 +456,7 @@ class Game {
         }
 
         if (!this.disconnect_timeout) {
-            console.log("Starting disconnect Timeout in Game " + this.game_id + " gameOver()");
+            if (config.DEBUG) console.log("Starting disconnect Timeout in Game " + this.game_id + " gameOver()");
             this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
         }
     } /* }}} */
