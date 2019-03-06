@@ -15,8 +15,11 @@ class Bot {
         this.command_callbacks = [];
         this.command_error_callbacks = [];
         this.firstmove = true;
-        this.ignore = false;   // Ignore output from bot ?
-        // Set to true when the bot process has died and needs to be restarted before it can be used again.
+        // Ignore output from bot, don't try to talk to it. Differs from "dead" below in that we don't know that the
+        // process has terminated yet.
+        this.unusable = false;
+        // Set to true when the bot process has died and needs to be restarted before it can be used again. Certainly no
+        // point in trying to talk to it.
         this.dead = false;
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
@@ -26,7 +29,6 @@ class Bot {
             this.proc = child_process.spawn(cmd[0], cmd.slice(1));
         } catch (e) {
             this.log("Failed to start the bot: ", e);
-            this.ignore = true;
             this.dead = true;
             this.failed = true;
             return;
@@ -35,12 +37,12 @@ class Bot {
         if (config.DEBUG) this.log("Starting ", cmd.join(' '));
 
         this.proc.stderr.on('data', (data) => {
-            if (this.ignore)  return;
+            if (this.isUnusable()) return;
             this.error("stderr: " + data);
         });
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
-            if (this.ignore)  return;
+            if (this.isUnusable()) return;
             stdout_buffer += data.toString();
 
             if (config.json) {
@@ -81,17 +83,21 @@ class Bot {
                         ++i;
                         this.log(lines[i]);
                     }
-                    this.failed = true;
                     this.command_callbacks.shift();
                     let eb = this.command_error_callbacks.shift();
-                    if (eb) eb(line.substr(1).trim());
+                    if (eb) {
+                        this.failed = true;
+                        eb(line.substr(1).trim());
+                    }
                 }
                 else {
                     this.log("Unexpected output: ", line);
-                    this.failed = true;
                     this.command_callbacks.shift();
                     let eb = this.command_error_callbacks.shift();
-                    if (eb) eb();
+                    if (eb) {
+                        this.failed = true;
+                        eb();
+                    }
                     //throw new Error("Unexpected output: " + line);
                 }
             }
@@ -100,17 +106,20 @@ class Bot {
             if (config.DEBUG) {
                 this.log('Bot exited');
             }
-            this.command_callbacks.shift();
             this.dead = true;
+            this.command_callbacks.shift();
             let eb = this.command_error_callbacks.shift();
-            if (eb) eb(code);
+            if (eb) {
+                this.failed = true;
+                eb(code);
+            }
         });
         this.proc.stdin.on('error', (code) => {
             if (config.DEBUG) {
                 this.log('Bot stdin write error');
             }
             this.command_callbacks.shift();
-            this.dead = true;
+            this.unusable = true;
             this.failed = true;
             let eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
@@ -332,7 +341,7 @@ class Bot {
     }
     
     loadState(state, cb, eb) { /* {{{ */
-        if (this.dead) {
+        if (this.isUnusable()) {
             if (config.DEBUG) { this.log("Attempting to load dead bot") }
             this.failed = true;
             if (eb) { eb() }
@@ -386,8 +395,8 @@ class Bot {
     } /* }}} */
 
     command(str, cb, eb, final_command) { /* {{{ */
-        if (this.dead) {
-            if (config.DEBUG) { this.log("Attempting to send to dead bot:", str) }
+        if (this.isUnusable()) {
+            if (config.DEBUG) { this.log("Attempting to send a command to dead bot:", str) }
             this.failed = true;
             if (eb) { eb() }
             return;
@@ -415,11 +424,13 @@ class Bot {
                 this.proc.stdin.write(str + "\r\n");
             }
         } catch (e) {
+            // I think this does not normally happen, the exception will usually be raised in the async write handler
+            // and delivered through an 'error' event.
             this.log("Failed to send command: ", str);
             this.log(e);
-            this.dead = true;
             this.failed = true;
             // Already calling the callback!
+            this.command_callbacks.shift();
             this.command_error_callbacks.shift();
             if (eb) eb(e);
         }
@@ -470,14 +481,21 @@ class Bot {
         )
     } /* }}} */
 
+    isUnusable() {
+        return this.dead || this.unusable;
+    }
+
     kill() { /* {{{ */
         this.log("Stopping bot");
-        this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
-        this.dead = true;
-        this.command("quit");
+        if (!this.isUnusable()) {
+            this.command("quit");
+            this.unusable = true;
+        }
         if (this.proc) {
             this.proc.kill();
             setTimeout(() => {
+                // To be 100% sure.
+                if (config.DEBUG) this.log("Killing process directly with a signal")
                 this.proc.kill(9);
             }, 5000);
         }
