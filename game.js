@@ -80,9 +80,13 @@ class Game {
             // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
-            //
+            let gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
             if (this.bot) {
-                this.log("Killing bot because of gamedata packet after bot was started");
+                this.log("Killing bot because of a gamedata change after bot was started");
+                if (config.DEBUG) {
+                    this.log('Previously seen gamedata:', this.state);
+                    this.log('New gamedata:', gamedata);
+                }
                 this.ensureBotKilled();
 
                 if (this.processing) {
