@@ -159,10 +159,7 @@ class Connection {
             } */
 
             if (gamedata.phase === "finished") {
-                if (!(gamedata.id in this.connected_games)) {
-                    // Don't connect to old finished games.
-                    return;
-                } else {
+                if (gamedata.id in this.connected_games) {
                     // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
                     // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
                     // Note: active_game and gamedata events can arrive in either order.
@@ -179,6 +176,9 @@ class Connection {
                             setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
                     }
                 }
+
+                // Don't connect to finished games.
+                return;
             }
 
             // Don't connect if it is not our turn.
