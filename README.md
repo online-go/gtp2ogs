@@ -150,7 +150,7 @@ Then, the following options are placed in the above ```<gtp2ogsarguments>```
 section. Put a space in between options when there are more than one.
 Also put a space in between the option and the parameter, for example :
 
-  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --ban UserX,playerY ---maxperiodsranked 5```
+  ```--startupbuffer 2 --boardsize 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --ban UserX,playerY --maxperiodsblitzranked 5 --maxperiodsliveranked 10 --maxperiodscorrranked 5```
 
 **You can find a list of all possible to use gtp2ogs arguments here**
 

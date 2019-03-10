@@ -611,7 +611,7 @@ class Connection {
             // (we have sanity checks just in case)
             // 1) simple time doesn't have a main time, only a period time, so we let it slide 
             // from maintime rejects
-            // 2) fischer : doesnt have a minperiods or maxperiods
+            // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
             // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
             // 4) while using gedit "find and replace", make sure you dont replace
             // t.max_time to t.min_time ! (it doesnt exist !)
@@ -986,35 +986,94 @@ class Connection {
         ///// version 2.3 for maintimes
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
 
-
-        if (config.minperiods && (t.periods < config.minperiods) && !config.minperiodsranked && !config.minperiodsunranked) {
-            conn_log(user.username + " wanted too few periods: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods is " + config.minperiods + " , please increase the number of periods" };
+        if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
+            conn_log(user.username + " wanted too few periods blitz: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for blitz games is " + config.minperiodsblitz + ", please increase the number of periods" };
         }
 
-        if (config.minperiodsranked && (t.periods < config.minperiodsranked) && notification.ranked) {
-            conn_log(user.username + " wanted too few periods ranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for ranked games is " + config.minperiodsranked + " , please increase the number of periods" };
+        if (config.minperiodsblitzranked && (t.periods < config.minperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
+            conn_log(user.username + " wanted too few periods blitz ranked: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for blitz ranked games is " + config.minperiodsblitzranked + ", please increase the number of periods" };
         }
 
-        if (config.minperiodsunranked && (t.periods < config.minperiodsunranked) && !notification.ranked) {
-            conn_log(user.username + " wanted too few periods unranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for unranked games is " + config.minperiodsunranked + " , please increase the number of periods" };
+        if (config.minperiodsblitzunranked && (t.periods < config.minperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
+            conn_log(user.username + " wanted too few periods blitz unranked: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for blitz unranked games is " + config.minperiodsblitzunranked + ", please increase the number of periods" };
         }
 
-        if (config.maxperiods && (t.periods > config.maxperiods) && !config.maxperiodsranked && !config.maxperiodsunranked) {
-            conn_log(user.username + " wanted too many periods: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods is " + config.maxperiods + " , please reduce the number of periods" };
+        if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
+            conn_log(user.username + " wanted too many periods blitz: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for blitz games is " + config.maxperiodsblitz + ", please reduce the number of periods" };
         }
 
-        if (config.maxperiodsranked && (t.periods > config.maxperiodsranked) && notification.ranked) {
-            conn_log(user.username + " wanted too many periods ranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for ranked games is " + config.maxperiodsranked + " , please reduce the number of periods" };
+        if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
+            conn_log(user.username + " wanted too many periods blitz ranked: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for blitz ranked games is " + config.maxperiodsblitzranked + ", please reduce the number of periods" };
         }
 
-        if (config.maxperiodsunranked && (t.periods > config.maxperiodsunranked) && !notification.ranked) {
-            conn_log(user.username + " wanted too many periods unranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for unranked games is " + config.maxperiodsunranked + " , please reduce the number of periods" };
+        if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
+            conn_log(user.username + " wanted too many periods blitz unranked: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for blitz unranked games is " + config.maxperiodsblitzunranked + ", please reduce the number of periods" };
+        }
+
+        if (config.minperiodslive && (t.periods < config.minperiodslive) && t.speed === "live" && !config.minperiodsliveranked && !config.minperiodsliveunranked) {
+            conn_log(user.username + " wanted too few periods live: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for live games is " + config.minperiodslive + ", please increase the number of periods" };
+        }
+
+        if (config.minperiodsliveranked && (t.periods < config.minperiodsliveranked) && t.speed === "live" && notification.ranked) {
+            conn_log(user.username + " wanted too few periods live ranked: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for live ranked games is " + config.minperiodsliveranked + ", please increase the number of periods" };
+        }
+
+        if (config.minperiodsliveunranked && (t.periods < config.minperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
+            conn_log(user.username + " wanted too few periods live unranked: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for live unranked games is " + config.minperiodsliveunranked + ", please increase the number of periods" };
+        }
+
+        if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
+            conn_log(user.username + " wanted too many periods live: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for live games is " + config.maxperiodslive + ", please reduce the number of periods" };
+        }
+
+        if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
+            conn_log(user.username + " wanted too many periods live ranked: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for live ranked games is " + config.maxperiodsliveranked + ", please reduce the number of periods" };
+        }
+
+        if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
+            conn_log(user.username + " wanted too many periods live unranked: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for live unranked games is " + config.maxperiodsliveunranked + ", please reduce the number of periods" };
+        }
+
+        if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
+            conn_log(user.username + " wanted too few periods corr: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for correspondence games is " + config.minperiodscorr + ", please increase the number of periods" };
+        }
+
+        if (config.minperiodscorrranked && (t.periods < config.minperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
+            conn_log(user.username + " wanted too few periods corr ranked: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for correspondence ranked games is " + config.minperiodscorrranked + ", please increase the number of periods" };
+        }
+
+        if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
+            conn_log(user.username + " wanted too few periods corr unranked: " + t.periods);
+            return { reject: true, msg: "Minimum number of periods for correspondence unranked games is " + config.minperiodscorrunranked + ", please increase the number of periods" };
+        }
+
+        if (config.maxperiodscorr && (t.periods > config.maxperiodscorr) && t.speed === "correspondence" && !config.maxperiodscorrranked && !config.maxperiodscorrunranked) {
+            conn_log(user.username + " wanted too many periods corr: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for correspondence games is " + config.maxperiodscorr + ", please reduce the number of periods" };
+        }
+
+        if (config.maxperiodscorrranked && (t.periods > config.maxperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
+            conn_log(user.username + " wanted too many periods corr ranked: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for correspondence ranked games is " + config.maxperiodscorrranked + ", please reduce the number of periods" };
+        }
+
+        if (config.maxperiodscorrunranked && (t.periods > config.maxperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
+            conn_log(user.username + " wanted too many periods corr unranked: " + t.periods);
+            return { reject: true, msg: "Maximum number of periods for correspondence unranked games is " + config.maxperiodscorrunranked + ", please reduce the number of periods" };
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -1054,7 +1113,7 @@ class Connection {
             // (we have sanity checks just in case)
             // 1) simple time doesn't have a main time, only a period time, so we let it slide 
             // from maintime rejects
-            // 2) fischer : doesnt have a minperiods or maxperiods
+            // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
             // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
             // 4) while using gedit "find and replace", make sure you dont replace
             // t.max_time to t.min_time ! (it doesnt exist !)

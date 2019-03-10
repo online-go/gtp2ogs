@@ -252,18 +252,60 @@ correspondence ranked games
 correspondence unranked games 
 
 #### minperiods
-  ```--minperiods``` Minimum number of periods (default 3)
+  ```--minperiodsblitz``` Minimum number of periods for 
+blitz games (default 3)
 
-  ```--minperiodsranked``` Minimum number of ranked periods
+  ```--minperiodsblitzranked``` Minimum number of periods 
+for blitz ranked games
 
-  ```--minperiodsunranked``` Minimum number of unranked periods
+  ```--minperiodsblitzunranked``` Minimum number of periods 
+for blitz unranked games
+
+  ```--minperiodslive``` Minimum number of periods for 
+live games (default 3)
+
+  ```--minperiodsliveranked``` Minimum number of periods 
+for live ranked games
+
+  ```--minperiodsliveunranked``` Minimum number of periods 
+for live unranked games
+
+  ```--minperiodscorr``` Minimum number of periods for 
+correspondence games (default 3)
+
+  ```--minperiodscorrranked``` Minimum number of periods 
+for correspondence ranked games
+
+  ```--minperiodscorrunranked``` Minimum number of periods 
+for correspondence unranked games
 
 #### maxperiods
-  ```--maxperiods``` Maximum number of periods (default 20)
+  ```--maxperiodsblitz``` Maximum number of periods for 
+blitz games (default 20)
 
-  ```--maxperiodsranked``` Maximum number of ranked periods
+  ```--maxperiodsblitzranked``` Maximum number of periods 
+for blitz ranked games
 
-  ```--maxperiodsunranked``` Maximum number of unranked periods
+  ```--maxperiodsblitzunranked``` Maximum number of periods 
+for blitz unranked games
+
+  ```--maxperiodslive``` Maximum number of periods for 
+live games (default 20)
+
+  ```--maxperiodsliveranked``` Maximum number of periods 
+for live ranked games
+
+  ```--maxperiodsliveunranked``` Maximum number of periods 
+for live unranked games
+
+  ```--maxperiodscorr``` Maximum number of periods for 
+correspondence games (default 10)
+
+  ```--maxperiodscorrranked``` Maximum number of periods 
+for correspondence ranked games
+
+  ```--maxperiodscorrunranked``` Maximum number of periods 
+for correspondence unranked games
 
 #### minperiodtime
  For period times below, if timecontrol is canadian, divide the period 
