@@ -290,11 +290,11 @@ class Connection {
         if (config.banned_users[user.username] || config.banned_users[user.id]) {
             conn_log(user.username + " (" + user.id + ") is banned, rejecting challenge");
             return { reject: true };
-        } else if (notification.ranked && (config.banned_ranked_users[user.username] || config.banned_ranked_users[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from ranked, rejecting challenge");
+        } else if (notification.ranked && (config.banned_users_ranked[user.username] || config.banned_users_ranked[user.id])) {
+            conn_log(user.username + " (" + user.id + ") is banned from ranked games, rejecting challenge");
             return { reject: true };
-        } else if (!notification.ranked && (config.banned_unranked_users[user.username] || config.banned_unranked_users[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from unranked, rejecting challenge");
+        } else if (!notification.ranked && (config.banned_users_unranked[user.username] || config.banned_users_unranked[user.id])) {
+            conn_log(user.username + " (" + user.id + ") is banned from unranked games, rejecting challenge");
             return { reject: true };
         }
 
@@ -388,11 +388,16 @@ class Connection {
             return { reject: true, msg: "This bot accepts Unranked games only. " };
         }
 
-        // for all the allowed_family options below (timecontrols, speeds, komis, boardsizes) 
+        // for all the allowed_family options below 
+        // (boardsizes, komis, timecontrols, speeds) 
         // we need to add a "family guard" 
         // && config.familyranked for ranked games 
         // && config.familyunranked for unranked games
         // else the allowed_ is always false and always rejects
+        // note : the exception to that rule is the banned_ family :
+        // for banned_ , it is possible to use 
+        // --bans and/or --bansranked and/or --bansunranked
+        // all at the same time if bot admin wants
 
         /******** begining of BOARDSIZES *********/
         // for square board sizes only //

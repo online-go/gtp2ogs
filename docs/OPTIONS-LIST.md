@@ -91,10 +91,10 @@ file exists (checked each time, can use for load-balancing)
 (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
   ```--bansranked``` Comma separated list of user names or IDs who 
-are banned from playing ranked games
+are banned from ranked games
 
   ```--bansunranked``` Comma separated list of user names or IDs who 
-are banned from playing unranked game
+are banned from unranked games
 
 The "bans" arguments are an exception to the general rule of using only general 
 argument alone, or specific ranked/unranked instead :
