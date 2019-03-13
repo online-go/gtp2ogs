@@ -421,12 +421,20 @@ Thank you message to appear in chat at end of game (ex: "Thank you for playing")
 
   ```--minhandicapunranked``` Min handicap for unranked games
 
+**important note** : until the min/max bypass issue is fixed, it is 
+recommended to use `--noautohandicap` as well, see 
+[#165](https://github.com/online-go/gtp2ogs/pull/165) for details
+
 #### maxhandicap
   ```--maxhandicap```  Max handicap for all games
 
   ```--maxhandicapranked``` Max handicap for ranked games
 
   ```--maxhandicapunranked``` Max handicap for unranked games
+
+**important note** : until the min/max bypass issue is fixed, it is 
+recommended to use `--noautohandicap` as well, see 
+[#165](https://github.com/online-go/gtp2ogs/pull/165) for details
   
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
