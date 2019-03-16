@@ -86,55 +86,75 @@ if your bot is busy playing a tournament, etc...)
   ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
 
-#### boardsize
-  ```--boardsize``` Board size(s) to accept
+#### bans
+  ```--bans``` Comma separated list of user names or IDs 
+(e.g.  UserA,UserB,UserC  do not put spaces in between)
 
-  ```--boardsizeranked``` Board size(s) to accept for ranked games
+  ```--bansranked``` Comma separated list of user names or IDs who 
+are banned from playing ranked games
 
-  ```--boardsizeunranked``` Board size(s) to accept for unranked games
+  ```--bansunranked``` Comma separated list of user names or IDs who 
+are banned from playing unranked game
 
-Possible boardsize values :
+The "bans" arguments are an exception to the general rule of using only general 
+argument alone, or specific ranked/unranked instead :
+
+Because, since bans is a string, we allow both general value `--bans A,B` AND 
+specific values at the same time too `--bansranked X,Y --bansunranked Z`, the 
+result will be Players banned : 
+
+- for ranked games : A,B,X,Y
+- for unranked games : A,B,Z 
+
+#### boardsizes
+  ```--boardsizes``` Board size(s) to accept
+
+  ```--boardsizesranked``` Board size(s) to accept for ranked games
+
+  ```--boardsizesunranked``` Board size(s) to accept for unranked games
+
+Possible boardsizes values :
 
 - `all` (allows ALL boardsizes, use only if your bot can handle it !), 
 - `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 
 15x15, 3x2, etc..), 
-- or square board size written in numbers comma separated (default is `9,13,19` 
+- or square boardsizes written in numbers comma separated (default is `9,13,19` 
 which is 9x9, 13x13, 19x19), see [notes E-](/docs/docs/NOTES.md#e-) for details
 
-#### boardsize custom 
-if ```--boardsize custom``` is chosen, then you need to specify these new 
+#### boardsizes custom
+if ```--boardsizes custom``` is chosen, then you need to specify these new 
 options as well :
 
-  ```--boardsizewidth``` For custom board size(s), specify boardsize width(s) 
+  ```--boardsizewidths``` For custom board sizes, specify boardsize width(s) 
 to accept, for example 25
 
-  ```--boardsizewidthranked``` For custom board size(s), specify boardsize 
+  ```--boardsizewidthsranked``` For custom board sizes, specify boardsize 
 width(s) to accept for ranked games, for example 25
 
-  ```--boardsizewidthunranked``` For custom board size(s), specify boardsize 
+  ```--boardsizewidthsunranked``` For custom board sizes, specify boardsize 
 width(s) to accept for unranked games, for example 25
 
-  ```--boardsizeheight``` For custom board size(s), specify boardsize height(s) 
+  ```--boardsizeheights``` For custom board sizes, specify boardsize height(s) 
 to accept, for example 1,2,3
 
-  ```--boardsizeheightranked``` For custom board size(s), specify boardsize 
+  ```--boardsizeheightsranked``` For custom board sizes, specify boardsize 
 height(s) to accept for ranked games, for example 1,2,3
 
-  ```--boardsizeheightunranked``` For custom board size(s), specify boardsize 
+  ```--boardsizeheightsunranked``` For custom board sizes, specify boardsize 
 height(s) to accept, for example 1,2,3
 
 for example :
 
-  ```--boardsize custom --boardsizewidth 25 --boardsizeheight 1,2,3``` 
+  ```--boardsizes custom --boardsizewidths 25 --boardsizeheights 1,2,3``` 
 Allows custom board sizes 25x1 25x2 25x3 in that example, see 
 [notes E-](/docs/docs/NOTES.md#e-) for details
 
-#### komi 
-```--komi``` Allowed komi values  (default automatic)
+#### komis
+```--komis``` Allowed komi values  (default automatic)
 
-```--komiranked``` Allowed komi values for ranked games
+```--komisranked``` Allowed komi values for ranked games
 
-```--komiunranked``` Allowed komi values for unranked games
+```--komisunranked``` Allowed komi values for unranked games
  
 Possible komi values : 
 - `automatic` (allows automatic komi), 
@@ -147,52 +167,32 @@ values are allowed and all other komi values are rejected see
 [notes C-](/docs/docs/NOTES.md#c-) and [notes D-](/docs/docs/NOTES.md#d-) 
 for details
 
-#### ban
-  ```--ban``` Comma separated list of user names or IDs 
-(e.g.  UserA,UserB,UserC  do not put spaces in between)
-
-  ```--banranked``` Comma separated list of user names or IDs who 
-are banned from playing ranked games
-
-  ```--banunranked``` Comma separated list of user names or IDs who 
-are banned from playing unranked game
-
-The "ban" arguments are an exception to the general rule of using only general 
-argument alone, or specific ranked/unranked instead :
-
-Because, since ban is a string, we allow both general value `--ban A,B` AND 
-specific values at the same time too `--banranked X,Y --banunranked Z`, the 
-result will be Players banned : 
-
-- for ranked games : A,B,X,Y
-- for unranked games : A,B,Z 
-
-#### speed
-  ```--speed``` Comma separated list of Game speed(s) to accept 
+#### speeds
+  ```--speeds``` Comma separated list of Game speed(s) to accept 
 (default blitz,live,correspondence)
 
-  ```--speedranked``` Comma separated list of Game speed(s) to 
+  ```--speedsranked``` Comma separated list of Game speed(s) to 
 accept for ranked games
 
-  ```--speedunranked``` Comma separated list of Game speed(s) to 
+  ```--speedsunranked``` Comma separated list of Game speed(s) to 
 accept for unranked games
 
-#### timecontrol
-  ```--timecontrol``` Time control(s) to accept (default fischer,
+#### timecontrols
+  ```--timecontrols``` Time control(s) to accept (default fischer,
 byoyomi,simple,canadian)
 
-  ```--timecontrolranked``` Time control(s) to accept for ranked 
+  ```--timecontrolsranked``` Time control(s) to accept for ranked 
 games
 
-  ```--timecontrolunranked``` Time control(s) to accept for unranked 
+  ```--timecontrolsunranked``` Time control(s) to accept for unranked 
 games
 
 note : "absolute" and/or "none" can be manually allowed by bot 
 admin in timecontrol if want, but then : 
 
-- for absolute games : make sure you increase minmaintime a lot 
-higher than default (with current defaults, bot will timeout in just 
-a few moves)
+- for absolute games : make sure you increase `--minmaintime/blitz*live*corr` 
+a lot higher than default (with current defaults, bot will timeout 
+in just a few moves)
 - for "none" : games would be very very long
 
 #### minmaintime
