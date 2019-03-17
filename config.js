@@ -16,8 +16,8 @@ exports.timeout = 0;
 exports.corrqueue = false;
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
-exports.banned_ranked_users = {};
-exports.banned_unranked_users = {};
+exports.banned_users_ranked = {};
+exports.banned_users_unranked = {};
 exports.allowed_boardsizes = [];
 exports.allow_all_boardsizes = false;
 exports.allow_custom_boardsizes = false;
@@ -88,9 +88,9 @@ exports.updateFromArgv = function() {
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
-        .describe('bansranked', 'Comma separated list of usernames or IDs')
+        .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
         .string('bansranked')
-        .describe('bansunranked', 'Comma separated list of usernames or IDs')
+        .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
         .string('bansunranked')
         .describe('boardsizes', 'Board size(s) to accept')
         .string('boardsizes')
@@ -413,13 +413,13 @@ exports.updateFromArgv = function() {
 
     if (argv.bansranked) {
         for (let e of argv.bansranked.split(',')) {
-            exports.banned_ranked_users[e] = true;
+            exports.banned_users_ranked[e] = true;
         }
     }
 
     if (argv.bansunranked) {
         for (let e of argv.bansunranked.split(',')) {
-            exports.banned_unranked_users[e] = true;
+            exports.banned_users_unranked[e] = true;
         }
     }
 

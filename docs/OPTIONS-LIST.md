@@ -91,10 +91,10 @@ file exists (checked each time, can use for load-balancing)
 (e.g.  UserA,UserB,UserC  do not put spaces in between)
 
   ```--bansranked``` Comma separated list of user names or IDs who 
-are banned from playing ranked games
+are banned from ranked games
 
   ```--bansunranked``` Comma separated list of user names or IDs who 
-are banned from playing unranked game
+are banned from unranked games
 
 The "bans" arguments are an exception to the general rule of using only general 
 argument alone, or specific ranked/unranked instead :
@@ -421,12 +421,20 @@ Thank you message to appear in chat at end of game (ex: "Thank you for playing")
 
   ```--minhandicapunranked``` Min handicap for unranked games
 
+**important note** : until the min/max bypass issue is fixed, it is 
+recommended to use `--noautohandicap` as well, see 
+[#165](https://github.com/online-go/gtp2ogs/pull/165) for details
+
 #### maxhandicap
   ```--maxhandicap```  Max handicap for all games
 
   ```--maxhandicapranked``` Max handicap for ranked games
 
   ```--maxhandicapunranked``` Max handicap for unranked games
+
+**important note** : until the min/max bypass issue is fixed, it is 
+recommended to use `--noautohandicap` as well, see 
+[#165](https://github.com/online-go/gtp2ogs/pull/165) for details
   
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
