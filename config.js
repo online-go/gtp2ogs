@@ -406,20 +406,20 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.bans) {
-        for (let i of argv.bans.split(',')) {
-            exports.banned_users[i] = true;
+        for (let e of argv.bans.split(',')) {
+            exports.banned_users[e] = true;
         }
     }
 
     if (argv.bansranked) {
-        for (let i of argv.bansranked.split(',')) {
-            exports.banned_ranked_users[i] = true;
+        for (let e of argv.bansranked.split(',')) {
+            exports.banned_ranked_users[e] = true;
         }
     }
 
     if (argv.bansunranked) {
-        for (let i of argv.bansunranked.split(',')) {
-            exports.banned_unranked_users[i] = true;
+        for (let e of argv.bansunranked.split(',')) {
+            exports.banned_unranked_users[e] = true;
         }
     }
 
@@ -643,38 +643,38 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.speeds) {
-        for (let i of argv.speeds.split(',')) {
-            exports.allowed_speeds[i] = true;
+        for (let e of argv.speeds.split(',')) {
+            exports.allowed_speeds[e] = true;
         }
     }
 
     if (argv.speedsranked) {
-        for (let i of argv.speedsranked.split(',')) {
-            exports.allowed_speeds_ranked[i] = true;
+        for (let e of argv.speedsranked.split(',')) {
+            exports.allowed_speeds_ranked[e] = true;
         }
     }
 
     if (argv.speedsunranked) {
-        for (let i of argv.speedsunranked.split(',')) {
-            exports.allowed_speeds_unranked[i] = true;
+        for (let e of argv.speedsunranked.split(',')) {
+            exports.allowed_speeds_unranked[e] = true;
         }
     }
 
     if (argv.timecontrols) {
-        for (let i of argv.timecontrols.split(',')) {
-            exports.allowed_timecontrols[i] = true;
+        for (let e of argv.timecontrols.split(',')) {
+            exports.allowed_timecontrols[e] = true;
         }
     }
 
     if (argv.timecontrolsranked) {
-        for (let i of argv.timecontrolsranked.split(',')) {
-            exports.allowed_timecontrols_ranked[i] = true;
+        for (let e of argv.timecontrolsranked.split(',')) {
+            exports.allowed_timecontrols_ranked[e] = true;
         }
     }
 
     if (argv.timecontrolsunranked) {
-        for (let i of argv.timecontrolunranked.split(',')) {
-            exports.allowed_timecontrols_unranked[i] = true;
+        for (let e of argv.timecontrolunranked.split(',')) {
+            exports.allowed_timecontrols_unranked[e] = true;
         }
     }
 
