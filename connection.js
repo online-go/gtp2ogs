@@ -303,7 +303,8 @@ class Connection {
             return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
         }
 
-        let connected_games_per_user = this.gamesForPlayer(notification.user.id);
+        let connected_games_per_user = this.gamesForPlayer(user.id);
+
         if (config.maxconnectedgamesperuser && connected_games_per_user >= config.maxconnectedgamesperuser) {
             conn_log("Too many connected games for this user.");
             return { reject: true, msg: "Maximum number of simultaneous games allowed per player against this bot is " + config.maxconnectedgamesperuser + " , please reduce your number of connected games against this bot, and try again" };
