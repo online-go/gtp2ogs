@@ -424,21 +424,15 @@ class Connection {
 
         /* if square, check if square board size is allowed*/
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            let boardsizeSquareString = config.boardsizes;
-            conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed, please choose one of these allowed board sizes " + boardsizeSquareToDisplayString(boardsizeSquareString)};
+            genericAllowedFamiliesReject("boardsizes", notification.width);
         }
 
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            let boardsizeSquareString = config.boardsizesranked;
-            conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for ranked games");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for ranked games, please choose one of these allowed board sizes for ranked games : " + boardsizeSquareToDisplayString(boardsizeSquareString)};
+            genericAllowedFamiliesReject("boardsizesranked", notification.width);
         }
 
-        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked  && config.boardsizesunranked) {
-            let boardsizeSquareString = config.boardsizesunranked;
-            conn_log("square board size " + notification.width + "x" + notification.height + " is not an allowed size for unranked games");
-            return { reject: true, msg: "Board size " + notification.width + "x" + notification.height + " is not allowed for unranked games, please choose one of these allowed board sizes for unranked games " + boardsizeSquareToDisplayString(boardsizeSquareString)};
+        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
+            genericAllowedFamiliesReject("boardsizesunranked", notification.width);
         }
 
         // for custom board sizes, including square board sizes if width === height as well //
@@ -493,89 +487,57 @@ class Connection {
         if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
             minmaxHandicapFamilyReject("minhandicap");
         }
-
         if (notification.handicap < config.minhandicapranked && notification.ranked) {
             minmaxHandicapFamilyReject("minhandicapranked");
         }
-
         if (notification.handicap < config.minhandicapunranked && !notification.ranked) {
             minmaxHandicapFamilyReject("minhandicapunranked");
         }
-
         if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
             minmaxHandicapFamilyReject("maxhandicap");
         }
-
         if (notification.handicap > config.maxhandicapranked && notification.ranked) {
             minmaxHandicapFamilyReject("maxhandicapranked");
         }
-
         if (notification.handicap > config.maxhandicapunranked && !notification.ranked) {
             minmaxHandicapFamilyReject("maxhandicapunranked");
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            let notificationKomiString = "";
-            if (notification.komi === null) {
-                notificationKomiString = "automatic";
-            } else {
-                notificationKomiString = notification.komi;
-            }
-            conn_log("komi value " + notificationKomiString + " is not allowed, allowed komis are: " + config.komis);
-            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed, please choose one of these allowed komis : " + config.komis};
+            genericAllowedFamiliesReject("komis", notification.komi);
         }
 
         if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            let notificationKomiString = "";
-            if (notification.komi === null) {
-                notificationKomiString = "automatic";
-            } else {
-                notificationKomiString = notification.komi;
-            }
-            conn_log("komi value " + notificationKomiString + " is not allowed for ranked games, allowed komis for ranked games are: " + config.komisranked);
-            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for ranked games, please choose one of these allowed komis for ranked games: " + config.komisranked};
+            genericAllowedFamiliesReject("komisranked", notification.komi);
         }
 
         if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            let notificationKomiString = "";
-            if (notification.komi === null) {
-                notificationKomiString = "automatic";
-            } else {
-                notificationKomiString = notification.komi;
-            }
-            conn_log("komi value " + notificationKomiString + " is not allowed for unranked games, allowed komis for unranked games are: " + config.komisunranked);
-            return { reject: true, msg: "komi " + notificationKomiString + " is not allowed for unranked games, please choose one of these allowed komis for unranked games: " + config.komisunranked};
+            genericAllowedFamiliesReject("komisunranked", notification.komi);
         }
 
         if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {
-            conn_log(user.username + " wanted speed " + t.speed + ", not in: " + config.speeds);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot, please choose one of these allowed game speeds on this bot : " + config.speeds};
+            genericAllowedFamiliesReject("speeds", t.speed);
         }
 
         if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedsranked) {
-            conn_log(user.username + " wanted speed for ranked games " + t.speed + ", not in: " + config.speedsranked);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for ranked games, please choose one of these allowed game speeds for ranked games : " + config.speedsranked};
+            genericAllowedFamiliesReject("speedsranked", t.speed);
         }
 
         if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedsunranked) {
-            conn_log(user.username + " wanted speed for unranked games " + t.speed + ", not in: " + config.speedsunranked);
-            return { reject: true, msg: "The " + t.speed + " game speed is not allowed on this bot for unranked games, please choose one of these allowed game speeds for unranked games : " + config.speedsunranked};
+            genericAllowedFamiliesReject("speedsunranked", t.speed);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
         if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            conn_log(user.username + " wanted time control " + t.time_control + ", not in: " + config.timecontrols);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot, please choose one of these allowed time controls on this bot : " + config.timecontrols };
+            genericAllowedFamiliesReject("timecontrols", t.time_control);
         }
 
         if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolsranked) { 
-            conn_log(user.username + " wanted time control for ranked games " + t.time_control + ", not in: " + config.timecontrolsranked);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for ranked games, please choose one of these allowed time controls for ranked games : " + config.timecontrolsranked };
+            genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
         }
 
         if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            conn_log(user.username + " wanted time control for unranked games " + t.time_control + ", not in: " + config.timecontrolsunranked);
-            return { reject: true, msg: "The " + t.time_control + " time control is not allowed on this bot for unranked games, please choose one of these allowed time controls for unranked games : " + config.timecontrolsunranked };
+            genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -1646,6 +1608,56 @@ class Connection {
             // then finally, the actual reject :
             conn_log(`${user.username} wanted ${t.periods} periods, ${minMax} periods ${rankedUnranked} is ${config[argNameString]}, needs to be ${increaseDecrease}d`);
             return { reject: true, msg: `${minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of periods` };
+        }
+
+        function pluralFamilyStringToSingularString(plural) {
+            let pluralToConvert = plural.split("unranked")[0].split("ranked")[0].split("");
+                // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
+            pluralToConvert.pop();
+                // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
+            pluralToConvert = pluralToConvert.join("");
+                // for example ["s", "p", "e", "e", "d"] -> "speed"
+            return pluralToConvert;
+        }
+
+        function genericAllowedFamiliesReject(argNameString, notificationUnit) {
+            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
+
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games ";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games ";
+            }
+
+            let argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
+            // for example "speedsranked" -> "speed"
+
+            // then, we process the inputs to human readable, 
+            let argConverted = argNameString;
+            let notificationUnitConverted = notificationUnit;
+            // if argFamilySingularString family is "boardsize" type :
+            if (argFamilySingularString.includes("boardsize")) {
+                argConverted = boardsizeSquareToDisplayString(config[argNameString]);
+                notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
+            }
+            // if argFamilySingularString family is "komi" type :
+            if (argFamilySingularString.includes("komi")) {
+                if (notificationUnit === null) {
+                    notificationUnitConverted = "automatic";
+                }
+            }
+            // else we dont dont convert : we dont change anything
+
+            // then finally, the actual reject :
+            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${config[argConverted]}- `);
+            // for example : "user wanted speed for ranked games -blitz-, not in -live,correspondence-
+            return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${config[argConverted]}-` };
+            /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
+                             choose one of these allowed speeds for ranked games : 
+                             -live,correspondence-"
+            */
         }
 
     } /* }}} */
