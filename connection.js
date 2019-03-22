@@ -321,49 +321,54 @@ class Connection {
         }
 
         if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMinRank = rankToString(config.minrank);
-            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min is " + humanReadableMinRank);
-            return { reject: true, msg: "Minimum rank is " + humanReadableMinRank + ", your rank is too low." };
+            minmaxRankFamilyReject("minrank")
         }
-
         if ((user.ranking < config.minrankranked) && notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMinRank = rankToString(config.minrankranked);
-            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min for ranked games is " + humanReadableMinRank);
-            return { reject: true, msg: "Minimum rank for ranked games is " + humanReadableMinRank + ", your rank is too low, try unranked game" };
+            minmaxRankFamilyReject("minrankranked")
         }
-
         if ((user.ranking < config.minrankunranked) && !notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMinRank = rankToString(config.minrankunranked);
-            conn_log(user.username + " ranking too low: " + humanReadableUserRank + " : min for ranked games is " + humanReadableMinRank);
-            return { reject: true, msg: "Minimum rank for unranked games is " + humanReadableMinRank + ", your rank is too low" };
+            minmaxRankFamilyReject("minrankunranked")
         }
-
         if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMaxRank = rankToString(config.maxrank);
-            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max is " + humanReadableMaxRank);
-            return { reject: true, msg: "Maximum rank is " + humanReadableMaxRank + ", your rank is too high." };
+            minmaxRankFamilyReject("maxrank")
         }
-
         if ((user.ranking > config.maxrankranked) && notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMaxRank = rankToString(config.maxrank);
-            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max for ranked games is " + humanReadableMaxRank);
-            return { reject: true, msg: "Maximum rank for ranked games is " + humanReadableMaxRank + ", your rank is too high, try unranked game" };
+            minmaxRankFamilyReject("maxrankranked")
         }
-
         if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMaxRank = rankToString(config.maxrank);
-            conn_log(user.username + " ranking too high: " + humanReadableUserRank + " : max for unranked games is " + humanReadableMaxRank);
-            return { reject: true, msg: "Maximum rank for unranked games is " + humanReadableMaxRank + ", your rank is too high" };
+            minmaxRankFamilyReject("maxrankunranked")
         }
-
 
         return { reject: false }; // OK !
+
+        function minmaxRankFamilyReject(argNameString) {
+            // first, we define rankedUnranked, lowHigh, minMax, and humanReadableRank, depending on argNameString
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games ";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games ";
+            }
+
+            let minMax = "";
+            let lowHigh = "";
+            if (argNameString.includes("min")) {
+                minMax = "Min";
+                lowHigh = "low";
+            } else if (argNameString.includes("max")) {
+                minMax = "Max";
+                lowHigh = "high";
+            }
+
+            // then we define humanReadable ranks
+            let humanReadableUserRank = rankToString(user.ranking);
+            let humanReadableMinmaxRank = rankToString(config[argNameString]);
+
+            // then finally, the actual reject :
+            conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked}is ${humanReadableMinmaxRank}`);
+            return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${config[argNameString]}, your rank is too ${lowHigh} ${rankedUnranked}` };
+        }
 
     } /* }}} */
     // Check game settings are acceptable
@@ -1605,7 +1610,7 @@ class Connection {
         function minmaxHandicapFamilyReject(argNameString) {
             // first, we define rankedUnranked and minMax depending on argNameString
             let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", keep default value for rankedunranked
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
             if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
                 rankedUnranked = "for ranked games";
             } else if (argNameString.includes("unranked")) {
