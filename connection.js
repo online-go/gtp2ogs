@@ -991,93 +991,62 @@ class Connection {
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
-            conn_log(user.username + " wanted too few periods blitz: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for blitz games is " + config.minperiodsblitz + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
         }
-
         if (config.minperiodsblitzranked && (t.periods < config.minperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            conn_log(user.username + " wanted too few periods blitz ranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for blitz ranked games is " + config.minperiodsblitzranked + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
         }
-
         if (config.minperiodsblitzunranked && (t.periods < config.minperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            conn_log(user.username + " wanted too few periods blitz unranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for blitz unranked games is " + config.minperiodsblitzunranked + ", please increase the number of periods" };
-        }
-
-        if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
-            conn_log(user.username + " wanted too many periods blitz: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for blitz games is " + config.maxperiodsblitz + ", please reduce the number of periods" };
-        }
-
-        if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            conn_log(user.username + " wanted too many periods blitz ranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for blitz ranked games is " + config.maxperiodsblitzranked + ", please reduce the number of periods" };
-        }
-
-        if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            conn_log(user.username + " wanted too many periods blitz unranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for blitz unranked games is " + config.maxperiodsblitzunranked + ", please reduce the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
         }
 
         if (config.minperiodslive && (t.periods < config.minperiodslive) && t.speed === "live" && !config.minperiodsliveranked && !config.minperiodsliveunranked) {
-            conn_log(user.username + " wanted too few periods live: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for live games is " + config.minperiodslive + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
         }
-
         if (config.minperiodsliveranked && (t.periods < config.minperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            conn_log(user.username + " wanted too few periods live ranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for live ranked games is " + config.minperiodsliveranked + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
         }
-
         if (config.minperiodsliveunranked && (t.periods < config.minperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            conn_log(user.username + " wanted too few periods live unranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for live unranked games is " + config.minperiodsliveunranked + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
         }
-
-        if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
-            conn_log(user.username + " wanted too many periods live: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for live games is " + config.maxperiodslive + ", please reduce the number of periods" };
-        }
-
-        if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            conn_log(user.username + " wanted too many periods live ranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for live ranked games is " + config.maxperiodsliveranked + ", please reduce the number of periods" };
-        }
-
-        if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            conn_log(user.username + " wanted too many periods live unranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for live unranked games is " + config.maxperiodsliveunranked + ", please reduce the number of periods" };
-        }
-
         if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
-            conn_log(user.username + " wanted too few periods corr: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for correspondence games is " + config.minperiodscorr + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
         }
 
         if (config.minperiodscorrranked && (t.periods < config.minperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            conn_log(user.username + " wanted too few periods corr ranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for correspondence ranked games is " + config.minperiodscorrranked + ", please increase the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
+        }
+        if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
+        }
+        if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
+        }
+        if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
+        }
+        if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
         }
 
-        if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            conn_log(user.username + " wanted too few periods corr unranked: " + t.periods);
-            return { reject: true, msg: "Minimum number of periods for correspondence unranked games is " + config.minperiodscorrunranked + ", please increase the number of periods" };
+        if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
+        }
+        if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
+        }
+        if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
         }
 
         if (config.maxperiodscorr && (t.periods > config.maxperiodscorr) && t.speed === "correspondence" && !config.maxperiodscorrranked && !config.maxperiodscorrunranked) {
-            conn_log(user.username + " wanted too many periods corr: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for correspondence games is " + config.maxperiodscorr + ", please reduce the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
         }
-
         if (config.maxperiodscorrranked && (t.periods > config.maxperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            conn_log(user.username + " wanted too many periods corr ranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for correspondence ranked games is " + config.maxperiodscorrranked + ", please reduce the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
         }
-
         if (config.maxperiodscorrunranked && (t.periods > config.maxperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            conn_log(user.username + " wanted too many periods corr unranked: " + t.periods);
-            return { reject: true, msg: "Maximum number of periods for correspondence unranked games is " + config.maxperiodscorrunranked + ", please reduce the number of periods" };
+            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -1640,6 +1609,43 @@ class Connection {
                 conn_log(`${minMax} handicap ${rankedUnranked} is ${config[argNameString]}`);
                 return { reject: true, msg: `${minMax} handicap ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of handicap stones` };
             }
+        }
+
+        function minmaxPeriodsBlitzlivecorrFamilyReject(argNameString) {
+            // first, we define blitzLiveCorr, rankedUnranked, minMax, increaseDecrease, depending on argNameString
+            let blitzLiveCorr = "";
+            if (argNameString.includes("blitz")) {
+                blitzLiveCorr = "blitz";
+            } else if (argNameString.includes("live")) {
+                blitzLiveCorr = "live";
+            } else if (argNameString.includes("corr")) {
+                blitzLiveCorr = "correspondence";
+            }
+
+            let rankedUnranked = "";
+            if (!argNameString.includes("ranked")) {
+                // here we keep the general argument line unlike other functions, 
+                // because it has a specific message like for example "for blitz games"
+                rankedUnranked = `for ${blitzLiveCorr} games`;
+            } else if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = `for ${blitzLiveCorr} ranked games`;
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = `for ${blitzLiveCorr} unranked games`;
+            }
+
+            let minMax = "";
+            let increaseDecrease = "";
+            if (argNameString.includes("min")) {
+                minMax = "Min";
+                increaseDecrease = "increase";
+            } else if (argNameString.includes("max")) {
+                minMax = "Max";
+                increaseDecrease = "reduce";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`${user.username} wanted ${t.periods} periods, ${minMax} periods ${rankedUnranked} is ${config[argNameString]}, needs to be ${increaseDecrease}d`);
+            return { reject: true, msg: `${minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of periods` };
         }
 
     } /* }}} */
