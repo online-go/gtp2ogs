@@ -486,33 +486,27 @@ class Connection {
 	}
 
         if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
-            conn_log("Min handicap is " + config.minhandicap);
-            return { reject: true, msg: "Minimum handicap is " + config.minhandicap + " , please increase the number of handicap stones " };
-        }
-
-        if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
-            conn_log("Max handicap is " + config.maxhandicap);
-            return { reject: true, msg: "Maximum handicap is " + config.maxhandicap + " , please reduce the number of handicap stones " };
+            minmaxHandicapFamilyReject("minhandicap");
         }
 
         if (notification.handicap < config.minhandicapranked && notification.ranked) {
-            conn_log("Min handicap ranked is " + config.minhandicapranked);
-            return { reject: true, msg: "Minimum handicap for ranked games is " + config.minhandicapranked + " , please increase the number of handicap stones" };
-        }
-
-        if (notification.handicap > config.maxhandicapranked && notification.ranked) {
-            conn_log("Max handicap ranked is " + config.maxhandicapranked);
-            return { reject: true, msg: "Maximum handicap for ranked games is " + config.maxhandicapranked + " , please reduce the number of handicap stones" };
+            minmaxHandicapFamilyReject("minhandicapranked");
         }
 
         if (notification.handicap < config.minhandicapunranked && !notification.ranked) {
-            conn_log("Min handicap unranked is " + config.minhandicapunranked);
-            return { reject: true, msg: "Minimum handicap for unranked games is " + config.minhandicapunranked + " , please reduce the number of handicap stones" };
+            minmaxHandicapFamilyReject("minhandicapunranked");
+        }
+
+        if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
+            minmaxHandicapFamilyReject("maxhandicap");
+        }
+
+        if (notification.handicap > config.maxhandicapranked && notification.ranked) {
+            minmaxHandicapFamilyReject("maxhandicapranked");
         }
 
         if (notification.handicap > config.maxhandicapunranked && !notification.ranked) {
-            conn_log("Max handicap unranked is " + config.maxhandicapunranked);
-            return { reject: true, msg: "Maximum handicap for unranked games is " + config.maxhandicapunranked + " , please increase the number of handicap stones" };
+            minmaxHandicapFamilyReject("maxhandicapunranked");
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
@@ -1607,6 +1601,41 @@ class Connection {
         ///// version 2.3 for periodtimes
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
         return { reject: false };  // Ok !
+
+        function minmaxHandicapFamilyReject(argNameString) {
+            // first, we define rankedUnranked and minMax depending on argNameString
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            let minMax = "";
+            let increaseDecrease = "";
+            if (argNameString.includes("min")) {
+                minMax = "Min";
+                increaseDecrease = "increase";
+            } else if (argNameString.includes("max")) {
+                minMax = "Max";
+                increaseDecrease = "reduce";
+            }
+
+            // then, specific messages for handicaponly and evenonly messages first
+            if (notification.handicap === 0 && minMax === "Min" && config[argNameString] > 0) {
+                conn_log(`handicap games only ${rankedUnranked}`);
+                return { reject: true, msg: `this bot does not play even games ${rankedUnranked}, please manually select the number of handicap stones in -custom handicap- : minimum is ${config[argNameString]} handicap stones or more` };
+            } else if (notification.handicap > 0 && minMax === "Max" && config[argNameString] === 0) {
+                conn_log(`even games only ${rankedUnranked}`);
+                return { reject: true, msg: `this bot does not play handicap games ${rankedUnranked}, please choose handicap -none- (0 handicap stones)` };
+
+            // then finally, the actual reject :
+            } else {
+                conn_log(`${minMax} handicap ${rankedUnranked} is ${config[argNameString]}`);
+                return { reject: true, msg: `${minMax} handicap ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of handicap stones` };
+            }
+        }
 
     } /* }}} */
     // Check everything and return reject status + optional error msg.
