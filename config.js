@@ -242,6 +242,7 @@ exports.updateFromArgv = function() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
+        .describe('fakerank', 'Temporary manual bot ranking input by bot admin to fix autohandicap bypass issue, see /docs/OPTIONS-LIST.md for details')
         .describe('nopause', 'Do not allow games to be paused')
         .describe('nopauseranked', 'Do not allow ranked games to be paused')
         .describe('nopauseunranked', 'Do not allow unranked games to be paused')
@@ -423,6 +424,10 @@ exports.updateFromArgv = function() {
     if (argv.maxrankunranked) {
         parseMinmaxRankFromNameString("minrankunranked");
     }
+    if (argv.fakerank) {
+        parseMinmaxRankFromNameString("fakerank");
+    }
+    // TODO : remove fakerank when notification.bot.ranking is server implemented
 
     const familyNamesArray = generateHashedArrayFromFamilyNamesArray(["bans", "boardsizes", "komis", "speeds", "timecontrols"]);
 
