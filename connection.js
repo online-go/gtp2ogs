@@ -1706,12 +1706,14 @@ class Connection {
             let argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
             // for example "speedsranked" -> "speed"
 
-            // then, we process the inputs to human readable, 
-            let argConverted = argNameString;
+            // then, we process the inputs to human readable, and convert them if needed
+            let argValueString = config[argNameString];
+            // for example config["boardsizesranked"];
             let notificationUnitConverted = notificationUnit;
             // if argFamilySingularString family is "boardsize" type :
             if (argFamilySingularString.includes("boardsize")) {
-                argConverted = boardsizeSquareToDisplayString(config[argNameString]);
+                argValueString = boardsizeSquareToDisplayString(config[argNameString]);
+                // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
                 notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
             }
             // if argFamilySingularString family is "komi" type :
@@ -1723,9 +1725,9 @@ class Connection {
             // else we dont dont convert : we dont change anything
 
             // then finally, the actual reject :
-            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${config[argConverted]}- `);
+            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${argValueString}- `);
             // for example : "user wanted speed for ranked games -blitz-, not in -live,correspondence-
-            return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${config[argConverted]}-` };
+            return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${argValueString}-` };
             /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
                              choose one of these allowed speeds for ranked games : 
                              -live,correspondence-"
