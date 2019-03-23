@@ -422,7 +422,7 @@ exports.updateFromArgv = function() {
         parseMinmaxRankFromNameString("maxrankranked");
     }
     if (argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("minrankunranked");
+        parseMinmaxRankFromNameString("maxrankunranked");
     }
     if (argv.fakerank) {
         parseMinmaxRankFromNameString("fakerank");
