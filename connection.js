@@ -470,20 +470,66 @@ class Connection {
         }
         /******** end of BOARDSIZES *********/
 
-        if (config.noautohandicap && notification.handicap === -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
-            conn_log("no autohandicap, rejecting challenge") ;
+        if (notification.handicap === -1 && config.noautohandicap) {
+            conn_log("no autohandicap");
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (config.noautohandicapranked && notification.handicap === -1 && notification.ranked) {
-            conn_log("no autohandicap for ranked games, rejecting challenge") ;
+        if (notification.handicap === -1 && config.noautohandicapranked && notification.ranked) {
+            conn_log("no autohandicap for ranked games");
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
 
-        if (config.noautohandicapunranked && notification.handicap === -1 && !notification.ranked) {
-            conn_log("no autohandicap for unranked games, rejecting challenge") ;
+        if (notification.handicap === -1 && config.noautohandicapunranked && !notification.ranked) {
+            conn_log("no autohandicap for unranked games");
             return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
 	}
+
+        /***** automatic handicap min/max handicap limits detection ******/
+
+        // below is a fix of automatic handicap bypass issue
+        // by manually calculating handicap stones number
+        // then calculate if it is within set min/max
+        // limits set by botadmin
+
+        // TODO : for all the code below, replace "fakerank" with 
+        // notification.bot.ranking (server support for bot ranking detection 
+        // in gtp2ogs)
+
+        if (notification.handicap === -1 && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
+            let rankDifference = Math.abs(Math.trunc(user.ranking) - Math.trunc(config.fakerank));
+            // adding a trunk because a 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+            // but it is in fact a still a 6k vs 7k = Math.abs(6-7) = 1 rank difference game
+
+            // first, if ranked game, we eliminate > 9 rank difference
+            if (notification.ranked && (rankDifference > 9)) {
+                conn_log("Rank difference > 9 in a ranked game would be 10+ handicap stones, not allowed");
+                return {reject: true, msg: "Rank difference between you and this bot is " + rankDifference + "\n The difference is too big to play a ranked game with handicap (max is 9 handicap for ranked games), try unranked handicap or manually reduce the number of handicap stones in -custom handicap-"};
+            }
+
+            // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
+            // we eliminate all unwanted values, everything not forbidden is allowed
+            if (config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked && (rankDifference < config.minhandicap)) {
+                automaticHandicapStoneDetectionReject("minhandicap");
+            }
+            if (config.minhandicapranked && notification.ranked && (rankDifference < config.minhandicapranked)) {
+                automaticHandicapStoneDetectionReject("minhandicapranked");
+            }
+            if (config.minhandicapunranked && !notification.ranked && (rankDifference < config.minhandicapunranked)) {
+                automaticHandicapStoneDetectionReject("minhandicap");
+            }
+            if (config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked && (rankDifference > config.maxhandicap)) {
+                automaticHandicapStoneDetectionReject("maxhandicap");
+            }
+            if (config.maxhandicapranked && notification.ranked && (rankDifference > config.maxhandicapranked)) {
+                automaticHandicapStoneDetectionReject("maxhandicapranked");
+            }
+            if (config.maxhandicapunranked && !notification.ranked && (rankDifference > config.maxhandicapunranked)) {
+                automaticHandicapStoneDetectionReject("maxhandicapunranked");
+            }
+        }
+        /***** end of automatic handicap min/max handicap limits detection ******/
+
 
         if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
             minmaxHandicapFamilyReject("minhandicap");
@@ -1609,6 +1655,31 @@ class Connection {
             // then finally, the actual reject :
             conn_log(`${user.username} wanted ${t.periods} periods, ${minMax} periods ${rankedUnranked} is ${config[argNameString]}, needs to be ${increaseDecrease}d`);
             return { reject: true, msg: `${minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of periods` };
+        }
+
+        function automaticHandicapStoneDetectionReject (argNameString) {
+            // first, we define rankedUnranked and minMax depending on argNameString
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            let minMax = "";
+            let increaseDecrease = "";
+            if (argNameString.includes("min")) {
+                minMax = "Min";
+                increaseDecrease = "increase";
+            } else if (argNameString.includes("max")) {
+                minMax = "Max";
+                increaseDecrease = "reduce";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`Automatic handicap ${rankedUnranked} was set to ${rankDifference} stones, but ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones`);
+            return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
         }
 
         function pluralFamilyStringToSingularString(plural) {
