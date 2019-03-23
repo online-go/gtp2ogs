@@ -424,132 +424,22 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
-        let re = /(\d+)([kdp])/;
-        let results = argv.minrank.toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports.minrank = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports.minrank = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports.minrank = 36 + parseInt(results[1]);
-                exports.proonly = true;
-            } else {
-                console.error("Invalid minrank " + argv.minrank);
-                process.exit();
-            }
-        } else {
-            console.error("Could not parse minrank " + argv.minrank);
-            process.exit();
-        }
+        parseMinmaxRankFromNameString("minrank");
     }
-
     if (argv.minrankranked) {
-        let re = /(\d+)([kdp])/;
-        let results = argv.minrank.toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports.minrankranked = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports.minrankranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports.minrankranked = 36 + parseInt(results[1]);
-                exports.proonly = true;
-            } else {
-                console.error("Invalid minrankranked " + argv.minrankranked);
-                process.exit();
-            }
-        } else {
-            console.error("Could not parse minrankranked " + argv.minrankranked);
-            process.exit();
-        }
+        parseMinmaxRankFromNameString("minrankranked");
     }
-
     if (argv.minrankunranked) {
-        let re = /(\d+)([kdp])/;
-        let results = argv.minrankunranked.toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports.minrankunranked = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports.minrankunranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports.minrankunranked = 36 + parseInt(results[1]);
-                exports.proonly = true;
-            } else {
-                console.error("Invalid minrankunranked " + argv.minrankunranked);
-                process.exit();
-            }
-        } else {
-            console.error("Could not parse minrankunranked " + argv.minrankunranked);
-            process.exit();
-        }
+        parseMinmaxRankFromNameString("minrankunranked");
     }
-
     if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
-        let re = /(\d+)([kdp])/;
-        let results = argv.maxrank.toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports.maxrank = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports.maxrank = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports.maxrank = 36 + parseInt(results[1]);
-            } else {
-                console.error("Invalid maxrank " + argv.maxrank);
-                process.exit();
-            }
-        } else {
-            console.error("Could not parse maxrank " + argv.maxrank);
-            process.exit();
-        }
+        parseMinmaxRankFromNameString("maxrank");
     }
-
     if (argv.maxrankranked) {
-        let re = /(\d+)([kdp])/;
-        let results = argv.maxrankranked.toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports.maxrankranked = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports.maxrankranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports.maxrankranked = 36 + parseInt(results[1]);
-            } else {
-                console.error("Invalid maxrankranked " + argv.maxrankranked);
-                process.exit();
-            }
-        } else {
-            console.error("Could not parse maxrankranked " + argv.maxrankranked);
-            process.exit();
-        }
+        parseMinmaxRankFromNameString("maxrankranked");
     }
-
     if (argv.maxrankunranked) {
-        let re = /(\d+)([kdp])/;
-        let results = argv.maxrankunranked.toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports.maxrankunranked = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports.maxrankunranked = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports.maxrankunranked = 36 + parseInt(results[1]);
-            } else {
-                console.error("Invalid maxrankunranked " + argv.maxrankunranked);
-                process.exit();
-            }
-        } else {
-            console.error("Could not parse maxrankunranked " + argv.maxrankunranked);
-            process.exit();
-        }
+        parseMinmaxRankFromNameString("minrankunranked");
     }
 
     if (argv.boardsizes) {
@@ -692,6 +582,28 @@ exports.updateFromArgv = function() {
 
     function familyArrayFromGeneralArg(generalArg) {
         return ["", "unranked", "ranked" ].map(e => generalArg + e);
+    }
+
+    function parseMinmaxRankFromNameString(rankArgNameString) {
+        let re = /(\d+)([kdp])/;
+        let results = argv[rankArgNameString].toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] === "k") {
+                exports[rankArgNameString] = 30 - parseInt(results[1]);
+            } else if (results[2] === "d") {
+                exports[rankArgNameString] = 30 - 1 + parseInt(results[1]);
+            } else if (results[2] === "p") {
+                exports[rankArgNameString] = 36 + parseInt(results[1]);
+                exports.proonly = true;
+            } else {
+                console.error(`Invalid ${rankArgNameString} ${argv[rankArgNameString]}`);
+                process.exit();
+            }
+        } else {
+            console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
+            process.exit();
+        }
     }
 
 }
