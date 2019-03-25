@@ -1866,6 +1866,7 @@ function timespanToDisplayString(timespan) { /* {{{ */
 
 function boardsizeSquareToDisplayString(boardsizeSquare) { /* {{{ */
     return boardsizeSquare
+    .toString()
     .split(',')
     .map(e => e.trim())
     .map(e => `${e}x${e}`)
