@@ -1826,7 +1826,10 @@ function post(path, data, cb, eb) { return request("POST", config.host, config.p
 function request(method, host, port, path, data) { /* {{{ */
     return new Promise((resolve, reject) => {
         if (config.DEBUG) {
-            console.debug(method, host, port, path, data);
+            let noapidata = data;
+            noapidata.apikey = "hidden";
+
+            console.debug(method, host, port, path, noapidata);
         }
 
         let enc_data_type = "application/x-www-form-urlencoded";
