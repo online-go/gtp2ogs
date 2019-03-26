@@ -288,14 +288,14 @@ class Connection {
         let user = notification.user;
 
         if (config.banned_users[user.username] || config.banned_users[user.id]) {
-            conn_log(user.username + " (" + user.id + ") is banned, rejecting challenge");
-            return { reject: true };
+            let result = bannedFamilyReject("bans");
+            if (result) return (result);
         } else if (notification.ranked && (config.banned_users_ranked[user.username] || config.banned_users_ranked[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from ranked games, rejecting challenge");
-            return { reject: true };
+            let result = bannedFamilyReject("bansranked");
+            if (result) return (result);
         } else if (!notification.ranked && (config.banned_users_unranked[user.username] || config.banned_users_unranked[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from unranked games, rejecting challenge");
-            return { reject: true };
+            let result = bannedFamilyReject("bansunranked");
+            if (result) return (result);
         }
 
         if (config.proonly && !user.professional) {
@@ -375,6 +375,22 @@ class Connection {
             // then finally, the actual reject :
             conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked}is ${humanReadableMinmaxRank}`);
             return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${config[argNameString]}, your rank is too ${lowHigh} ${rankedUnranked}` };
+        }
+
+        function bannedFamilyReject(argNameString) {
+            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
+
+            let rankedUnranked = "from all games";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "from ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "from unranked games";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`Username ${user.username} (user id ${user.id}) is banned ${rankedUnranked}`);
+            return { reject: true, msg: `Username ${user.username} (user id ${user.id}) is banned ${rankedUnranked} on this bot by bot admin` };
         }
 
     } /* }}} */
@@ -1725,16 +1741,6 @@ class Connection {
             return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
         }
 
-        function pluralFamilyStringToSingularString(plural) {
-            let pluralToConvert = plural.split("unranked")[0].split("ranked")[0].split("");
-                // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
-            pluralToConvert.pop();
-                // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
-            pluralToConvert = pluralToConvert.join("");
-                // for example ["s", "p", "e", "e", "d"] -> "speed"
-            return pluralToConvert;
-        }
-
         function genericAllowedFamiliesReject(argNameString, notificationUnit) {
             // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
 
@@ -1914,6 +1920,16 @@ function boardsizeSquareToDisplayString(boardsizeSquare) { /* {{{ */
     .map(e => e.trim())
     .map(e => `${e}x${e}`)
     .join(', ');
+} /* }}} */
+
+function pluralFamilyStringToSingularString(plural) { /* {{{ */
+    let pluralToConvert = plural.split("unranked")[0].split("ranked")[0].split("");
+    // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
+    pluralToConvert.pop();
+    // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
+    pluralToConvert = pluralToConvert.join("");
+    // for example ["s", "p", "e", "e", "d"] -> "speed"
+    return pluralToConvert;
 } /* }}} */
 
 function conn_log() { /* {{{ */
