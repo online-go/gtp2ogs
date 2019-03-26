@@ -1740,7 +1740,7 @@ class Connection {
 
             // then finally, the actual reject :
             conn_log(`boardsize ${notification.width} x ${notification.height} is not square, not allowed`);
-            return { reject: true, msg: `Your selected board size ${notification.width} x ${notification.height} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example ${boardsizeSquareToDisplayString(config[argNameString])}` };
+            return { reject: true, msg: `Your selected board size ${notification.width} x ${notification.height} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example try 9x9 or 19x19}` };
         }
 
         function customBoardsizeWidthsHeightsReject(argNameString) {
