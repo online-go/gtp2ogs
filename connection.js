@@ -322,22 +322,28 @@ class Connection {
         }
 
         if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
-            minmaxRankFamilyReject("minrank")
+            let result = minmaxRankFamilyReject("minrank");
+            if (result) return (result);
         }
         if ((user.ranking < config.minrankranked) && notification.ranked) {
-            minmaxRankFamilyReject("minrankranked")
+            let result = minmaxRankFamilyReject("minrankranked");
+            if (result) return (result);
         }
         if ((user.ranking < config.minrankunranked) && !notification.ranked) {
-            minmaxRankFamilyReject("minrankunranked")
+            let result = minmaxRankFamilyReject("minrankunranked");
+            if (result) return (result);
         }
         if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
-            minmaxRankFamilyReject("maxrank")
+            let result = minmaxRankFamilyReject("maxrank")
+            if (result) return (result);
         }
         if ((user.ranking > config.maxrankranked) && notification.ranked) {
-            minmaxRankFamilyReject("maxrankranked")
+            let result = minmaxRankFamilyReject("maxrankranked");
+            if (result) return (result);
         }
         if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
-            minmaxRankFamilyReject("maxrankunranked")
+            let result = minmaxRankFamilyReject("maxrankunranked");
+            if (result) return (result);
         }
 
         return { reject: false }; // OK !
@@ -425,15 +431,18 @@ class Connection {
 
         /* if square, check if square board size is allowed*/
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            genericAllowedFamiliesReject("boardsizes", notification.width);
+            let result = genericAllowedFamiliesReject("boardsizes", notification.width);
+            if (result) return (result);
         }
 
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            genericAllowedFamiliesReject("boardsizesranked", notification.width);
+            let result = genericAllowedFamiliesReject("boardsizesranked", notification.width);
+            if (result) return (result);
         }
 
         if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            genericAllowedFamiliesReject("boardsizesunranked", notification.width);
+            let result = genericAllowedFamiliesReject("boardsizesunranked", notification.width);
+            if (result) return (result);
         }
 
         // for custom board sizes, including square board sizes if width === height as well //
@@ -510,81 +519,96 @@ class Connection {
             // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
             // we eliminate all unwanted values, everything not forbidden is allowed
             if (config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked && (rankDifference < config.minhandicap)) {
-                automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
+                let result = automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
+                if (result) return (result);
             }
             if (config.minhandicapranked && notification.ranked && (rankDifference < config.minhandicapranked)) {
-                automaticHandicapStoneDetectionReject("minhandicapranked", rankDifference);
+                let result = automaticHandicapStoneDetectionReject("minhandicapranked", rankDifference);
+                if (result) return (result);
             }
             if (config.minhandicapunranked && !notification.ranked && (rankDifference < config.minhandicapunranked)) {
-                automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
+                let result = automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
+                if (result) return (result);
             }
             if (config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked && (rankDifference > config.maxhandicap)) {
-                automaticHandicapStoneDetectionReject("maxhandicap", rankDifference);
+                let result = automaticHandicapStoneDetectionReject("maxhandicap", rankDifference);
+                if (result) return (result);
             }
             if (config.maxhandicapranked && notification.ranked && (rankDifference > config.maxhandicapranked)) {
-                automaticHandicapStoneDetectionReject("maxhandicapranked", rankDifference);
+                let result = automaticHandicapStoneDetectionReject("maxhandicapranked", rankDifference);
+                if (result) return (result);
             }
             if (config.maxhandicapunranked && !notification.ranked && (rankDifference > config.maxhandicapunranked)) {
-                automaticHandicapStoneDetectionReject("maxhandicapunranked", rankDifference);
+                let result = automaticHandicapStoneDetectionReject("maxhandicapunranked", rankDifference);
+                if (result) return (result);
             }
         }
         /***** end of automatic handicap min/max handicap limits detection ******/
 
 
         if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
-            minmaxHandicapFamilyReject("minhandicap");
+            let result = minmaxHandicapFamilyReject("minhandicap");
+            if (result) return (result);
         }
         if (notification.handicap < config.minhandicapranked && notification.ranked) {
-            minmaxHandicapFamilyReject("minhandicapranked");
+            let result = minmaxHandicapFamilyReject("minhandicapranked");
+            if (result) return (result);
         }
         if (notification.handicap < config.minhandicapunranked && !notification.ranked) {
-            minmaxHandicapFamilyReject("minhandicapunranked");
+            let result = minmaxHandicapFamilyReject("minhandicapunranked");
+            if (result) return (result);
         }
         if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
-            minmaxHandicapFamilyReject("maxhandicap");
+            let result = minmaxHandicapFamilyReject("maxhandicap");
+            if (result) return (result);
         }
         if (notification.handicap > config.maxhandicapranked && notification.ranked) {
-            minmaxHandicapFamilyReject("maxhandicapranked");
+            let result = minmaxHandicapFamilyReject("maxhandicapranked");
+            if (result) return (result);
         }
         if (notification.handicap > config.maxhandicapunranked && !notification.ranked) {
-            minmaxHandicapFamilyReject("maxhandicapunranked");
+            let result = minmaxHandicapFamilyReject("maxhandicapunranked");
+            if (result) return (result);
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            genericAllowedFamiliesReject("komis", notification.komi);
+            let result = genericAllowedFamiliesReject("komis", notification.komi);
+            if (result) return (result);
         }
-
         if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            genericAllowedFamiliesReject("komisranked", notification.komi);
+            let result = genericAllowedFamiliesReject("komisranked", notification.komi);
+            if (result) return (result);
         }
-
         if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            genericAllowedFamiliesReject("komisunranked", notification.komi);
+            let result = genericAllowedFamiliesReject("komisunranked", notification.komi);
+            if (result) return (result);
         }
 
         if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {
-            genericAllowedFamiliesReject("speeds", t.speed);
+            let result = genericAllowedFamiliesReject("speeds", t.speed);
+            if (result) return (result);
         }
-
         if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedsranked) {
-            genericAllowedFamiliesReject("speedsranked", t.speed);
+            let result = genericAllowedFamiliesReject("speedsranked", t.speed);
+            if (result) return (result);
         }
-
         if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedsunranked) {
-            genericAllowedFamiliesReject("speedsunranked", t.speed);
+            let result = genericAllowedFamiliesReject("speedsunranked", t.speed);
+            if (result) return (result);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
         if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            genericAllowedFamiliesReject("timecontrols", t.time_control);
+            let result = genericAllowedFamiliesReject("timecontrols", t.time_control);
+            if (result) return (result);
         }
-
         if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolsranked) { 
-            genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
+            let result = genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
+            if (result) return (result);
         }
-
         if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
+            let result = genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
+            if (result) return (result);
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -1000,62 +1024,81 @@ class Connection {
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
+            if (result) return (result);
         }
         if (config.minperiodsblitzranked && (t.periods < config.minperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
+            if (result) return (result);
         }
         if (config.minperiodsblitzunranked && (t.periods < config.minperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
+            if (result) return (result);
         }
 
         if (config.minperiodslive && (t.periods < config.minperiodslive) && t.speed === "live" && !config.minperiodsliveranked && !config.minperiodsliveunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
+            if (result) return (result);
         }
         if (config.minperiodsliveranked && (t.periods < config.minperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
+            if (result) return (result);
         }
         if (config.minperiodsliveunranked && (t.periods < config.minperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
-        }
-        if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
+            if (result) return (result);
         }
 
+        if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
+            if (result) return (result);
+        }
         if (config.minperiodscorrranked && (t.periods < config.minperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
+            if (result) return (result);
         }
         if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
+            if (result) return (result);
         }
+
         if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
+            if (result) return (result);
         }
         if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
+            if (result) return (result);
         }
         if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
+            if (result) return (result);
         }
 
         if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
+            if (result) return (result);
         }
         if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
+            if (result) return (result);
         }
         if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
+            if (result) return (result);
         }
 
         if (config.maxperiodscorr && (t.periods > config.maxperiodscorr) && t.speed === "correspondence" && !config.maxperiodscorrranked && !config.maxperiodscorrunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
+            if (result) return (result);
         }
         if (config.maxperiodscorrranked && (t.periods > config.maxperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
+            if (result) return (result);
         }
         if (config.maxperiodscorrunranked && (t.periods > config.maxperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
+            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
+            if (result) return (result);
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
