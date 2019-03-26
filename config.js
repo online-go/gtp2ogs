@@ -577,11 +577,13 @@ exports.updateFromArgv = function() {
                     exports["allow_all_" + hashedArgNameStringConverted] = true;
                     // for example exports["allow_all_komis_ranked"] = true;
                 } else if (komi === "automatic") {
-                    exports[(prefixString + hashedArgNameStringConverted)[null]] = true;
-                    // for example exports["allowed_komis_ranked"[null]] = true;
+                    exports[prefixString + hashedArgNameStringConverted][null] = true;
+                    // for example exports["allowed_komis_ranked"][null] = true;
+                    // same as     exports.allowed_komis_ranked[null] = true;
                 } else {
-                    exports[(prefixString + hashedArgNameStringConverted)[komi]] = true;
-                    // for example exports["allowed_komis_ranked"[7.5]] = true;
+                    exports[prefixString + hashedArgNameStringConverted][komi] = true;
+                    // for example exports["allowed_komis_ranked"][7.5] = true;
+                    // same as     exports.allowed_komis_ranked[7.5] = true;
                 }
             }
 
@@ -598,21 +600,22 @@ exports.updateFromArgv = function() {
                     let hashedArgNameStringConvertedCustomHeights = jointArgStringToCustomHashedArgString(jointArgNameString, "heights");
                     // for example "boardsizesranked" => "boardsizewidths_ranked"
                     for (let width of argv[jointArgNameStringConvertedCustomWidths].split(',')) {
-                        exports[("allowed_custom_" + hashedArgNameStringConvertedCustomWidths)[width]] = true;
+                        exports["allowed_custom_" + hashedArgNameStringConvertedCustomWidths][width] = true;
                     }
                     for (let height of argv[jointArgNameStringConvertedCustomHeights].split(',')) {
-                        exports[("allowed_custom_" + hashedArgNameStringConvertedCustomHeights)[height]] = true;
+                        exports["allowed_custom_" + hashedArgNameStringConvertedCustomHeights][height] = true;
                     }
                 } else {
-                    exports[(prefixString + hashedArgNameStringConverted)[boardsize]] = true;
-                    // for example exports["allowed_boardsizes_ranked"[19]] = true;
+                    exports[prefixString + hashedArgNameStringConverted][boardsize] = true;
+                    // for example exports["allowed_boardsizes_ranked"][19] = true;
+                    // same as     exports.allowed_boardsizes_ranked[19] = true;
                 }
             }
 
         } else {
         // for non "boardsizes", non "komis" allowed families, switch back to default code :
             for (let e of argv[jointArgNameString].split(",")) {
-                exports[exportNameString[e]] = true;
+                exports[exportNameString][e] = true;
                 /* for example for (let e of argv["speedsranked"]) {
                                    exports["speeds_ranked"[e]] = true;
                                }
