@@ -428,18 +428,17 @@ class Connection {
         // all at the same time if bot admin wants
 
         /******** begining of BOARDSIZES *********/
+
         // for square board sizes only //
         /* if not square*/
         if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
             let result = boardsizeNotificationIsNotSquareReject("boardsizes");
             if (result) return (result);
         }
-
         if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
             let result = boardsizeNotificationIsNotSquareReject("boardsizesranked");
             if (result) return (result);
         }
-
         if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
             let result = boardsizeNotificationIsNotSquareReject("boardsizesunranked");
             if (result) return (result);
@@ -450,12 +449,10 @@ class Connection {
             let result = genericAllowedFamiliesReject("boardsizes", notification.width);
             if (result) return (result);
         }
-
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
             let result = genericAllowedFamiliesReject("boardsizesranked", notification.width);
             if (result) return (result);
         }
-
         if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
             let result = genericAllowedFamiliesReject("boardsizesunranked", notification.width);
             if (result) return (result);
@@ -467,12 +464,10 @@ class Connection {
             let result = customBoardsizeWidthsHeightsReject("boardsizewidths");
             if (result) return (result);
         }
-
         if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
             let result = customBoardsizeWidthsHeightsReject("boardsizewidthsranked");
             if (result) return (result);
         }
-
         if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
             let result = customBoardsizeWidthsHeightsReject("boardsizewidthsunranked");
             if (result) return (result);
@@ -483,12 +478,10 @@ class Connection {
             let result = customBoardsizeWidthsHeightsReject("boardsizeheights");
             if (result) return (result);
         }
-
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
             let result = customBoardsizeWidthsHeightsReject("boardsizeheightsranked");
             if (result) return (result);
         }
-
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
             let result = customBoardsizeWidthsHeightsReject("boardsizeheightsunranked");
             if (result) return (result);
@@ -496,18 +489,16 @@ class Connection {
         /******** end of BOARDSIZES *********/
 
         if (notification.handicap === -1 && config.noautohandicap) {
-            conn_log("no autohandicap");
-            return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+            let result = noAutohandicapReject("noautohandicap");
+            if (result) return (result);
 	}
-
         if (notification.handicap === -1 && config.noautohandicapranked && notification.ranked) {
-            conn_log("no autohandicap for ranked games");
-            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+            let result = noAutohandicapReject("noautohandicapranked");
+            if (result) return (result);
 	}
-
         if (notification.handicap === -1 && config.noautohandicapunranked && !notification.ranked) {
-            conn_log("no autohandicap for unranked games");
-            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+            let result = noAutohandicapReject("noautohandicapunranked");
+            if (result) return (result);
 	}
 
         /***** automatic handicap min/max handicap limits detection ******/
@@ -1741,6 +1732,22 @@ class Connection {
             return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
         }
 
+        function noAutohandicapReject(argNameString) {
+            // first, we define rankedUnranked, depending on argNameString
+
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`no autohandicap ${rankedUnranked}`);
+            return { reject: true, msg: `For easier bot management, -automatic- handicap is disabled on this bot ${rankedUnranked}, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones` };
+        }
+
         function genericAllowedFamiliesReject(argNameString, notificationUnit) {
             // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
 
@@ -1805,9 +1812,9 @@ class Connection {
             let rankedUnranked = "";
             // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
             if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games ";
+                rankedUnranked = "for ranked games";
             } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games ";
+                rankedUnranked = "for unranked games";
             }
 
             let widthHeight = "";
@@ -1824,7 +1831,7 @@ class Connection {
             // then finally, the actual reject :
             conn_log(`${user.username} wanted boardsize ${widthHeight} ${rankedUnranked}-${notificationUnit}-, not in -${config[argNameString]}- `);
             // for example : "user wanted boardsize width for ranked games -15-, not in -17,19,25-
-            return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values for ${rankedUnranked} : ${config[argNameString]}` };
+            return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values ${rankedUnranked} : ${config[argNameString]}` };
             /* for example : In your selected board size 15 x 2 (width x height), boardsize WIDTH (15) is not allowed for ranked games on this bot, please choose one of these allowed CUSTOM boardsize WIDTHS values for ranked games : 17,19,25
             */
         }
