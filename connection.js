@@ -288,14 +288,11 @@ class Connection {
         let user = notification.user;
 
         if (config.banned_users[user.username] || config.banned_users[user.id]) {
-            let result = bannedFamilyReject("bans");
-            if (result) return (result);
+            return bannedFamilyReject("bans");
         } else if (notification.ranked && (config.banned_users_ranked[user.username] || config.banned_users_ranked[user.id])) {
-            let result = bannedFamilyReject("bansranked");
-            if (result) return (result);
+            return bannedFamilyReject("bansranked");
         } else if (!notification.ranked && (config.banned_users_unranked[user.username] || config.banned_users_unranked[user.id])) {
-            let result = bannedFamilyReject("bansunranked");
-            if (result) return (result);
+            return bannedFamilyReject("bansunranked");
         }
 
         if (config.proonly && !user.professional) {
@@ -322,28 +319,22 @@ class Connection {
         }
 
         if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
-            let result = minmaxRankFamilyReject("minrank");
-            if (result) return (result);
+            return minmaxRankFamilyReject("minrank");
         }
         if ((user.ranking < config.minrankranked) && notification.ranked) {
-            let result = minmaxRankFamilyReject("minrankranked");
-            if (result) return (result);
+            return minmaxRankFamilyReject("minrankranked");
         }
         if ((user.ranking < config.minrankunranked) && !notification.ranked) {
-            let result = minmaxRankFamilyReject("minrankunranked");
-            if (result) return (result);
+            return minmaxRankFamilyReject("minrankunranked");
         }
         if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
-            let result = minmaxRankFamilyReject("maxrank")
-            if (result) return (result);
+            return minmaxRankFamilyReject("maxrank")
         }
         if ((user.ranking > config.maxrankranked) && notification.ranked) {
-            let result = minmaxRankFamilyReject("maxrankranked");
-            if (result) return (result);
+            return minmaxRankFamilyReject("maxrankranked");
         }
         if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
-            let result = minmaxRankFamilyReject("maxrankunranked");
-            if (result) return (result);
+            return minmaxRankFamilyReject("maxrankunranked");
         }
 
         return { reject: false }; // OK !
@@ -432,73 +423,58 @@ class Connection {
         // for square board sizes only //
         /* if not square*/
         if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            let result = boardsizeNotificationIsNotSquareReject("boardsizes");
-            if (result) return (result);
+            return boardsizeNotificationIsNotSquareReject("boardsizes");
         }
         if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-            let result = boardsizeNotificationIsNotSquareReject("boardsizesranked");
-            if (result) return (result);
+            return boardsizeNotificationIsNotSquareReject("boardsizesranked");
         }
         if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-            let result = boardsizeNotificationIsNotSquareReject("boardsizesunranked");
-            if (result) return (result);
+            return boardsizeNotificationIsNotSquareReject("boardsizesunranked");
         }
 
         /* if square, check if square board size is allowed*/
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            let result = genericAllowedFamiliesReject("boardsizes", notification.width);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("boardsizes", notification.width);
         }
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            let result = genericAllowedFamiliesReject("boardsizesranked", notification.width);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("boardsizesranked", notification.width);
         }
         if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            let result = genericAllowedFamiliesReject("boardsizesunranked", notification.width);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
         }
 
         // for custom board sizes, including square board sizes if width === height as well //
         /* if custom, check width */
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizewidths[notification.width] && !config.boardsizewidthsranked && !config.boardsizewidthsunranked) {
-            let result = customBoardsizeWidthsHeightsReject("boardsizewidths");
-            if (result) return (result);
+            return customBoardsizeWidthsHeightsReject("boardsizewidths");
         }
         if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
-            let result = customBoardsizeWidthsHeightsReject("boardsizewidthsranked");
-            if (result) return (result);
+            return customBoardsizeWidthsHeightsReject("boardsizewidthsranked");
         }
         if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
-            let result = customBoardsizeWidthsHeightsReject("boardsizewidthsunranked");
-            if (result) return (result);
+            return customBoardsizeWidthsHeightsReject("boardsizewidthsunranked");
         }
 
         /* if custom, check height */
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !config.boardsizeheightsranked && !config.boardsizeheightsunranked) {
-            let result = customBoardsizeWidthsHeightsReject("boardsizeheights");
-            if (result) return (result);
+            return customBoardsizeWidthsHeightsReject("boardsizeheights");
         }
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
-            let result = customBoardsizeWidthsHeightsReject("boardsizeheightsranked");
-            if (result) return (result);
+            return customBoardsizeWidthsHeightsReject("boardsizeheightsranked");
         }
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
-            let result = customBoardsizeWidthsHeightsReject("boardsizeheightsunranked");
-            if (result) return (result);
+            return customBoardsizeWidthsHeightsReject("boardsizeheightsunranked");
         }
         /******** end of BOARDSIZES *********/
 
         if (notification.handicap === -1 && config.noautohandicap) {
-            let result = noAutohandicapReject("noautohandicap");
-            if (result) return (result);
+            return noAutohandicapReject("noautohandicap");
 	}
         if (notification.handicap === -1 && config.noautohandicapranked && notification.ranked) {
-            let result = noAutohandicapReject("noautohandicapranked");
-            if (result) return (result);
+            return noAutohandicapReject("noautohandicapranked");
 	}
         if (notification.handicap === -1 && config.noautohandicapunranked && !notification.ranked) {
-            let result = noAutohandicapReject("noautohandicapunranked");
-            if (result) return (result);
+            return noAutohandicapReject("noautohandicapunranked");
 	}
 
         /***** automatic handicap min/max handicap limits detection ******/
@@ -526,96 +502,75 @@ class Connection {
             // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
             // we eliminate all unwanted values, everything not forbidden is allowed
             if (config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked && (rankDifference < config.minhandicap)) {
-                let result = automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
-                if (result) return (result);
+                return automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
             }
             if (config.minhandicapranked && notification.ranked && (rankDifference < config.minhandicapranked)) {
-                let result = automaticHandicapStoneDetectionReject("minhandicapranked", rankDifference);
-                if (result) return (result);
+                return automaticHandicapStoneDetectionReject("minhandicapranked", rankDifference);
             }
             if (config.minhandicapunranked && !notification.ranked && (rankDifference < config.minhandicapunranked)) {
-                let result = automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
-                if (result) return (result);
+                return automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
             }
             if (config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked && (rankDifference > config.maxhandicap)) {
-                let result = automaticHandicapStoneDetectionReject("maxhandicap", rankDifference);
-                if (result) return (result);
+                return automaticHandicapStoneDetectionReject("maxhandicap", rankDifference);
             }
             if (config.maxhandicapranked && notification.ranked && (rankDifference > config.maxhandicapranked)) {
-                let result = automaticHandicapStoneDetectionReject("maxhandicapranked", rankDifference);
-                if (result) return (result);
+                return automaticHandicapStoneDetectionReject("maxhandicapranked", rankDifference);
             }
             if (config.maxhandicapunranked && !notification.ranked && (rankDifference > config.maxhandicapunranked)) {
-                let result = automaticHandicapStoneDetectionReject("maxhandicapunranked", rankDifference);
-                if (result) return (result);
+                return automaticHandicapStoneDetectionReject("maxhandicapunranked", rankDifference);
             }
         }
         /***** end of automatic handicap min/max handicap limits detection ******/
 
 
         if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
-            let result = minmaxHandicapFamilyReject("minhandicap");
-            if (result) return (result);
+            return minmaxHandicapFamilyReject("minhandicap");
         }
         if (notification.handicap < config.minhandicapranked && notification.ranked) {
-            let result = minmaxHandicapFamilyReject("minhandicapranked");
-            if (result) return (result);
+            return minmaxHandicapFamilyReject("minhandicapranked");
         }
         if (notification.handicap < config.minhandicapunranked && !notification.ranked) {
-            let result = minmaxHandicapFamilyReject("minhandicapunranked");
-            if (result) return (result);
+            return minmaxHandicapFamilyReject("minhandicapunranked");
         }
         if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
-            let result = minmaxHandicapFamilyReject("maxhandicap");
-            if (result) return (result);
+            return minmaxHandicapFamilyReject("maxhandicap");
         }
         if (notification.handicap > config.maxhandicapranked && notification.ranked) {
-            let result = minmaxHandicapFamilyReject("maxhandicapranked");
-            if (result) return (result);
+            return minmaxHandicapFamilyReject("maxhandicapranked");
         }
         if (notification.handicap > config.maxhandicapunranked && !notification.ranked) {
-            let result = minmaxHandicapFamilyReject("maxhandicapunranked");
-            if (result) return (result);
+            return minmaxHandicapFamilyReject("maxhandicapunranked");
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            let result = genericAllowedFamiliesReject("komis", notification.komi);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("komis", notification.komi);
         }
         if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            let result = genericAllowedFamiliesReject("komisranked", notification.komi);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("komisranked", notification.komi);
         }
         if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            let result = genericAllowedFamiliesReject("komisunranked", notification.komi);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("komisunranked", notification.komi);
         }
 
         if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {
-            let result = genericAllowedFamiliesReject("speeds", t.speed);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("speeds", t.speed);
         }
         if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedsranked) {
-            let result = genericAllowedFamiliesReject("speedsranked", t.speed);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("speedsranked", t.speed);
         }
         if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedsunranked) {
-            let result = genericAllowedFamiliesReject("speedsunranked", t.speed);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("speedsunranked", t.speed);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
         if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            let result = genericAllowedFamiliesReject("timecontrols", t.time_control);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("timecontrols", t.time_control);
         }
         if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolsranked) { 
-            let result = genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
         }
         if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            let result = genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
-            if (result) return (result);
+            return genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -1031,81 +986,63 @@ class Connection {
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
         }
         if (config.minperiodsblitzranked && (t.periods < config.minperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
         }
         if (config.minperiodsblitzunranked && (t.periods < config.minperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
         }
 
         if (config.minperiodslive && (t.periods < config.minperiodslive) && t.speed === "live" && !config.minperiodsliveranked && !config.minperiodsliveunranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
         }
         if (config.minperiodsliveranked && (t.periods < config.minperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
         }
         if (config.minperiodsliveunranked && (t.periods < config.minperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
         }
 
         if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
         }
         if (config.minperiodscorrranked && (t.periods < config.minperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
         }
         if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
         }
 
         if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
         }
         if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
         }
         if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
         }
 
         if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
         }
         if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
         }
         if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
         }
 
         if (config.maxperiodscorr && (t.periods > config.maxperiodscorr) && t.speed === "correspondence" && !config.maxperiodscorrranked && !config.maxperiodscorrunranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
         }
         if (config.maxperiodscorrranked && (t.periods > config.maxperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
         }
         if (config.maxperiodscorrunranked && (t.periods > config.maxperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            let result = minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
-            if (result) return (result);
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
