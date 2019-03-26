@@ -431,18 +431,18 @@ class Connection {
         // for square board sizes only //
         /* if not square*/
         if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            conn_log("board was not square, not allowed");
-            return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            let result = boardsizeNotificationIsNotSquareReject("boardsizes");
+            if (result) return (result);
         }
 
         if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-            conn_log("board was not square, not allowed for ranked games");
-            return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for ranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            let result = boardsizeNotificationIsNotSquareReject("boardsizesranked");
+            if (result) return (result);
         }
 
         if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-            conn_log("board was not square, not allowed for unranked games");
-            return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for unranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            let result = boardsizeNotificationIsNotSquareReject("boardsizesunranked");
+            if (result) return (result);
         }
 
         /* if square, check if square board size is allowed*/
@@ -1783,6 +1783,22 @@ class Connection {
             */
         }
 
+        function boardsizeNotificationIsNotSquareReject(argNameString) {
+            // first, we define rankedUnranked, depending on argNameString
+
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`boardsize ${notification.width} x ${notification.height} is not square, not allowed`);
+            return { reject: true, msg: `Your selected board size ${notification.width} x ${notification.height} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example ${boardsizeSquareToDisplayString(config[argNameString])}` };
+        }
+
         function customBoardsizeWidthsHeightsReject(argNameString) {
             // first, we define rankedUnranked, widthHeight, depending on argNameString
 
@@ -1808,7 +1824,7 @@ class Connection {
             // then finally, the actual reject :
             conn_log(`${user.username} wanted boardsize ${widthHeight} ${rankedUnranked}-${notificationUnit}-, not in -${config[argNameString]}- `);
             // for example : "user wanted boardsize width for ranked games -15-, not in -17,19,25-
-            return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed for ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values for ${rankedUnranked} : ${config[argNameString]}` };
+            return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values for ${rankedUnranked} : ${config[argNameString]}` };
             /* for example : In your selected board size 15 x 2 (width x height), boardsize WIDTH (15) is not allowed for ranked games on this bot, please choose one of these allowed CUSTOM boardsize WIDTHS values for ranked games : 17,19,25
             */
         }
