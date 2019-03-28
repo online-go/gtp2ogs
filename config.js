@@ -242,6 +242,7 @@ exports.updateFromArgv = function() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
+        .describe('fakerank', 'Temporary manual bot ranking input by bot admin to fix autohandicap bypass issue, see /docs/OPTIONS-LIST.md for details')
         .describe('nopause', 'Do not allow games to be paused')
         .describe('nopauseranked', 'Do not allow ranked games to be paused')
         .describe('nopauseunranked', 'Do not allow unranked games to be paused')
@@ -405,24 +406,6 @@ exports.updateFromArgv = function() {
         return false;
     }
 
-    if (argv.bans) {
-        for (let e of argv.bans.split(',')) {
-            exports.banned_users[e] = true;
-        }
-    }
-
-    if (argv.bansranked) {
-        for (let e of argv.bansranked.split(',')) {
-            exports.banned_users_ranked[e] = true;
-        }
-    }
-
-    if (argv.bansunranked) {
-        for (let e of argv.bansunranked.split(',')) {
-            exports.banned_users_unranked[e] = true;
-        }
-    }
-
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
         parseMinmaxRankFromNameString("minrank");
     }
@@ -439,8 +422,12 @@ exports.updateFromArgv = function() {
         parseMinmaxRankFromNameString("maxrankranked");
     }
     if (argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("minrankunranked");
+        parseMinmaxRankFromNameString("maxrankunranked");
     }
+    if (argv.fakerank) {
+        parseMinmaxRankFromNameString("fakerank");
+    }
+    // TODO : remove fakerank when notification.bot.ranking is server implemented
 
     if (argv.boardsizes) {
         for (let boardsize of argv.boardsizes.split(',')) {

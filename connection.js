@@ -288,14 +288,11 @@ class Connection {
         let user = notification.user;
 
         if (config.banned_users[user.username] || config.banned_users[user.id]) {
-            conn_log(user.username + " (" + user.id + ") is banned, rejecting challenge");
-            return { reject: true };
+            return bannedFamilyReject("bans");
         } else if (notification.ranked && (config.banned_users_ranked[user.username] || config.banned_users_ranked[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from ranked games, rejecting challenge");
-            return { reject: true };
+            return bannedFamilyReject("bansranked");
         } else if (!notification.ranked && (config.banned_users_unranked[user.username] || config.banned_users_unranked[user.id])) {
-            conn_log(user.username + " (" + user.id + ") is banned from unranked games, rejecting challenge");
-            return { reject: true };
+            return bannedFamilyReject("bansunranked");
         }
 
         if (config.proonly && !user.professional) {
@@ -322,22 +319,22 @@ class Connection {
         }
 
         if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
-            minmaxRankFamilyReject("minrank")
+            return minmaxRankFamilyReject("minrank");
         }
         if ((user.ranking < config.minrankranked) && notification.ranked) {
-            minmaxRankFamilyReject("minrankranked")
+            return minmaxRankFamilyReject("minrankranked");
         }
         if ((user.ranking < config.minrankunranked) && !notification.ranked) {
-            minmaxRankFamilyReject("minrankunranked")
+            return minmaxRankFamilyReject("minrankunranked");
         }
         if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
-            minmaxRankFamilyReject("maxrank")
+            return minmaxRankFamilyReject("maxrank")
         }
         if ((user.ranking > config.maxrankranked) && notification.ranked) {
-            minmaxRankFamilyReject("maxrankranked")
+            return minmaxRankFamilyReject("maxrankranked");
         }
         if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
-            minmaxRankFamilyReject("maxrankunranked")
+            return minmaxRankFamilyReject("maxrankunranked");
         }
 
         return { reject: false }; // OK !
@@ -369,6 +366,22 @@ class Connection {
             // then finally, the actual reject :
             conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked}is ${humanReadableMinmaxRank}`);
             return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${config[argNameString]}, your rank is too ${lowHigh} ${rankedUnranked}` };
+        }
+
+        function bannedFamilyReject(argNameString) {
+            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
+
+            let rankedUnranked = "from all games";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "from ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "from unranked games";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`Username ${user.username} (user id ${user.id}) is banned ${rankedUnranked}`);
+            return { reject: true, msg: `Username ${user.username} (user id ${user.id}) is banned ${rankedUnranked} on this bot by bot admin` };
         }
 
     } /* }}} */
@@ -406,139 +419,158 @@ class Connection {
         // all at the same time if bot admin wants
 
         /******** begining of BOARDSIZES *********/
+
         // for square board sizes only //
         /* if not square*/
         if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            conn_log("board was not square, not allowed");
-            return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            return boardsizeNotificationIsNotSquareReject("boardsizes");
         }
-
         if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-            conn_log("board was not square, not allowed for ranked games");
-            return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for ranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            return boardsizeNotificationIsNotSquareReject("boardsizesranked");
         }
-
         if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-            conn_log("board was not square, not allowed for unranked games");
-            return { reject: true, msg: "Your selected board size " + notification.width + "x" + notification.height + " (width x height), is not square, not allowed for unranked games, please choose a square board size (same width and height, for example 9x9 or 19x19). " };
+            return boardsizeNotificationIsNotSquareReject("boardsizesunranked");
         }
 
         /* if square, check if square board size is allowed*/
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            genericAllowedFamiliesReject("boardsizes", notification.width);
+            return genericAllowedFamiliesReject("boardsizes", notification.width);
         }
-
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            genericAllowedFamiliesReject("boardsizesranked", notification.width);
+            return genericAllowedFamiliesReject("boardsizesranked", notification.width);
         }
-
         if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            genericAllowedFamiliesReject("boardsizesunranked", notification.width);
+            return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
         }
 
         // for custom board sizes, including square board sizes if width === height as well //
         /* if custom, check width */
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizewidths[notification.width] && !config.boardsizewidthsranked && !config.boardsizewidthsunranked) {
-            conn_log("custom board width " + notification.width + " is not an allowed custom board width");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed, please choose one of these allowed CUSTOM board WIDTH values : " + config.boardsizewidths };
+            return customBoardsizeWidthsHeightsReject("boardsizewidths");
         }
-
         if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
-            conn_log("custom board width " + notification.width + " is not an allowed custom board width for ranked games");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board WIDTH values for ranked games : " + config.boardsizewidthsranked };
+            return customBoardsizeWidthsHeightsReject("boardsizewidthsranked");
         }
-
         if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
-            conn_log("custom board width " + notification.width + " is not an allowed custom board width for unranked games");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board WIDTH (" + notification.width + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board WIDTH values for unranked games : " + config.boardsizewidthsunranked };
+            return customBoardsizeWidthsHeightsReject("boardsizewidthsunranked");
         }
 
         /* if custom, check height */
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !config.boardsizeheightsranked && !config.boardsizeheightsunranked) {
-            conn_log("custom board height " + notification.height + " is not an allowed custom board height");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed, please choose one of these allowed CUSTOM board HEIGHT values : " + config.boardsizeheights };
+            return customBoardsizeWidthsHeightsReject("boardsizeheights");
         }
-
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
-            conn_log("custom board height " + notification.height + " is not an allowed custom board height for ranked games ");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for ranked games, please choose one of these allowed CUSTOM board HEIGHT values for ranked games: " + config.boardsizeheights };
+            return customBoardsizeWidthsHeightsReject("boardsizeheightsranked");
         }
-
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
-            conn_log("custom board height " + notification.height + " is not an allowed custom board height for unranked games ");
-            return { reject: true, msg: "In your selected board size " + notification.width + "x" + notification.height + " (width x height), board HEIGHT (" + notification.height + ") is not allowed for unranked games, please choose one of these allowed CUSTOM board HEIGHT values for unranked games: " + config.boardsizeheights };
+            return customBoardsizeWidthsHeightsReject("boardsizeheightsunranked");
         }
         /******** end of BOARDSIZES *********/
 
-        if (config.noautohandicap && notification.handicap === -1 && !config.noautohandicapranked && !config.noautohandicapunranked) {
-            conn_log("no autohandicap, rejecting challenge") ;
-            return { reject: true, msg: "For easier bot management, automatic handicap is disabled on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
+        if (notification.handicap === -1 && config.noautohandicap) {
+            return noAutohandicapReject("noautohandicap");
+	}
+        if (notification.handicap === -1 && config.noautohandicapranked && notification.ranked) {
+            return noAutohandicapReject("noautohandicapranked");
+	}
+        if (notification.handicap === -1 && config.noautohandicapunranked && !notification.ranked) {
+            return noAutohandicapReject("noautohandicapunranked");
 	}
 
-        if (config.noautohandicapranked && notification.handicap === -1 && notification.ranked) {
-            conn_log("no autohandicap for ranked games, rejecting challenge") ;
-            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for ranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
-	}
+        /***** automatic handicap min/max handicap limits detection ******/
 
-        if (config.noautohandicapunranked && notification.handicap === -1 && !notification.ranked) {
-            conn_log("no autohandicap for unranked games, rejecting challenge") ;
-            return { reject: true, msg: "For easier bot management, automatic handicap is disabled for unranked games on this bot, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones" };
-	}
+        // below is a fix of automatic handicap bypass issue
+        // by manually calculating handicap stones number
+        // then calculate if it is within set min/max
+        // limits set by botadmin
+
+        // TODO : for all the code below, replace "fakerank" with 
+        // notification.bot.ranking (server support for bot ranking detection 
+        // in gtp2ogs)
+
+        if (notification.handicap === -1 && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
+            let rankDifference = Math.abs(Math.trunc(user.ranking) - Math.trunc(config.fakerank));
+            // adding a trunk because a 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+            // but it is in fact a still a 6k vs 7k = Math.abs(6-7) = 1 rank difference game
+
+            // first, if ranked game, we eliminate > 9 rank difference
+            if (notification.ranked && (rankDifference > 9)) {
+                conn_log("Rank difference > 9 in a ranked game would be 10+ handicap stones, not allowed");
+                return {reject: true, msg: "Rank difference between you and this bot is " + rankDifference + "\n The difference is too big to play a ranked game with handicap (max is 9 handicap for ranked games), try unranked handicap or manually reduce the number of handicap stones in -custom handicap-"};
+            }
+
+            // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
+            // we eliminate all unwanted values, everything not forbidden is allowed
+            if (config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked && (rankDifference < config.minhandicap)) {
+                return automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
+            }
+            if (config.minhandicapranked && notification.ranked && (rankDifference < config.minhandicapranked)) {
+                return automaticHandicapStoneDetectionReject("minhandicapranked", rankDifference);
+            }
+            if (config.minhandicapunranked && !notification.ranked && (rankDifference < config.minhandicapunranked)) {
+                return automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
+            }
+            if (config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked && (rankDifference > config.maxhandicap)) {
+                return automaticHandicapStoneDetectionReject("maxhandicap", rankDifference);
+            }
+            if (config.maxhandicapranked && notification.ranked && (rankDifference > config.maxhandicapranked)) {
+                return automaticHandicapStoneDetectionReject("maxhandicapranked", rankDifference);
+            }
+            if (config.maxhandicapunranked && !notification.ranked && (rankDifference > config.maxhandicapunranked)) {
+                return automaticHandicapStoneDetectionReject("maxhandicapunranked", rankDifference);
+            }
+        }
+        /***** end of automatic handicap min/max handicap limits detection ******/
+
 
         if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
-            minmaxHandicapFamilyReject("minhandicap");
+            return minmaxHandicapFamilyReject("minhandicap");
         }
         if (notification.handicap < config.minhandicapranked && notification.ranked) {
-            minmaxHandicapFamilyReject("minhandicapranked");
+            return minmaxHandicapFamilyReject("minhandicapranked");
         }
         if (notification.handicap < config.minhandicapunranked && !notification.ranked) {
-            minmaxHandicapFamilyReject("minhandicapunranked");
+            return minmaxHandicapFamilyReject("minhandicapunranked");
         }
         if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
-            minmaxHandicapFamilyReject("maxhandicap");
+            return minmaxHandicapFamilyReject("maxhandicap");
         }
         if (notification.handicap > config.maxhandicapranked && notification.ranked) {
-            minmaxHandicapFamilyReject("maxhandicapranked");
+            return minmaxHandicapFamilyReject("maxhandicapranked");
         }
         if (notification.handicap > config.maxhandicapunranked && !notification.ranked) {
-            minmaxHandicapFamilyReject("maxhandicapunranked");
+            return minmaxHandicapFamilyReject("maxhandicapunranked");
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            genericAllowedFamiliesReject("komis", notification.komi);
+            return genericAllowedFamiliesReject("komis", notification.komi);
         }
-
         if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            genericAllowedFamiliesReject("komisranked", notification.komi);
+            return genericAllowedFamiliesReject("komisranked", notification.komi);
         }
-
         if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            genericAllowedFamiliesReject("komisunranked", notification.komi);
+            return genericAllowedFamiliesReject("komisunranked", notification.komi);
         }
 
         if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {
-            genericAllowedFamiliesReject("speeds", t.speed);
+            return genericAllowedFamiliesReject("speeds", t.speed);
         }
-
         if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedsranked) {
-            genericAllowedFamiliesReject("speedsranked", t.speed);
+            return genericAllowedFamiliesReject("speedsranked", t.speed);
         }
-
         if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedsunranked) {
-            genericAllowedFamiliesReject("speedsunranked", t.speed);
+            return genericAllowedFamiliesReject("speedsunranked", t.speed);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
         if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            genericAllowedFamiliesReject("timecontrols", t.time_control);
+            return genericAllowedFamiliesReject("timecontrols", t.time_control);
         }
-
         if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolsranked) { 
-            genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
+            return genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
         }
-
         if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
+            return genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -954,62 +986,63 @@ class Connection {
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
 
         if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
         }
         if (config.minperiodsblitzranked && (t.periods < config.minperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
         }
         if (config.minperiodsblitzunranked && (t.periods < config.minperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
         }
 
         if (config.minperiodslive && (t.periods < config.minperiodslive) && t.speed === "live" && !config.minperiodsliveranked && !config.minperiodsliveunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
         }
         if (config.minperiodsliveranked && (t.periods < config.minperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
         }
         if (config.minperiodsliveunranked && (t.periods < config.minperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
-        }
-        if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
         }
 
+        if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
+        }
         if (config.minperiodscorrranked && (t.periods < config.minperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
         }
         if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
         }
+
         if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
         }
         if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
         }
         if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
         }
 
         if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
         }
         if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
         }
         if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
         }
 
         if (config.maxperiodscorr && (t.periods > config.maxperiodscorr) && t.speed === "correspondence" && !config.maxperiodscorrranked && !config.maxperiodscorrunranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
         }
         if (config.maxperiodscorrranked && (t.periods > config.maxperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
         }
         if (config.maxperiodscorrunranked && (t.periods > config.maxperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
+            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
         }
 
         ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
@@ -1611,14 +1644,45 @@ class Connection {
             return { reject: true, msg: `${minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of periods` };
         }
 
-        function pluralFamilyStringToSingularString(plural) {
-            let pluralToConvert = plural.split("unranked")[0].split("ranked")[0].split("");
-                // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
-            pluralToConvert.pop();
-                // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
-            pluralToConvert = pluralToConvert.join("");
-                // for example ["s", "p", "e", "e", "d"] -> "speed"
-            return pluralToConvert;
+        function automaticHandicapStoneDetectionReject (argNameString, rankDifference) {
+            // first, we define rankedUnranked and minMax depending on argNameString
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            let minMax = "";
+            let increaseDecrease = "";
+            if (argNameString.includes("min")) {
+                minMax = "Min";
+                increaseDecrease = "increase";
+            } else if (argNameString.includes("max")) {
+                minMax = "Max";
+                increaseDecrease = "reduce";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`Automatic handicap ${rankedUnranked} was set to ${rankDifference} stones, but ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones`);
+            return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
+        }
+
+        function noAutohandicapReject(argNameString) {
+            // first, we define rankedUnranked, depending on argNameString
+
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`no autohandicap ${rankedUnranked}`);
+            return { reject: true, msg: `For easier bot management, -automatic- handicap is disabled on this bot ${rankedUnranked}, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones` };
         }
 
         function genericAllowedFamiliesReject(argNameString, notificationUnit) {
@@ -1635,12 +1699,14 @@ class Connection {
             let argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
             // for example "speedsranked" -> "speed"
 
-            // then, we process the inputs to human readable, 
-            let argConverted = argNameString;
+            // then, we process the inputs to human readable, and convert them if needed
+            let argValueString = config[argNameString];
+            // for example config["boardsizesranked"];
             let notificationUnitConverted = notificationUnit;
             // if argFamilySingularString family is "boardsize" type :
             if (argFamilySingularString.includes("boardsize")) {
-                argConverted = boardsizeSquareToDisplayString(config[argNameString]);
+                argValueString = boardsizeSquareToDisplayString(config[argNameString]);
+                // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
                 notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
             }
             // if argFamilySingularString family is "komi" type :
@@ -1652,12 +1718,58 @@ class Connection {
             // else we dont dont convert : we dont change anything
 
             // then finally, the actual reject :
-            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${config[argConverted]}- `);
+            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${argValueString}- `);
             // for example : "user wanted speed for ranked games -blitz-, not in -live,correspondence-
-            return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${config[argConverted]}-` };
+            return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${argValueString}-` };
             /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
                              choose one of these allowed speeds for ranked games : 
                              -live,correspondence-"
+            */
+        }
+
+        function boardsizeNotificationIsNotSquareReject(argNameString) {
+            // first, we define rankedUnranked, depending on argNameString
+
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            // then finally, the actual reject :
+            conn_log(`boardsize ${notification.width} x ${notification.height} is not square, not allowed`);
+            return { reject: true, msg: `Your selected board size ${notification.width} x ${notification.height} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example try 9x9 or 19x19}` };
+        }
+
+        function customBoardsizeWidthsHeightsReject(argNameString) {
+            // first, we define rankedUnranked, widthHeight, depending on argNameString
+
+            let rankedUnranked = "";
+            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
+            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+                rankedUnranked = "for ranked games";
+            } else if (argNameString.includes("unranked")) {
+                rankedUnranked = "for unranked games";
+            }
+
+            let widthHeight = "";
+            let notificationUnit = "";
+            if (argNameString.includes("width")) {
+                widthHeight = "width";
+                notificationUnit = notification[widthHeight];
+            }
+            if (argNameString.includes("height")) {
+                widthHeight = "height";
+                notificationUnit = notification[widthHeight];
+            }
+
+            // then finally, the actual reject :
+            conn_log(`${user.username} wanted boardsize ${widthHeight} ${rankedUnranked}-${notificationUnit}-, not in -${config[argNameString]}- `);
+            // for example : "user wanted boardsize width for ranked games -15-, not in -17,19,25-
+            return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values ${rankedUnranked} : ${config[argNameString]}` };
+            /* for example : In your selected board size 15 x 2 (width x height), boardsize WIDTH (15) is not allowed for ranked games on this bot, please choose one of these allowed CUSTOM boardsize WIDTHS values for ranked games : 17,19,25
             */
         }
 
@@ -1793,10 +1905,21 @@ function timespanToDisplayString(timespan) { /* {{{ */
 
 function boardsizeSquareToDisplayString(boardsizeSquare) { /* {{{ */
     return boardsizeSquare
+    .toString()
     .split(',')
     .map(e => e.trim())
     .map(e => `${e}x${e}`)
     .join(', ');
+} /* }}} */
+
+function pluralFamilyStringToSingularString(plural) { /* {{{ */
+    let pluralToConvert = plural.split("unranked")[0].split("ranked")[0].split("");
+    // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
+    pluralToConvert.pop();
+    // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
+    pluralToConvert = pluralToConvert.join("");
+    // for example ["s", "p", "e", "e", "d"] -> "speed"
+    return pluralToConvert;
 } /* }}} */
 
 function conn_log() { /* {{{ */
