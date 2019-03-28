@@ -429,11 +429,129 @@ exports.updateFromArgv = function() {
     }
     // TODO : remove fakerank when notification.bot.ranking is server implemented
 
-    const familyNamesArray = generateHashedArrayFromFamilyNamesArray(["bans", "boardsizes", "komis", "speeds", "timecontrols"]);
+    if (argv.boardsizes) {
+        for (let boardsize of argv.boardsizes.split(',')) {
+            if (boardsize === "all") {
+                exports.allow_all_boardsizes = true;
+            } else if (boardsize === "custom") {
+                exports.allow_custom_boardsizes = true;
+                for (let boardsizewidth of argv.boardsizewidths.split(',')) {
+                    exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
+                }
+                for (let boardsizeheight of argv.boardsizeheights.split(',')) {
+                    exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
+                }
+            } else {
+                exports.allowed_boardsizes[boardsize] = true;
+            }
+        }
+    }
 
-    for (let familyName of familyNamesArray) {
-        if (argv[familyName]) {
-            allowedFamilyExport(familyName);
+    if (argv.boardsizesranked) {
+        for (let boardsizeranked of argv.boardsizesranked.split(',')) {
+            if (boardsizeranked === "all") {
+                exports.allow_all_boardsizes_ranked = true;
+            } else if (boardsizeranked === "custom") {
+                exports.allow_custom_boardsizes_ranked = true;
+                for (let boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
+                    exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
+                }
+                for (let boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
+                    exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
+                }
+            } else {
+                exports.allowed_boardsizes_ranked[boardsizeranked] = true;
+            }
+        }
+    }
+
+    if (argv.boardsizesunranked) {
+        for (let boardsizeunranked of argv.boardsizesunranked.split(',')) {
+            if (boardsizeunranked === "all") {
+                exports.allow_all_boardsizes_unranked = true;
+            } else if (boardsizeunranked === "custom") {
+                exports.allow_custom_boardsizes_unranked = true;
+                for (let boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
+                    exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
+                }
+                for (let boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
+                    exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
+                }
+            } else {
+                exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
+            }
+        }
+    }
+
+    if (argv.komis) {
+        for (let komi of argv.komis.split(',')) {
+            if (komi === "all") {
+                exports.allow_all_komis = true;
+            } else if (komi === "automatic") {
+                exports.allowed_komis[null] = true;
+            } else {
+                exports.allowed_komis[komi] = true;
+            }
+        }
+    }
+
+    if (argv.komisranked) {
+        for (let komiranked of argv.komisranked.split(',')) {
+            if (komiranked === "all") {
+                exports.allow_all_komis_ranked = true;
+            } else if (komiranked === "automatic") {
+                exports.allowed_komis_ranked[null] = true;
+            } else {
+                exports.allowed_komis_ranked[komiranked] = true;
+            }
+        }
+    }
+
+    if (argv.komisunranked) {
+        for (let komiunranked of argv.komisunranked.split(',')) {
+            if (komiunranked === "all") {
+                exports.allow_all_komis_unranked = true;
+            } else if (komiunranked === "automatic") {
+                exports.allowed_komis_unranked[null] = true;
+            } else {
+                exports.allowed_komis_unranked[komiunranked] = true;
+            }
+        }
+    }
+
+    if (argv.speeds) {
+        for (let e of argv.speeds.split(',')) {
+            exports.allowed_speeds[e] = true;
+        }
+    }
+
+    if (argv.speedsranked) {
+        for (let e of argv.speedsranked.split(',')) {
+            exports.allowed_speeds_ranked[e] = true;
+        }
+    }
+
+    if (argv.speedsunranked) {
+        for (let e of argv.speedsunranked.split(',')) {
+            exports.allowed_speeds_unranked[e] = true;
+        }
+    }
+
+    if (argv.timecontrols) {
+        for (let e of argv.timecontrols.split(',')) {
+            exports.allowed_timecontrols[e] = true;
+        }
+    }
+
+    if (argv.timecontrolsranked) {
+        for (let e of argv.timecontrolsranked.split(',')) {
+            exports.allowed_timecontrols_ranked[e] = true;
+        }
+    }
+
+    if (argv.timecontrolsunranked) {
+        for (let e of argv.timecontrolunranked.split(',')) {
+            exports.allowed_timecontrols_unranked[e] = true;
         }
     }
 
@@ -472,155 +590,6 @@ exports.updateFromArgv = function() {
         } else {
             console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
             process.exit();
-        }
-    }
-
-    function jointArgStringToCustomJointArgString(jointArgString, widthsHeightsString) {
-        let jointArgStringToConvert = jointArgString.split("unranked")[0].split("ranked")[0].split("");
-        // for example "boardsizesranked" -> ["b", "o", "a", "r", "d", "s", "i", "z", "e", "s"]
-        jointArgStringToConvert.pop();
-        // for example ["s", "p", "e", "e", "d", "s"] -> ["b", "o", "a", "r", "d", "s", "i", "z", "e"]
-        jointArgStringToConvert = jointArgStringToConvert.join("");
-        // for example ["b", "o", "a", "r", "d", "s", "i", "z", "e"] -> "boardsize"
-        jointArgStringToConvert = jointArgStringToConvert + widthsHeightsString;
-        // for example "boardsize" -> "boardsizewidths"
-
-        // then, we define rankedUnranked and minMax depending on argNameString
-        let rankedUnranked = "";
-        // if hashedArgString does not include "ranked" or "unranked", we keep default value for rankedunranked
-        if (jointArgString.includes("ranked") && !jointArgString.includes("unranked")) {
-            rankedUnranked = "ranked";
-        } else if (jointArgString.includes("unranked")) {
-            rankedUnranked = "unranked";
-        }
-
-        // finally, we return joint Arg Name String
-        return (jointArgStringToConvert + rankedUnranked);
-        // for example return "boardsizewidthsranked";
-    }
-
-    function jointArgStringToCustomHashedArgString(jointArgString, widthsHeightsString) {
-        let jointArgStringToConvert = jointArgString.split("unranked")[0].split("ranked")[0].split("");
-        // for example "boardsizesranked" -> ["b", "o", "a", "r", "d", "s", "i", "z", "e", "s"]
-        jointArgStringToConvert.pop();
-        // for example ["s", "p", "e", "e", "d", "s"] -> ["b", "o", "a", "r", "d", "s", "i", "z", "e"]
-        jointArgStringToConvert = jointArgStringToConvert.join("");
-        // for example ["b", "o", "a", "r", "d", "s", "i", "z", "e"] -> "boardsize"
-        jointArgStringToConvert = jointArgStringToConvert + widthsHeightsString;
-        // for example "boardsize" -> "boardsizewidths"
-
-        // then, we define rankedUnranked and minMax depending on argNameString
-        let rankedUnranked = "";
-        // if hashedArgString does not include "ranked" or "unranked", we keep default value for rankedunranked
-        if (jointArgString.includes("ranked") && !jointArgString.includes("unranked")) {
-            rankedUnranked = "_ranked";
-        } else if (jointArgString.includes("unranked")) {
-            rankedUnranked = "_unranked";
-        }
-
-        // finally, we return hashed Arg Name String
-        return (jointArgStringToConvert + rankedUnranked);
-        // for example return "boardsizewidths_ranked";
-    }
-
-    function generateHashedArrayFromFamilyNamesArray(familyNamesArray) {
-        let bigFamilyArray = [];
-        for (let familyNameString of familyNamesArray) {
-            bigFamilyArray.push(familyNameString);
-            bigFamilyArray.push(familyNameString + "_ranked");
-            bigFamilyArray.push(familyNameString + "_unranked");
-        }
-        return bigFamilyArray;
-    }
-
-    function allowedFamilyExport(hashedArgNameString) {
-        // 1) first, we define the joint arg (example: "speedsranked")
-        let jointArgNameString = hashedArgNameString;
-        // we also add the exception of ranked/unranked hashed args
-        if (jointArgNameString.includes("ranked")) {
-            // "ranked" or "unranked"
-            jointArgNameString = jointArgNameString.split("_").join("");
-            // for example "speeds_ranked" => "speedsranked"
-        } // else we keep default jointArgNameString
-
-        // 2) then, we append the "allowed_" prefix,
-        //    and we also convert both the prefix and the hashed arg if needed 
-        //    (example "allowed_speeds_ranked", "banned_users_ranked")
-        let prefixString = "allowed_";
-        let hashedArgNameStringConverted = hashedArgNameString;
-        // then we add the exception of bans (different naming : 
-        // there is no "allowed_bans", + different formula) :
-        if (hashedArgNameStringConverted.includes("bans")) {
-            prefixString = "banned_users";
-            // final idea would be, at this current step :
-            // "allowed_bans_ranked" => "banned_users_bans_ranked"
-            if (hashedArgNameStringConverted.includes("ranked")) { // "ranked" or "unranked"
-                hashedArgNameStringConverted = "_" + hashedArgNameStringConverted.split("_")[1];
-                // for example "bans_ranked" => "_ranked"
-                // final idea would now be "banned_users" + "_ranked"
-            } else { 
-                hashedArgNameStringConverted = "";
-                // for example "bans" => ""
-                // final idea would now be "banned_users"
-            }
-        } // if not "bans" family, we keep default "allowed_" prefix String
-
-        let exportNameString = `${prefixString}${hashedArgNameStringConverted}`;
-        // for example exportNameString = "allowed_speeds_ranked";
-        // for example exportNameString = "banned_users_ranked";
-
-        // 3) then finally, the actual export
-        //    the export is different for "komis" and "boardsizes" families :
-        if (jointArgNameString.includes("komis")) {
-            for (let komi of argv[jointArgNameString].split(',')) {
-                if (komi === "all") {
-                    exports["allow_all_" + hashedArgNameStringConverted] = true;
-                    // for example exports["allow_all_komis_ranked"] = true;
-                } else if (komi === "automatic") {
-                    exports[prefixString + hashedArgNameStringConverted][null] = true;
-                    // for example exports["allowed_komis_ranked"][null] = true;
-                    // same as     exports.allowed_komis_ranked[null] = true;
-                } else {
-                    exports[prefixString + hashedArgNameStringConverted][komi] = true;
-                    // for example exports["allowed_komis_ranked"][7.5] = true;
-                    // same as     exports.allowed_komis_ranked[7.5] = true;
-                }
-            }
-
-        } else if (jointArgNameString.includes("boardsizes")) {
-            for (let boardsize of argv[jointArgNameString].split(',')) {
-                if (boardsize === "all") {
-                    exports["allow_all_" + hashedArgNameStringConverted] = true;
-                } else if (boardsize === "custom") {
-                    exports["allow_custom_" + hashedArgNameStringConverted] = true;
-                    let jointArgNameStringConvertedCustomWidths = jointArgStringToCustomJointArgString(jointArgNameString, "widths");
-                    let jointArgNameStringConvertedCustomHeights = jointArgStringToCustomJointArgString(jointArgNameString, "heights");
-                    // for example "boardsizesranked" => "boardsizewidthsranked"
-                    let hashedArgNameStringConvertedCustomWidths = jointArgStringToCustomHashedArgString(jointArgNameString, "widths");
-                    let hashedArgNameStringConvertedCustomHeights = jointArgStringToCustomHashedArgString(jointArgNameString, "heights");
-                    // for example "boardsizesranked" => "boardsizewidths_ranked"
-                    for (let width of argv[jointArgNameStringConvertedCustomWidths].split(',')) {
-                        exports["allowed_custom_" + hashedArgNameStringConvertedCustomWidths][width] = true;
-                    }
-                    for (let height of argv[jointArgNameStringConvertedCustomHeights].split(',')) {
-                        exports["allowed_custom_" + hashedArgNameStringConvertedCustomHeights][height] = true;
-                    }
-                } else {
-                    exports[prefixString + hashedArgNameStringConverted][boardsize] = true;
-                    // for example exports["allowed_boardsizes_ranked"][19] = true;
-                    // same as     exports.allowed_boardsizes_ranked[19] = true;
-                }
-            }
-
-        } else {
-        // for non "boardsizes", non "komis" allowed families, switch back to default code :
-            for (let e of argv[jointArgNameString].split(",")) {
-                exports[exportNameString][e] = true;
-                /* for example for (let e of argv["speedsranked"]) {
-                                   exports["speeds_ranked"[e]] = true;
-                               }
-            */
-            }
         }
     }
 
