@@ -425,6 +425,11 @@ Thank you message to appear in chat at end of game (ex: "Thank you for playing")
 recommended to use `--noautohandicap` as well, see 
 [#165](https://github.com/online-go/gtp2ogs/pull/165) for details
 
+note 2 : currently, since "automatic" handicap returns the server 
+value `notification.handicap` `-1`, using `--minhandicap 0` will 
+also disable automatic handicap (because `-1 < 0`), regardless of 
+the number of automatic handicap stones
+
 #### maxhandicap
   ```--maxhandicap```  Max handicap for all games
 
@@ -444,6 +449,21 @@ recommended to use `--noautohandicap` as well, see
   
   ```--noautohandicapunranked``` Do not allow handicap to be set to 
 -automatic- for unranked games
+
+#### fakerank
+  ```--fakerank``` Temporary manual bot ranking input by bot admin 
+to fix autohandicap bypass issue, by manualy counting min and max 
+number of handicap stones allowed if handicap is "automatic"
+
+This is a temporary fix until server provides bot ranking detection
+on gtp2ogs
+
+for example ```--fakerank 6d``` and ```--minhandicap 0 --maxhandicap 4``` 
+will allow automatic handicap only for opponents ranked between 2d-6d for 
+automatic handicap, but players of any rank (even 25k or 9d+) will be 
+notified that they are still able to play up to 4 handicap stones games 
+by going in -custom handicap- and manually inputting the number of 
+handicap stones
 
 #### nopause
   ```--nopause```  Do not allow games to be paused
