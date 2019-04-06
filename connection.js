@@ -573,417 +573,22 @@ class Connection {
             return genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
         }
 
-        ////// begining of *** UHMAEAT v2.3: Universal Highly Modulable And Expandable Argv Tree ***
-        ///// version 2.3 for maintimes
-        if (config.minmaintimeblitz || config.minmaintimeblitzranked || config.minmaintimeblitzunranked || config.maxmaintimeblitz || config.maxmaintimeblitzranked || config.maxmaintimeblitzunranked || config.minmaintimelive || config.minmaintimeliveranked || config.minmaintimeliveunranked || config.maxmaintimelive || config.maxmaintimeliveranked || config.maxmaintimeliveunranked || config.minmaintimecorr || config.minmaintimecorrranked || config.minmaintimecorrunranked || config.maxmaintimecorr || config.maxmaintimecorrranked || config.maxmaintimecorrunranked) {
-            // later the t.time_control and t.speed can't be used for rule detection for some reason,
-            // so storing them now in strings while we can
-            // also, whenever before TimecontrolString and SpeedString are going to be tested,
-            // we always make sure they have the latest refreshed value
-            // this avoids TimecontrolString and SpeedString being frozen on the same value independently 
-            // from what user chooses, e.g. stuck on "fischer" and "blitz"
-
-            // for fischer, byoyomi, or canadian, we use our UHMAEAT for maintimes !
-            // simple time is not included in reject messages for maintime : no main time, only period time !
-
-            /* here is a list of all properties used for maintime rejects : 
-            MinimumMaximumSentence    - minimum/maximum
-            TimecontrolSentence       - main time - initial time and/or max time, etc..
-            SpeedSentence             - for blitz/live/corr
-            RankedUnrankedGamesIs     - (+/-ranked/unranked) games is
-            TimeNumber                - for example 600 (600 seconds)
-            TimeToString              - for example "10 minutes"  = timespanToDisplayString(config.xxx)
-            TimeNotificationToString  - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
-            IncreaseDecreaseSentence  - , please increase/decrease
-                                        main time - TimecontrolSentence again
-            EndingSentence            - optional, currently only a "."
-            ConnBelowAboveSentence    - for conn_log : below/above
-            ConnSentence              - for conn_log sentence
-            TimecontrolString         - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
-            SpeedString               - "blitz" , "live" , "corr"
-            */
-
-            /////////////////////////////////////////////////////////////////////////////////////
-            // before starting, general information : 
-            // 0) "none" doesnt have a period time, so we let it slide from both maintime and 
-            // periodtime rejects
-            // (we have sanity checks just in case)
-            // 1) simple time doesn't have a main time, only a period time, so we let it slide 
-            // from maintime rejects
-            // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
-            // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
-            // 4) while using gedit "find and replace", make sure you dont replace
-            // t.max_time to t.min_time ! (it doesnt exist !)
-            //////////////////////////////////////////////////////////////////////////////////////
-
-            // before starting, make sures : we refresh values //
-            // now just before TimecontrolString is being tested, we again make sure it has the latest value
-            /*"fischer", "byoyomi", "canadian", "simple", "absolute" */
-            this.TimecontrolString = String(t.time_control);
-            // now just before SpeedString is being tested, we again make sure it has the latest value
-            /* "blitz", "live", "correspondence" */
-            this.SpeedString = String(t.speed);
-
-            // before starting, sanity checks //
-            // sanity check : if not fischer, not byoyomi, not canadian, not simple, not absolute
-            if ((this.TimecontrolString !== "fischer") && (this.TimecontrolString !== "byoyomi") && (this.TimecontrolString !== "canadian") && (this.TimecontrolString !== "simple") && (this.TimecontrolString !== "absolute")) {
-                conn_log ("error, could not find allowed time control in " + t.time_control);
-                return { reject : true, msg: "error, could not find allowed time control in " + t.timecontrol};
-            }
-            // sanity check : if not "blitz" , not "live" , not "correspondence"
-            if ((this.SpeedString !== "blitz") && (this.SpeedString !== "live") && (this.SpeedString !== "correspondence")) {
-                conn_log ("error, could not find allowed game speed in " + t.speed);
-                return { reject : true, msg: "error, could not find allowed game speed in " + t.speed};
-            }
-            // -> then if sanity checks all pass :       
-
-            //////////// for blitz games : "blitz" //////////////////
-            // min
-            if ((config.minmaintimeblitz || config.minmaintimeblitzranked || config.minmaintimeblitzunranked) && (this.SpeedString === "blitz")) {
-                this.MinimumMaximumSentence = "Minimum ";
-                this.SpeedSentence = "for " + this.SpeedString + " ";
-                this.IncreaseDecreaseSentence = ", please increase ";
-                this.ConnBelowAboveSentence = " below ";
-                this.ConnSentence = user.username + " wanted" + this.MinimumMaximumSentence + " "; // example : "user wanted minimum "
-                if (config.minmaintimeblitz && !config.minmaintimeblitzranked && !config.minmaintimeblitzunranked) {
-                    this.TimeNumber = config.minmaintimeblitz;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimeblitz);
-                    this.RankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config.minmaintimeblitzranked && notification.ranked) {
-                    this.TimeNumber = config.minmaintimeblitzranked;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimeblitzranked);
-                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config.minmaintimeblitzunranked && !notification.ranked) {
-                    this.TimeNumber = config.minmaintimeblitzunranked;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimeblitzunranked);
-                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((this.TimecontrolString === "fischer") && ((t.initial_time < this.TimeNumber) || (t.max_time < this.TimeNumber))) {
-                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.initial_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "byoyomi") && t.main_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "absolute") && t.total_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Total Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.total_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "canadian") && t.main_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-            }
-
-            // max
-            if ((config.maxmaintimeblitz || config.maxmaintimeblitzranked || config.maxmaintimeblitzunranked) && (this.SpeedString === "blitz")) {
-                this.MinimumMaximumSentence = "Maximum ";
-                this.SpeedSentence = "for " + this.SpeedString + " ";
-                this.IncreaseDecreaseSentence = ", please reduce ";
-                this.ConnBelowAboveSentence = " above ";
-                this.ConnSentence = user.username + " wanted" + this.MinimumMaximumSentence + " "; // example : "user wanted minimum "
-                if (config.maxmaintimeblitz && !config.maxmaintimeblitzranked && !config.maxmaintimeblitzunranked) {
-                    this.TimeNumber = config.maxmaintimeblitz;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimeblitz);
-                    this.RankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config.maxmaintimeblitzranked && notification.ranked) {
-                    this.TimeNumber = config.maxmaintimeblitzranked;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimeblitzranked);
-                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config.maxmaintimeblitzunranked && !notification.ranked) {
-                    this.TimeNumber = config.maxmaintimeblitzunranked;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimeblitzunranked);
-                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((this.TimecontrolString === "fischer") && ((t.initial_time > this.TimeNumber) || (t.max_time > this.TimeNumber))) {
-                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.max_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "byoyomi") && t.main_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "absolute") && t.total_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Total Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.total_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "canadian") && t.main_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-            }      
-
-            //////////// for live games : "live" //////////////////
-            // min
-            if ((config.minmaintimelive || config.minmaintimeliveranked || config.minmaintimeliveunranked) && (this.SpeedString === "live")) {
-                this.MinimumMaximumSentence = "Minimum ";
-                this.SpeedSentence = "for " + this.SpeedString + " ";
-                this.IncreaseDecreaseSentence = ", please increase ";
-                this.ConnBelowAboveSentence = " below ";
-                this.ConnSentence = user.username + " wanted" + this.MinimumMaximumSentence + " "; // example : "user wanted minimum "
-                if (config.minmaintimelive && !config.minmaintimeliveranked && !config.minmaintimeliveunranked) {
-                    this.TimeNumber = config.minmaintimelive;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimelive);
-                    this.RankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config.minmaintimeliveranked && notification.ranked) {
-                    this.TimeNumber = config.minmaintimeliveranked;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimeliveranked);
-                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config.minmaintimeliveunranked && !notification.ranked) {
-                    this.TimeNumber = config.minmaintimeliveunranked;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimeliveunranked);
-                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((this.TimecontrolString === "fischer") && ((t.initial_time < this.TimeNumber) || (t.max_time < this.TimeNumber))) {
-                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.initial_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "byoyomi") && t.main_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "absolute") && t.total_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Total Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.total_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "canadian") && t.main_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-            }
-
-            // max
-            if ((config.maxmaintimelive || config.maxmaintimeliveranked || config.maxmaintimeliveunranked) && (this.SpeedString === "live")) {
-                this.MinimumMaximumSentence = "Maximum ";
-                this.SpeedSentence = "for " + this.SpeedString + " ";
-                this.IncreaseDecreaseSentence = ", please reduce ";
-                this.ConnBelowAboveSentence = " above ";
-                this.ConnSentence = user.username + " wanted" + this.MinimumMaximumSentence + " "; // example : "user wanted minimum "
-                if (config.maxmaintimelive && !config.maxmaintimeliveranked && !config.maxmaintimeliveunranked) {
-                    this.TimeNumber = config.maxmaintimelive;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimelive);
-                    this.RankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config.maxmaintimeliveranked && notification.ranked) {
-                    this.TimeNumber = config.maxmaintimeliveranked;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimeliveranked);
-                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config.maxmaintimeliveunranked && !notification.ranked) {
-                    this.TimeNumber = config.maxmaintimeliveunranked;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimeliveunranked);
-                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((this.TimecontrolString === "fischer") && ((t.initial_time > this.TimeNumber) || (t.max_time > this.TimeNumber))) {
-                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.max_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "byoyomi") && t.main_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "absolute") && t.total_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Total Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.total_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "canadian") && t.main_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-            }
-
-            //////////// for correspondence games : "correspondence" //////////////////
-            // min
-            if ((config.minmaintimecorr || config.minmaintimecorrranked || config.minmaintimecorrunranked) && (this.SpeedString === "correspondence")) {
-                this.MinimumMaximumSentence = "Minimum ";
-                this.SpeedSentence = "for " + this.SpeedString + " ";
-                this.IncreaseDecreaseSentence = ", please increase ";
-                this.ConnBelowAboveSentence = " below ";
-                this.ConnSentence = user.username + " wanted" + this.MinimumMaximumSentence + " "; // example : "user wanted minimum "
-                if (config.minmaintimecorr && !config.minmaintimecorrranked && !config.minmaintimecorrunranked) {
-                    this.TimeNumber = config.minmaintimecorr;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimecorr);
-                    this.RankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config.minmaintimecorrranked && notification.ranked) {
-                    this.TimeNumber = config.minmaintimecorrranked;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimecorrranked);
-                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config.minmaintimecorrunranked && !notification.ranked) {
-                    this.TimeNumber = config.minmaintimecorrunranked;
-                    this.TimeToString = timespanToDisplayString(config.minmaintimecorrunranked);
-                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((this.TimecontrolString === "fischer") && ((t.initial_time < this.TimeNumber) || (t.max_time < this.TimeNumber))) {
-                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.initial_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "byoyomi") && t.main_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "absolute") && t.total_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Total Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.total_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "canadian") && t.main_time < this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-            }
-
-            // max
-            if ((config.maxmaintimecorr || config.maxmaintimecorrranked || config.maxmaintimecorrunranked) && (this.SpeedString === "correspondence")) {
-                this.MinimumMaximumSentence = "Maximum ";
-                this.SpeedSentence = "for " + this.SpeedString + " ";
-                this.IncreaseDecreaseSentence = ", please reduce ";
-                this.ConnBelowAboveSentence = " above ";
-                this.ConnSentence = user.username + " wanted" + this.MinimumMaximumSentence + " "; // example : "user wanted minimum "
-                if (config.maxmaintimecorr && !config.maxmaintimecorrranked && !config.maxmaintimecorrunranked) {
-                    this.TimeNumber = config.maxmaintimecorr;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimecorr);
-                    this.RankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config.maxmaintimecorrranked && notification.ranked) {
-                    this.TimeNumber = config.maxmaintimecorrranked;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimecorrranked);
-                    this.RankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config.maxmaintimecorrunranked && !notification.ranked) {
-                    this.TimeNumber = config.maxmaintimecorrunranked;
-                    this.TimeToString = timespanToDisplayString(config.maxmaintimecorrunranked);
-                    this.RankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((this.TimecontrolString === "fischer") && ((t.initial_time > this.TimeNumber) || (t.max_time > this.TimeNumber))) {
-                    this.TimecontrolSentence = "Initial Time and/or Max Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.max_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "byoyomi") && t.main_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "absolute") && t.total_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Total Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.total_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-                if ((this.TimecontrolString === "canadian") && t.main_time > this.TimeNumber) {
-                    this.TimecontrolSentence = "Main Time ";
-                    this.TimeNotificationToString = timespanToDisplayString(t.main_time);
-                    this.EndingSentence = ".";
-                    // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                    conn_log(this.ConnSentence + this.TimecontrolSentence + this.TimeNotificationToString + ", it is" + this.ConnBelowAboveSentence + this.MinimumMaximumSentence + this.TimecontrolSentence + this.SpeedString + " in " + this.TimecontrolString);
-                    return { reject : true, msg:  `${this.MinimumMaximumSentence} ${this.TimecontrolSentence} ${this.SpeedSentence} ${this.RankedUnrankedGamesIsSentence} ${this.TimeToString} ${this.IncreaseDecreaseSentence} ${this.TimecontrolSentence} ${this.EndingSentence}` };
-                }
-            }
+        // then we process the UHMAEATs for maintimes blitz/live/corr
+        // and reject challenge if not within min/max set limits by bot admin :
+        let resultMaintimeBlitz = UHMAEATForMaintimes ("blitz");
+        if (resultMaintimeBlitz) {
+            return (resultMaintimeBlitz);
         }
-        ///// version 2.3 for maintimes
-        ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
+
+        let resultMaintimeLive = UHMAEATForMaintimes ("live");
+        if (resultMaintimeLive) {
+            return (resultMaintimeLive);
+        }
+
+        let resultMaintimeCorr = UHMAEATForMaintimes ("corr");
+        if (resultMaintimeCorr) {
+            return (resultMaintimeCorr);
+        }
 
         if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
             return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
@@ -1571,6 +1176,195 @@ class Connection {
         ///// version 2.3 for periodtimes
         ////// end of *** UHMAEAT v2.3 : Universal Highly Modulable And Expandable Argv Tree ***
         return { reject: false };  // Ok !
+
+        function UHMAEATForMaintimes (blitzLiveCorr) {
+            ////// begining of *** UHMAEAT v3.0: Universal Highly Modulable And Expandable Argv Tree ***
+            ///// version 3.0 for maintimes
+        
+            let minGeneralArg = "min" + "maintime" + blitzLiveCorr; 
+            // for example "minmaintimeblitz"
+            let minFamilyArray = [];
+            minFamilyArray.push(minGeneralArg);
+            minFamilyArray.push(minGeneralArg + "ranked");
+            minFamilyArray.push(minGeneralArg + "unranked");
+            // example : ["minmaintimeblitz", "minmaintimeblitzranked", "minmaintimeblitzunranked"];
+
+            let maxGeneralArg = "max" + "maintime" + blitzLiveCorr; 
+            // for example "maxmaintimeblitz"
+            let maxFamilyArray = [];
+            maxFamilyArray.push(maxGeneralArg);
+            maxFamilyArray.push(maxGeneralArg + "ranked");
+            maxFamilyArray.push(maxGeneralArg + "unranked");
+            // example : ["maxmaintimeblitz", "maxmaintimeblitzranked", "maxmaintimeblitzunranked"];
+
+            // then we convert "corr" to "correspondence"
+            let blitzLiveCorrConverted = blitzLiveCorr;
+            if (blitzLiveCorrConverted === "corr") {
+                blitzLiveCorrConverted = "correspondence";
+            }
+            // else we keep same name : "blitz", or "live"
+
+            // later the t.time_control and t.speed can't be used for rule detection for some reason,
+            // so storing them now in strings while we can
+            // also, whenever before timecontrolString and speedString are going to be tested,
+            // we always make sure they have the latest refreshed value
+            // this avoids timecontrolString and speedString being frozen on the same value independently 
+            // from what user chooses, e.g. stuck on "fischer" and "blitz"
+            // for fischer, byoyomi, or canadian, we use our UHMAEAT for maintimes !
+            // simple time is not included in reject messages for maintime : no main time, only period time !
+
+            /* below is all the other local variables the UHMAEAT for maintimes blitz/live/corr will use */
+            let minimumMaximumSentence = "";   // - minimum/maximum
+            let timecontrolSentence = "";      // - main time - initial time and/or max time, etc..
+            let speedSentence = "";            // - for blitz/live/corr
+            let rankedUnrankedGamesIsSentence  = "";   // - (+/-ranked/unranked) games is
+            let timeNumber = 0;                // - for example 600 (600 seconds)
+            let timeToString = "";             // - for example "10 minutes"  = timespanToDisplayString(config.xxx)
+            let timeNotificationToString = ""; // - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
+            let increaseReduceSentence = "";   // - , please increase/reduce
+                                               // main time - timecontrolSentence again
+            let endingSentence = "";           // - optional, currently only a "."
+            let connBelowAboveSentence = "";   // - for conn_log : below/above
+            let connSentence = "";             // - for conn_log sentence
+            let timecontrolString = "";        // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
+            let speedString = "";              // - "blitz" , "live" , "corr"
+
+            /////////////////////////////////////////////////////////////////////////////////////
+            // before starting, general information : 
+            // 0) "none" doesnt have a period time, so we let it slide from both maintime and 
+            // periodtime rejects
+            // (we have sanity checks just in case)
+            // 1) simple time doesn't have a main time, only a period time, so we let it slide 
+            // from maintime rejects
+            // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
+            // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
+            // 4) while using gedit "find and replace", make sure you dont replace
+            // t.max_time to t.min_time ! (it doesnt exist !)
+            //////////////////////////////////////////////////////////////////////////////////////
+
+            // before starting, make sures : we refresh values //
+            // now just before timecontrolString is being tested, 
+            // we again make sure it has the latest value
+            /*"fischer", "byoyomi", "canadian", "simple", "absolute" */
+            timecontrolString = String(t.time_control);
+            // now just before speedString is being tested, 
+            // we again make sure it has the latest value
+            /* "blitz", "live", "correspondence" */
+            speedString = String(t.speed);
+
+            // for maintimes, the reject message is always the same, so use a
+            // sub-function for it
+            function UHMAEATForMaintimesGenericReject() {
+                conn_log(connSentence + timecontrolSentence + timeNotificationToString + ", it is" + connBelowAboveSentence + minimumMaximumSentence + timecontrolSentence + speedString + " in " + timecontrolString);
+                return { reject : true, msg:  `${minimumMaximumSentence} ${timecontrolSentence} ${speedSentence} ${rankedUnrankedGamesIsSentence} ${timeToString} ${increaseReduceSentence} ${timecontrolSentence} ${endingSentence}` };
+            }
+
+            // then since the processing after the tests is the same for min and max args
+            // (only difference is ">" or "<" in the tests
+            // => we store all the processing in sub functions as well :
+            function UHMAEATForMaintimesFischerRejectProcessing() {
+                timecontrolSentence = "Initial Time and/or Max Time ";
+                timeNotificationToString = timespanToDisplayString(t.initial_time);
+                endingSentence = ".";
+                // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
+                return UHMAEATForMaintimesGenericReject();
+            }
+            function UHMAEATForMaintimesByoyomiRejectProcessing() {
+                timecontrolSentence = "Main Time ";
+                timeNotificationToString = timespanToDisplayString(t.main_time);
+                endingSentence = ".";
+                return UHMAEATForMaintimesGenericReject();
+            }
+            function UHMAEATForMaintimesCanadianRejectProcessing() {
+                timecontrolSentence = "Main Time ";
+                timeNotificationToString = timespanToDisplayString(t.main_time);
+                endingSentence = ".";
+                return UHMAEATForMaintimesGenericReject();
+            }
+            function UHMAEATForMaintimesAbsoluteRejectProcessing() {
+                timecontrolSentence = "Total Time ";
+                timeNotificationToString = timespanToDisplayString(t.total_time);
+                endingSentence = ".";
+                return UHMAEATForMaintimesGenericReject();
+            }
+                
+            // min
+            if ((config[minFamilyArray[0]] || config[minFamilyArray[1]] || config[minFamilyArray[2]]) && (speedString === blitzLiveCorrConverted)) {
+                minimumMaximumSentence = "Minimum ";
+                speedSentence = "for " + speedString + " ";
+                increaseReduceSentence = ", please increase ";
+                connBelowAboveSentence = " below ";
+                connSentence = user.username + " wanted " + minimumMaximumSentence; // example : "user wanted minimum "
+                if (config[minFamilyArray[0]] && !config[minFamilyArray[1]] && !config[minFamilyArray[2]]) {
+                    timeNumber = config[minFamilyArray[0]];
+                    timeToString = timespanToDisplayString(config[minFamilyArray[0]]);
+                    rankedUnrankedGamesIsSentence = "games is ";
+                }
+                if (config[minFamilyArray[1]] && notification.ranked) {
+                    timeNumber = config[minFamilyArray[1]];
+                    timeToString = timespanToDisplayString(config[minFamilyArray[1]]);
+                    rankedUnrankedGamesIsSentence = "ranked games is ";
+                }
+                if (config[minFamilyArray[2]] && !notification.ranked) {
+                    timeNumber = config[minFamilyArray[2]];
+                    timeToString = timespanToDisplayString(config[minFamilyArray[2]]);
+                    rankedUnrankedGamesIsSentence = "unranked games is ";
+                }
+
+                if ((timecontrolString === "fischer") && ((t.initial_time < timeNumber) || (t.max_time < timeNumber))) {
+                    return UHMAEATForMaintimesFischerRejectProcessing();
+                }
+                if ((timecontrolString === "byoyomi") && t.main_time < timeNumber) {
+                    return UHMAEATForMaintimesByoyomiRejectProcessing();
+                }
+
+                if ((timecontrolString === "canadian") && t.main_time < timeNumber) {
+                    return UHMAEATForMaintimesCanadianRejectProcessing();
+                }
+                if ((timecontrolString === "absolute") && t.total_time < timeNumber) {
+                    return UHMAEATForMaintimesAbsoluteRejectProcessing();
+                }
+            }
+
+            // max
+            if ((config[maxFamilyArray[0]] || config[maxFamilyArray[1]] || config[maxFamilyArray[2]]) && (speedString === blitzLiveCorrConverted)) {
+                minimumMaximumSentence = "Maximum ";
+                speedSentence = "for " + speedString + " ";
+                increaseReduceSentence = ", please reduce ";
+                connBelowAboveSentence = " above ";
+                connSentence = user.username + " wanted " + minimumMaximumSentence; // example : "user wanted maximum"
+                if (config[maxFamilyArray[0]] && !config[maxFamilyArray[1]] && !config[maxFamilyArray[2]]) {
+                    timeNumber = config[maxFamilyArray[0]];
+                    timeToString = timespanToDisplayString(config[maxFamilyArray[0]]);
+                    rankedUnrankedGamesIsSentence = "games is ";
+                }
+                if (config[maxFamilyArray[1]] && notification.ranked) {
+                    timeNumber = config[maxFamilyArray[1]];
+                    timeToString = timespanToDisplayString(config[maxFamilyArray[1]]);
+                    rankedUnrankedGamesIsSentence = "ranked games is ";
+                }
+                if (config[maxFamilyArray[2]] && !notification.ranked) {
+                    timeNumber = config[maxFamilyArray[2]];
+                    timeToString = timespanToDisplayString(config[maxFamilyArray[2]]);
+                    rankedUnrankedGamesIsSentence = "unranked games is ";
+                }
+
+                if ((timecontrolString === "fischer") && ((t.initial_time > timeNumber) || (t.max_time > timeNumber))) {
+                    return UHMAEATForMaintimesFischerRejectProcessing();
+                }
+                if ((timecontrolString === "byoyomi") && t.main_time > timeNumber) {
+                    return UHMAEATForMaintimesByoyomiRejectProcessing();
+                }
+                if ((timecontrolString === "absolute") && t.total_time > timeNumber) {
+                    return UHMAEATForMaintimesAbsoluteRejectProcessing();
+                }
+                if ((timecontrolString === "canadian") && t.main_time > timeNumber) {
+                    return UHMAEATForMaintimesCanadianRejectProcessing();
+                }
+            }
+        ///// version 3.0 for maintimes
+        ////// end of *** UHMAEAT v3.0 : Universal Highly Modulable And Expandable Argv Tree ***
+        }
 
         function minmaxHandicapFamilyReject(argNameString) {
             // first, we define rankedUnranked and minMax depending on argNameString
