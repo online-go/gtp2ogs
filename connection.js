@@ -684,24 +684,19 @@ class Connection {
         // t.max_time to t.min_time ! (it doesnt exist !)
         //////////////////////////////////////////////////////////////////////////////////////
 
+        ////// begining of *** UHMAEAT v3.1: Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 3.1 for periodtimes
         function UHMAEATForPeriodtimes (blitzLiveCorr) {
-            ////// begining of *** UHMAEAT v3.0: Universal Highly Modulable And Expandable Argv Tree ***
-            ///// version 3.0 for periodtimes
-        
-            let minGeneralArg = "min" + "periodtime" + blitzLiveCorr; 
+
+            // first we define the args we want to test
+            let minGeneralArg = "minperiodtime" + blitzLiveCorr; 
             // for example "minperiodtimeblitz"
-            let minFamilyArray = [];
-            minFamilyArray.push(minGeneralArg);
-            minFamilyArray.push(minGeneralArg + "ranked");
-            minFamilyArray.push(minGeneralArg + "unranked");
+            let minFamilyArray = ["", "ranked", "unranked"].map(e => minGeneralArg + e);
             // example : ["minperiodtimeblitz", "minperiodtimeblitzranked", "minperiodtimeblitzunranked"];
 
-            let maxGeneralArg = "max" + "periodtime" + blitzLiveCorr; 
+            let maxGeneralArg = "maxperiodtime" + blitzLiveCorr; 
             // for example "maxperiodtimeblitz"
-            let maxFamilyArray = [];
-            maxFamilyArray.push(maxGeneralArg);
-            maxFamilyArray.push(maxGeneralArg + "ranked");
-            maxFamilyArray.push(maxGeneralArg + "unranked");
+            let maxFamilyArray = ["", "ranked", "unranked"].map(e => maxGeneralArg + e);
             // example : ["maxperiodtimeblitz", "maxperiodtimeblitzranked", "maxperiodtimeblitzunranked"];
 
             // then we convert "corr" to "correspondence"
@@ -711,20 +706,11 @@ class Connection {
             }
             // else we keep same name : "blitz", or "live"
 
-            // later the t.time_control and t.speed can't be used for rule detection for some reason,
-            // so storing them now in strings while we can
-            // also, whenever before timecontrolString and speedString are going to be tested,
-            // we always make sure they have the latest refreshed value
-            // this avoids timecontrolString and speedString being frozen on the same value independently 
-            // from what user chooses, e.g. stuck on "fischer" and "blitz"
-            // for fischer, byoyomi, or canadian, we use our UHMAEAT for periodtimes !
-            // simple time is not included in reject messages for periodtime : no period time, only period time !
-
-            /* below is all the other local variables the UHMAEAT for periodtimes blitz/live/corr will use */
+            /* below is all the other local variables the UHMAEAT for ptimes blitz/live/corr will use */
             let minimumMaximumSentence = "";   // - minimum/maximum
             let timecontrolSentence = "";      // - period time - initial time and/or max time, etc..
             let speedSentence = "";            // - for blitz/live/corr
-            let rankedUnrankedGamesIsSentence  = "";   // - (+/-ranked/unranked) games is
+            let rankedUnrankedGamesIsSentence  = "";  // - (+/-ranked/unranked) games is
             let timeNumber = 0;                // - for example 600 (600 seconds)
             let timeToString = "";             // - for example "10 minutes"  = timespanToDisplayString(config.xxx)
             let timeNotificationToString = ""; // - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
@@ -733,18 +719,15 @@ class Connection {
             let endingSentence = "";           // - optional, currently only a "."
             let connBelowAboveSentence = "";   // - for conn_log : below/above
             let connSentence = "";             // - for conn_log sentence
-            let timecontrolString = "";        // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
-            let speedString = "";              // - "blitz" , "live" , "corr"
 
-            // before starting, make sures : we refresh values //
-            // now just before timecontrolString is being tested, 
-            // we again make sure it has the latest value
-            /*"fischer", "byoyomi", "canadian", "simple", "absolute" */
-            timecontrolString = String(t.time_control);
-            // now just before speedString is being tested, 
-            // we again make sure it has the latest value
-            /* "blitz", "live", "correspondence" */
-            speedString = String(t.speed);
+            // then we initialize some values that will not change : //
+            let timecontrolString = t.time_control;  
+            // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
+            let speedString = t.speed; // we will initialize all the other variables later
+            // if needed (if for example challenge is "blitz" and no maintime arg using "blitz" 
+            // is used, then the speedString === blitzLiveCorr test below fails and we 
+            // exit the function : we dont reject)
+            // "blitz", "live", "correspondence" //
 
             // for periodtimes, the reject message is always the same, so use a
             // sub-function for it
@@ -876,28 +859,23 @@ class Connection {
                     return UHMAEATForPeriodtimesSimpleRejectProcessing();
                 }
             }
-        ///// version 3.0 for periodtimes
-        ////// end of *** UHMAEAT v3.0 : Universal Highly Modulable And Expandable Argv Tree ***
         }
+        ///// version 3.1 for periodtimes
+        ////// end of *** UHMAEAT v3.1 : Universal Highly Modulable And Expandable Argv Tree ***
 
+        ////// begining of *** UHMAEAT v3.1: Universal Highly Modulable And Expandable Argv Tree ***
+        ///// version 3.1 for maintimes
         function UHMAEATForMaintimes (blitzLiveCorr) {
-            ////// begining of *** UHMAEAT v3.0: Universal Highly Modulable And Expandable Argv Tree ***
-            ///// version 3.0 for maintimes
-        
-            let minGeneralArg = "min" + "maintime" + blitzLiveCorr; 
+
+            // first we define the args we want to test
+            let minGeneralArg = "minmaintime" + blitzLiveCorr; 
             // for example "minmaintimeblitz"
-            let minFamilyArray = [];
-            minFamilyArray.push(minGeneralArg);
-            minFamilyArray.push(minGeneralArg + "ranked");
-            minFamilyArray.push(minGeneralArg + "unranked");
+            let minFamilyArray = ["", "ranked", "unranked"].map(e => minGeneralArg + e);
             // example : ["minmaintimeblitz", "minmaintimeblitzranked", "minmaintimeblitzunranked"];
 
-            let maxGeneralArg = "max" + "maintime" + blitzLiveCorr; 
+            let maxGeneralArg = "maxmaintime" + blitzLiveCorr; 
             // for example "maxmaintimeblitz"
-            let maxFamilyArray = [];
-            maxFamilyArray.push(maxGeneralArg);
-            maxFamilyArray.push(maxGeneralArg + "ranked");
-            maxFamilyArray.push(maxGeneralArg + "unranked");
+            let maxFamilyArray = ["", "ranked", "unranked"].map(e => maxGeneralArg + e);
             // example : ["maxmaintimeblitz", "maxmaintimeblitzranked", "maxmaintimeblitzunranked"];
 
             // then we convert "corr" to "correspondence"
@@ -907,20 +885,11 @@ class Connection {
             }
             // else we keep same name : "blitz", or "live"
 
-            // later the t.time_control and t.speed can't be used for rule detection for some reason,
-            // so storing them now in strings while we can
-            // also, whenever before timecontrolString and speedString are going to be tested,
-            // we always make sure they have the latest refreshed value
-            // this avoids timecontrolString and speedString being frozen on the same value independently 
-            // from what user chooses, e.g. stuck on "fischer" and "blitz"
-            // for fischer, byoyomi, or canadian, we use our UHMAEAT for maintimes !
-            // simple time is not included in reject messages for maintime : no main time, only period time !
-
             /* below is all the other local variables the UHMAEAT for maintimes blitz/live/corr will use */
             let minimumMaximumSentence = "";   // - minimum/maximum
             let timecontrolSentence = "";      // - main time - initial time and/or max time, etc..
             let speedSentence = "";            // - for blitz/live/corr
-            let rankedUnrankedGamesIsSentence  = "";   // - (+/-ranked/unranked) games is
+            let rankedUnrankedGamesIsSentence  = "";  // - (+/-ranked/unranked) games is
             let timeNumber = 0;                // - for example 600 (600 seconds)
             let timeToString = "";             // - for example "10 minutes"  = timespanToDisplayString(config.xxx)
             let timeNotificationToString = ""; // - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
@@ -929,18 +898,15 @@ class Connection {
             let endingSentence = "";           // - optional, currently only a "."
             let connBelowAboveSentence = "";   // - for conn_log : below/above
             let connSentence = "";             // - for conn_log sentence
-            let timecontrolString = "";        // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
-            let speedString = "";              // - "blitz" , "live" , "corr"
 
-            // before starting, make sures : we refresh values //
-            // now just before timecontrolString is being tested, 
-            // we again make sure it has the latest value
-            /*"fischer", "byoyomi", "canadian", "simple", "absolute" */
-            timecontrolString = String(t.time_control);
-            // now just before speedString is being tested, 
-            // we again make sure it has the latest value
-            /* "blitz", "live", "correspondence" */
-            speedString = String(t.speed);
+            // then we initialize some values that will not change : //
+            let timecontrolString = t.time_control;  
+            // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
+            let speedString = t.speed; // we will initialize all the other variables later
+            // if needed (if for example challenge is "blitz" and no maintime arg using "blitz" 
+            // is used, then the speedString === blitzLiveCorr test below fails and we 
+            // exit the function : we dont reject)
+            // "blitz", "live", "correspondence" //
 
             // for maintimes, the reject message is always the same, so use a
             // sub-function for it
@@ -1051,9 +1017,9 @@ class Connection {
                     return UHMAEATForMaintimesCanadianRejectProcessing();
                 }
             }
-        ///// version 3.0 for maintimes
-        ////// end of *** UHMAEAT v3.0 : Universal Highly Modulable And Expandable Argv Tree ***
         }
+        ///// version 3.1 for maintimes
+        ////// end of *** UHMAEAT v3.1 : Universal Highly Modulable And Expandable Argv Tree ***
 
         function minmaxHandicapFamilyReject(argNameString) {
             // first, we define rankedUnranked and minMax depending on argNameString
