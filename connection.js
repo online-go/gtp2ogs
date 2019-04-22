@@ -488,7 +488,7 @@ class Connection {
         // notification.bot.ranking (server support for bot ranking detection 
         // in gtp2ogs)
 
-        if (notification.handicap === -1 && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
+        if (notification.handicap === -1 && config.fakerank && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
             let rankDifference = Math.abs(Math.trunc(user.ranking) - Math.trunc(config.fakerank));
             // adding a trunk because a 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
             // but it is in fact a still a 6k vs 7k = Math.abs(6-7) = 1 rank difference game
