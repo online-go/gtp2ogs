@@ -458,8 +458,8 @@ number of handicap stones allowed if handicap is "automatic"
 This is a temporary fix until server provides bot ranking detection
 on gtp2ogs
 
-for example ```--fakerank 6d``` and ```--minhandicap 0 --maxhandicap 4``` 
-will allow automatic handicap only for opponents ranked between 2d-6d for 
+for example ```--fakerank 6d``` and ```--maxhandicap 4``` will allow 
+automatic handicap only for opponents ranked between 2d-6d for 
 automatic handicap, but players of any rank (even 25k or 9d+) will be 
 notified that they are still able to play up to 4 handicap stones games 
 by going in -custom handicap- and manually inputting the number of 
