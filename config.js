@@ -339,7 +339,7 @@ exports.updateFromArgv = function() {
         ]
     deprecatedArgs.forEach(ar => testDeprecated(...ar))
 
-    for (let e of familyArrayFromGeneralArg("komi")) {
+    for (let e of familyArrayFromGeneralArg("komis")) {
         if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
         // for example if argv[komisranked]
             if (argv[e].split(",").includes("auto")) {
