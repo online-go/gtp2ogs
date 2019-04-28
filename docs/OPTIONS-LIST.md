@@ -4,6 +4,54 @@ Since they take a lot of place all the list has been moved here
 
 use the ones you want only, no need to use them all !
 
+# DEFAULT VALUES SUMMARY
+
+Also, some options come provided with a default, so even if 
+you don't input any value, it will work as-is
+
+However, you can also use your own value if you want : this will 
+overwrite the default one
+
+For easier reference, you can see below all default values gtp2ogs 
+currently provides :
+
+```
+--host online-go.com
+--port 443
+--startupbuffer 5
+--timeout 0
+--maxconnectedgames 20
+--maxconnectedgamesperuser 3
+--rejectnewmsg "Currently, this bot is not accepting games, try again later "
+--boardsizes 9,13,19
+--komis automatic
+--speeds blitz,live,correspondence
+--timecontrols fischer,byoyomi,simple,canadian
+--minmaintimeblitz 15
+--maxmaintimeblitz 300
+--minmaintimelive 60
+--maxmaintimelive 7200
+--minmaintimecorr 259200
+--maxmaintimecorr 604800
+--minperiodsblitz 3
+--maxperiodsblitz 20
+--minperiodslive 3
+--maxperiodslive 20
+--minperiodscorr 3
+--maxperiodscorr 10
+--minperiodtimeblitz 5
+--maxperiodtimeblitz 10
+--minperiodtimelive 10
+--maxperiodtimelive 120
+--minperiodtimecorr 14400
+--maxperiodtimecorr 259200
+```
+
+note : command line arguments should not be separated by skipping 
+lines, it was done here only for clearer display
+
+# FULL LIST 
+
 The options below are clickable links, so that you can share the 
 link to the wanted option :
 
@@ -12,6 +60,10 @@ link to the wanted option :
 
 #### port
 ```--port``` OGS Port to connect to (default 443)
+
+#### startupbuffer
+  ```--startupbuffer``` Subtract this many seconds from time 
+available on first move (default 5)
 
 #### timeout
 ```--timeout``` Disconnect from a game after this many seconds (if set) 
@@ -68,11 +120,7 @@ stability) (default 20)
   ```--maxconnectedgamesperuser``` Maximum number of 
 connected games per user against this bot (default 3)
 
-#### startupbuffer
-  ```--startupbuffer``` Subtract this many seconds from time 
-available on first move (default 5)
-
-#### rejectnew
+#### rejectnew and rejectnewmsg
   ```--rejectnew``` Reject all new challenges with the default 
 reject message
 
