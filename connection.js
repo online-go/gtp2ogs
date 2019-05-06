@@ -365,7 +365,7 @@ class Connection {
 
             // then finally, the actual reject :
             conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked}is ${humanReadableMinmaxRank}`);
-            return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${config[argNameString]}, your rank is too ${lowHigh} ${rankedUnranked}` };
+            return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${humanReadableMinmaxRank}, your rank is too ${lowHigh} ${rankedUnranked}` };
         }
 
         function bannedFamilyReject(argNameString) {
