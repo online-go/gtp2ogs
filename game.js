@@ -82,8 +82,16 @@ class Game {
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
-            if (this.bot) {
-                this.log("Killing bot because of gamedata packet after bot was started");
+            let gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
+
+            if (this.bot && gamedataChanged) {
+                this.log("Killing bot because of gamedata change after bot was started");
+
+                if (config.DEBUG) {
+                    this.log('Previously seen gamedata:', this.state);
+                    this.log('New gamedata:', gamedata);
+                }
+
                 this.ensureBotKilled();
 
                 if (this.processing) {
@@ -327,7 +335,7 @@ class Game {
 
     scheduleRetry() {
         if (config.DEBUG) {
-            this.log("We may need to move but were not able to. Re-connect to trigger action based on game state.");
+            this.log("Unable to react correctly - re-connect to trigger action based on game state.");
         }
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id,
