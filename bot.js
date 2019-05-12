@@ -387,7 +387,7 @@ class Bot {
 
     command(str, cb, eb, final_command) { /* {{{ */
         if (this.dead) {
-            if (config.DEBUG) { this.log("Attempting to send to dead bot:", str) }
+            if (config.DEBUG) { this.log("Attempting to send a command to dead bot:", str) }
             this.failed = true;
             if (eb) { eb() }
             return;
@@ -415,6 +415,9 @@ class Bot {
                 this.proc.stdin.write(str + "\r\n");
             }
         } catch (e) {
+            // I think this does not normally happen, the exception will usually be raised in the async write handler
+            // and delivered through an 'error' event.
+            //
             this.log("Failed to send command: ", str);
             this.log(e);
             this.dead = true;
@@ -478,6 +481,8 @@ class Bot {
         if (this.proc) {
             this.proc.kill();
             setTimeout(() => {
+                // To be 100% sure.
+                if (config.DEBUG) this.log("Killing process directly with a signal");
                 this.proc.kill(9);
             }, 5000);
         }
