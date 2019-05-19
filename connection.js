@@ -232,7 +232,6 @@ class Connection {
         }
     }
     dumpStatus() {
-        conn_log('Dumping status of all connected games');
         for (let game_id in this.connected_games) {
             let game = this.connected_games[game_id];
             let msg = [];
@@ -259,7 +258,6 @@ class Connection {
             msg.push('bot.failed=' + game.bot.failed);
             conn_log(...msg);
         }
-        conn_log('Dump complete');
     }
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), () => {
