@@ -1949,6 +1949,9 @@ function post(path, data, cb, eb) { return request("POST", config.host, config.p
 function request(method, host, port, path, data) { /* {{{ */
     return new Promise((resolve, reject) => {
         if (config.DEBUG) {
+            // Modern NodeJS offers shallow copy syntax:
+            // let noapidata = { ...data, apikey: "hidden"};
+            //
             // Make a deep copy just in case.
             //
             let noapidata = JSON.parse(JSON.stringify(data));
