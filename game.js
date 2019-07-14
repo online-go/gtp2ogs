@@ -362,10 +362,6 @@ class Game {
             'move': encodeMove(move)
         }));
         //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
-        if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-            this.sendChat( config.GREETING, "discussion");
-            this.greeted = true;
-        }
     } /* }}} */
 
     // Get move from bot and upload to server.
@@ -378,6 +374,10 @@ class Game {
             return;
         if (this.state.phase !== 'play')
             return;
+        if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
+            this.sendChat( config.GREETING, "discussion");
+            this.greeted = true;
+        }
 
         let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
             this.state.moves.length < this.state.handicap);
