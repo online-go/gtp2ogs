@@ -108,8 +108,8 @@ class Game {
             if (this.state.phase === "play" && this.state.clock.current_player === this.conn.bot_id) {
                 if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
                     this.corr_move_pending = true;
-                } else if (!this.processing) {
-                    this.makeMove(this.state.moves.length);
+                } else {
+                    if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
                 }
             }
         });
