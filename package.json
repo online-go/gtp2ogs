@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "eslint": "5.14.1",
-    "mocha": "5.2.0",
-    "sinon": "7.2.3"
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.3"
   },
   "scripts": {
     "test": "mocha",
