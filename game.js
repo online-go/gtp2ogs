@@ -109,7 +109,7 @@ class Game {
                 if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
                     this.corr_move_pending = true;
                 } else {
-                    this.makeMove(this.state.moves.length);
+                    if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
                 }
             }
         });
