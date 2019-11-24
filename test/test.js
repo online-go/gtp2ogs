@@ -732,6 +732,7 @@ describe("Retrying bot failures", () => {
     });
 });
 
+
 describe("Pv should work", () => {
     it("should pass bot stderr output to pv class", () => {
         stub_console();
@@ -812,3 +813,5 @@ describe("Pv should work", () => {
         conn.terminate();
     }
 });
+
+module.exports = { FakeSocket, FakeAPI, base_challenge };
