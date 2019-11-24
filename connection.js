@@ -338,15 +338,7 @@ class Connection {
         return { reject: false }; // OK !
 
         function minmaxRankFamilyReject(argNameString) {
-            // first, we define rankedUnranked, lowHigh, minMax, and humanReadableRank, depending on argNameString
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games ";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games ";
-            }
-
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
             let minMax = "";
             let lowHigh = "";
             if (argNameString.includes("min")) {
@@ -362,18 +354,17 @@ class Connection {
             let humanReadableMinmaxRank = rankToString(config[argNameString]);
 
             // then finally, the actual reject :
-            conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked}is ${humanReadableMinmaxRank}`);
-            return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${humanReadableMinmaxRank}, your rank is too ${lowHigh} ${rankedUnranked}` };
+            conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked} is ${humanReadableMinmaxRank}`);
+            return { reject: true, msg: `${minMax} rank ${rankedUnranked} is ${humanReadableMinmaxRank}, your rank is too ${lowHigh} ${rankedUnranked}` };
         }
 
         function bannedFamilyReject(argNameString) {
-            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
-
             let rankedUnranked = "from all games";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
             if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+            // "bansranked"
                 rankedUnranked = "from ranked games";
             } else if (argNameString.includes("unranked")) {
+            // "bansunranked"
                 rankedUnranked = "from unranked games";
             }
 
@@ -1020,15 +1011,7 @@ class Connection {
         ////// end of *** UHMAEAT v3.1 : Universal Highly Modulable And Expandable Argv Tree ***
 
         function minmaxHandicapFamilyReject(argNameString) {
-            // first, we define rankedUnranked and minMax depending on argNameString
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
             let minMax = "";
             let increaseDecrease = "";
             if (argNameString.includes("min")) {
@@ -1055,7 +1038,6 @@ class Connection {
         }
 
         function minmaxPeriodsBlitzlivecorrFamilyReject(argNameString) {
-            // first, we define blitzLiveCorr, rankedUnranked, minMax, increaseDecrease, depending on argNameString
             let blitzLiveCorr = "";
             if (argNameString.includes("blitz")) {
                 blitzLiveCorr = "blitz";
@@ -1092,15 +1074,7 @@ class Connection {
         }
 
         function automaticHandicapStoneDetectionReject (argNameString, rankDifference) {
-            // first, we define rankedUnranked and minMax depending on argNameString
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
             let minMax = "";
             let increaseDecrease = "";
             if (argNameString.includes("min")) {
@@ -1117,15 +1091,7 @@ class Connection {
         }
 
         function noAutohandicapReject(argNameString) {
-            // first, we define rankedUnranked, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
 
             // then finally, the actual reject :
             conn_log(`no autohandicap ${rankedUnranked}`);
@@ -1133,16 +1099,7 @@ class Connection {
         }
 
         function genericAllowedFamiliesReject(argNameString, notificationUnit) {
-            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games ";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games ";
-            }
-
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
             let argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
             // for example "speedsranked" -> "speed"
 
@@ -1165,7 +1122,7 @@ class Connection {
             // else we dont dont convert : we dont change anything
 
             // then finally, the actual reject :
-            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${argValueString}- `);
+            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked} -${notificationUnitConverted}-, not in -${argValueString}- `);
             // for example : "user wanted speed for ranked games -blitz-, not in -live,correspondence-
             return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${argValueString}-` };
             /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
@@ -1175,15 +1132,7 @@ class Connection {
         }
 
         function boardsizeNotificationIsNotSquareReject(argNameString) {
-            // first, we define rankedUnranked, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
 
             // then finally, the actual reject :
             conn_log(`boardsize ${notification.width} x ${notification.height} is not square, not allowed`);
@@ -1191,16 +1140,7 @@ class Connection {
         }
 
         function customBoardsizeWidthsHeightsReject(argNameString) {
-            // first, we define rankedUnranked, widthHeight, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
+            let rankedUnranked = rankedUnrankedGamesString(argNameString);
             let widthHeight = "";
             let notificationUnit = "";
             if (argNameString.includes("width")) {
@@ -1213,7 +1153,7 @@ class Connection {
             }
 
             // then finally, the actual reject :
-            conn_log(`${user.username} wanted boardsize ${widthHeight} ${rankedUnranked}-${notificationUnit}-, not in -${config[argNameString]}- `);
+            conn_log(`${user.username} wanted boardsize ${widthHeight} ${rankedUnranked} -${notificationUnit}-, not in -${config[argNameString]}- `);
             // for example : "user wanted boardsize width for ranked games -15-, not in -17,19,25-
             return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values ${rankedUnranked} : ${config[argNameString]}` };
             /* for example : In your selected board size 15 x 2 (width x height), boardsize WIDTH (15) is not allowed for ranked games on this bot, please choose one of these allowed CUSTOM boardsize WIDTHS values for ranked games : 17,19,25
@@ -1367,6 +1307,19 @@ function pluralFamilyStringToSingularString(plural) { /* {{{ */
     pluralToConvert = pluralToConvert.join("");
     // for example ["s", "p", "e", "e", "d"] -> "speed"
     return pluralToConvert;
+} /* }}} */
+
+function rankedUnrankedGamesString(argNameString) { /* {{{ */
+    if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+    // for example "boardsizesranked"
+        return "for ranked games";
+    } else if (argNameString.includes("unranked")) {
+    // for example "boardsizesunranked"
+        return "for unranked games";
+    } else {
+    // for example "boardsizes"
+        return "";
+    }
 } /* }}} */
 
 function conn_log() { /* {{{ */
