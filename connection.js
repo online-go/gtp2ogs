@@ -339,32 +339,20 @@ class Connection {
 
         function minmaxRankFamilyReject(argNameString) {
             let rankedUnranked = rankedUnrankedGamesString(argNameString);
-            let minMax = "";
-            let lowHigh = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                lowHigh = "low";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                lowHigh = "high";
-            }
-
-            // then we define humanReadable ranks
+            let minMaxStrings = minMaxToStrings(argNameString);
             let humanReadableUserRank = rankToString(user.ranking);
             let humanReadableMinmaxRank = rankToString(config[argNameString]);
 
             // then finally, the actual reject :
-            conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked} is ${humanReadableMinmaxRank}`);
-            return { reject: true, msg: `${minMax} rank ${rankedUnranked} is ${humanReadableMinmaxRank}, your rank is too ${lowHigh} ${rankedUnranked}` };
+            conn_log(`${user.username} ranking ${humanReadableUserRank} too ${minMaxStrings.lowHigh} ${rankedUnranked}: ${minMaxStrings.minMax} ${rankedUnranked} is ${humanReadableMinmaxRank}`);
+            return { reject: true, msg: `${minMaxStrings.minMax} rank ${rankedUnranked} is ${humanReadableMinmaxRank}, your rank is too ${minMaxStrings.lowHigh} ${rankedUnranked}` };
         }
 
         function bannedFamilyReject(argNameString) {
             let rankedUnranked = "from all games";
             if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-            // "bansranked"
                 rankedUnranked = "from ranked games";
             } else if (argNameString.includes("unranked")) {
-            // "bansunranked"
                 rankedUnranked = "from unranked games";
             }
 
@@ -1012,28 +1000,20 @@ class Connection {
 
         function minmaxHandicapFamilyReject(argNameString) {
             let rankedUnranked = rankedUnrankedGamesString(argNameString);
-            let minMax = "";
-            let increaseDecrease = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                increaseDecrease = "increase";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                increaseDecrease = "reduce";
-            }
+            let minMaxStrings = minMaxToStrings(argNameString);
 
             // then, specific messages for handicaponly and evenonly messages first
-            if (notification.handicap === 0 && minMax === "Min" && config[argNameString] > 0) {
+            if (notification.handicap === 0 && minMaxStrings.isMin && config[argNameString] > 0) {
                 conn_log(`handicap games only ${rankedUnranked}`);
                 return { reject: true, msg: `this bot does not play even games ${rankedUnranked}, please manually select the number of handicap stones in -custom handicap- : minimum is ${config[argNameString]} handicap stones or more` };
-            } else if (notification.handicap > 0 && minMax === "Max" && config[argNameString] === 0) {
+            } else if (notification.handicap > 0 && minMaxStrings.isMax && config[argNameString] === 0) {
                 conn_log(`even games only ${rankedUnranked}`);
                 return { reject: true, msg: `this bot does not play handicap games ${rankedUnranked}, please choose handicap -none- (0 handicap stones)` };
 
             // then finally, the actual reject :
             } else {
-                conn_log(`${minMax} handicap ${rankedUnranked} is ${config[argNameString]}`);
-                return { reject: true, msg: `${minMax} handicap ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of handicap stones` };
+                conn_log(`${minMaxStrings.minMax} handicap ${rankedUnranked} is ${config[argNameString]}`);
+                return { reject: true, msg: `${minMaxStrings.minMax} handicap ${rankedUnranked} is ${config[argNameString]}, please ${minMaxStrings.increaseDecrease} the number of handicap stones` };
             }
         }
 
@@ -1058,36 +1038,20 @@ class Connection {
                 rankedUnranked = `for ${blitzLiveCorr} unranked games`;
             }
 
-            let minMax = "";
-            let increaseDecrease = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                increaseDecrease = "increase";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                increaseDecrease = "reduce";
-            }
+            let minMaxStrings = minMaxToStrings(argNameString);
 
             // then finally, the actual reject :
-            conn_log(`${user.username} wanted ${t.periods} periods, ${minMax} periods ${rankedUnranked} is ${config[argNameString]}, needs to be ${increaseDecrease}d`);
-            return { reject: true, msg: `${minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of periods` };
+            conn_log(`${user.username} wanted ${t.periods} periods, ${minMaxStrings.minMax} periods ${rankedUnranked} is ${config[argNameString]}, needs to be ${minMaxStrings.increaseDecrease}d`);
+            return { reject: true, msg: `${minMaxStrings.minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${minMaxStrings.increaseDecrease} the number of periods` };
         }
 
         function automaticHandicapStoneDetectionReject (argNameString, rankDifference) {
             let rankedUnranked = rankedUnrankedGamesString(argNameString);
-            let minMax = "";
-            let increaseDecrease = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                increaseDecrease = "increase";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                increaseDecrease = "reduce";
-            }
+            let minMaxStrings = minMaxToStrings(argNameString);
 
             // then finally, the actual reject :
-            conn_log(`Automatic handicap ${rankedUnranked} was set to ${rankDifference} stones, but ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones`);
-            return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
+            conn_log(`Automatic handicap ${rankedUnranked} was set to ${rankDifference} stones, but ${minMaxStrings.minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones`);
+            return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMaxStrings.minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${minMaxStrings.increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
         }
 
         function noAutohandicapReject(argNameString) {
@@ -1319,6 +1283,14 @@ function rankedUnrankedGamesString(argNameString) { /* {{{ */
     } else {
     // for example "boardsizes"
         return "";
+    }
+} /* }}} */
+
+function minMaxToStrings(argNameString) { /* {{{ */
+    if (argNameString.includes("min")) {
+        return {minMax: "minimum", increaseDecrease: "increase", lowHigh: "low", isMin: true, isMax: false};
+    } else if (argNameString.includes("max")) {
+        return {minMax: "maximum", increaseDecrease: "decrease", lowHigh: "high", isMin: false, isMax: true};
     }
 } /* }}} */
 
