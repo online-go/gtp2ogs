@@ -1369,6 +1369,49 @@ function pluralFamilyStringToSingularString(plural) { /* {{{ */
     return pluralToConvert;
 } /* }}} */
 
+function convertBlitzLiveCorr(argNameString) { /* {{{ */
+    if (argNameString.includes("blitz")) {
+        return "blitz";
+    } else if (argNameString.includes("live")) {
+        return "live";
+    } else { // "corr"
+        return "correspondence";
+    }
+} /* }}} */
+
+function familyArrayMIBLIsminIsmaxFromGeneralArgString(generalArgString) { /* {{{ */
+    let mm = "";
+    let ir = "";
+    let ba = "";
+    let lh = "";
+    const isMin = generalArgString.includes("min");
+    const isMax = generalArgString.includes("max");
+    if (isMin) {
+        mm = "minimum";
+        ir = "increase";
+        ba = "below";
+        lh = "low";
+    } else if (isMax) {
+        mm = "maximum";
+        ir = "reduce";
+        ba = "above";
+        lh = "high";
+    }
+    let fullArray = ["", "ranked", "unranked" ].map(e => generalArgString + e);
+    fullArray.push([mm, ir, ba, lh], [isMin, isMax]);
+    return fullArray;
+} /* }}} */
+
+function rankedUnrankedString(argNameString) { /* {{{ */
+    if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+        return "ranked";
+    } else if (argNameString.includes("unranked")) {
+        return "unranked";
+    } else {
+        return "";
+    }
+} /* }}} */
+
 function conn_log() { /* {{{ */
     let arr = ["# "];
     let errlog = false;
