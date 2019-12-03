@@ -571,23 +571,10 @@ class Connection {
             return genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
         }
 
-        // then we process the UHMAEATs for maintimes blitz/live/corr
-        // and reject challenge if not within min/max set limits by bot admin :
-        let resultMaintimeBlitz = UHMAEATForMaintimes ("blitz");
-        if (resultMaintimeBlitz) {
-            return (resultMaintimeBlitz);
+        const resultMaintime = UHMAEAT("maintime", notification.time_control, notification.ranked, user.username); // clearer and safer to use notification.time_control instead of the alias t
+        if (resultMaintime) {
+            return (resultMaintime);
         }
-
-        let resultMaintimeLive = UHMAEATForMaintimes ("live");
-        if (resultMaintimeLive) {
-            return (resultMaintimeLive);
-        }
-
-        let resultMaintimeCorr = UHMAEATForMaintimes ("corr");
-        if (resultMaintimeCorr) {
-            return (resultMaintimeCorr);
-        }
-        // end of maintime rejects
 
         if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
             return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
@@ -649,375 +636,12 @@ class Connection {
             return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
         }
 
-        // then we process the UHMAEATs for periodtimes blitz/live/corr
-        // and reject challenge if not within min/max set limits by bot admin :
-        let resultPeriodtimeBlitz = UHMAEATForPeriodtimes ("blitz");
-        if (resultPeriodtimeBlitz) {
-            return (resultPeriodtimeBlitz);
+        const resultPeriodtime = UHMAEAT("periodtime", notification.time_control, notification.ranked, user.username);
+        if (resultPeriodtime) {
+            return (resultPeriodtime);
         }
-
-        let resultPeriodtimeLive = UHMAEATForPeriodtimes ("live");
-        if (resultPeriodtimeLive) {
-            return (resultPeriodtimeLive);
-        }
-
-        let resultPeriodtimeCorr = UHMAEATForPeriodtimes ("corr");
-        if (resultPeriodtimeCorr) {
-            return (resultPeriodtimeCorr);
-        }
-        // end of periodtime rejects
 
         return { reject: false };  // Ok !
-
-        /////////////////////////////////////////////////////////////////////////////////////
-        // before reading UHMAEATs function code, general information : 
-        // 0) "none" doesnt have a period time, so we let it slide from both maintime and 
-        // periodtime rejects
-        // (we have sanity checks just in case)
-        // 1) simple time doesn't have a main time, only a period time, so we let it slide 
-        // from maintime rejects
-        // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
-        // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
-        // 4) while using gedit "find and replace", make sure you dont replace
-        // t.max_time to t.min_time ! (it doesnt exist !)
-        //////////////////////////////////////////////////////////////////////////////////////
-
-        ////// begining of *** UHMAEAT v3.1: Universal Highly Modulable And Expandable Argv Tree ***
-        ///// version 3.1 for periodtimes
-        function UHMAEATForPeriodtimes (blitzLiveCorr) {
-
-            // first we define the args we want to test
-            let minGeneralArg = "minperiodtime" + blitzLiveCorr; 
-            // for example "minperiodtimeblitz"
-            let minFamilyArray = ["", "ranked", "unranked"].map(e => minGeneralArg + e);
-            // example : ["minperiodtimeblitz", "minperiodtimeblitzranked", "minperiodtimeblitzunranked"];
-
-            let maxGeneralArg = "maxperiodtime" + blitzLiveCorr; 
-            // for example "maxperiodtimeblitz"
-            let maxFamilyArray = ["", "ranked", "unranked"].map(e => maxGeneralArg + e);
-            // example : ["maxperiodtimeblitz", "maxperiodtimeblitzranked", "maxperiodtimeblitzunranked"];
-
-            // then we convert "corr" to "correspondence"
-            let blitzLiveCorrConverted = blitzLiveCorr;
-            if (blitzLiveCorrConverted === "corr") {
-                blitzLiveCorrConverted = "correspondence";
-            }
-            // else we keep same name : "blitz", or "live"
-
-            /* below is all the other local variables the UHMAEAT for ptimes blitz/live/corr will use */
-            let minimumMaximumSentence = "";   // - minimum/maximum
-            let timecontrolSentence = "";      // - period time - initial time and/or max time, etc..
-            let speedSentence = "";            // - for blitz/live/corr
-            let rankedUnrankedGamesIsSentence  = "";  // - (+/-ranked/unranked) games is
-            let timeNumber = 0;                // - for example 600 (600 seconds)
-            let timeToString = "";             // - for example "10 minutes"  = timespanToDisplayString(config.xxx)
-            let timeNotificationToString = ""; // - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
-            let increaseReduceSentence = "";   // - , please increase/reduce
-                                               // period time - timecontrolSentence again
-            let endingSentence = "";           // - optional, currently only a "."
-            let connBelowAboveSentence = "";   // - for conn_log : below/above
-            let connSentence = "";             // - for conn_log sentence
-
-            // then we initialize some values that will not change : //
-            let timecontrolString = t.time_control;  
-            // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
-            let speedString = t.speed; // we will initialize all the other variables later
-            // if needed (if for example challenge is "blitz" and no maintime arg using "blitz" 
-            // is used, then the speedString === blitzLiveCorr test below fails and we 
-            // exit the function : we dont reject)
-            // "blitz", "live", "correspondence" //
-
-            // for periodtimes, the reject message is always the same, so use a
-            // sub-function for it
-            function UHMAEATForPeriodtimesGenericReject() {
-                conn_log(connSentence + timecontrolSentence + timeNotificationToString + ", it is" + connBelowAboveSentence + minimumMaximumSentence + timecontrolSentence + speedString + " in " + timecontrolString);
-                return { reject : true, msg:  `${minimumMaximumSentence} ${timecontrolSentence} ${speedSentence} ${rankedUnrankedGamesIsSentence} ${timeToString} ${increaseReduceSentence} ${timecontrolSentence} ${endingSentence}` };
-            }
-
-            // then since the processing after the tests is the same for min and max args
-            // (only difference is ">" or "<" in the tests
-            // => we store all the processing in sub functions as well :
-            function UHMAEATForPeriodtimesFischerRejectProcessing() {
-                timecontrolSentence = "Initial Time and/or Max Time ";
-                timeNotificationToString = timespanToDisplayString(t.initial_time);
-                endingSentence = ".";
-                // example : connSentence + "period time 5 seconds, it is below minimum period time live in byoyomi : 1 minutes"
-                return UHMAEATForPeriodtimesGenericReject();
-            }
-            function UHMAEATForPeriodtimesByoyomiRejectProcessing() {
-                timecontrolSentence = "Period Time ";
-                timeNotificationToString = timespanToDisplayString(t.period_time);
-                endingSentence = ".";
-                return UHMAEATForPeriodtimesGenericReject();
-            }
-            function UHMAEATForPeriodtimesCanadianRejectProcessing() {
-                    // note 1 : for canadian we add a small explanation how to 
-                    // understand period for all stones
-                    timecontrolSentence = "Period Time for all the " + t.stones_per_period + " stones ";
-                    // note 2 : canadian period time is already for n number of stones, 
-                    // dont divide by stone
-                    // e.g. 300 seconds divided by 25 stones
-                    // = 300 / 25 = 12 seconds / stone average
-                    // same as 300 seconds for all the 25 stones"
-
-                    // then, for canadian, we need to do a conversion of timeNumber 
-                    // to timeNumber * t.stones_per_period
-                    // e.g. 30 seconds period time for 1 stone (japanese byoyomi) 
-                    // = 30*20 = 600 = 10 minutes period time for 20 stones
-                    timeNumber = (timeNumber * t.stones_per_period);
-
-                    // because of this conversion, we need to recalculate timeToString
-                    // specific to canadian (time in human readable)
-                    timeToString = timespanToDisplayString(timeNumber);
-                    // but in conn_log, we display requested time by user for all the stones
-                    // example : user "wanted 5 minutes period time for all the 25 stones"
-                    timeNotificationToString = timespanToDisplayString(t.period_time);
-                    endingSentence = ".";
-                    // then the reject message is standardized, using the same generic format
-                    // than other timecontrols
-                return UHMAEATForPeriodtimesGenericReject();
-            }
-            function UHMAEATForPeriodtimesSimpleRejectProcessing() {
-                timecontrolSentence = "Time per move ";
-                timeNotificationToString = timespanToDisplayString(t.period_time);
-                endingSentence = ".";
-                return UHMAEATForPeriodtimesGenericReject();
-            }
-                
-            // min
-            if ((config[minFamilyArray[0]] || config[minFamilyArray[1]] || config[minFamilyArray[2]]) && (speedString === blitzLiveCorrConverted)) {
-                minimumMaximumSentence = "Minimum ";
-                speedSentence = "for " + speedString + " ";
-                increaseReduceSentence = ", please increase ";
-                connBelowAboveSentence = " below ";
-                connSentence = user.username + " wanted " + minimumMaximumSentence; // example : "user wanted minimum "
-                if (config[minFamilyArray[0]] && !config[minFamilyArray[1]] && !config[minFamilyArray[2]]) {
-                    timeNumber = config[minFamilyArray[0]];
-                    timeToString = timespanToDisplayString(config[minFamilyArray[0]]);
-                    rankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config[minFamilyArray[1]] && notification.ranked) {
-                    timeNumber = config[minFamilyArray[1]];
-                    timeToString = timespanToDisplayString(config[minFamilyArray[1]]);
-                    rankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config[minFamilyArray[2]] && !notification.ranked) {
-                    timeNumber = config[minFamilyArray[2]];
-                    timeToString = timespanToDisplayString(config[minFamilyArray[2]]);
-                    rankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((timecontrolString === "fischer") && (t.time_increment < timeNumber)) {
-                    return UHMAEATForPeriodtimesFischerRejectProcessing();
-                }
-                if ((timecontrolString === "byoyomi") && t.period_time < timeNumber) {
-                    return UHMAEATForPeriodtimesByoyomiRejectProcessing();
-                }
-                if ((timecontrolString === "canadian") && ((t.period_time / t.stones_per_period) < timeNumber)) {
-                    return UHMAEATForPeriodtimesCanadianRejectProcessing();
-                }
-                if ((timecontrolString === "simple") && t.per_move < timeNumber) {
-                    return UHMAEATForPeriodtimesSimpleRejectProcessing();
-                }
-            }
-
-            // max
-            if ((config[maxFamilyArray[0]] || config[maxFamilyArray[1]] || config[maxFamilyArray[2]]) && (speedString === blitzLiveCorrConverted)) {
-                minimumMaximumSentence = "Maximum ";
-                speedSentence = "for " + speedString + " ";
-                increaseReduceSentence = ", please reduce ";
-                connBelowAboveSentence = " above ";
-                connSentence = user.username + " wanted " + minimumMaximumSentence; // example : "user wanted maximum"
-                if (config[maxFamilyArray[0]] && !config[maxFamilyArray[1]] && !config[maxFamilyArray[2]]) {
-                    timeNumber = config[maxFamilyArray[0]];
-                    timeToString = timespanToDisplayString(config[maxFamilyArray[0]]);
-                    rankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config[maxFamilyArray[1]] && notification.ranked) {
-                    timeNumber = config[maxFamilyArray[1]];
-                    timeToString = timespanToDisplayString(config[maxFamilyArray[1]]);
-                    rankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config[maxFamilyArray[2]] && !notification.ranked) {
-                    timeNumber = config[maxFamilyArray[2]];
-                    timeToString = timespanToDisplayString(config[maxFamilyArray[2]]);
-                    rankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((timecontrolString === "fischer") && (t.time_increment > timeNumber)) {
-                    return UHMAEATForPeriodtimesFischerRejectProcessing();
-                }
-                if ((timecontrolString === "byoyomi") && t.period_time > timeNumber) {
-                    return UHMAEATForPeriodtimesByoyomiRejectProcessing();
-                }
-                if ((timecontrolString === "canadian") && ((t.period_time / t.stones_per_period) > timeNumber)) {
-                    return UHMAEATForPeriodtimesCanadianRejectProcessing();
-                }
-                if ((timecontrolString === "simple") && t.per_move > timeNumber) {
-                    return UHMAEATForPeriodtimesSimpleRejectProcessing();
-                }
-            }
-        }
-        ///// version 3.1 for periodtimes
-        ////// end of *** UHMAEAT v3.1 : Universal Highly Modulable And Expandable Argv Tree ***
-
-        ////// begining of *** UHMAEAT v3.1: Universal Highly Modulable And Expandable Argv Tree ***
-        ///// version 3.1 for maintimes
-        function UHMAEATForMaintimes (blitzLiveCorr) {
-
-            // first we define the args we want to test
-            let minGeneralArg = "minmaintime" + blitzLiveCorr; 
-            // for example "minmaintimeblitz"
-            let minFamilyArray = ["", "ranked", "unranked"].map(e => minGeneralArg + e);
-            // example : ["minmaintimeblitz", "minmaintimeblitzranked", "minmaintimeblitzunranked"];
-
-            let maxGeneralArg = "maxmaintime" + blitzLiveCorr; 
-            // for example "maxmaintimeblitz"
-            let maxFamilyArray = ["", "ranked", "unranked"].map(e => maxGeneralArg + e);
-            // example : ["maxmaintimeblitz", "maxmaintimeblitzranked", "maxmaintimeblitzunranked"];
-
-            // then we convert "corr" to "correspondence"
-            let blitzLiveCorrConverted = blitzLiveCorr;
-            if (blitzLiveCorrConverted === "corr") {
-                blitzLiveCorrConverted = "correspondence";
-            }
-            // else we keep same name : "blitz", or "live"
-
-            /* below is all the other local variables the UHMAEAT for maintimes blitz/live/corr will use */
-            let minimumMaximumSentence = "";   // - minimum/maximum
-            let timecontrolSentence = "";      // - main time - initial time and/or max time, etc..
-            let speedSentence = "";            // - for blitz/live/corr
-            let rankedUnrankedGamesIsSentence  = "";  // - (+/-ranked/unranked) games is
-            let timeNumber = 0;                // - for example 600 (600 seconds)
-            let timeToString = "";             // - for example "10 minutes"  = timespanToDisplayString(config.xxx)
-            let timeNotificationToString = ""; // - for example user wanted "1 seconds" = timespanToDisplayString(t.xxx)
-            let increaseReduceSentence = "";   // - , please increase/reduce
-                                               // main time - timecontrolSentence again
-            let endingSentence = "";           // - optional, currently only a "."
-            let connBelowAboveSentence = "";   // - for conn_log : below/above
-            let connSentence = "";             // - for conn_log sentence
-
-            // then we initialize some values that will not change : //
-            let timecontrolString = t.time_control;  
-            // - "fischer" , "simple", "byoyomi" , "canadian" , "absolute"
-            let speedString = t.speed; // we will initialize all the other variables later
-            // if needed (if for example challenge is "blitz" and no maintime arg using "blitz" 
-            // is used, then the speedString === blitzLiveCorr test below fails and we 
-            // exit the function : we dont reject)
-            // "blitz", "live", "correspondence" //
-
-            // for maintimes, the reject message is always the same, so use a
-            // sub-function for it
-            function UHMAEATForMaintimesGenericReject() {
-                conn_log(connSentence + timecontrolSentence + timeNotificationToString + ", it is" + connBelowAboveSentence + minimumMaximumSentence + timecontrolSentence + speedString + " in " + timecontrolString);
-                return { reject : true, msg:  `${minimumMaximumSentence} ${timecontrolSentence} ${speedSentence} ${rankedUnrankedGamesIsSentence} ${timeToString} ${increaseReduceSentence} ${timecontrolSentence} ${endingSentence}` };
-            }
-
-            // then since the processing after the tests is the same for min and max args
-            // (only difference is ">" or "<" in the tests
-            // => we store all the processing in sub functions as well :
-            function UHMAEATForMaintimesFischerRejectProcessing() {
-                timecontrolSentence = "Initial Time and/or Max Time ";
-                timeNotificationToString = timespanToDisplayString(t.initial_time);
-                endingSentence = ".";
-                // example : connSentence + "main time 5 seconds, it is below minimum main time live in byoyomi : 1 minutes"
-                return UHMAEATForMaintimesGenericReject();
-            }
-            function UHMAEATForMaintimesByoyomiRejectProcessing() {
-                timecontrolSentence = "Main Time ";
-                timeNotificationToString = timespanToDisplayString(t.main_time);
-                endingSentence = ".";
-                return UHMAEATForMaintimesGenericReject();
-            }
-            function UHMAEATForMaintimesCanadianRejectProcessing() {
-                timecontrolSentence = "Main Time ";
-                timeNotificationToString = timespanToDisplayString(t.main_time);
-                endingSentence = ".";
-                return UHMAEATForMaintimesGenericReject();
-            }
-            function UHMAEATForMaintimesAbsoluteRejectProcessing() {
-                timecontrolSentence = "Total Time ";
-                timeNotificationToString = timespanToDisplayString(t.total_time);
-                endingSentence = ".";
-                return UHMAEATForMaintimesGenericReject();
-            }
-                
-            // min
-            if ((config[minFamilyArray[0]] || config[minFamilyArray[1]] || config[minFamilyArray[2]]) && (speedString === blitzLiveCorrConverted)) {
-                minimumMaximumSentence = "Minimum ";
-                speedSentence = "for " + speedString + " ";
-                increaseReduceSentence = ", please increase ";
-                connBelowAboveSentence = " below ";
-                connSentence = user.username + " wanted " + minimumMaximumSentence; // example : "user wanted minimum "
-                if (config[minFamilyArray[0]] && !config[minFamilyArray[1]] && !config[minFamilyArray[2]]) {
-                    timeNumber = config[minFamilyArray[0]];
-                    timeToString = timespanToDisplayString(config[minFamilyArray[0]]);
-                    rankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config[minFamilyArray[1]] && notification.ranked) {
-                    timeNumber = config[minFamilyArray[1]];
-                    timeToString = timespanToDisplayString(config[minFamilyArray[1]]);
-                    rankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config[minFamilyArray[2]] && !notification.ranked) {
-                    timeNumber = config[minFamilyArray[2]];
-                    timeToString = timespanToDisplayString(config[minFamilyArray[2]]);
-                    rankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((timecontrolString === "fischer") && ((t.initial_time < timeNumber) || (t.max_time < timeNumber))) {
-                    return UHMAEATForMaintimesFischerRejectProcessing();
-                }
-                if ((timecontrolString === "byoyomi") && t.main_time < timeNumber) {
-                    return UHMAEATForMaintimesByoyomiRejectProcessing();
-                }
-                if ((timecontrolString === "canadian") && t.main_time < timeNumber) {
-                    return UHMAEATForMaintimesCanadianRejectProcessing();
-                }
-                if ((timecontrolString === "absolute") && t.total_time < timeNumber) {
-                    return UHMAEATForMaintimesAbsoluteRejectProcessing();
-                }
-            }
-
-            // max
-            if ((config[maxFamilyArray[0]] || config[maxFamilyArray[1]] || config[maxFamilyArray[2]]) && (speedString === blitzLiveCorrConverted)) {
-                minimumMaximumSentence = "Maximum ";
-                speedSentence = "for " + speedString + " ";
-                increaseReduceSentence = ", please reduce ";
-                connBelowAboveSentence = " above ";
-                connSentence = user.username + " wanted " + minimumMaximumSentence; // example : "user wanted maximum"
-                if (config[maxFamilyArray[0]] && !config[maxFamilyArray[1]] && !config[maxFamilyArray[2]]) {
-                    timeNumber = config[maxFamilyArray[0]];
-                    timeToString = timespanToDisplayString(config[maxFamilyArray[0]]);
-                    rankedUnrankedGamesIsSentence = "games is ";
-                }
-                if (config[maxFamilyArray[1]] && notification.ranked) {
-                    timeNumber = config[maxFamilyArray[1]];
-                    timeToString = timespanToDisplayString(config[maxFamilyArray[1]]);
-                    rankedUnrankedGamesIsSentence = "ranked games is ";
-                }
-                if (config[maxFamilyArray[2]] && !notification.ranked) {
-                    timeNumber = config[maxFamilyArray[2]];
-                    timeToString = timespanToDisplayString(config[maxFamilyArray[2]]);
-                    rankedUnrankedGamesIsSentence = "unranked games is ";
-                }
-
-                if ((timecontrolString === "fischer") && ((t.initial_time > timeNumber) || (t.max_time > timeNumber))) {
-                    return UHMAEATForMaintimesFischerRejectProcessing();
-                }
-                if ((timecontrolString === "byoyomi") && t.main_time > timeNumber) {
-                    return UHMAEATForMaintimesByoyomiRejectProcessing();
-                }
-                if ((timecontrolString === "absolute") && t.total_time > timeNumber) {
-                    return UHMAEATForMaintimesAbsoluteRejectProcessing();
-                }
-                if ((timecontrolString === "canadian") && t.main_time > timeNumber) {
-                    return UHMAEATForMaintimesCanadianRejectProcessing();
-                }
-            }
-        }
-        ///// version 3.1 for maintimes
-        ////// end of *** UHMAEAT v3.1 : Universal Highly Modulable And Expandable Argv Tree ***
 
         function minmaxHandicapFamilyReject(argNameString) {
             // first, we define rankedUnranked and minMax depending on argNameString
@@ -1332,6 +956,101 @@ class Connection {
     }}}
 }
 
+function UHMAEAT(mainPeriodTime, notificationT, notificationRanked, notificationUserUsername) { /* }}} */
+    ////////////////////////////////////////////////////////////////////////////////////////
+    ////// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+    ///// (main/period)times version 4.0
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // before reading UHMAEATs function code, general information : 
+    // 0) "none" doesnt have a period time, so we let it slide from  
+    // both maintime and periodtime rejects
+    // 1) simple time doesn't have a main time, only a period time,  
+    // so we let it slide from maintime rejects
+    // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
+    // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
+    // 4) while using gedit "find and replace", make sure you dont replace
+    // notificationT.max_time (fischer maintime) to notificationT.min_time ! (it doesnt exist !)
+    // 5) notificationT.time_control possible values:
+    // "fischer" , "byoyomi" , "canadian", "simple", "absolute"
+    // 6) notificationT.speed possible values: "blitz", "live", "correspondence"
+    // 7) the notificationT.Speed === "blitz"/"live"/"correspondence") test is for efficiency :
+    // if false, we skip the unrelevant arg and skip to next speed to test :
+    // ex: if ((arg family is minmaintimeBLITZ) AND (notificationT.Speed is live/correspondence)),
+    ////////////////////////////////////////////////////////////////////////////////////////
+
+    for (let blitzLiveCorr of ["blitz", "live", "corr"]) {
+        if (notificationT.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
+            const minFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("min" + mainPeriodTime + blitzLiveCorr);
+            const maxFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("max" + mainPeriodTime + blitzLiveCorr);
+            // example : ["min(main/period)timeblitz", "min(main/period)timeblitzranked", "min(main/period)timeblitzunranked", 
+            //            ["Minimum", "increase", "below", "low"], [true, false]]
+
+            return (minmaxRejectTests(minFamilyArray, mainPeriodTime, notificationT, notificationRanked, notificationUserUsername) 
+                    || minmaxRejectTests(maxFamilyArray, mainPeriodTime, notificationT, notificationRanked, notificationUserUsername));
+        }
+    }
+}
+
+function minmaxRejectTests(familyArray, mainPeriodTime, notificationT, notificationRanked, notificationUserUsername) {
+    let argNameString = familyArray[0]; // ex: "minperiodtimeblitzranked"
+    if (config[familyArray[1]] && notificationRanked) {
+        argNameString = familyArray[1];
+    } else if (config[familyArray[2]] && !notificationRanked) {
+        argNameString = familyArray[2];
+    }
+    const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTime, config[argNameString], notificationT);
+    let timeCondition = false;
+    for (let setting of timecontrolsSettings) {
+        if (notificationT.time_control === setting[0]) {
+            if (familyArray[4][0]) {         // isMin
+                timeCondition = setting[3];  // min condition
+            } else if (familyArray[4][1]) {  // isMax
+                timeCondition = setting[4];  // max condition
+            }
+            if (timeCondition) {
+                const argToString = timespanToDisplayString(config[argNameString]); // ex: "1 minutes"
+                let rankedUnranked = notificationT.speed;
+                if (argNameString.includes("ranked")) { // ex: "blitz ranked", "correspondence unranked" games, etc.
+                    rankedUnranked = `${notificationT.speed} ${rankedUnrankedString(argNameString)}`;
+                }
+                let endingSentence = ".";
+                if ((notificationT.time_control === "canadian") && (mainPeriodTime === "periodtime")) {
+                    endingSentence = ", or change the number of stones per period";
+                }
+                conn_log(`${notificationUserUsername} wanted ${familyArray[3][0]} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${timespanToDisplayString(setting[2])}, it is ${familyArray[3][2]} ${argToString}`);
+                // example : "userX wanted Minimum (Main/Period) Time blitz ranked
+                // in byoyomi 15 seconds, it is below 1 minutes"
+                return { reject : true, msg: `${familyArray[3][0]} ${setting[1]} for ${rankedUnranked} games in ${notificationT.time_control} is ${argToString}, please ${familyArray[3][1]} ${setting[1]}${endingSentence}` };
+                // example : "Minimum (Main/Period) Time for blitz ranked games
+                // in byoyomi is 1 minutes, please increase (Main/Period) Time."
+            }
+        }
+    }
+}
+
+function timecontrolsMainPeriodTime(mpt, argNumber, notificationT) {
+    if (mpt === "maintime") {
+        return [["fischer", "Initial Time and/or Max Time", notificationT.initial_time, (notificationT.initial_time < argNumber) || (notificationT.max_time < argNumber), (notificationT.initial_time > argNumber) || (notificationT.max_time > argNumber)],
+                ["byoyomi", "Main Time", notificationT.main_time, notificationT.main_time < argNumber, notificationT.main_time > argNumber],
+                ["canadian", "Main Time", notificationT.main_time, notificationT.main_time < argNumber, notificationT.main_time > argNumber],
+                ["absolute", "Total Time", notificationT.total_time, notificationT.total_time < argNumber, notificationT.total_time > argNumber]];
+    } else {
+        return [["fischer", "Increment Time", notificationT.time_increment, notificationT.time_increment < argNumber, notificationT.time_increment > argNumber],
+                ["byoyomi", "Period Time", notificationT.period_time, notificationT.period_time < argNumber, notificationT.period_time > argNumber],
+                ["canadian", "Period Time for all the " + notificationT.stones_per_period + " stones", argNumber * notificationT.stones_per_period, (notificationT.period_time / notificationT.stones_per_period) < argNumber, (notificationT.period_time / notificationT.stones_per_period) > argNumber],
+                ["simple", "Time per move", notificationT.period_time, notificationT.per_move < argNumber, notificationT.per_move > argNumber]];
+                // note : 1) for canadian periodtimes, we need to do a conversion of argNumber
+                //           e.g. 30 seconds average period time for 1 stone 
+                //           = 30*20 = 600 = 10 minutes period time for all the 20 stones (canadian)
+                //        2) but in conn_log, we display requested time by user for all the stones
+                //           example : user "wanted 5 minutes period time for all the 25 stones"
+    }
+}  /* }}} */
+///////////////////////////////////////////////////////////////////////////////////
+////// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
+///// (main/period)times version 4.0
+///////////////////////////////////////////////////////////////////////////////////
+
 function rankToString(r) { /* {{{ */
     r = Math.floor(r);
     if (r >= 30)  return (r-30+1) + 'd'; // r>=30 : 1 dan or stronger
@@ -1367,6 +1086,49 @@ function pluralFamilyStringToSingularString(plural) { /* {{{ */
     pluralToConvert = pluralToConvert.join("");
     // for example ["s", "p", "e", "e", "d"] -> "speed"
     return pluralToConvert;
+} /* }}} */
+
+function convertBlitzLiveCorr(argNameString) { /* {{{ */
+    if (argNameString.includes("blitz")) {
+        return "blitz";
+    } else if (argNameString.includes("live")) {
+        return "live";
+    } else { // "corr"
+        return "correspondence";
+    }
+} /* }}} */
+
+function familyArrayMIBLIsminIsmaxFromGeneralArgString(generalArgString) { /* {{{ */
+    let mm = "";
+    let ir = "";
+    let ba = "";
+    let lh = "";
+    const isMin = generalArgString.includes("min");
+    const isMax = generalArgString.includes("max");
+    if (isMin) {
+        mm = "Minimum";
+        ir = "increase";
+        ba = "below";
+        lh = "low";
+    } else if (isMax) {
+        mm = "Maximum";
+        ir = "reduce";
+        ba = "above";
+        lh = "high";
+    }
+    let fullArray = ["", "ranked", "unranked" ].map(e => generalArgString + e);
+    fullArray.push([mm, ir, ba, lh], [isMin, isMax]);
+    return fullArray;
+} /* }}} */
+
+function rankedUnrankedString(argNameString) { /* {{{ */
+    if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
+        return "ranked";
+    } else if (argNameString.includes("unranked")) {
+        return "unranked";
+    } else {
+        return "";
+    }
 } /* }}} */
 
 function conn_log() { /* {{{ */
