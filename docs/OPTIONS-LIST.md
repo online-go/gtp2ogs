@@ -469,9 +469,13 @@ Thank you message to appear in chat at end of game (ex: "Thank you for playing")
 
   ```--minhandicapunranked``` Min handicap for unranked games
 
-**important note** : until the min/max bypass issue is fixed, it is 
-recommended to use `--noautohandicap` as well, see 
-[#165](https://github.com/online-go/gtp2ogs/pull/165) for details
+**important note** : until the min/max bypass issue is fixed (at
+the server level), it is recommended for botadmin (at the gtp2ogs 
+level) to use the `--fakerank` option, or `--noautohandicapranked`,
+ see for details :
+[#165](https://github.com/online-go/gtp2ogs/pull/165), 
+[#207](https://github.com/online-go/gtp2ogs/pull/207),
+[#28](https://github.com/online-go/gtp2ogs/issues/28).
 
 note 2 : currently, since "automatic" handicap returns the server 
 value `notification.handicap` `-1`, using `--minhandicap 0` will 
@@ -485,9 +489,13 @@ the number of automatic handicap stones
 
   ```--maxhandicapunranked``` Max handicap for unranked games
 
-**important note** : until the min/max bypass issue is fixed, it is 
-recommended to use `--noautohandicap` as well, see 
-[#165](https://github.com/online-go/gtp2ogs/pull/165) for details
+**important note** : until the min/max bypass issue is fixed (at
+the server level), it is recommended for botadmin (at the gtp2ogs 
+level) to use the `--fakerank` option, or `--noautohandicapranked`,
+ see for details :
+[#165](https://github.com/online-go/gtp2ogs/pull/165), 
+[#207](https://github.com/online-go/gtp2ogs/pull/207),
+[#28](https://github.com/online-go/gtp2ogs/issues/28).
   
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
@@ -503,8 +511,11 @@ recommended to use `--noautohandicap` as well, see
 to fix autohandicap bypass issue, by manualy counting min and max 
 number of handicap stones allowed if handicap is "automatic"
 
-This is a temporary fix until server provides bot ranking detection
-on gtp2ogs
+This is a temporary fix until server sends handicap notification as
+an object telling if handicap is automatic or user-defined, as well
+as the number of stones if automatic or user-defined (we currently
+only know the latter, automatic always returns `-1` regardless of
+actual handicap stone number)
 
 for example ```--fakerank 6d``` and ```--maxhandicap 4``` will allow 
 automatic handicap only for opponents ranked between 2d-6d for 
@@ -512,6 +523,14 @@ automatic handicap, but players of any rank (even 25k or 9d+) will be
 notified that they are still able to play up to 4 handicap stones games 
 by going in -custom handicap- and manually inputting the number of 
 handicap stones
+
+**important note** : until the min/max bypass issue is fixed (at
+the server level), it is recommended for botadmin (at the gtp2ogs 
+level) to use the `--fakerank` option, or `--noautohandicapranked`,
+ see for details :
+[#165](https://github.com/online-go/gtp2ogs/pull/165), 
+[#207](https://github.com/online-go/gtp2ogs/pull/207),
+[#28](https://github.com/online-go/gtp2ogs/issues/28).
 
 #### nopause
   ```--nopause```  Do not allow games to be paused
