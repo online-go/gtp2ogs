@@ -286,11 +286,11 @@ class Connection {
         let user = notification.user;
 
         if (config.banned_users[user.username] || config.banned_users[user.id]) {
-            return bannedFamilyReject("bans");
+            return bannedFamilyReject("bans", user.id, user.username);
         } else if (notification.ranked && (config.banned_users_ranked[user.username] || config.banned_users_ranked[user.id])) {
-            return bannedFamilyReject("bansranked");
+            return bannedFamilyReject("bansranked", user.id, user.username);
         } else if (!notification.ranked && (config.banned_users_unranked[user.username] || config.banned_users_unranked[user.id])) {
-            return bannedFamilyReject("bansunranked");
+            return bannedFamilyReject("bansunranked", user.id, user.username);
         }
 
         if (config.proonly && !user.professional) {
@@ -323,27 +323,10 @@ class Connection {
 
         return { reject: false }; // OK !
 
-        function bannedFamilyReject(argNameString) {
-            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
-
-            let rankedUnranked = "from all games";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "from ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "from unranked games";
-            }
-
-            // then finally, the actual reject :
-            conn_log(`Username ${user.username} (user id ${user.id}) is banned ${rankedUnranked}`);
-            return { reject: true, msg: `Username ${user.username} (user id ${user.id}) is banned ${rankedUnranked} on this bot by bot admin` };
-        }
-
     } /* }}} */
     // Check game settings are acceptable
     //
     checkGameSettings(notification) { /* {{{ */
-        let t = notification.time_control;
         let user = notification.user;
 
         // Sanity check, user can't choose rules. Bots only play chinese.
@@ -351,7 +334,6 @@ class Connection {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
         }
-
         if (config.rankedonly && !notification.ranked) {
             conn_log("Ranked games only");
             return { reject: true, msg: "This bot accepts ranked games only. " };
@@ -374,51 +356,50 @@ class Connection {
         // all at the same time if bot admin wants
 
         /******** begining of BOARDSIZES *********/
-
-        // for square board sizes only //
-        /* if not square*/
+        // 1) for square board sizes only //
+        /*     A) if not square*/
         if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            return boardsizeNotificationIsNotSquareReject("boardsizes");
+            return boardsizeNotificationIsNotSquareReject("boardsizes", notification.width, notification.height);
         }
         if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-            return boardsizeNotificationIsNotSquareReject("boardsizesranked");
+            return boardsizeNotificationIsNotSquareReject("boardsizesranked", notification.width, notification.height);
         }
         if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-            return boardsizeNotificationIsNotSquareReject("boardsizesunranked");
+            return boardsizeNotificationIsNotSquareReject("boardsizesunranked", notification.width, notification.height);
         }
 
-        /* if square, check if square board size is allowed*/
+        /*     B) if square, check if square board size is allowed*/
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizes", notification.width);
+            return genericAllowedFamiliesReject("boardsizes", notification.width, user.username);
         }
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            return genericAllowedFamiliesReject("boardsizesranked", notification.width);
+            return genericAllowedFamiliesReject("boardsizesranked", notification.width, user.username);
         }
         if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
+            return genericAllowedFamiliesReject("boardsizesunranked", notification.width, user.username);
         }
 
-        // for custom board sizes, including square board sizes if width === height as well //
-        /* if custom, check width */
+        // 2) for custom board sizes, including square board sizes if width === height as well //
+        /*     A) if custom, check width */
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizewidths[notification.width] && !config.boardsizewidthsranked && !config.boardsizewidthsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidths");
+            return customBoardsizeWidthsHeightsReject("boardsizewidths", notification.width, notification.height, user.username);
         }
         if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidthsranked");
+            return customBoardsizeWidthsHeightsReject("boardsizewidthsranked", notification.width, notification.height, user.username);
         }
         if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidthsunranked");
+            return customBoardsizeWidthsHeightsReject("boardsizewidthsunranked", notification.width, notification.height, user.username);
         }
 
-        /* if custom, check height */
+        /*     B) if custom, check height */
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !config.boardsizeheightsranked && !config.boardsizeheightsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheights");
+            return customBoardsizeWidthsHeightsReject("boardsizeheights", notification.width, notification.height, user.username);
         }
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheightsranked");
+            return customBoardsizeWidthsHeightsReject("boardsizeheightsranked", notification.width, notification.height, user.username);
         }
         if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheightsunranked");
+            return customBoardsizeWidthsHeightsReject("boardsizeheightsunranked", notification.width, notification.height, user.username);
         }
         /******** end of BOARDSIZES *********/
 
@@ -438,8 +419,9 @@ class Connection {
                 // by manually calculating handicap stones number
                 // then calculate if it is within min/max limits set by botadmin
 
-                // TODO : for all the code below, replace "fakerank" with 
-                // notification.bot.ranking (server support for bot ranking detection in gtp2ogs)
+                // TODO : remove all the fakerank below when server gives us support for
+                // "automatic handicap" notification object, containing both the type of 
+                // handicap "automatic"/"user-defined" as well as the number of stones in each case
                 let fakeRankDifference = Math.abs(Math.trunc(user.ranking) - Math.trunc(config.fakerank));
                 // adding a trunk because a 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
                 // but it is in fact a still a 6k vs 7k = Math.abs(6-7) = 1 rank difference game
@@ -465,41 +447,41 @@ class Connection {
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            return genericAllowedFamiliesReject("komis", notification.komi);
+            return genericAllowedFamiliesReject("komis", notification.komi, user.username);
         }
         if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
             return genericAllowedFamiliesReject("komisranked", notification.komi);
         }
         if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            return genericAllowedFamiliesReject("komisunranked", notification.komi);
+            return genericAllowedFamiliesReject("komisunranked", notification.komi, user.username);
         }
 
-        if (!config.allowed_speeds[t.speed] && !config.speedsranked && !config.speedsunranked) {
-            return genericAllowedFamiliesReject("speeds", t.speed);
+        if (!config.allowed_speeds[notification.time_control.speed] && !config.speedsranked && !config.speedsunranked) {
+            return genericAllowedFamiliesReject("speeds", notification.time_control.speed, user.username);
         }
-        if (!config.allowed_speeds_ranked[t.speed] && notification.ranked && config.speedsranked) {
-            return genericAllowedFamiliesReject("speedsranked", t.speed);
+        if (!config.allowed_speeds_ranked[notification.time_control.speed] && notification.ranked && config.speedsranked) {
+            return genericAllowedFamiliesReject("speedsranked", notification.time_control.speed, user.username);
         }
-        if (!config.allowed_speeds_unranked[t.speed] && !notification.ranked && config.speedsunranked) {
-            return genericAllowedFamiliesReject("speedsunranked", t.speed);
+        if (!config.allowed_speeds_unranked[notification.time_control.speed] && !notification.ranked && config.speedsunranked) {
+            return genericAllowedFamiliesReject("speedsunranked", notification.time_control.speed, user.username);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see README and OPTIONS-LIST for details
-        if (!config.allowed_timecontrols[t.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrols", t.time_control);
+        if (!config.allowed_timecontrols[notification.time_control.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
+            return genericAllowedFamiliesReject("timecontrols", notification.time_control.time_control, user.username);
         }
-        if (!config.allowed_timecontrols_ranked[t.time_control] && notification.ranked && config.timecontrolsranked) { 
-            return genericAllowedFamiliesReject("timecontrolsranked", t.time_control);
+        if (!config.allowed_timecontrols_ranked[notification.time_control.time_control] && notification.ranked && config.timecontrolsranked) { 
+            return genericAllowedFamiliesReject("timecontrolsranked", notification.time_control.time_control, user.username);
         }
-        if (!config.allowed_timecontrols_unranked[t.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrolsunranked", t.time_control);
+        if (!config.allowed_timecontrols_unranked[notification.time_control.time_control] && !notification.ranked && config.timecontrolsunranked) { 
+            return genericAllowedFamiliesReject("timecontrolsunranked", notification.time_control.time_control, user.username);
         }
 
-        const resultMaintime = UHMAEAT("maintime", notification.time_control, notification.ranked, user.username); // clearer and safer to use notification.time_control instead of the alias t
+        const resultMaintime = UHMAEAT("maintime", notification.time_control, notification.ranked, user.username);
         if (resultMaintime) {
             return (resultMaintime);
         }
-        const resultPeriods = minmaxPeriodsActualReject("periods", t.periods, t.speed, notification.ranked, user.username);
+        const resultPeriods = minmaxPeriodsActualReject("periods", notification.time_control.periods, notification.time_control.speed, notification.ranked, user.username);
         if (resultPeriods) {
             return (resultPeriods);
         }
@@ -509,110 +491,6 @@ class Connection {
         }
 
         return { reject: false };  // Ok !
-
-        function noAutohandicapReject(argNameString) {
-            // first, we define rankedUnranked, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
-            // then finally, the actual reject :
-            conn_log(`no autohandicap ${rankedUnranked}`);
-            return { reject: true, msg: `For easier bot management, -automatic- handicap is disabled on this bot ${rankedUnranked}, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones` };
-        }
-
-        function genericAllowedFamiliesReject(argNameString, notificationUnit) {
-            // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games ";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games ";
-            }
-
-            let argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
-            // for example "speedsranked" -> "speed"
-
-            // then, we process the inputs to human readable, and convert them if needed
-            let argValueString = config[argNameString];
-            // for example config["boardsizesranked"];
-            let notificationUnitConverted = notificationUnit;
-            // if argFamilySingularString family is "boardsize" type :
-            if (argFamilySingularString.includes("boardsize")) {
-                argValueString = boardsizeSquareToDisplayString(config[argNameString]);
-                // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
-                notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
-            }
-            // if argFamilySingularString family is "komi" type :
-            if (argFamilySingularString.includes("komi")) {
-                if (notificationUnit === null) {
-                    notificationUnitConverted = "automatic";
-                }
-            }
-            // else we dont dont convert : we dont change anything
-
-            // then finally, the actual reject :
-            conn_log(`${user.username} wanted ${argFamilySingularString} ${rankedUnranked}-${notificationUnitConverted}-, not in -${argValueString}- `);
-            // for example : "user wanted speed for ranked games -blitz-, not in -live,correspondence-
-            return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked} : -${argValueString}-` };
-            /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
-                             choose one of these allowed speeds for ranked games : 
-                             -live,correspondence-"
-            */
-        }
-
-        function boardsizeNotificationIsNotSquareReject(argNameString) {
-            // first, we define rankedUnranked, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
-            // then finally, the actual reject :
-            conn_log(`boardsize ${notification.width} x ${notification.height} is not square, not allowed`);
-            return { reject: true, msg: `Your selected board size ${notification.width} x ${notification.height} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example try 9x9 or 19x19}` };
-        }
-
-        function customBoardsizeWidthsHeightsReject(argNameString) {
-            // first, we define rankedUnranked, widthHeight, depending on argNameString
-
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
-            let widthHeight = "";
-            let notificationUnit = "";
-            if (argNameString.includes("width")) {
-                widthHeight = "width";
-                notificationUnit = notification[widthHeight];
-            }
-            if (argNameString.includes("height")) {
-                widthHeight = "height";
-                notificationUnit = notification[widthHeight];
-            }
-
-            // then finally, the actual reject :
-            conn_log(`${user.username} wanted boardsize ${widthHeight} ${rankedUnranked}-${notificationUnit}-, not in -${config[argNameString]}- `);
-            // for example : "user wanted boardsize width for ranked games -15-, not in -17,19,25-
-            return { reject: true, msg: `In your selected board size ${notification.width} x ${notification.height} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values ${rankedUnranked} : ${config[argNameString]}` };
-            /* for example : In your selected board size 15 x 2 (width x height), boardsize WIDTH (15) is not allowed for ranked games on this bot, please choose one of these allowed CUSTOM boardsize WIDTHS values for ranked games : 17,19,25
-            */
-        }
 
     } /* }}} */
     // Check everything and return reject status + optional error msg.
@@ -725,6 +603,66 @@ class Connection {
         clearInterval(this.corr_queue_interval);
     }}}
 }
+
+function bannedFamilyReject(argNameString, notificationUserId, notificationUserUsername) { /* }}} */
+    let rankedUnranked = rankedUnrankedString(argNameString);
+    if (!argNameString.includes("ranked")) {
+        rankedUnranked = "all";
+    }
+    conn_log(`Username ${notificationUserUsername} (user id ${notificationUserId}) is banned from ${rankedUnranked} games`);
+    return { reject: true, msg: `Username ${notificationUserUsername} (user id ${notificationUserId}) is banned from ${rankedUnranked} games on this bot by bot admin` };
+}  /* }}} */
+
+function noAutohandicapReject(argNameString) { /* }}} */
+    const rankedUnranked = rankedUnrankedString(argNameString);
+    conn_log(`no autohandicap for ${rankedUnranked}`);
+    return { reject: true, msg: `For easier bot management, -automatic- handicap is disabled on this bot for ${rankedUnranked}, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones` };
+}  /* }}} */
+
+function genericAllowedFamiliesReject(argNameString, notificationUnit, notificationUserUsername) { /* }}} */
+    const rankedUnranked = rankedUnrankedString(argNameString);
+    const argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
+    // for example "speedsranked" -> "speed"
+    let argValueString = config[argNameString];
+    // for example config["boardsizesranked"];
+    let notificationUnitConverted = notificationUnit;
+
+    if (argFamilySingularString.includes("boardsize")) {
+        argValueString = boardsizeSquareToDisplayString(config[argNameString]);
+        // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
+        notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
+    }
+    if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
+        notificationUnitConverted = "automatic";
+    }
+    conn_log(`${notificationUserUsername} wanted ${argFamilySingularString} for ${rankedUnranked} -${notificationUnitConverted}-, not in -${argValueString}- `);
+    // for example : "user wanted speed for ranked games -blitz-, not in -live,correspondence-
+    return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot for ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s for ${rankedUnranked} : -${argValueString}-` };
+    /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
+                     choose one of these allowed speeds for ranked games : -live,correspondence-"*/
+} /* }}} */
+
+function boardsizeNotificationIsNotSquareReject(argNameString, notificationWidth, notificationHeight) { /* }}} */
+    const rankedUnranked = rankedUnrankedString(argNameString);
+    conn_log(`boardsize ${notificationWidth} x ${notificationHeight} is not square, not allowed for ${rankedUnranked}`);
+    return { reject: true, msg: `Your selected board size ${notificationWidth} x ${notificationHeight} is not square, not allowed for ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example try 9x9 or 19x19}` };
+} /* }}} */
+
+function customBoardsizeWidthsHeightsReject(argNameString, notificationWidth, notificationHeight, notificationUserUsername) { /* }}} */
+    const rankedUnranked = rankedUnrankedString(argNameString);
+    let widthHeight = "width";
+    let notificationUnit = notificationWidth;
+    if (argNameString.includes("height")) {
+        widthHeight = "height";
+        notificationUnit = notificationHeight;
+    }
+    conn_log(`${notificationUserUsername} wanted boardsize ${widthHeight} for ${rankedUnranked} -${notificationUnit}-, not in -${config[argNameString]}- `);
+    // for example : "user wanted boardsize width for ranked games -15-, not in -17,19,25-
+    return { reject: true, msg: `In your selected board size ${notificationWidth} x ${notificationHeight} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed for ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values for ${rankedUnranked} : ${config[argNameString]}` };
+    /* for example : In your selected board size 15 x 2 (width x height), boardsize WIDTH (15)
+    is not allowed for ranked games on this bot, please choose one of these allowed CUSTOM 
+    boardsize WIDTHS values for ranked games : 17,19,25 */
+} /* }}} */
 
 // minmax families reject functions :
 function minmaxPeriodsActualReject(familyNameString, familyNotification, notificationTSpeed, notificationRanked, notificationUserUsername) { /* }}} */
