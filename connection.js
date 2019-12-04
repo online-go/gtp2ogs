@@ -316,55 +316,12 @@ class Connection {
             return { reject: true, msg: "Currently, " + Object.keys(this.connected_games).length + " games are being played by this bot, maximum is " + config.maxconnectedgames + " (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played) , try again later " };
         }
 
-        if ((user.ranking < config.minrank) && !config.minrankranked && !config.minrankunranked) {
-            return minmaxRankFamilyReject("minrank");
-        }
-        if ((user.ranking < config.minrankranked) && notification.ranked) {
-            return minmaxRankFamilyReject("minrankranked");
-        }
-        if ((user.ranking < config.minrankunranked) && !notification.ranked) {
-            return minmaxRankFamilyReject("minrankunranked");
-        }
-        if ((user.ranking > config.maxrank) && !config.maxrankranked && !config.maxrankunranked) {
-            return minmaxRankFamilyReject("maxrank")
-        }
-        if ((user.ranking > config.maxrankranked) && notification.ranked) {
-            return minmaxRankFamilyReject("maxrankranked");
-        }
-        if ((user.ranking > config.maxrankunranked) && !notification.ranked) {
-            return minmaxRankFamilyReject("maxrankunranked");
+        const resultRank = minmaxHandicapRankActualReject("rank", user.ranking, notification.handicap, notification.ranked, user.username);
+        if (resultRank) {
+            return (resultRank);
         }
 
         return { reject: false }; // OK !
-
-        function minmaxRankFamilyReject(argNameString) {
-            // first, we define rankedUnranked, lowHigh, minMax, and humanReadableRank, depending on argNameString
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games ";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games ";
-            }
-
-            let minMax = "";
-            let lowHigh = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                lowHigh = "low";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                lowHigh = "high";
-            }
-
-            // then we define humanReadable ranks
-            let humanReadableUserRank = rankToString(user.ranking);
-            let humanReadableMinmaxRank = rankToString(config[argNameString]);
-
-            // then finally, the actual reject :
-            conn_log(`${user.username} ranking ${humanReadableUserRank} too ${lowHigh} ${rankedUnranked}: ${minMax} ${rankedUnranked}is ${humanReadableMinmaxRank}`);
-            return { reject: true, msg: `${minMax} rank ${rankedUnranked}is ${humanReadableMinmaxRank}, your rank is too ${lowHigh} ${rankedUnranked}` };
-        }
 
         function bannedFamilyReject(argNameString) {
             // first, we define rankedUnranked, argFamilySingularString, depending on argNameString
@@ -465,79 +422,46 @@ class Connection {
         }
         /******** end of BOARDSIZES *********/
 
-        if (notification.handicap === -1 && config.noautohandicap) {
-            return noAutohandicapReject("noautohandicap");
-	}
-        if (notification.handicap === -1 && config.noautohandicapranked && notification.ranked) {
-            return noAutohandicapReject("noautohandicapranked");
-	}
-        if (notification.handicap === -1 && config.noautohandicapunranked && !notification.ranked) {
-            return noAutohandicapReject("noautohandicapunranked");
-	}
-
-        /***** automatic handicap min/max handicap limits detection ******/
-
-        // below is a fix of automatic handicap bypass issue
-        // by manually calculating handicap stones number
-        // then calculate if it is within set min/max
-        // limits set by botadmin
-
-        // TODO : for all the code below, replace "fakerank" with 
-        // notification.bot.ranking (server support for bot ranking detection 
-        // in gtp2ogs)
-
-        if (notification.handicap === -1 && config.fakerank && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
-            let rankDifference = Math.abs(Math.trunc(user.ranking) - Math.trunc(config.fakerank));
-            // adding a trunk because a 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
-            // but it is in fact a still a 6k vs 7k = Math.abs(6-7) = 1 rank difference game
-
-            // first, if ranked game, we eliminate > 9 rank difference
-            if (notification.ranked && (rankDifference > 9)) {
-                conn_log("Rank difference > 9 in a ranked game would be 10+ handicap stones, not allowed");
-                return {reject: true, msg: "Rank difference between you and this bot is " + rankDifference + "\n The difference is too big to play a ranked game with handicap (max is 9 handicap for ranked games), try unranked handicap or manually reduce the number of handicap stones in -custom handicap-"};
+        if (notification.handicap === -1) {
+            if (config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
+                return noAutohandicapReject("noautohandicap");
             }
+            if (config.noautohandicapranked && notification.ranked) {
+                return noAutohandicapReject("noautohandicapranked");
+            }
+            if (config.noautohandicapunranked && !notification.ranked) {
+                return noAutohandicapReject("noautohandicapunranked");
+            }
+            /***** fakerank : automatic handicap min/max handicap limits detection ******/
+            if (config.fakerank && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
+                // below is a fix of automatic handicap bypass issue
+                // by manually calculating handicap stones number
+                // then calculate if it is within min/max limits set by botadmin
 
-            // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
-            // we eliminate all unwanted values, everything not forbidden is allowed
-            if (config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked && (rankDifference < config.minhandicap)) {
-                return automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
-            }
-            if (config.minhandicapranked && notification.ranked && (rankDifference < config.minhandicapranked)) {
-                return automaticHandicapStoneDetectionReject("minhandicapranked", rankDifference);
-            }
-            if (config.minhandicapunranked && !notification.ranked && (rankDifference < config.minhandicapunranked)) {
-                return automaticHandicapStoneDetectionReject("minhandicap", rankDifference);
-            }
-            if (config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked && (rankDifference > config.maxhandicap)) {
-                return automaticHandicapStoneDetectionReject("maxhandicap", rankDifference);
-            }
-            if (config.maxhandicapranked && notification.ranked && (rankDifference > config.maxhandicapranked)) {
-                return automaticHandicapStoneDetectionReject("maxhandicapranked", rankDifference);
-            }
-            if (config.maxhandicapunranked && !notification.ranked && (rankDifference > config.maxhandicapunranked)) {
-                return automaticHandicapStoneDetectionReject("maxhandicapunranked", rankDifference);
+                // TODO : for all the code below, replace "fakerank" with 
+                // notification.bot.ranking (server support for bot ranking detection in gtp2ogs)
+                let fakeRankDifference = Math.abs(Math.trunc(user.ranking) - Math.trunc(config.fakerank));
+                // adding a trunk because a 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+                // but it is in fact a still a 6k vs 7k = Math.abs(6-7) = 1 rank difference game
+
+                // first, if ranked game, we eliminate > 9 rank difference
+                if (notification.ranked && (fakeRankDifference > 9)) {
+                    conn_log("Rank difference > 9 in a ranked game would be 10+ handicap stones, not allowed");
+                    return {reject: true, msg: "Rank difference between you and this bot is " + fakeRankDifference + "\n The difference is too big to play a ranked game with handicap (max is 9 handicap for ranked games), try unranked handicap or manually reduce the number of handicap stones in -custom handicap-"};
+                }
+
+                // then, after eliminating > 9 rank difference if ranked, we consider value of min-max handicap if set
+                // we eliminate all unwanted values, everything not forbidden is allowed
+                const resultFakeHandicap = minmaxHandicapRankActualReject("handicap", fakeRankDifference, notification.handicap, notification.ranked, user.username);
+                if (resultFakeHandicap) {
+                    return (resultFakeHandicap);
+                }
             }
         }
-        /***** end of automatic handicap min/max handicap limits detection ******/
 
-
-        if (notification.handicap < config.minhandicap && !config.minhandicapranked && !config.minhandicapunranked) {
-            return minmaxHandicapFamilyReject("minhandicap");
-        }
-        if (notification.handicap < config.minhandicapranked && notification.ranked) {
-            return minmaxHandicapFamilyReject("minhandicapranked");
-        }
-        if (notification.handicap < config.minhandicapunranked && !notification.ranked) {
-            return minmaxHandicapFamilyReject("minhandicapunranked");
-        }
-        if (notification.handicap > config.maxhandicap && !config.maxhandicapranked && !config.maxhandicapunranked) {
-            return minmaxHandicapFamilyReject("maxhandicap");
-        }
-        if (notification.handicap > config.maxhandicapranked && notification.ranked) {
-            return minmaxHandicapFamilyReject("maxhandicapranked");
-        }
-        if (notification.handicap > config.maxhandicapunranked && !notification.ranked) {
-            return minmaxHandicapFamilyReject("maxhandicapunranked");
+        const resultHandicap = minmaxHandicapRankActualReject("handicap", notification.handicap, notification.handicap, notification.ranked, user.username);
+        if (resultHandicap) {
+            return (resultHandicap);
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
@@ -575,170 +499,16 @@ class Connection {
         if (resultMaintime) {
             return (resultMaintime);
         }
-
-        if (config.minperiodsblitz && (t.periods < config.minperiodsblitz) && t.speed === "blitz" && !config.minperiodsblitzranked && !config.minperiodsblitzunranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitz");
+        const resultPeriods = minmaxPeriodsActualReject("periods", t.periods, t.speed, notification.ranked, user.username);
+        if (resultPeriods) {
+            return (resultPeriods);
         }
-        if (config.minperiodsblitzranked && (t.periods < config.minperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzranked");
-        }
-        if (config.minperiodsblitzunranked && (t.periods < config.minperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsblitzunranked");
-        }
-
-        if (config.minperiodslive && (t.periods < config.minperiodslive) && t.speed === "live" && !config.minperiodsliveranked && !config.minperiodsliveunranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodslive");
-        }
-        if (config.minperiodsliveranked && (t.periods < config.minperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveranked");
-        }
-        if (config.minperiodsliveunranked && (t.periods < config.minperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodsliveunranked");
-        }
-
-        if (config.minperiodscorr && (t.periods < config.minperiodscorr) && t.speed === "correspondence" && !config.minperiodscorrranked && !config.minperiodscorrunranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorr");
-        }
-        if (config.minperiodscorrranked && (t.periods < config.minperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrranked");
-        }
-        if (config.minperiodscorrunranked && (t.periods < config.minperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("minperiodscorrunranked");
-        }
-
-        if (config.maxperiodsblitz && (t.periods > config.maxperiodsblitz) && t.speed === "blitz" && !config.maxperiodsblitzranked && !config.maxperiodsblitzunranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitz");
-        }
-        if (config.maxperiodsblitzranked && (t.periods > config.maxperiodsblitzranked) && t.speed === "blitz" && notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzranked");
-        }
-        if (config.maxperiodsblitzunranked && (t.periods > config.maxperiodsblitzunranked) && t.speed === "blitz" && !notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsblitzunranked");
-        }
-
-        if (config.maxperiodslive && (t.periods > config.maxperiodslive) && t.speed === "live" && !config.maxperiodsliveranked && !config.maxperiodsliveunranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodslive");
-        }
-        if (config.maxperiodsliveranked && (t.periods > config.maxperiodsliveranked) && t.speed === "live" && notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveranked");
-        }
-        if (config.maxperiodsliveunranked && (t.periods > config.maxperiodsliveunranked) && t.speed === "live" && !notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodsliveunranked");
-        }
-
-        if (config.maxperiodscorr && (t.periods > config.maxperiodscorr) && t.speed === "correspondence" && !config.maxperiodscorrranked && !config.maxperiodscorrunranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorr");
-        }
-        if (config.maxperiodscorrranked && (t.periods > config.maxperiodscorrranked) && t.speed === "correspondence" && notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrranked");
-        }
-        if (config.maxperiodscorrunranked && (t.periods > config.maxperiodscorrunranked) && t.speed === "correspondence" && !notification.ranked) {
-            return minmaxPeriodsBlitzlivecorrFamilyReject("maxperiodscorrunranked");
-        }
-
         const resultPeriodtime = UHMAEAT("periodtime", notification.time_control, notification.ranked, user.username);
         if (resultPeriodtime) {
             return (resultPeriodtime);
         }
 
         return { reject: false };  // Ok !
-
-        function minmaxHandicapFamilyReject(argNameString) {
-            // first, we define rankedUnranked and minMax depending on argNameString
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
-            let minMax = "";
-            let increaseDecrease = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                increaseDecrease = "increase";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                increaseDecrease = "reduce";
-            }
-
-            // then, specific messages for handicaponly and evenonly messages first
-            if (notification.handicap === 0 && minMax === "Min" && config[argNameString] > 0) {
-                conn_log(`handicap games only ${rankedUnranked}`);
-                return { reject: true, msg: `this bot does not play even games ${rankedUnranked}, please manually select the number of handicap stones in -custom handicap- : minimum is ${config[argNameString]} handicap stones or more` };
-            } else if (notification.handicap > 0 && minMax === "Max" && config[argNameString] === 0) {
-                conn_log(`even games only ${rankedUnranked}`);
-                return { reject: true, msg: `this bot does not play handicap games ${rankedUnranked}, please choose handicap -none- (0 handicap stones)` };
-
-            // then finally, the actual reject :
-            } else {
-                conn_log(`${minMax} handicap ${rankedUnranked} is ${config[argNameString]}`);
-                return { reject: true, msg: `${minMax} handicap ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of handicap stones` };
-            }
-        }
-
-        function minmaxPeriodsBlitzlivecorrFamilyReject(argNameString) {
-            // first, we define blitzLiveCorr, rankedUnranked, minMax, increaseDecrease, depending on argNameString
-            let blitzLiveCorr = "";
-            if (argNameString.includes("blitz")) {
-                blitzLiveCorr = "blitz";
-            } else if (argNameString.includes("live")) {
-                blitzLiveCorr = "live";
-            } else if (argNameString.includes("corr")) {
-                blitzLiveCorr = "correspondence";
-            }
-
-            let rankedUnranked = "";
-            if (!argNameString.includes("ranked")) {
-                // here we keep the general argument line unlike other functions, 
-                // because it has a specific message like for example "for blitz games"
-                rankedUnranked = `for ${blitzLiveCorr} games`;
-            } else if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = `for ${blitzLiveCorr} ranked games`;
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = `for ${blitzLiveCorr} unranked games`;
-            }
-
-            let minMax = "";
-            let increaseDecrease = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                increaseDecrease = "increase";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                increaseDecrease = "reduce";
-            }
-
-            // then finally, the actual reject :
-            conn_log(`${user.username} wanted ${t.periods} periods, ${minMax} periods ${rankedUnranked} is ${config[argNameString]}, needs to be ${increaseDecrease}d`);
-            return { reject: true, msg: `${minMax} periods ${rankedUnranked} is ${config[argNameString]}, please ${increaseDecrease} the number of periods` };
-        }
-
-        function automaticHandicapStoneDetectionReject (argNameString, rankDifference) {
-            // first, we define rankedUnranked and minMax depending on argNameString
-            let rankedUnranked = "";
-            // if argNameString does not include "ranked" or "unranked", we keep default value for rankedunranked
-            if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-                rankedUnranked = "for ranked games";
-            } else if (argNameString.includes("unranked")) {
-                rankedUnranked = "for unranked games";
-            }
-
-            let minMax = "";
-            let increaseDecrease = "";
-            if (argNameString.includes("min")) {
-                minMax = "Min";
-                increaseDecrease = "increase";
-            } else if (argNameString.includes("max")) {
-                minMax = "Max";
-                increaseDecrease = "reduce";
-            }
-
-            // then finally, the actual reject :
-            conn_log(`Automatic handicap ${rankedUnranked} was set to ${rankDifference} stones, but ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones`);
-            return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${rankDifference} stones based on rank difference between you and this bot,\nBut ${minMax} handicap ${rankedUnranked} is ${config[argNameString]} stones \nPlease ${increaseDecrease} the number of handicap stones ${rankedUnranked} in -custom handicap-` };
-        }
 
         function noAutohandicapReject(argNameString) {
             // first, we define rankedUnranked, depending on argNameString
@@ -956,6 +726,74 @@ class Connection {
     }}}
 }
 
+// minmax families reject functions :
+function minmaxPeriodsActualReject(familyNameString, familyNotification, notificationTSpeed, notificationRanked, notificationUserUsername) { /* }}} */
+    for (let blitzLiveCorr of ["blitz", "live", "corr"]) {
+        if (notificationTSpeed === convertBlitzLiveCorr(blitzLiveCorr)) {
+            // per challenge, notification can only be one of these 3 : "blitz" or "live" or "corr",
+            // so we can use const to define both min and max arrays
+            const minFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("min" + familyNameString + blitzLiveCorr);
+            const maxFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("max" + familyNameString + blitzLiveCorr);
+            // example : ["minperiodsblitz", "minperiodsblitzranked", "minperiodsblitzunranked", 
+            //            ["Minimum", "increase", "below", "low"], [true, false]]
+            let argNameString = "";
+            for (let familyArray of [minFamilyArray, maxFamilyArray]) {
+                argNameString = checkAndGenerateArgNameString(familyArray, notificationRanked);
+                if (minmaxCondition(config[argNameString], familyNotification, familyArray[4][0])) { // if we dont reject, we early exit all the remaining reject
+                    let rankedUnranked = `${notificationTSpeed}`;
+                    if (rankedUnranked.includes("ranked")) { // "ranked" or "unranked"
+                        rankedUnranked =`${notificationTSpeed} ${rankedUnrankedString(argNameString)}`; // ex: "blitz ranked" games is ...
+                    }
+                    conn_log(`${notificationUserUsername} wanted ${familyArray[3][0]} ${familyNameString} for ${rankedUnranked} games ${familyNotification}, it is ${familyArray[3][2]} ${config[argNameString]}`);
+                    return { reject: true, msg: `${familyArray[3][0]} ${familyNameString} for ${rankedUnranked} games is ${config[argNameString]}, please ${familyArray[3][1]} the number of ${familyNameString}.` };
+                }
+            }
+        }
+    }
+}
+
+function minmaxHandicapRankActualReject(familyNameString, familyNotification, notificationHandicap, notificationRanked, notificationUserUsername) {
+    const minFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("min" + familyNameString);
+    const maxFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("max" + familyNameString);
+    let argNameString = "";
+    for (let familyArray of [minFamilyArray, maxFamilyArray]) {
+        argNameString = checkAndGenerateArgNameString(familyArray, notificationRanked);
+        if (minmaxCondition(config[argNameString], familyNotification, familyArray[4][0])) { // if we dont reject, we early exit all the remaining reject
+            let familyNameStringConverted = "";
+            let forRankedUnrankedGames = "";
+            let argToString = config[argNameString];
+            let endingSentence = "";
+            if (argNameString.includes("ranked")) { // "ranked" or "unranked"
+                forRankedUnrankedGames =`for ${rankedUnrankedString(argNameString)} games `; // ex: "for unranked games " is ...
+            }
+            familyNameStringConverted = familyNameString;
+            if (familyNameString === "handicap") {
+                familyNameStringConverted = "handicap stones";
+                endingSentence = `please ${familyArray[3][1]} the number of ${familyNameStringConverted}`;
+                // handicap specific rejects below :
+                if (familyArray[4][0] && familyNotification === 0 && config[argNameString] > 0) { // handicap only specific reject
+                    conn_log(`handicap games only ${forRankedUnrankedGames}`);
+                    return { reject: true, msg: `This bot does not play even ${forRankedUnrankedGames}, please manually select the number of ${familyNameStringConverted} in -custom handicap- : minimum is ${argToString} ${familyNameStringConverted} ${forRankedUnrankedGames}.` };
+                } else if (familyArray[4][1] && familyNotification > 0 && config[argNameString] === 0) { // even only specific reject
+                    conn_log(`even games only ${forRankedUnrankedGames}.`);
+                    return { reject: true, msg: `This bot does not play handicap games ${forRankedUnrankedGames}, please choose handicap -none- (0 handicap stones)` };
+                } else if (notificationHandicap === -1 && config.fakerank && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) { // fakerank specific reject
+                    conn_log(`Automatic handicap ${forRankedUnrankedGames} was set to ${familyNotification} stones, but ${familyArray[3][0]} handicap ${forRankedUnrankedGames} is ${argToString} stones`);
+                    return { reject: true, msg: `Your automatic handicap ${forRankedUnrankedGames} was automatically set to ${familyNotification} stones based on rank difference between you and this bot,\nBut ${familyArray[3][0]} handicap ${forRankedUnrankedGames} is ${argToString} stones \nPlease ${familyArray[3][1]} the number of handicap stones in -custom handicap- instead of -automatic handicap-` };
+                }
+            } else if (familyNameString === "rank") {
+                argToString = rankToString(config[argNameString]);
+                endingSentence = `your rank is too ${familyArray[3][3]}`;
+            }
+            // if we are not in any "handicap" specific reject case, we return the generic return below instead :
+            conn_log(`${notificationUserUsername} wanted ${familyArray[3][0]} ${familyNameStringConverted} ${forRankedUnrankedGames} ${familyNotification}, it is ${familyArray[3][2]} ${argToString}`);
+            return { reject: true, msg: `${familyArray[3][0]} ${familyNameStringConverted} ${forRankedUnrankedGames} is ${argToString}, ${endingSentence}.` };
+        }
+    }
+// end of minmax families reject functions
+} /* }}} */
+
+
 function UHMAEAT(mainPeriodTime, notificationT, notificationRanked, notificationUserUsername) { /* }}} */
     ////////////////////////////////////////////////////////////////////////////////////////
     ////// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
@@ -968,12 +806,10 @@ function UHMAEAT(mainPeriodTime, notificationT, notificationRanked, notification
     // so we let it slide from maintime rejects
     // 2) fischer : doesnt have a minperiods or maxperiods (blitz/live/corr)
     // 3) absolute doesnt have a period time, so we let it slide from periodtime rejects
-    // 4) while using gedit "find and replace", make sure you dont replace
-    // notificationT.max_time (fischer maintime) to notificationT.min_time ! (it doesnt exist !)
-    // 5) notificationT.time_control possible values:
+    // 4) notificationT.time_control possible values:
     // "fischer" , "byoyomi" , "canadian", "simple", "absolute"
-    // 6) notificationT.speed possible values: "blitz", "live", "correspondence"
-    // 7) the notificationT.Speed === "blitz"/"live"/"correspondence") test is for efficiency :
+    // 5) notificationT.speed possible values: "blitz", "live", "correspondence"
+    // 6) the notificationT.Speed === "blitz"/"live"/"correspondence") test is for efficiency :
     // if false, we skip the unrelevant arg and skip to next speed to test :
     // ex: if ((arg family is minmaintimeBLITZ) AND (notificationT.Speed is live/correspondence)),
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -984,72 +820,68 @@ function UHMAEAT(mainPeriodTime, notificationT, notificationRanked, notification
             const maxFamilyArray = familyArrayMIBLIsminIsmaxFromGeneralArgString("max" + mainPeriodTime + blitzLiveCorr);
             // example : ["min(main/period)timeblitz", "min(main/period)timeblitzranked", "min(main/period)timeblitzunranked", 
             //            ["Minimum", "increase", "below", "low"], [true, false]]
-
-            return (minmaxRejectTests(minFamilyArray, mainPeriodTime, notificationT, notificationRanked, notificationUserUsername) 
-                    || minmaxRejectTests(maxFamilyArray, mainPeriodTime, notificationT, notificationRanked, notificationUserUsername));
-        }
-    }
-}
-
-function minmaxRejectTests(familyArray, mainPeriodTime, notificationT, notificationRanked, notificationUserUsername) {
-    let argNameString = familyArray[0]; // ex: "minperiodtimeblitzranked"
-    if (config[familyArray[1]] && notificationRanked) {
-        argNameString = familyArray[1];
-    } else if (config[familyArray[2]] && !notificationRanked) {
-        argNameString = familyArray[2];
-    }
-    const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTime, config[argNameString], notificationT);
-    let timeCondition = false;
-    for (let setting of timecontrolsSettings) {
-        if (notificationT.time_control === setting[0]) {
-            if (familyArray[4][0]) {         // isMin
-                timeCondition = setting[3];  // min condition
-            } else if (familyArray[4][1]) {  // isMax
-                timeCondition = setting[4];  // max condition
-            }
-            if (timeCondition) {
-                const argToString = timespanToDisplayString(config[argNameString]); // ex: "1 minutes"
-                let rankedUnranked = notificationT.speed;
-                if (argNameString.includes("ranked")) { // ex: "blitz ranked", "correspondence unranked" games, etc.
-                    rankedUnranked = `${notificationT.speed} ${rankedUnrankedString(argNameString)}`;
+            const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTime, notificationT);
+            let argNameString = "";
+            let argNumberConverted = -1;
+            for (let familyArray of [minFamilyArray, maxFamilyArray]) {
+                for (let setting of timecontrolsSettings) {
+                    if (notificationT.time_control === setting[0]) {
+                        argNameString = checkAndGenerateArgNameString(familyArray, notificationRanked);
+                        argNumberConverted = config[argNameString];
+                        if (setting[0] === "canadian" && mainPeriodTime === "periodtime") {
+                            argNumberConverted = argNumberConverted * notificationT.stones_per_period;
+                        }
+                        if (minmaxCondition(argNumberConverted, setting[2], familyArray[4][0])) { // if we dont reject, we early exit all the remaining reject
+                            const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
+                            let rankedUnranked = notificationT.speed;
+                            if (argNameString.includes("ranked")) { // ex: "blitz ranked", "correspondence unranked" games, etc.
+                                rankedUnranked = `${notificationT.speed} ${rankedUnrankedString(argNameString)}`;
+                            }
+                            let endingSentence = "";
+                            if ((notificationT.time_control === "canadian") && (mainPeriodTime === "periodtime")) {
+                                endingSentence = ", or change the number of stones per period";
+                            }
+                            conn_log(`${notificationUserUsername} wanted ${familyArray[3][0]} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${timespanToDisplayString(setting[2])}, it is ${familyArray[3][2]} ${argToString}`);
+                            // example : "userX wanted Minimum (Main/Period) Time blitz ranked
+                            // in byoyomi 15 seconds, it is below 1 minutes"
+                            return { reject : true, msg: `${familyArray[3][0]} ${setting[1]} for ${rankedUnranked} games in ${notificationT.time_control} is ${argToString}, please ${familyArray[3][1]} ${setting[1]}${endingSentence}.` };
+                            // example : "Minimum (Main/Period) Time for blitz ranked games
+                            // in byoyomi is 1 minutes, please increase (Main/Period) Time."
+                        }
+                    }
                 }
-                let endingSentence = ".";
-                if ((notificationT.time_control === "canadian") && (mainPeriodTime === "periodtime")) {
-                    endingSentence = ", or change the number of stones per period";
-                }
-                conn_log(`${notificationUserUsername} wanted ${familyArray[3][0]} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${timespanToDisplayString(setting[2])}, it is ${familyArray[3][2]} ${argToString}`);
-                // example : "userX wanted Minimum (Main/Period) Time blitz ranked
-                // in byoyomi 15 seconds, it is below 1 minutes"
-                return { reject : true, msg: `${familyArray[3][0]} ${setting[1]} for ${rankedUnranked} games in ${notificationT.time_control} is ${argToString}, please ${familyArray[3][1]} ${setting[1]}${endingSentence}` };
-                // example : "Minimum (Main/Period) Time for blitz ranked games
-                // in byoyomi is 1 minutes, please increase (Main/Period) Time."
             }
         }
     }
 }
 
-function timecontrolsMainPeriodTime(mpt, argNumber, notificationT) {
+function timecontrolsMainPeriodTime(mpt, notificationT) {
     if (mpt === "maintime") {
-        return [["fischer", "Initial Time and/or Max Time", notificationT.initial_time, (notificationT.initial_time < argNumber) || (notificationT.max_time < argNumber), (notificationT.initial_time > argNumber) || (notificationT.max_time > argNumber)],
-                ["byoyomi", "Main Time", notificationT.main_time, notificationT.main_time < argNumber, notificationT.main_time > argNumber],
-                ["canadian", "Main Time", notificationT.main_time, notificationT.main_time < argNumber, notificationT.main_time > argNumber],
-                ["absolute", "Total Time", notificationT.total_time, notificationT.total_time < argNumber, notificationT.total_time > argNumber]];
+        return [["fischer", "Initial Time", notificationT.initial_time],
+                ["fischer", "Max Time", notificationT.max_time],
+                ["byoyomi", "Main Time", notificationT.main_time],
+                ["canadian", "Main Time", notificationT.main_time],
+                ["absolute", "Total Time", notificationT.total_time]];
     } else {
-        return [["fischer", "Increment Time", notificationT.time_increment, notificationT.time_increment < argNumber, notificationT.time_increment > argNumber],
-                ["byoyomi", "Period Time", notificationT.period_time, notificationT.period_time < argNumber, notificationT.period_time > argNumber],
-                ["canadian", "Period Time for all the " + notificationT.stones_per_period + " stones", argNumber * notificationT.stones_per_period, (notificationT.period_time / notificationT.stones_per_period) < argNumber, (notificationT.period_time / notificationT.stones_per_period) > argNumber],
-                ["simple", "Time per move", notificationT.period_time, notificationT.per_move < argNumber, notificationT.per_move > argNumber]];
-                // note : 1) for canadian periodtimes, we need to do a conversion of argNumber
-                //           e.g. 30 seconds average period time for 1 stone 
-                //           = 30*20 = 600 = 10 minutes period time for all the 20 stones (canadian)
-                //        2) but in conn_log, we display requested time by user for all the stones
-                //           example : user "wanted 5 minutes period time for all the 25 stones"
+        return [["fischer", "Increment Time", notificationT.time_increment],
+                ["byoyomi", "Period Time", notificationT.period_time],
+                ["canadian", "Period Time for all the " + notificationT.stones_per_period + " stones", notificationT.period_time],
+                ["simple", "Time per move", notificationT.per_move]];
+                // notes for canadian :
+                //   1) for canadian periodtimes, notificationT.period_time is already for X stones,
+                //      so no need to multiply setting[2] by notificationT.stones_per_period
+                //      But when we process config[argNameString], bot admin inputs periodtime
+                //      in arg as if it could be "byoyomi" or "simple" or any other standard periodtime, 
+                //      so we need to multiply config[argNameString] by the number of stones per period
+                //      e.g. 30 seconds average period time for 1 stone (config[argNameString])
+                //           = 30*20 = 600 = 10 minutes period time for all the 20 stones (notificaiton period time).
+                //   2) for fischer maintimes, it is much easier to check initial time and max time separately
     }
-}  /* }}} */
 ///////////////////////////////////////////////////////////////////////////////////
 ////// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree ***
 ///// (main/period)times version 4.0
 ///////////////////////////////////////////////////////////////////////////////////
+}  /* }}} */
 
 function rankToString(r) { /* {{{ */
     r = Math.floor(r);
@@ -1116,7 +948,7 @@ function familyArrayMIBLIsminIsmaxFromGeneralArgString(generalArgString) { /* {{
         ba = "above";
         lh = "high";
     }
-    let fullArray = ["", "ranked", "unranked" ].map(e => generalArgString + e);
+    let fullArray = ["", "ranked", "unranked"].map(e => generalArgString + e);
     fullArray.push([mm, ir, ba, lh], [isMin, isMax]);
     return fullArray;
 } /* }}} */
@@ -1128,6 +960,24 @@ function rankedUnrankedString(argNameString) { /* {{{ */
         return "unranked";
     } else {
         return "";
+    }
+} /* }}} */
+
+function checkAndGenerateArgNameString(familyArray, notificationRanked) { /* {{{ */
+    if (config[familyArray[1]] && notificationRanked) {
+        return familyArray[1];
+    } else if (config[familyArray[2]] && !notificationRanked) {
+        return familyArray[2];
+    } else {
+        return familyArray[0];
+    }
+} /* }}} */
+
+function minmaxCondition(argNumber, familyNotification, isMin) { /* {{{ */
+    if (isMin) {
+        return familyNotification < argNumber; // to reject in minimum, we need notification < arg
+    } else {
+        return familyNotification > argNumber;
     }
 } /* }}} */
 
