@@ -73,18 +73,13 @@ exports.updateFromArgv = function() {
         .describe('corrqueue', 'Process correspondence games one at a time')
         .describe('maxconnectedgames', 'Maximum number of connected games for all users')
         .default('maxconnectedgames', 20)
-        // maxconnectedgames is actually the maximum number of connected games for all users 
-        // against your bot, which means the maximum number of games your bot can play at the same time 
-        // (choose a low number to regulate your computer performance and stability)
-        // (correspondence games are currently included in the total connected games count if you use `--persist` )
+        /* for maxconnectedgames, correspondence games are currently included in the 
+        /  maxconnectedgames count if you use `--persist` )*/
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
         .default('maxconnectedgamesperuser', 3)
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-        // behaviour : 1. when only --rejectnew is used, default reject message is printed
-        // behaviour : 2. when you want to add a customized reject message, do it like that for example :
-        // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
@@ -111,11 +106,6 @@ exports.updateFromArgv = function() {
         .string('boardsizewidthsunranked')
         .describe('boardsizeheightsunranked', 'For custom board sizes, specify boardsize height(s) to accept for unranked games, for example 1')
         .string('boardsizeheightsunranked')
-        // behaviour : --boardsizes can be specified as 
-        // "custom" (allows board with custom size width x height),
-        // "all" (allows ALL boardsizes), 
-        // or for square boardsizes only (same width x height) comma separated list of explicit values.
-        // The default is "9,13,19" (square board sizes only), see README for details
         .describe('komis', 'Allowed komi values')
         .string('komis')
         .default('komis', 'automatic')
@@ -123,11 +113,6 @@ exports.updateFromArgv = function() {
         .string('komisranked')
         .describe('komisunranked', 'Allowed komi values for unranked games')
         .string('komisunranked')
-        // behaviour: --komis may be specified as 
-        // "automatic" (accept automatic komi)
-        // "all" (accept all komi values), 
-        // or comma separated list of explicit values.
-        // The default is "automatic", see README and OPTIONS-LIST for details
         .describe('speeds', 'Game speed(s) to accept')
         .default('speeds', 'blitz,live,correspondence')
         .describe('speedsranked', 'Game speed(s) to accept for ranked games')
@@ -136,10 +121,10 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        // 1- for "absolute", bot admin can allow absolute if want, but then 
-        // make sure to increase minmaintimeblitz and minmaintimelive to high values
-        // 2 - "none" is not default, can be manually allowed in timecontrol argument
-        // but then games will be very very long
+        /* 1- for "absolute", bot admin can allow absolute if want, but then 
+        /  make sure to increase minmaintimeblitz and minmaintimelive to high values
+        /  2 - "none" is not in default values, can be manually allowed in timecontrol 
+        /  argument but then games will be very very long*/
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
         .default('minmaintimeblitz', '15') // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')
@@ -188,28 +173,33 @@ exports.updateFromArgv = function() {
         .default('maxperiodscorr', 10)
         .describe('maxperiodscorrranked', 'Maximum number of periods for correspondence ranked games')
         .describe('maxperiodscorrunranked', 'Maximum number of periods for correspondence unranked games')
-        // for canadian period times, divide the period time by the number of stones per period
-        // for example max periodtime 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12
+        /* - for canadian period times, bot admin inputs periodtime for 1 stone as if timecontrol could be
+        /  "byoyomi" or "fischer" or any other timecontrol, so to calculate our min/max arg we need to divide
+        /  wanted periodtime for all the X stones by Y number of stones per period
+        /  - ex: max periodtime 10 minutes / 20 stones = 10*60 /20 = 30 seconds/stone on average
+        /  so bot admin would need to input --maxperiodtimeblitz 30 for example to allow max
+        /  10 minutes for 20 stones, or 5 minutes for 10 stones, 3 minutes for 6 stones, 
+        /  or any combination of average period time per stone * number of stones */
         .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
-        .default('minperiodtimeblitz', '5') // 5 seconds (average time per stone if time control is canadian)
+        .default('minperiodtimeblitz', '5') // 5 seconds
         .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
-        .default('maxperiodtimeblitz', '10') // 10 seconds (max)  (average time per stone if time control is canadian)
+        .default('maxperiodtimeblitz', '10') // 10 seconds
         .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games ')
         .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games ')
         .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games ')
         .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games ')
         .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
-        .default('minperiodtimelive', '10') // 10 seconds (average time per stone if time control is canadian)
+        .default('minperiodtimelive', '10') // 10 seconds
         .describe('maxperiodtimelive', 'Maximum seconds of period time for live games ')
-        .default('maxperiodtimelive', '120') // 2 minutes  (average time per stone if time control is canadian)
+        .default('maxperiodtimelive', '120') // 2 minutes
         .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games ')
         .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games ')
         .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
         .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
         .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
-        .default('minperiodtimecorr', '14400') // 4 hours (average time per stone if time control is canadian)
+        .default('minperiodtimecorr', '14400') // 4 hours
         .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
-        .default('maxperiodtimecorr', '259200') // 3 days (average time per stone if time control is canadian)
+        .default('maxperiodtimecorr', '259200') // 3 days
         .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games ')
         .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games ')
         .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games ')
@@ -256,31 +246,31 @@ exports.updateFromArgv = function() {
     }
 
     // console : greeting //
-
     console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n");
 
     // console : warnings //
-
     // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
     const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
-// --bans --bansranked --bansunranked are an exception, do not include here
+    // --bans --bansranked --bansunranked are an exception, do not include here
 
-    function checkThreeSameTimeFamily() {
-        for (let e of familyArgs) {
-            let familyToTest = familyArrayFromGeneralArg(e);
+    function checkThreeSameTimeFamily(familyArray) {
+        for (let e of familyArray) {
+            let familyToTest = familyArrayFromGeneralArgString(e);
             // for example ["komis", "komisranked", "komisunranked"];
-            if ((argv[familyToTest[0]]) && ((argv[familyToTest[1]]) || (argv[familyToTest[2]]))) {
-                console.log(`Warning: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR --${familyToTest[1]} with --${familyToTest[2]}.\nBut don't use the 3 ${familyToTest[0]} arguments at the same time.`);
+            if (argv[familyToTest[0]]) {
+                if (argv[familyToTest[1]] && argv[familyToTest[2]]) {
+                    console.log(`Information: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR both --${familyToTest[1]} and --${familyToTest[2]}.\nIf you are using the ranked and unranked arguments only and not the general one --${familyToTest[0]}, it means you have this warning because gtp2ogs provides a default value for --${familyToTest[0]}. In that case, you may ignore this message, and the ranked and unranked arguments will overwrite the general value\n`);
+                } else if (argv[familyToTest[1]] || argv[familyToTest[2]]) {
+                    console.log(`Warning: You are using --${familyToTest[0]} in combination with only one the arguments --${familyToTest[1]} --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR both --${familyToTest[1]} and --${familyToTest[2]}.\n`);
+                }
             }
         }
     }
-
-    checkThreeSameTimeFamily();
-    console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
+    checkThreeSameTimeFamily(familyArgs);
 
     // B - warning : avoid infinite games
     if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpausetime and co gets implemented, replace with "are likely to last for a long time"
+        console.log("Warning : No nopause setting detected, games are likely to last forever\n"); // TODO : when --maxpausetime and co gets implemented, replace with "are likely to last for a long time"
     }
 
     // C - warning : check deprecated features    
@@ -339,9 +329,8 @@ exports.updateFromArgv = function() {
         ]
     deprecatedArgs.forEach(ar => testDeprecated(...ar))
 
-    for (let e of familyArrayFromGeneralArg("komis")) {
+    for (let e of familyArrayFromGeneralArgString("komis")) {
         if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
-        // for example if argv[komisranked]
             if (argv[e].split(",").includes("auto")) {
             // we need to split the argv value into an array before the includes test
                 console.log(`Warning: /--${e} auto/ is no longer supported, use /--${e} automatic/ instead`);
@@ -356,20 +345,16 @@ exports.updateFromArgv = function() {
     if (deprecatedArgs.some(e => argv[e[0]])) {
         console.log("\n");
     }
-    
     console.log("\n");
-
     // end of console messages
 
     // Set all the argv
     for(var k in argv) exports[k] = argv[k];
 
     // Convert timeout to microseconds once here so we don't need to do it each time it is used later.
-    //
     if (argv.timeout) {
         exports.timeout = argv.timeout * 1000;
     }
-
     if (argv.startupbuffer) {
         exports.startupbuffer = argv.startupbuffer * 1000;
     }
@@ -377,24 +362,19 @@ exports.updateFromArgv = function() {
     if (argv.beta) {
         exports.host = 'beta.online-go.com';
     }
-
     if (argv.debug) {
         exports.DEBUG = true;
     }
-
     if (argv.persist) {
         exports.PERSIST = true;
     }
-
     // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
     if (argv.kgstime) {
         exports.KGSTIME = true;
     }
-
     if (argv.showboard) {
         exports.SHOWBOARD = true;
     }
-
     if (argv.noclock) {
         exports.NOCLOCK = true;
     }
@@ -405,155 +385,16 @@ exports.updateFromArgv = function() {
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
         return false;
     }
-
-    if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
-        parseMinmaxRankFromNameString("minrank");
-    }
-    if (argv.minrankranked) {
-        parseMinmaxRankFromNameString("minrankranked");
-    }
-    if (argv.minrankunranked) {
-        parseMinmaxRankFromNameString("minrankunranked");
-    }
-    if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("maxrank");
-    }
-    if (argv.maxrankranked) {
-        parseMinmaxRankFromNameString("maxrankranked");
-    }
-    if (argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("maxrankunranked");
-    }
-    if (argv.fakerank) {
+                
+    parseMinmaxrankFamilyNameString("minrank");
+    parseMinmaxrankFamilyNameString("maxrank");
+    if (argv.fakerank) { // TODO : remove fakerank when the bypass automatic handicap issue is fixed, 
+                         //        and/or when server adds an automatic handicap new object
         parseMinmaxRankFromNameString("fakerank");
     }
-    // TODO : remove fakerank when notification.bot.ranking is server implemented
-
-    if (argv.boardsizes) {
-        for (let boardsize of argv.boardsizes.split(',')) {
-            if (boardsize === "all") {
-                exports.allow_all_boardsizes = true;
-            } else if (boardsize === "custom") {
-                exports.allow_custom_boardsizes = true;
-                for (let boardsizewidth of argv.boardsizewidths.split(',')) {
-                    exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
-                }
-                for (let boardsizeheight of argv.boardsizeheights.split(',')) {
-                    exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
-                }
-            } else {
-                exports.allowed_boardsizes[boardsize] = true;
-            }
-        }
-    }
-
-    if (argv.boardsizesranked) {
-        for (let boardsizeranked of argv.boardsizesranked.split(',')) {
-            if (boardsizeranked === "all") {
-                exports.allow_all_boardsizes_ranked = true;
-            } else if (boardsizeranked === "custom") {
-                exports.allow_custom_boardsizes_ranked = true;
-                for (let boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
-                    exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
-                }
-                for (let boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
-                    exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
-                }
-            } else {
-                exports.allowed_boardsizes_ranked[boardsizeranked] = true;
-            }
-        }
-    }
-
-    if (argv.boardsizesunranked) {
-        for (let boardsizeunranked of argv.boardsizesunranked.split(',')) {
-            if (boardsizeunranked === "all") {
-                exports.allow_all_boardsizes_unranked = true;
-            } else if (boardsizeunranked === "custom") {
-                exports.allow_custom_boardsizes_unranked = true;
-                for (let boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
-                    exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
-                }
-                for (let boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
-                    exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
-                }
-            } else {
-                exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
-            }
-        }
-    }
-
-    if (argv.komis) {
-        for (let komi of argv.komis.split(',')) {
-            if (komi === "all") {
-                exports.allow_all_komis = true;
-            } else if (komi === "automatic") {
-                exports.allowed_komis[null] = true;
-            } else {
-                exports.allowed_komis[komi] = true;
-            }
-        }
-    }
-
-    if (argv.komisranked) {
-        for (let komiranked of argv.komisranked.split(',')) {
-            if (komiranked === "all") {
-                exports.allow_all_komis_ranked = true;
-            } else if (komiranked === "automatic") {
-                exports.allowed_komis_ranked[null] = true;
-            } else {
-                exports.allowed_komis_ranked[komiranked] = true;
-            }
-        }
-    }
-
-    if (argv.komisunranked) {
-        for (let komiunranked of argv.komisunranked.split(',')) {
-            if (komiunranked === "all") {
-                exports.allow_all_komis_unranked = true;
-            } else if (komiunranked === "automatic") {
-                exports.allowed_komis_unranked[null] = true;
-            } else {
-                exports.allowed_komis_unranked[komiunranked] = true;
-            }
-        }
-    }
-
-    if (argv.speeds) {
-        for (let e of argv.speeds.split(',')) {
-            exports.allowed_speeds[e] = true;
-        }
-    }
-
-    if (argv.speedsranked) {
-        for (let e of argv.speedsranked.split(',')) {
-            exports.allowed_speeds_ranked[e] = true;
-        }
-    }
-
-    if (argv.speedsunranked) {
-        for (let e of argv.speedsunranked.split(',')) {
-            exports.allowed_speeds_unranked[e] = true;
-        }
-    }
-
-    if (argv.timecontrols) {
-        for (let e of argv.timecontrols.split(',')) {
-            exports.allowed_timecontrols[e] = true;
-        }
-    }
-
-    if (argv.timecontrolsranked) {
-        for (let e of argv.timecontrolsranked.split(',')) {
-            exports.allowed_timecontrols_ranked[e] = true;
-        }
-    }
-
-    if (argv.timecontrolsunranked) {
-        for (let e of argv.timecontrolunranked.split(',')) {
-            exports.allowed_timecontrols_unranked[e] = true;
-        }
-    }
+    exportBoardsizeIfArgv("boardsizes");
+    exportKomiIfArgv("komis");
+    exportIfArgv(["speeds", "timecontrols"]);
 
     if (argv.greeting) {
         exports.GREETING = argv.greeting;
@@ -567,8 +408,82 @@ exports.updateFromArgv = function() {
 
     exports.bot_command = argv._;
 
-    function familyArrayFromGeneralArg(generalArg) {
-        return ["", "unranked", "ranked" ].map(e => generalArg + e);
+    function familyArrayFromGeneralArgString(generalArgString) {
+        return ["", "ranked", "unranked"].map(e => generalArgString + e);
+    }
+
+    function extraRankedUnrankedString(argNameString) {
+        if (argNameString.includes("unranked")) {
+            return "_unranked";
+        } else if (argNameString.includes("ranked")) {
+            return "_ranked";
+        } else {
+            return "";
+        }
+    }
+
+    function pluralArgNameStringToPluralFamilyString(plural) {
+        return plural.split("unranked")[0].split("ranked")[0];
+    }
+
+    function allowedExportArgString(argNameString, extraRankedUnranked) {
+        return "allowed_" + pluralArgNameStringToPluralFamilyString(argNameString) + extraRankedUnranked;
+    }
+
+    function exportBoardsizeIfArgv(familyNameString) {
+        let extraRankedUnranked = "";
+        for (let argNameString of familyArrayFromGeneralArgString(familyNameString)) {
+            if (argv[argNameString]) {
+                extraRankedUnranked = extraRankedUnrankedString(argNameString);
+                for (let boardsize of argv[argNameString].split(',')) {
+                    if (boardsize === "all") {
+                        exports["allow_all_boardsizes" + extraRankedUnranked] = true;
+                    } else if (boardsize === "custom") {
+                        exports["allow_custom_boardsizes" + extraRankedUnranked] = true;
+                        for (let width of argv["boardsizewidths" + extraRankedUnranked].split(',')) {
+                            exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width] = true;
+                        }
+                        for (let height of argv["boardsizeheights" + extraRankedUnranked].split(',')) {
+                            exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height] = true;
+                        }
+                    } else {
+                        exports[allowedExportArgString(argNameString, extraRankedUnranked)][boardsize] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    function exportKomiIfArgv(familyNameString) {
+        let extraRankedUnranked = "";
+        for (let argNameString of familyArrayFromGeneralArgString(familyNameString)) {
+            if (argv[argNameString]) {
+                extraRankedUnranked = extraRankedUnrankedString(argNameString);
+                for (let komi of argv[argNameString].split(',')) {
+                    if (komi === "all") {
+                        exports["allow_all_komis" + extraRankedUnranked] = true;
+                    } else if (komi === "automatic") {
+                        exports["allowed_komis" + extraRankedUnranked][null] = true;
+                    } else {
+                        exports[allowedExportArgString(argNameString, extraRankedUnranked)][komi] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    function exportIfArgv(familyNameStringsArray) {
+        let extraRankedUnranked = "";
+        for (let familyNameString of familyNameStringsArray) {
+            for (let argNameString of familyArrayFromGeneralArgString(familyNameString)) {
+                if (argv[argNameString]) {
+                    extraRankedUnranked = extraRankedUnrankedString(argNameString);
+                    for (let e of argv[argNameString].split(',')) {
+                        exports[allowedExportArgString(argNameString, extraRankedUnranked)][e] = true;
+                    }
+                }
+            }
+        }
     }
 
     function parseMinmaxRankFromNameString(rankArgNameString) {
@@ -590,6 +505,20 @@ exports.updateFromArgv = function() {
         } else {
             console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
             process.exit();
+        }
+    }
+
+    function parseMinmaxrankFamilyNameString(familyNameString) {
+        const familyArray = familyArrayFromGeneralArgString(familyNameString);
+        if (argv[familyArray[0]] && !argv[familyArray[1]] && !argv[familyArray[2]]) {
+            parseMinmaxRankFromNameString(familyArray[0]);
+        } else {
+            if (argv[familyArray[1]]) {
+                parseMinmaxRankFromNameString(familyArray[1]);
+            }
+            if (argv[familyArray[2]]) {
+                parseMinmaxRankFromNameString(familyArray[2]);
+            }
         }
     }
 
