@@ -335,7 +335,6 @@ class Connection {
             conn_log("Ranked games only");
             return { reject: true, msg: "This bot accepts ranked games only. " };
         }
-
         if (config.unrankedonly && notification.ranked) {
             conn_log("Unranked games only");
             return { reject: true, msg: "This bot accepts Unranked games only. " };
@@ -352,14 +351,16 @@ class Connection {
         /*------- begining of BOARDSIZES -------*/
         // 1) for square board sizes only
         //     A) if not square
-        if (notification.width !== notification.height && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            return boardsizeNotificationIsNotSquareReject("boardsizes", notification.width, notification.height);
-        }
-        if (notification.width !== notification.height && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-            return boardsizeNotificationIsNotSquareReject("boardsizesranked", notification.width, notification.height);
-        }
-        if (notification.width !== notification.height && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-            return boardsizeNotificationIsNotSquareReject("boardsizesunranked", notification.width, notification.height);
+        if (notification.width !== notification.height) {
+            if (!config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
+                return boardsizeNotificationIsNotSquareReject("boardsizes", notification.width, notification.height);
+            }
+            if (!config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
+                return boardsizeNotificationIsNotSquareReject("boardsizesranked", notification.width, notification.height);
+            }
+            if (!config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
+                return boardsizeNotificationIsNotSquareReject("boardsizesunranked", notification.width, notification.height);
+            }
         }
         //     B) if square, check if square board size is allowed
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
@@ -406,7 +407,7 @@ class Connection {
                 return noAutohandicapReject("noautohandicapunranked");
             }
             /***** fakerank : automatic handicap min/max handicap limits detection ******/
-            if (config.fakerank && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
+            if (config.fakerank) {
                 /* below is a fix of automatic handicap bypass issue
                 /  by manually calculating handicap stones number
                 /  then calculate if it is within min/max limits set by botadmin
@@ -618,8 +619,7 @@ function genericAllowedFamiliesReject(argNameString, notificationUnit) { /* }}} 
         argValueString = boardsizeSquareToDisplayString(config[argNameString]);
         // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
         notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
-    }
-    if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
+    } else if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
         notificationUnitConverted = "automatic";
     }
     conn_log(`${argFamilySingularString} ${rankedUnranked} -${notificationUnitConverted}-, not in -${argValueString}- `);
@@ -697,7 +697,7 @@ function minmaxHandicapRankActualReject(familyNameString, familyNotification, no
                     rankedUnranked = beforeRankedUnrankedGamesSpecial("", "handicap ", argNameString, "");
                     conn_log(`No ${rankedUnranked} (even games only)'`);
                     return { reject: true, msg: `This bot does not play ${rankedUnranked}, please choose handicap -none- (0 handicap stones), or try changing ranked/unranked game setting.` };
-                } else if (notificationHandicap === -1 && config.fakerank && !config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) { // fakerank specific reject
+                } else if (notificationHandicap === -1 && config.fakerank) { // fakerank specific reject
                     conn_log(`Automatic handicap ${rankedUnranked} was set to ${familyNotificationConverted} stones, but ${familyObject.MIBL.minMax} handicap ${rankedUnranked} is ${argToString} stones`);
                     return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${familyNotificationConverted} stones based on rank difference between you and this bot,\nBut ${familyObject.MIBL.minMax} handicap ${rankedUnranked} is ${argToString} stones \nPlease ${familyObject.MIBL.incDec} the number of handicap stones in -custom handicap- instead of -automatic handicap-` };
                 }
@@ -817,13 +817,11 @@ function pluralFamilyStringToSingularString(plural) { /* {{{ */
     return pluralToConvert;
 } /* }}} */
 
-function convertBlitzLiveCorr(argNameString) { /* {{{ */
-    if (argNameString.includes("blitz")) {
-        return "blitz";
-    } else if (argNameString.includes("live")) {
-        return "live";
-    } else { // "corr"
+function convertBlitzLiveCorr(blitzLiveCorr) { /* {{{ */
+    if (blitzLiveCorr === "corr") {
         return "correspondence";
+    } else {
+        return blitzLiveCorr;
     }
 } /* }}} */
 
@@ -853,15 +851,15 @@ function familyObjectMIBLIsminmax(familyNameString) { /* {{{ */
 
 function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special) { /* {{{ */
     const isExtra = (extra !== "");
-    if (argNameString.includes("ranked") && !argNameString.includes("unranked")) {
-        return `${before}${extra}ranked games`;   //ex: "for ranked games"
-    } else if (argNameString.includes("unranked")) {
+    if (argNameString.includes("unranked")) {
         return `${before}${extra}unranked games`; //ex: "for blitz unranked games"
+    } else if (argNameString.includes("ranked")) {
+        return `${before}${extra}ranked games`;   //ex: "for ranked games"
     } else {
         if (isExtra) {
             return `${before}${extra}games`       //ex: "for correspondence games"
         } else if (special !== "") {
-            return `${before}${special}games`    //ex: "from all games"
+            return `${before}${special}games`     //ex: "from all games"
         } else {
             return "";
         }
@@ -869,10 +867,10 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special)
 } /* }}} */
 
 function checkAndGenerateArgNameString(familyObjectArgNameStrings, notificationRanked) { /* {{{ */
-    if (config[familyObjectArgNameStrings.ranked] && notificationRanked) {
-        return familyObjectArgNameStrings.ranked;
-    } else if (config[familyObjectArgNameStrings.unranked] && !notificationRanked) {
+    if (config[familyObjectArgNameStrings.unranked] && !notificationRanked) {
         return familyObjectArgNameStrings.unranked;
+    } else if (config[familyObjectArgNameStrings.ranked] && notificationRanked) {
+        return familyObjectArgNameStrings.ranked;
     } else {
         return familyObjectArgNameStrings.all;
     }
