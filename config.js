@@ -377,7 +377,7 @@ exports.updateFromArgv = function() {
     testDeprecated(deprecatedArgs, "komis");
 
     // D - check Warnings :
-    checkWarnings("nopause");
+    checkWarnings(rankedUnrankedFamilies, "nopause");
 
     // end of console messages
 
@@ -563,12 +563,25 @@ exports.updateFromArgv = function() {
         }
     }
 
-    function checkWarnings(noPauseFamilyString) {
+    function checkWarnings(rankedUnrankedFamilies, noPauseFamilyString) {
         console.log("CHECK WARNINGS:\n-------------------------------------------------------");
-        let familyArray = familyArrayFromGeneralArgString(noPauseFamilyString);
+        let familyArray = [];
         let isWarning = false;
+        // if arg[1], need arg[2], and vice versa
+        for (let familyNameString of rankedUnrankedFamilies) {
+            familyArray = familyArrayFromGeneralArgString(familyNameString);
+            if (exports[familyArray[1]] && !exports[familyArray[2]]) {
+                isWarning = true;
+                console.log(`Warning: --${familyArray[1]} detected but --${familyArray[2]} is missing, no value for unranked games !`);
+            }
+            if (exports[familyArray[2]] && !exports[familyArray[1]]) {
+                isWarning = true;
+                console.log(`Warning: --${familyArray[2]} detected but --${familyArray[1]} is missing, no value for ranked games !`);
+            }
+        }
         /* avoid infinite games
         /  TODO : whenever --maxpausetime and co gets implemented, remove this);*/
+        familyArray = familyArrayFromGeneralArgString(noPauseFamilyString);
         if (!exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
             isWarning = true;
             console.log(`  Warning: No --${familyArray[0]}, --${familyArray[1]}, nor --${familyArray[2]}, games are likely to last forever`); 
