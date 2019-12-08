@@ -12,25 +12,26 @@ exports.GREETING = "";
 exports.FAREWELL = "";
 exports.REJECTNEWMSG = "";
 
-exports.timeout = 0;
-exports.corrqueue = false;
+exports.timeout = 0; // needed to define type, see : https://github.com/online-go/gtp2ogs/pull/208#issuecomment-562983535
+exports.corrqueue = false; // needed too, do not delete until fully investigated
+
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_users_ranked = {};
 exports.banned_users_unranked = {};
-exports.allowed_boardsizes = [];
 exports.allow_all_boardsizes = false;
 exports.allow_custom_boardsizes = false;
+exports.allowed_boardsizes = [];
 exports.allowed_custom_boardsizewidths = [];
 exports.allowed_custom_boardsizeheights = [];
-exports.allowed_boardsizes_ranked = [];
 exports.allow_all_boardsizes_ranked = false;
 exports.allow_custom_boardsizes_ranked = false;
+exports.allowed_boardsizes_ranked = [];
 exports.allowed_custom_boardsizewidths_ranked = [];
 exports.allowed_custom_boardsizeheights_ranked = [];
-exports.allowed_boardsizes_unranked = [];
 exports.allow_all_boardsizes_unranked = false;
 exports.allow_custom_boardsizes_unranked = false;
+exports.allowed_boardsizes_unranked = [];
 exports.allowed_custom_boardsizewidths_unranked = [];
 exports.allowed_custom_boardsizeheights_unranked = [];
 exports.allow_all_komis = false;
@@ -245,39 +246,85 @@ exports.updateFromArgv = function() {
         process.exit();
     }
 
-    // console : greeting //
-    console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n");
+    // Set all the argv
+    for(var k in argv) exports[k] = argv[k];
 
-    // console : warnings //
-    // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
-    // --bans --bansranked --bansunranked are an exception, do not include here
-
-    function checkThreeSameTimeFamily(familyArray) {
-        for (let e of familyArray) {
-            let familyToTest = familyArrayFromGeneralArgString(e);
-            // for example ["komis", "komisranked", "komisunranked"];
-            if (argv[familyToTest[0]]) {
-                if (argv[familyToTest[1]] && argv[familyToTest[2]]) {
-                    console.log(`Information: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR both --${familyToTest[1]} and --${familyToTest[2]}.\nIf you are using the ranked and unranked arguments only and not the general one --${familyToTest[0]}, it means you have this warning because gtp2ogs provides a default value for --${familyToTest[0]}. In that case, you may ignore this message, and the ranked and unranked arguments will overwrite the general value\n`);
-                } else if (argv[familyToTest[1]] || argv[familyToTest[2]]) {
-                    console.log(`Warning: You are using --${familyToTest[0]} in combination with only one the arguments --${familyToTest[1]} --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR both --${familyToTest[1]} and --${familyToTest[2]}.\n`);
-                }
-            }
-        }
+    // Convert timeout to microseconds once here so we don't need to do it each time it is used later.
+    if (argv.timeout) {
+        exports.timeout = argv.timeout * 1000;
     }
-    checkThreeSameTimeFamily(familyArgs);
-
-    // B - warning : avoid infinite games
-    if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-        console.log("Warning : No nopause setting detected, games are likely to last forever\n"); // TODO : when --maxpausetime and co gets implemented, replace with "are likely to last for a long time"
+    if (argv.startupbuffer) {
+        exports.startupbuffer = argv.startupbuffer * 1000;
     }
 
-    // C - warning : check deprecated features    
-    function testDeprecated(oldName, newName) {
-        if (argv[oldName]) console.log(`Warning: --${oldName} is deprecated, use --${newName} instead.`)
+    if (argv.beta) {
+        exports.host = 'beta.online-go.com';
+    }
+    let debugStatusMessage = "-\n-Skipping detailed booting data\n-Shrinking all console notifications";
+    if (argv.debug) {
+        exports.DEBUG = true;
+        debugStatusMessage = "ON\n-Will show detailed booting data\n-Will show all console notifications";
+    }
+    if (argv.persist) {
+        exports.PERSIST = true;
+    }
+    // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
+    if (argv.kgstime) {
+        exports.KGSTIME = true;
+    }
+    if (argv.showboard) {
+        exports.SHOWBOARD = true;
+    }
+    if (argv.noclock) {
+        exports.NOCLOCK = true;
     }
 
+    exports.check_rejectnew = function()
+    {
+        if (argv.rejectnew)  return true;
+        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
+        return false;
+    }
+
+    // special families exports:
+    parseMinmaxrankFamilyNameString("minrank");
+    parseMinmaxrankFamilyNameString("maxrank");
+    if (argv.fakerank) { // TODO : remove fakerank when the bypass automatic handicap issue is fixed, 
+                         //        and/or when server adds an automatic handicap new object
+        parseMinmaxRankFromNameString("fakerank");
+    }
+    exportBoardsizeIfArgv("boardsizes");
+    exportKomiIfArgv("komis");
+    exportIfArgv(["speeds", "timecontrols"]);
+
+    exports.bot_command = argv._;
+
+    // console messages
+    // A- greeting and debug status //
+    console.log(`\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}\n`);
+
+    // B- exports full checks in debug //
+    const allRankedUnrankedFamilies = ["bans"];
+    const rankedUnrankedFamilies = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis",
+        "speeds", "timecontrols", "minhandicap", "maxhandicap", "minmaintimeblitz","minmaintimelive",
+        "minmaintimecorr","maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz",
+        "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr",
+        "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz",
+        "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "noautohandicap", "nopause"];
+
+    // apikey will be hidden if exports[apikey] : not in the array below
+    const nonSpecificArgs = ["beta", "corrqueue", "debug", "fakerank", "farewell", "greeting",
+        "hidden", "host", "insecure", "json", "kgstime", "logfile", "maxconnectedgames",
+        "maxconnectedgamesperuser", "noclock", "persist", "persist", "proonly", "port",
+        "rankedonly", "rejectnew", "rejectnewfile", "rejectnewmsg", "showboard", "startupbuffer",
+        "timeout", "unrankedonly", "username"];
+
+    if (exports.debug) {
+        checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies, "apikey", nonSpecificArgs);
+        console.log("\n");
+    }
+
+    // C - check deprecated features //
     const deprecatedArgs = [["botid", "username"],
         ["bot", "username"],
         ["id", "username"],
@@ -326,87 +373,13 @@ exports.updateFromArgv = function() {
         ["timecontrol", "timecontrols"],
         ["timecontrolranked", "timecontrolsranked"],
         ["timecontrolunranked", "timecontrolsunranked"]
-        ]
-    deprecatedArgs.forEach(ar => testDeprecated(...ar))
+        ];
+    testDeprecated(deprecatedArgs, "komis");
 
-    for (let e of familyArrayFromGeneralArgString("komis")) {
-        if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
-            if (argv[e].split(",").includes("auto")) {
-            // we need to split the argv value into an array before the includes test
-                console.log(`Warning: /--${e} auto/ is no longer supported, use /--${e} automatic/ instead`);
-            }
-            if (argv[e].split(",").includes("null")) {
-            // we need to split the argv value into an array before the includes test
-                console.log(`Warning: /--${e} null/ is no longer supported, use /--${e} automatic/ instead`);
-            }
-        }
-    }
-    
-    if (deprecatedArgs.some(e => argv[e[0]])) {
-        console.log("\n");
-    }
-    console.log("\n");
+    // D - check Warnings :
+    checkWarnings("nopause");
+
     // end of console messages
-
-    // Set all the argv
-    for(var k in argv) exports[k] = argv[k];
-
-    // Convert timeout to microseconds once here so we don't need to do it each time it is used later.
-    if (argv.timeout) {
-        exports.timeout = argv.timeout * 1000;
-    }
-    if (argv.startupbuffer) {
-        exports.startupbuffer = argv.startupbuffer * 1000;
-    }
-
-    if (argv.beta) {
-        exports.host = 'beta.online-go.com';
-    }
-    if (argv.debug) {
-        exports.DEBUG = true;
-    }
-    if (argv.persist) {
-        exports.PERSIST = true;
-    }
-    // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
-    if (argv.kgstime) {
-        exports.KGSTIME = true;
-    }
-    if (argv.showboard) {
-        exports.SHOWBOARD = true;
-    }
-    if (argv.noclock) {
-        exports.NOCLOCK = true;
-    }
-
-    exports.check_rejectnew = function()
-    {
-        if (argv.rejectnew)  return true;
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        return false;
-    }
-                
-    parseMinmaxrankFamilyNameString("minrank");
-    parseMinmaxrankFamilyNameString("maxrank");
-    if (argv.fakerank) { // TODO : remove fakerank when the bypass automatic handicap issue is fixed, 
-                         //        and/or when server adds an automatic handicap new object
-        parseMinmaxRankFromNameString("fakerank");
-    }
-    exportBoardsizeIfArgv("boardsizes");
-    exportKomiIfArgv("komis");
-    exportIfArgv(["speeds", "timecontrols"]);
-
-    if (argv.greeting) {
-        exports.GREETING = argv.greeting;
-    }
-    if (argv.farewell) {
-        exports.FAREWELL = argv.farewell;
-    }
-    if (argv.rejectnewmsg) {
-        exports.REJECTNEWMSG = argv.rejectnewmsg;
-    }
-
-    exports.bot_command = argv._;
 
     function familyArrayFromGeneralArgString(generalArgString) {
         return ["", "ranked", "unranked"].map(e => generalArgString + e);
@@ -520,6 +493,92 @@ exports.updateFromArgv = function() {
                 parseMinmaxRankFromNameString(familyArray[2]);
             }
         }
+    }
+
+    /* console messages functions:
+
+    /  always use exports and not argv for the console checks below: */
+    function checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies, apikeyString, nonSpecificArgs) {
+        console.log("SHOW ARGUMENTS SELECTION AND EXPORTS:\n-------------------------------------------------------");
+        let familyArray = [];
+        let rankedArgValue = "";
+        let unrankedArgValue = "";
+        // all / ranked / unranked exports :
+        for (let familyNameString of allRankedUnrankedFamilies) {
+            familyArray = familyArrayFromGeneralArgString(familyNameString);
+            console.log(`  ${familyArray[0].toUpperCase()}(*): -all: ${exports[familyArray[0]] || "-"}, -ranked: ${exports[familyArray[1]] || "-"}, -unranked: ${exports[familyArray[2]] || "-"}`);
+        }
+        // ranked / unranked exports :
+        for (let familyNameString of rankedUnrankedFamilies) {
+            familyArray = familyArrayFromGeneralArgString(familyNameString);
+            // for example ["komis", "komisranked", "komisunranked"];
+            if (exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+                rankedArgValue = exports[familyArray[0]];
+                unrankedArgValue = exports[familyArray[0]];
+            } else {
+                rankedArgValue = exports[familyArray[1]] || "-";
+                unrankedArgValue = exports[familyArray[2]] || "-";
+            }
+            console.log(`  ${familyArray[0].toUpperCase()}: -ranked: ${rankedArgValue}, -unranked: ${unrankedArgValue}`);
+        }
+        /* non specific exports :
+        /  first we hide apikey*/
+        let hiddenApikey = "-";
+        if (exports[apikeyString]) {
+            hiddenApikey = "hidden";
+        }
+        console.log(`  --apikey: ${hiddenApikey}`);
+        // then the remaining non specific exports :
+        // ex: "persist", "debug", etc.
+        for (let nonSpecificArg of nonSpecificArgs) {
+            console.log(`  --${nonSpecificArg}: ${exports[nonSpecificArg] || "-"}`);
+        }
+    }
+
+    function testDeprecated(deprecatedArgs, komisFamilyNameString) {
+        console.log("CHECK DEPRECATIONS:\n-------------------------------------------------------");
+        let isDeprecated = false;
+        for (let [oldName, newName] of deprecatedArgs) {
+            if (exports[oldName]) {
+                console.log(`  Deprecated: --${oldName} is deprecated, use --${newName} instead.`);
+                isDeprecated = true;
+            }
+        }
+        for (let komiArg of familyArrayFromGeneralArgString(komisFamilyNameString)) {
+            if (exports[komiArg]) { // check to avoid undefined error if bot admin is not using it
+                if (exports[komiArg].split(",").includes("auto")) {
+                    console.log(`  Deprecated: --${komiArg} /auto/ is no longer supported, use --${komiArg} /automatic/ instead`);
+                    isDeprecated = true;
+                }
+                if (exports[komiArg].split(",").includes("null")) {
+                    console.log(`  Deprecated: --${komiArg} /null/ is no longer supported, use --${komiArg} /automatic/ instead`);
+                    isDeprecated = true;
+                }
+            }
+        }
+        if (isDeprecated) {
+            console.log("ERRORS.\n");
+        } else {
+            console.log("SUCCESS.\n");
+        }
+    }
+
+    function checkWarnings(noPauseFamilyString) {
+        console.log("CHECK WARNINGS:\n-------------------------------------------------------");
+        let familyArray = familyArrayFromGeneralArgString(noPauseFamilyString);
+        let isWarning = false;
+        /* avoid infinite games
+        /  TODO : whenever --maxpausetime and co gets implemented, remove this);*/
+        if (!exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+            isWarning = true;
+            console.log(`  Warning: No --${familyArray[0]}, --${familyArray[1]}, nor --${familyArray[2]}, games are likely to last forever`); 
+        }
+        if (isWarning) {
+            console.log("ERRORS.\n");
+        } else {
+            console.log("SUCCESS.\n");
+        }
+
     }
 
 }
