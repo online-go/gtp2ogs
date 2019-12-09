@@ -282,10 +282,10 @@ class Connection {
     checkChallengePreRequirements(notification) { /* {{{ */
 
         // check user is acceptable first, else don't mislead user :
-        const resultBans = bannedFamilyReject("bans", notification.user.id, notification.user.username);
-        if (resultBans) {
-            return resultBans;
-        }
+        //const resultBans = bannedFamilyReject("bans", notification.user.id, notification.user.username);
+        //if (resultBans) {
+        //    return resultBans;
+        //}
         if (config.proonly && !notification.user.professional) {
             conn_log(notification.user.username + " is not a professional");
             return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
@@ -517,34 +517,38 @@ class Connection {
     }}}
 }
 
-function bannedFamilyReject(familyNameString, notificationUserId, notificationUserUsername) { /* }}} */
-    let bannedUsersString = "";
-    let rankedUnranked = "";
-    for (let argNameString of familyArrayFromFamilyNameString(familyNameString)) {
-        bannedUsersString = allowedBannedSettingExtraRankedUnranked("banned_users", argNameString); // we check all args for "bans" family
-        if ((config[bannedUsersString][notificationUserUsername]) || (config[bannedUsersString][notificationUserUsername])) {
-            rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
-            conn_log(`Username ${notificationUserUsername}, user id ${notificationUserId}, is banned ${rankedUnranked}`);
-            return { reject: true, msg: `Username ${notificationUserUsername}, user id ${notificationUserId}, is banned ${rankedUnranked} on this bot by bot admin, you may try changing the ranked/unranked setting` };
-        }
-    }
-}  /* }}} */
+//function bannedFamilyReject(familyNameString, notificationUserId, notificationUserUsername) { /* }}} */
+//    let rankedUnranked = "";
+//    for (let argNameString of familyArrayFromFamilyNameString(familyNameString)) { // we check all args for "bans" family
+//        if ( ( config[(allowedBannedObject(argNameString)).bannedUsers][notificationUserUsername] ) || ( (allowedBannedObject(argNameString)).bannedUsers][notificationUserUsername] ) ) {
+//            rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
+//            conn_log(`Username ${notificationUserUsername}, user id ${notificationUserId}, is banned ${rankedUnranked}`);
+//            return { reject: true, msg: `Username ${notificationUserUsername}, user id ${notificationUserId}, is banned ${rankedUnranked} on this bot by bot admin, you may try changing the ranked/unranked setting` };
+//        }
+//    }
+//}  /* }}} */
 
 function boardsizesFamilyReject(familyNameString, familyNameStringW, familyNameStringH, notificationWidth, notificationHeight, notificationRanked, familyDescription, familyDescriptionW, familyDescriptionH) { /* }}} */
     const argObject = checkBoardsizesFamilyNameStringToArgObjectWH(familyNameString, familyNameStringW, familyNameStringH, notificationWidth, notificationRanked, familyDescription, familyDescriptionW, familyDescriptionH);
-    if (!config[allowedBannedSettingExtraRankedUnranked(`allow_all_${familyNameString}`, argObject.argNameString)]) {
-        if (!config[allowedBannedSettingExtraRankedUnranked(`allow_custom_${familyNameString}`, argObject.argNameString)]) { // square
+    console.log(JSON.stringify(argObject));
+    console.log(argObject.allowedBannedObject.allowAllArg);
+    if (!config[argObject.allowedBannedObject.allowAllArg]) {
+        console.log(argObject.allowedBannedObject.allowCustomArg);
+        if (!config[argObject.allowedBannedObject.allowCustomArg]) { // square
             if (notificationWidth !== notificationHeight) {
                 const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argObject.argNameString, "");
                 conn_log(`${familyDescription} ${notificationWidth} x ${notificationHeight} is not square, not allowed ${rankedUnranked}`);
                 return { reject: true, msg: `Your selected ${familyDescription} ${notificationWidth} x ${notificationHeight} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE ${familyDescription} (same width and height), for example try 9x9 or 19x19}` };
-            } else if (!config[allowedBannedSettingExtraRankedUnranked(`allowed_${familyNameString}`, argObject.argNameString)][notificationWidth]) {
+            }
+            console.log(argObject.allowedBannedObject.allowedArg);
+            if (!config[argObject.allowedBannedObject.allowedArg][notificationWidth]) {
                 const argValueConverted = boardsizeSquareToDisplayString(config[argObject.argNameString]);
                 const notificationConverted = boardsizeSquareToDisplayString(notificationWidth);
                 return allowedFamiliesGenericReject(argValueConverted, notificationConverted, familyDescription);
             }
         } else { // custom : width + height
             for (let argObjectArgWH of [argObject.argW, argObject.argH]) {
+                console.log(allowedBannedSettingExtraRankedUnranked(`allowed_custom_${argObjectArgWH.family}`, argObjectArgWH.argNameString));
                 if (!(config[allowedBannedSettingExtraRankedUnranked(`allowed_custom_${argObjectArgWH.family}`, argObjectArgWH.argNameString)][argObjectArgWH.notif])) {
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argObjectArgWH.argNameString, "");
                     conn_log(`${argObjectArgWH.descr} ${rankedUnranked} -${argObjectArgWH.notif}-, not in -${config[argObjectArgWH.argNameString]}- `);
@@ -557,36 +561,33 @@ function boardsizesFamilyReject(familyNameString, familyNameStringW, familyNameS
 
 function komisFamilyReject(familyNameString, familyNotification, notificationRanked, familyDescription) { /* }}} */
     const argObject = checkFamilyNameStringToArgObjectIsArg(familyNameString, notificationRanked);
-    if (!config[allowedBannedSettingExtraRankedUnranked(`allow_all_${familyNameString}`, argObject.argNameString)]) {
-        if (!config[allowedBannedSettingExtraRankedUnranked(`allowed_${familyNameString}`, argObject.argNameString)][familyNotification]) {
-            const argValueConverted = config[argObject.argNameString];
+    if (!config[argObject.allowedBannedObject.allowAllArg]) {
+        if (!config[argObject.allowedBannedObject.allowedArg][familyNotification]) {
             let notificationConverted = familyNotification;
             if (notificationConverted === null) {
                 notificationConverted = "automatic";
             }
-            return allowedFamiliesGenericReject(argValueConverted, notificationConverted, familyDescription);
+            return allowedFamiliesGenericReject(config[argObject.argNameString], notificationConverted, familyDescription);
         }
     }
 } /* }}} */
 
+//["speeds", notification.time_control.speed, notification.ranked, "speed"
 function simpleAllowedFamiliesReject(basicAllowedFamiliesArray) { /* }}} */
     let argObject = {};
     for (let [fam, notif, ranked, descr] of basicAllowedFamiliesArray) {
         argObject = checkFamilyNameStringToArgObjectIsArg(fam, ranked);
-        if (!config[allowedBannedSettingExtraRankedUnranked(`allowed_${argObject.fam}`, argObject.argNameString)][notif]) {
+        // ex: argObject {argNameString: "speedsranked", isArg: true} if --speedsranked correspondence
+        if (!config[argObject.allowedBannedObject.allowedArg][notif]) {
+            // ex: config["allowed_speeds_ranked"]["correspondence"]
             return allowedFamiliesGenericReject(config[argObject.argNameString], notif, descr);
+            /*                             ex: (config["speedsranked"], correspondence, "speed") */
         }
     }
 } /* }}} */
 
-function allowedFamiliesGenericReject(argValueConverted, notificationConverted, familyDescription) { /* }}} */
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argValueConverted, "");
-    conn_log(`${familyDescription} ${rankedUnranked} -${notificationConverted}-, not in -${argValueConverted}- `);
-    return { reject: true, msg: `${familyDescription} -${notificationConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed values ${rankedUnranked}: -${argValueConverted}-` };
-} /* }}} */
-
 function noAutohandicapReject(argNameString, notificationHandicap, notificationRanked, familyDescription) { /* }}} */
-    const noAutoHandicapObject = checkFamilyNameStringToArgObjectIsArg("noautohandicap", notificationRanked);
+    const noAutoHandicapObject = checkFamilyNameStringToArgObjectIsArg(argNameString, notificationRanked);
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
     if (config[noAutoHandicapObject.isArg]) {
         conn_log(`no ${familyDescription} ${rankedUnranked}`);
@@ -748,16 +749,6 @@ function boardsizeSquareToDisplayString(boardsizeSquare) { /* {{{ */
     .join(', ');
 } /* }}} */
 
-function allowedBannedSettingExtraRankedUnranked(allowedBannedSetting, argNameString) { /* {{{ */
-    if (argNameString.includes("unranked")) {
-        return `${allowedBannedSetting}_unranked`;
-    } else if (argNameString.includes("ranked")) {
-        return `${allowedBannedSetting}_ranked`;
-    } else {
-        return allowedBannedSetting;
-    }
-} /* {{{ */
-
 function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special) { /* {{{ */
     const isExtra = (extra !== "");
     if (argNameString.includes("unranked")) {
@@ -773,27 +764,42 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special)
     }
 } /* }}} */
 
+function allowedBannedObject(argNameString) { /* {{{ */
+    let extraArgNameString = argNameString.toString();
+    if (extraArgNameString.includes("unranked")) {
+        extraArgNameString = `${extraArgNameString}_unranked`
+    } else if (extraArgNameString.includes("ranked")) {
+        extraArgNameString = `${extraArgNameString}_ranked`
+    }
+    return {allowAllArg:      `allow_all_${argNameString}`,
+            allowCustomArg:   `allow_custom_${argNameString}`,
+            allowedArg:       `allowed_${argNameString}`,
+            bannedUsers:      `banned_users${argNameString}`};
+} /* {{{ */
+
 function familyArrayFromFamilyNameString(familyNameString) { /* {{{ */
     return ["", "ranked", "unranked"].map(e => familyNameString + e);
 } /* {{{ */
 
-function checkFamilyArrayArgs(familyArray, notificationRanked) { /* {{{ */
-    if (config[familyArray[2]] && !notificationRanked) {
-        return 2;
-    } else if (config[familyArray[1]] && notificationRanked) {
-        return 1;
-    } else if (config[familyArray[0]]) {
-        return 0;
-    } else {
-        return -1; // config.arg is undefined (no default is provided, no arg inputted by bot admin)
-    }
-} /* }}} */
-
 function checkFamilyNameStringToArgObjectIsArg(familyNameString, notificationRanked) { /* {{{ */
     const familyArray = familyArrayFromFamilyNameString(familyNameString);
-    const n = checkFamilyArrayArgs(familyArray, notificationRanked)
+    let n = -1;
+    if (config[familyArray[2]] && !notificationRanked) {
+        n = 2;
+    } else if (config[familyArray[1]] && notificationRanked) {
+        n = 1;
+    } else if (config[familyArray[0]]) {
+        n = 0;
+    }
     if (n !== 1) { // note: for families that provide a default value, no need to use the isArg check
-        return {argNameString: familyArray[n], isArg: true};
+        let extraArgNameString = familyArray[n];
+        if (extraArgNameString.includes("unranked")) {
+            extraArgNameString = `${extraArgNameString}_unranked`
+        } else if (extraArgNameString.includes("ranked")) {
+            extraArgNameString = `${extraArgNameString}_ranked`
+        }
+        return {argNameString: familyArray[n], isArg: true,
+                allowedBannedObject: allowedBannedObject(familyArray[n])};
     } else {
         return {argNameString: false, isArg: false}
     }
@@ -803,12 +809,18 @@ function checkBoardsizesFamilyNameStringToArgObjectWH(familyNameString, familyNa
     const familyArray = familyArrayFromFamilyNameString(familyNameString);
     const familyArrayW = familyArrayFromFamilyNameString(familyNameStringW);
     const familyArrayH = familyArrayFromFamilyNameString(familyNameStringH);
-    const n = checkFamilyArrayArgs(familyArray, notificationRanked);
+    let n = 0; // we know we have a default, no need to check if isArg
+    if (config[familyArray[2]] && !notificationRanked) {
+        n = 2;
+    } else if (config[familyArray[1]] && notificationRanked) {
+        n = 1;
+    }
     // for boardsizes we provide defaults, so isArg === true; no need to provide it, nor to check it
-    return {argNameString: familyArray[n], argW: {argNameString: familyArrayW[n], notif: notificationWidth,
-                                                  descr: familyDescriptionW, family: familyNameStringW}, 
-                                           argH: {argNameString: familyArrayH[n], notif: notificationHeight,
-                                                  descr: familyDescriptionH, family: familyNameStringH}};
+    return {argNameString: familyArray[n], allowedBannedObject: allowedBannedObject(familyArray[n]),
+                     argW: {argNameString: familyArrayW[n], notif: notificationWidth,
+                            descr: familyDescriptionW, family: familyNameStringW}, 
+                     argH: {argNameString: familyArrayH[n], notif: notificationHeight,
+                            descr: familyDescriptionH, family: familyNameStringH}};
 } /* }}} */
 
 function argObjectMIBLIsminmax(familyNameString, notificationRanked) { /* {{{ */
