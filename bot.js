@@ -166,7 +166,7 @@ class Bot {
         //
         // Japanese byoyomi with one period left could be viewed as a special case of Canadian byoyomi where the number of stones is always = 1
         //
-        if (config.NOCLOCK) return;
+        if (config.noclock) return;
 
         let black_offset = 0;
         let white_offset = 0;
@@ -189,7 +189,7 @@ class Bot {
             // again, the next state setup should have this corrected. This problem would happen if a bot were to crash and re-start during
             // a period. This is only an issue if it is our turn, and our main time left is 0.
             //
-            if (config.KGSTIME) {
+            if (config.kgstime) {
                 let black_timeleft = 0;
                 let white_timeleft = 0;
 
@@ -258,7 +258,7 @@ class Bot {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-            if (config.KGSTIME) {
+            if (config.kgstime) {
                 this.command("kgs-time_settings canadian " + state.time_control.main_time + " "
                     + state.time_control.period_time + " " + state.time_control.stones_per_period);
             } else {
@@ -278,7 +278,7 @@ class Bot {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-            if (config.KGSTIME) {
+            if (config.kgstime) {
                 this.command("kgs-time_settings canadian " + (state.time_control.initial_time - state.time_control.time_increment)
                     + " " + state.time_control.time_increment + " 1");
             } else {
@@ -310,7 +310,7 @@ class Bot {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-            if (config.KGSTIME) {
+            if (config.kgstime) {
                 this.command("kgs-time_settings absolute " + state.time_control.total_time);
             } else {
                 this.command("time_settings " + state.time_control.total_time + " 0 0");
@@ -321,7 +321,7 @@ class Bot {
         // OGS doesn't actually send 'none' time control type
         //
         /* else if (state.time_control.system === 'none') {
-            if (config.KGSTIME) {
+            if (config.kgstime) {
                 this.command("kgs-time_settings none");
             } else {
                 // GTP v2 says byoyomi time > 0 and stones = 0 means no time limits
@@ -379,7 +379,7 @@ class Bot {
 
             color = color === 'black' ? 'white' : 'black';
         }
-        if (config.SHOWBOARD) {
+        if (config.showboard) {
             this.command("showboard", cb, eb);
         }
         return true;
