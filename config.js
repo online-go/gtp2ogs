@@ -384,208 +384,206 @@ exports.updateFromArgv = function() {
 
     // D - check Warnings :
     checkWarnings(rankedUnrankedFamilies, "nopause");
-
     // end of console messages
 
-    function familyArrayFromGeneralExportString(generalExportsString) {
-        return ["", "ranked", "unranked"].map(e => generalExportsString + e);
-    }
+}
 
-    function extraRankedUnrankedString(exportsNameString) {
-        if (exportsNameString.includes("unranked")) {
-            return "_unranked";
-        } else if (exportsNameString.includes("ranked")) {
-            return "_ranked";
-        } else {
-            return "";
+function familyArrayFromGeneralExportString(generalExportsString) {
+    return ["", "ranked", "unranked"].map(e => generalExportsString + e);
+}
+
+function extraRankedUnrankedString(exportsNameString) {
+    if (exportsNameString.includes("unranked")) {
+        return "_unranked";
+    } else if (exportsNameString.includes("ranked")) {
+        return "_ranked";
+    } else {
+        return "";
+    }
+}
+
+function pluralExportsNameStringToPluralFamilyString(plural) {
+    return plural.split("unranked")[0].split("ranked")[0];
+}
+
+function allowedExportsString(exportsNameString, extraRankedUnranked) {
+    return "allowed_" + pluralExportsNameStringToPluralFamilyString(exportsNameString) + extraRankedUnranked;
+}
+
+function exportBoardsizeIfExports(familyNameString) {
+    let extraRankedUnranked = "";
+    for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
+        if (exports[exportsNameString]) {
+            extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
+            for (let boardsize of exports[exportsNameString].split(',')) {
+                if (boardsize === "all") {
+                    exports["allow_all_boardsizes" + extraRankedUnranked] = true;
+                } else if (boardsize === "custom") {
+                    exports["allow_custom_boardsizes" + extraRankedUnranked] = true;
+                    for (let width of exports["boardsizewidths" + extraRankedUnranked].split(',')) {
+                        exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width] = true;
+                    }
+                    for (let height of exports["boardsizeheights" + extraRankedUnranked].split(',')) {
+                        exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height] = true;
+                    }
+                } else {
+                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][boardsize] = true;
+                }
+            }
         }
     }
+}
 
-    function pluralExportsNameStringToPluralFamilyString(plural) {
-        return plural.split("unranked")[0].split("ranked")[0];
+function exportKomiIfExports(familyNameString) {
+    let extraRankedUnranked = "";
+    for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
+        if (exports[exportsNameString]) {
+            extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
+            for (let komi of exports[exportsNameString].split(',')) {
+                if (komi === "all") {
+                    exports["allow_all_komis" + extraRankedUnranked] = true;
+                } else if (komi === "automatic") {
+                    exports["allowed_komis" + extraRankedUnranked][null] = true;
+                } else {
+                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][komi] = true;
+                }
+            }
+        }
     }
+}
 
-    function allowedExportsString(exportsNameString, extraRankedUnranked) {
-        return "allowed_" + pluralExportsNameStringToPluralFamilyString(exportsNameString) + extraRankedUnranked;
-    }
-
-    function exportBoardsizeIfExports(familyNameString) {
-        let extraRankedUnranked = "";
+function exportIfExports(familyNameStringsArray) {
+    let extraRankedUnranked = "";
+    for (let familyNameString of familyNameStringsArray) {
         for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
             if (exports[exportsNameString]) {
                 extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
-                for (let boardsize of exports[exportsNameString].split(',')) {
-                    if (boardsize === "all") {
-                        exports["allow_all_boardsizes" + extraRankedUnranked] = true;
-                    } else if (boardsize === "custom") {
-                        exports["allow_custom_boardsizes" + extraRankedUnranked] = true;
-                        for (let width of exports["boardsizewidths" + extraRankedUnranked].split(',')) {
-                            exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width] = true;
-                        }
-                        for (let height of exports["boardsizeheights" + extraRankedUnranked].split(',')) {
-                            exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height] = true;
-                        }
-                    } else {
-                        exports[allowedExportsString(exportsNameString, extraRankedUnranked)][boardsize] = true;
-                    }
+                for (let e of exports[exportsNameString].split(',')) {
+                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][e] = true;
                 }
             }
         }
     }
+}
 
-    function exportKomiIfExports(familyNameString) {
-        let extraRankedUnranked = "";
-        for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
-            if (exports[exportsNameString]) {
-                extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
-                for (let komi of exports[exportsNameString].split(',')) {
-                    if (komi === "all") {
-                        exports["allow_all_komis" + extraRankedUnranked] = true;
-                    } else if (komi === "automatic") {
-                        exports["allowed_komis" + extraRankedUnranked][null] = true;
-                    } else {
-                        exports[allowedExportsString(exportsNameString, extraRankedUnranked)][komi] = true;
-                    }
-                }
-            }
-        }
-    }
+function parseMinmaxRankFromNameString(rankExportsNameString) {
+    let re = /(\d+)([kdp])/;
+    let results = exports[rankExportsNameString].toLowerCase().match(re);
 
-    function exportIfExports(familyNameStringsArray) {
-        let extraRankedUnranked = "";
-        for (let familyNameString of familyNameStringsArray) {
-            for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
-                if (exports[exportsNameString]) {
-                    extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
-                    for (let e of exports[exportsNameString].split(',')) {
-                        exports[allowedExportsString(exportsNameString, extraRankedUnranked)][e] = true;
-                    }
-                }
-            }
-        }
-    }
-
-    function parseMinmaxRankFromNameString(rankExportsNameString) {
-        let re = /(\d+)([kdp])/;
-        let results = exports[rankExportsNameString].toLowerCase().match(re);
-
-        if (results) {
-            if (results[2] === "k") {
-                exports[rankExportsNameString] = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports[rankExportsNameString] = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports[rankExportsNameString] = 36 + parseInt(results[1]);
-                exports.proonly = true;
-            } else {
-                console.error(`Invalid ${rankExportsNameString} ${exports[rankExportsNameString]}`);
-                process.exit();
-            }
+    if (results) {
+        if (results[2] === "k") {
+            exports[rankExportsNameString] = 30 - parseInt(results[1]);
+        } else if (results[2] === "d") {
+            exports[rankExportsNameString] = 30 - 1 + parseInt(results[1]);
+        } else if (results[2] === "p") {
+            exports[rankExportsNameString] = 36 + parseInt(results[1]);
+            exports.proonly = true;
         } else {
-            console.error(`Could not parse ${rankExportsNameString} ${exports[rankExportsNameString]}`);
+            console.error(`Invalid ${rankExportsNameString} ${exports[rankExportsNameString]}`);
             process.exit();
         }
+    } else {
+        console.error(`Could not parse ${rankExportsNameString} ${exports[rankExportsNameString]}`);
+        process.exit();
     }
+}
 
-    function parseMinmaxrankFamilyNameString(familyNameString) {
-        const familyArray = familyArrayFromGeneralExportString(familyNameString);
+function parseMinmaxrankFamilyNameString(familyNameString) {
+    const familyArray = familyArrayFromGeneralExportString(familyNameString);
+    if (exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+        parseMinmaxRankFromNameString(familyArray[0]);
+    } else {
+        if (exports[familyArray[1]]) {
+            parseMinmaxRankFromNameString(familyArray[1]);
+        }
+        if (exports[familyArray[2]]) {
+            parseMinmaxRankFromNameString(familyArray[2]);
+        }
+    }
+}
+
+/* console messages functions:
+
+/  always use exports and not exports for the console checks below: */
+function checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies) {
+    console.log("SHOW EXPORTS RANKED/UNRANKED GAMES SELECTION:\n-------------------------------------------------------");
+    let familyArray = [];
+    let rankedExportValue = "";
+    let unrankedExportValue = "";
+    // all / ranked / unranked exports :
+    for (let familyNameString of allRankedUnrankedFamilies) {
+        familyArray = familyArrayFromGeneralExportString(familyNameString);
+        console.log(`    ${familyArray[0].toUpperCase()}(*): -all: ${exports[familyArray[0]] || "-"}, -ranked: ${exports[familyArray[1]] || "-"}, -unranked: ${exports[familyArray[2]] || "-"}`);
+    }
+    // ranked / unranked exports :
+    for (let familyNameString of rankedUnrankedFamilies) {
+        familyArray = familyArrayFromGeneralExportString(familyNameString);
+        // for example ["komis", "komisranked", "komisunranked"];
         if (exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
-            parseMinmaxRankFromNameString(familyArray[0]);
+            rankedExportValue = exports[familyArray[0]];
+            unrankedExportValue = exports[familyArray[0]];
         } else {
-            if (exports[familyArray[1]]) {
-                parseMinmaxRankFromNameString(familyArray[1]);
-            }
-            if (exports[familyArray[2]]) {
-                parseMinmaxRankFromNameString(familyArray[2]);
-            }
+            rankedExportValue = exports[familyArray[1]] || "-";
+            unrankedExportValue = exports[familyArray[2]] || "-";
+        }
+        console.log(`    ${familyArray[0].toUpperCase()}: -ranked: ${rankedExportValue}, -unranked: ${unrankedExportValue}`);
+    }
+}
+
+function testDeprecated(deprecatedExports, komisFamilyNameString) {
+    console.log("CHECK DEPRECATIONS:\n-------------------------------------------------------");
+    let isDeprecated = false;
+    for (let [oldName, newName] of deprecatedExports) {
+        if (exports[oldName]) {
+            console.log(`    Deprecated: --${oldName} is deprecated, use --${newName} instead.`);
+            isDeprecated = true;
         }
     }
-
-    /* console messages functions:
-
-    /  always use exports and not exports for the console checks below: */
-    function checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies) {
-        console.log("SHOW EXPORTS RANKED/UNRANKED GAMES SELECTION:\n-------------------------------------------------------");
-        let familyArray = [];
-        let rankedExportValue = "";
-        let unrankedExportValue = "";
-        // all / ranked / unranked exports :
-        for (let familyNameString of allRankedUnrankedFamilies) {
-            familyArray = familyArrayFromGeneralExportString(familyNameString);
-            console.log(`    ${familyArray[0].toUpperCase()}(*): -all: ${exports[familyArray[0]] || "-"}, -ranked: ${exports[familyArray[1]] || "-"}, -unranked: ${exports[familyArray[2]] || "-"}`);
-        }
-        // ranked / unranked exports :
-        for (let familyNameString of rankedUnrankedFamilies) {
-            familyArray = familyArrayFromGeneralExportString(familyNameString);
-            // for example ["komis", "komisranked", "komisunranked"];
-            if (exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
-                rankedExportValue = exports[familyArray[0]];
-                unrankedExportValue = exports[familyArray[0]];
-            } else {
-                rankedExportValue = exports[familyArray[1]] || "-";
-                unrankedExportValue = exports[familyArray[2]] || "-";
+    for (let komiExport of familyArrayFromGeneralExportString(komisFamilyNameString)) {
+        if (exports[komiExport]) { // check to avoid undefined error if bot admin is not using it
+            if (exports[komiExport].split(",").includes("auto")) {
+                console.log(`    Deprecated: --${komiExport} /auto/ is no longer supported, use --${komiExport} /automatic/ instead`);
+                isDeprecated = true;
             }
-            console.log(`    ${familyArray[0].toUpperCase()}: -ranked: ${rankedExportValue}, -unranked: ${unrankedExportValue}`);
-        }
-    }
-
-    function testDeprecated(deprecatedExports, komisFamilyNameString) {
-        console.log("CHECK DEPRECATIONS:\n-------------------------------------------------------");
-        let isDeprecated = false;
-        for (let [oldName, newName] of deprecatedExports) {
-            if (exports[oldName]) {
-                console.log(`    Deprecated: --${oldName} is deprecated, use --${newName} instead.`);
+            if (exports[komiExport].split(",").includes("null")) {
+                console.log(`    Deprecated: --${komiExport} /null/ is no longer supported, use --${komiExport} /automatic/ instead`);
                 isDeprecated = true;
             }
         }
-        for (let komiExport of familyArrayFromGeneralExportString(komisFamilyNameString)) {
-            if (exports[komiExport]) { // check to avoid undefined error if bot admin is not using it
-                if (exports[komiExport].split(",").includes("auto")) {
-                    console.log(`    Deprecated: --${komiExport} /auto/ is no longer supported, use --${komiExport} /automatic/ instead`);
-                    isDeprecated = true;
-                }
-                if (exports[komiExport].split(",").includes("null")) {
-                    console.log(`    Deprecated: --${komiExport} /null/ is no longer supported, use --${komiExport} /automatic/ instead`);
-                    isDeprecated = true;
-                }
-            }
-        }
-        if (isDeprecated) {
-            console.log("ERRORS.\n");
-        } else {
-            console.log("SUCCESS.\n");
-        }
     }
+    if (isDeprecated) {
+        console.log("ERRORS.\n");
+    } else {
+        console.log("SUCCESS.\n");
+    }
+}
 
-    function checkWarnings(rankedUnrankedFamilies, noPauseFamilyString) {
-        console.log("CHECK WARNINGS:\n-------------------------------------------------------");
-        let familyArray = [];
-        let isWarning = false;
-        // if exports[1], need exports[2], and vice versa
-        for (let familyNameString of rankedUnrankedFamilies) {
-            familyArray = familyArrayFromGeneralExportString(familyNameString);
-            if (exports[familyArray[1]] && !exports[familyArray[2]]) {
-                isWarning = true;
-                console.log(`Warning: --${familyArray[1]} detected but --${familyArray[2]} is missing, no value for unranked games !`);
-            }
-            if (exports[familyArray[2]] && !exports[familyArray[1]]) {
-                isWarning = true;
-                console.log(`Warning: --${familyArray[2]} detected but --${familyArray[1]} is missing, no value for ranked games !`);
-            }
-        }
-        /* avoid infinite games
-        /  TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this */
-        familyArray = familyArrayFromGeneralExportString(noPauseFamilyString);
-        if (!exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+function checkWarnings(rankedUnrankedFamilies, noPauseFamilyString) {
+    console.log("CHECK WARNINGS:\n-------------------------------------------------------");
+    let familyArray = [];
+    let isWarning = false;
+    // if exports[1], need exports[2], and vice versa
+    for (let familyNameString of rankedUnrankedFamilies) {
+        familyArray = familyArrayFromGeneralExportString(familyNameString);
+        if (exports[familyArray[1]] && !exports[familyArray[2]]) {
             isWarning = true;
-            console.log(`    Warning: No --${familyArray[0]}, --${familyArray[1]}, nor --${familyArray[2]}, games are likely to last forever`); 
+            console.log(`Warning: --${familyArray[1]} detected but --${familyArray[2]} is missing, no value for unranked games !`);
         }
-        if (isWarning) {
-            console.log("ERRORS.\n");
-        } else {
-            console.log("SUCCESS.\n");
+        if (exports[familyArray[2]] && !exports[familyArray[1]]) {
+            isWarning = true;
+            console.log(`Warning: --${familyArray[2]} detected but --${familyArray[1]} is missing, no value for ranked games !`);
         }
-
     }
-
+    /* avoid infinite games
+    /  TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this */
+    familyArray = familyArrayFromGeneralExportString(noPauseFamilyString);
+    if (!exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+        isWarning = true;
+        console.log(`    Warning: No --${familyArray[0]}, --${familyArray[1]}, nor --${familyArray[2]}, games are likely to last forever`); 
+    }
+    if (isWarning) {
+        console.log("ERRORS.\n");
+    } else {
+        console.log("SUCCESS.\n");
+    }
 }
