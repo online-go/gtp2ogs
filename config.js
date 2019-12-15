@@ -36,7 +36,7 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
-    let optimist = require("optimist")
+    const optimist = require("optimist")
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -340,8 +340,8 @@ function allowedExportsString(exportsNameString, extraRankedUnranked) {
 
 function parseMinmaxRankFromNameString(rankExportsNameString) {
     if (exports[rankExportsNameString]) {
-        let re = /(\d+)([kdp])/;
-        let results = exports[rankExportsNameString].toLowerCase().match(re);
+        const re = /(\d+)([kdp])/;
+        const results = exports[rankExportsNameString].toLowerCase().match(re);
 
         if (results) {
             if (results[2] === "k") {
