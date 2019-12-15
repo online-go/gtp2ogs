@@ -3,8 +3,6 @@
 let fs = require('fs')
 let console = require('console');
 
-exports.DEBUG = false;
-
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_users_ranked = {};
@@ -237,55 +235,48 @@ exports.updateFromArgv = function() {
 
     // console messages
     // A- greeting and debug status //
-    let debugStatusMessage = "-\n-Skipping detailed booting data\n-Shrinking all console notifications";
+    let debugStatusMessage = "-\n-Skipping debug booting data\n-Shrinking all console notifications";
     if (optimist.argv.debug) {
-        debugStatusMessage = "ON\n-Will show detailed booting data\n-Will show all console notifications\n\nk IN OPTIMIST.ARGV[k] TO EXPORTS[k] (CONVERTED VALUES) RESULT:\n-------------------------------------------------------";
+        debugStatusMessage = "ON\n-Will show detailed debug booting data\n-Will show all console notifications\n\nk IN OPTIMIST.ARGV[k] TO EXPORTS[k] RESULT:\n-------------------------------------------------------";
+        exports.DEBUG = optimist.argv.debug; // if --debug, export an alias "DEBUG" instead
     }
     console.log(`\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}\n`);
+    console.log(`    case alias: DEBUG + ${exports.DEBUG}`);
 
     // Set the exports from optimist.argv[k]
     for (let k in optimist.argv) {
         if (k === "host" && optimist.argv.beta) {
             exports.host = 'beta.online-go.com';
-            debugArgLog(optimist.argv.debug, `    case modified: host + ${exports["host"]}`);
-        } else if (k === "startupbuffer") { // Convert some times to microseconds once here so we don't need to do it each time it is used later.
-            exports[k] = optimist.argv.startupbuffer * 1000;
-            debugArgLog(optimist.argv.debug, `    case modified: ${k} + ${exports[k]}`);
-        } else if (k === "timeout") {
-            exports[k] = optimist.argv.timeout * 1000;
-            debugArgLog(optimist.argv.debug, `    case modified: ${k} + ${exports[k]}`);
-        } else if (k === "apikey") { // hide some exports in console messages, ex: apikey
-            exports[k] = optimist.argv[k];
-            debugArgLog(optimist.argv.debug, `    case hidden: ${k} + hidden}`);
-        } else if (k === "debug") { // if --debug, export an alias "DEBUG" as well
-            exports.DEBUG = optimist.argv[k];
-            debugArgLog(optimist.argv.debug, `    case alias: DEBUG + ${exports["DEBUG"]}`);
-        } else if (k === "_") {
-            exports.bot_command = exports._;
-            debugArgLog(optimist.argv.debug, `    case alias: bot_command + ${exports["bot_command"]}`);
-        } else if (k === "fakerank") {
-            /* TODO : remove fakerank when the bypass automatic handicap issue is fixed, 
-            /        and/or when server adds an automatic handicap new object*/
-            parseMinmaxRankFromNameString("fakerank"); // debugArgLog included in this function
-        } else { // standard case
+            debugLogExports(`    case modified: host + ${exports["host"]}`);
+        } else if (k === "timeout" || k === "startupbuffer") {
+            // Convert some times to microseconds once here so we don't need to do it each time it is used later.
+            exports[k] = optimist.argv[k] * 1000;
+            debugLogExports(`    case modified: ${k} + ${exports[k]}`);
+        } else if (k !== "debug" && k !== "fakerank") { // standard case, excluded special cases
             /* note: don't filter families we need both the arg and the allowed_family export
             /  ex: config.boardsizesranked AND config.allowed_boardsizes_ranked[19]
             /  same for all the general/ranked/unranked familes (minrank, etc.), so we put them here too */
             exports[k] = optimist.argv[k];
-            debugArgLog(optimist.argv.debug, `    result: ${k} + ${exports[k]}`);
+            if (k === "apikey") {
+                debugLogExports(`    case hidden: ${k} + hidden}`);
+            } else {
+                debugLogExports(`    result: ${k} + ${exports[k]}`);
+            }
         }
     }
-    if (exports.DEBUG) { // beautification
-        console.log("\n");
-    }
+    debugLogExports("\n");
 
-    /* from here on, not using optimist.argv anymore,
-    /  we can work directly on exports */
-
-    // special exports:
+    // special exports (argDebugLog is included) :
     parseMinmaxrankFamilyNameString("minrank");
     parseMinmaxrankFamilyNameString("maxrank");
-
+    if (exports.fakerank) {
+        /* - the parsing functions needs optimist.argv to be exported first,
+        /    do not put the fakerank exports here
+        /  - remove fakerank when the bypass automatic handicap issue is fixed, 
+        /    and/or when server adds an automatic handicap new object*/
+        parseMinmaxRankFromNameString("fakerank");
+    }
+    // from here on, not using optimist.argv anymore, we can work directly on exports
     exportBoardsizeIfExports("boardsizes");
     exportKomiIfExports("komis");
     exportIfExports(["speeds", "timecontrols"]);
@@ -295,6 +286,13 @@ exports.updateFromArgv = function() {
         if (exports.rejectnew)  return true;
         if (exports.rejectnewfile && fs.existsSync(exports.rejectnewfile))  return true;
         return false;
+    }
+    if (exports.check_rejectnew) {
+        debugLogExports(`    case function: exports.check_rejectnew + DONE`);
+    }
+    exports.bot_command = exports._;
+    if (exports.bot_command) {
+        debugLogExports(`    case alias: bot_command + ${exports["bot_command"]}\n`);
     }
 
     // console messages
@@ -306,13 +304,173 @@ exports.updateFromArgv = function() {
         "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr",
         "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz",
         "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "noautohandicap", "nopause"];
-
     if (exports.DEBUG) {
         checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies);
-        console.log("\n");
     }
 
     // C - check deprecated features //
+    testDeprecated("komis");
+
+    // D - check Warnings :
+    checkWarnings(rankedUnrankedFamilies, "nopause");
+    // end of console messages
+}
+
+function familyArrayFromGeneralExportString(generalExportsString) {
+    return ["", "ranked", "unranked"].map(e => generalExportsString + e);
+}
+
+function extraRankedUnrankedString(exportsNameString) {
+    if (exportsNameString.includes("unranked")) {
+        return "_unranked";
+    } else if (exportsNameString.includes("ranked")) {
+        return "_ranked";
+    } else {
+        return "";
+    }
+}
+
+function pluralExportsNameStringToPluralFamilyString(plural) {
+    return plural.split("unranked")[0].split("ranked")[0];
+}
+
+function allowedExportsString(exportsNameString, extraRankedUnranked) {
+    return "allowed_" + pluralExportsNameStringToPluralFamilyString(exportsNameString) + extraRankedUnranked;
+}
+
+function parseMinmaxRankFromNameString(rankExportsNameString) {
+    if (exports[rankExportsNameString]) {
+        let re = /(\d+)([kdp])/;
+        let results = exports[rankExportsNameString].toLowerCase().match(re);
+
+        if (results) {
+            if (results[2] === "k") {
+                exports[rankExportsNameString] = 30 - parseInt(results[1]);
+                debugLogExports(`    case family: ${rankExportsNameString} / ${results} + ${exports[rankExportsNameString]}`);
+            } else if (results[2] === "d") {
+                exports[rankExportsNameString] = 30 - 1 + parseInt(results[1]);
+                debugLogExports(`    case family: ${rankExportsNameString} / ${results} + ${exports[rankExportsNameString]}`);
+            } else if (results[2] === "p") {
+                exports[rankExportsNameString] = 36 + parseInt(results[1]);
+                debugLogExports(`    case family: ${rankExportsNameString} / ${results} + ${exports[rankExportsNameString]}`);
+                if (rankExportsNameString.includes("minrank")) {
+                    exports.proonly = true;
+                    debugLogExports(exports.proonly, `    case family: proonly (${rankExportsNameString} > 36) + ${exports.proonly}`);
+                }
+            }
+        } else {
+            console.error(`Invalid ${rankExportsNameString} ${exports[rankExportsNameString]}`);
+            process.exit();
+        }
+    }
+}
+
+function parseMinmaxrankFamilyNameString(familyNameString) {
+    const familyArray = familyArrayFromGeneralExportString(familyNameString);
+    for (let arg of familyArray) {
+        parseMinmaxRankFromNameString(arg);
+    }
+}
+
+function exportBoardsizeIfExports(familyNameString) {
+    let extraRankedUnranked = "";
+    for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
+        if (exports[exportsNameString]) {
+            extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
+            for (let boardsize of exports[exportsNameString].split(',')) {
+                if (boardsize === "all") {
+                    exports["allow_all_boardsizes" + extraRankedUnranked] = true;
+                    debugLogExports(`    case family: ${"allow_all_boardsizes" + extraRankedUnranked} + ${exports["allow_all_boardsizes" + extraRankedUnranked]}`);
+                } else if (boardsize === "custom") {
+                    exports["allow_custom_boardsizes" + extraRankedUnranked] = true;
+                    debugLogExports(`    case family: ${"allow_custom_boardsizes" + extraRankedUnranked} + ${exports["allow_custom_boardsizes" + extraRankedUnranked]}`);
+                    for (let width of exports["boardsizewidths" + extraRankedUnranked].split(',')) {
+                        exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width] = true;
+                        debugLogExports(`    case family: ${"allowed_custom_boardsizewidths" + extraRankedUnranked}  / ${width} + ${exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width]}`);
+                    }
+                    for (let height of exports["boardsizeheights" + extraRankedUnranked].split(',')) {
+                        exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height] = true;
+                        debugLogExports(`    case family: ${"allowed_custom_boardsizeheights" + extraRankedUnranked}  / ${height} + ${exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height]}`);
+                    }
+                } else {
+                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][boardsize] = true;
+                    debugLogExports(`    case family: ${allowedExportsString(exportsNameString, extraRankedUnranked)} / ${boardsize} + ${exports[allowedExportsString(exportsNameString, extraRankedUnranked)][boardsize]}`);
+                }
+            }
+        }
+    }
+}
+
+function exportKomiIfExports(familyNameString) {
+    let extraRankedUnranked = "";
+    for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
+        if (exports[exportsNameString]) {
+            extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
+            for (let komi of exports[exportsNameString].split(',')) {
+                if (komi === "all") {
+                    exports["allow_all_komis" + extraRankedUnranked] = true;
+                    debugLogExports(`    case family: ${"allow_all_komis" + extraRankedUnranked} + ${exports["allow_all_komis" + extraRankedUnranked]}`);
+                } else if (komi === "automatic") {
+                    exports["allowed_komis" + extraRankedUnranked][null] = true;
+                    debugLogExports(`    case family: ${"allowed_komis" + extraRankedUnranked} / null + ${exports["allowed_komis" + extraRankedUnranked][null]}`);
+                } else {
+                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][komi] = true;
+                    debugLogExports(`    case family: ${allowedExportsString(exportsNameString, extraRankedUnranked)} / ${komi} + ${exports[allowedExportsString(exportsNameString, extraRankedUnranked)][komi]}`);
+                }
+            }
+        }
+    }
+}
+
+function exportIfExports(familyNameStringsArray) {
+    let extraRankedUnranked = "";
+    for (let familyNameString of familyNameStringsArray) {
+        for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
+            if (exports[exportsNameString]) {
+                extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
+                for (let e of exports[exportsNameString].split(',')) {
+                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][e] = true;
+                    debugLogExports(`    case family: ${allowedExportsString(exportsNameString, extraRankedUnranked)} / ${e} + ${exports[allowedExportsString(exportsNameString, extraRankedUnranked)][e]}`);
+                }
+            }
+        }
+    }
+}
+
+// console messages functions:
+function debugLogExports(messageString) {
+    if (exports.DEBUG) {
+        console.log(messageString);
+    }
+}
+
+function checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies) {
+    console.log("SHOW EXPORTS RANKED/UNRANKED GAMES SELECTION:\n-------------------------------------------------------");
+    let familyArray = [];
+    let rankedExportValue = "";
+    let unrankedExportValue = "";
+    // all / ranked / unranked exports :
+    for (let familyNameString of allRankedUnrankedFamilies) {
+        familyArray = familyArrayFromGeneralExportString(familyNameString);
+        console.log(`    ${familyArray[0].toUpperCase()}(*): -all: ${exports[familyArray[0]] || "-"}, -ranked: ${exports[familyArray[1]] || "-"}, -unranked: ${exports[familyArray[2]] || "-"}`);
+    }
+    // ranked / unranked exports :
+    for (let familyNameString of rankedUnrankedFamilies) {
+        familyArray = familyArrayFromGeneralExportString(familyNameString);
+        // for example ["komis", "komisranked", "komisunranked"];
+        if (exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+            rankedExportValue = exports[familyArray[0]];
+            unrankedExportValue = exports[familyArray[0]];
+        } else {
+            rankedExportValue = exports[familyArray[1]] || "-";
+            unrankedExportValue = exports[familyArray[2]] || "-";
+        }
+        console.log(`    ${familyArray[0].toUpperCase()}: -ranked: ${rankedExportValue}, -unranked: ${unrankedExportValue}`);
+    }
+    console.log("\n");
+}
+
+function testDeprecated(komisFamilyNameString) {
     const deprecatedExports = [["botid", "username"],
         ["bot", "username"],
         ["id", "username"],
@@ -362,168 +520,6 @@ exports.updateFromArgv = function() {
         ["timecontrolranked", "timecontrolsranked"],
         ["timecontrolunranked", "timecontrolsunranked"]
         ];
-    testDeprecated(deprecatedExports, "komis");
-
-    // D - check Warnings :
-    checkWarnings(rankedUnrankedFamilies, "nopause");
-    // end of console messages
-
-}
-
-function familyArrayFromGeneralExportString(generalExportsString) {
-    return ["", "ranked", "unranked"].map(e => generalExportsString + e);
-}
-
-function extraRankedUnrankedString(exportsNameString) {
-    if (exportsNameString.includes("unranked")) {
-        return "_unranked";
-    } else if (exportsNameString.includes("ranked")) {
-        return "_ranked";
-    } else {
-        return "";
-    }
-}
-
-function pluralExportsNameStringToPluralFamilyString(plural) {
-    return plural.split("unranked")[0].split("ranked")[0];
-}
-
-function allowedExportsString(exportsNameString, extraRankedUnranked) {
-    return "allowed_" + pluralExportsNameStringToPluralFamilyString(exportsNameString) + extraRankedUnranked;
-}
-
-function exportBoardsizeIfExports(familyNameString) {
-    let extraRankedUnranked = "";
-    for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
-        if (exports[exportsNameString]) {
-            extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
-            for (let boardsize of exports[exportsNameString].split(',')) {
-                if (boardsize === "all") {
-                    exports["allow_all_boardsizes" + extraRankedUnranked] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${"allow_all_boardsizes" + extraRankedUnranked} + ${exports["allow_all_boardsizes" + extraRankedUnranked]}`);
-                } else if (boardsize === "custom") {
-                    exports["allow_custom_boardsizes" + extraRankedUnranked] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${"allow_custom_boardsizes" + extraRankedUnranked} + ${exports["allow_custom_boardsizes" + extraRankedUnranked]}`);
-                    for (let width of exports["boardsizewidths" + extraRankedUnranked].split(',')) {
-                        exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width] = true;
-                        debugArgLog(exports.DEBUG, `    case family: ${"allowed_custom_boardsizewidths" + extraRankedUnranked}  / ${width} + ${exports["allowed_custom_boardsizewidths" + extraRankedUnranked][width]}`);
-                    }
-                    for (let height of exports["boardsizeheights" + extraRankedUnranked].split(',')) {
-                        exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height] = true;
-                        debugArgLog(exports.DEBUG, `    case family: ${"allowed_custom_boardsizeheights" + extraRankedUnranked}  / ${height} + ${exports["allowed_custom_boardsizeheights" + extraRankedUnranked][height]}`);
-                    }
-                } else {
-                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][boardsize] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${allowedExportsString(exportsNameString, extraRankedUnranked)} / ${boardsize} + ${exports[allowedExportsString(exportsNameString, extraRankedUnranked)][boardsize]}`);
-                }
-            }
-        }
-    }
-}
-
-function exportKomiIfExports(familyNameString) {
-    let extraRankedUnranked = "";
-    for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
-        if (exports[exportsNameString]) {
-            extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
-            for (let komi of exports[exportsNameString].split(',')) {
-                if (komi === "all") {
-                    exports["allow_all_komis" + extraRankedUnranked] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${"allow_all_komis" + extraRankedUnranked} + ${exports["allow_all_komis" + extraRankedUnranked]}`);
-                } else if (komi === "automatic") {
-                    exports["allowed_komis" + extraRankedUnranked][null] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${"allowed_komis" + extraRankedUnranked} / null + ${exports["allowed_komis" + extraRankedUnranked][null]}`);
-                } else {
-                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][komi] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${allowedExportsString(exportsNameString, extraRankedUnranked)} / ${komi} + ${exports[allowedExportsString(exportsNameString, extraRankedUnranked)][komi]}`);
-                }
-            }
-        }
-    }
-}
-
-function exportIfExports(familyNameStringsArray) {
-    let extraRankedUnranked = "";
-    for (let familyNameString of familyNameStringsArray) {
-        for (let exportsNameString of familyArrayFromGeneralExportString(familyNameString)) {
-            if (exports[exportsNameString]) {
-                extraRankedUnranked = extraRankedUnrankedString(exportsNameString);
-                for (let e of exports[exportsNameString].split(',')) {
-                    exports[allowedExportsString(exportsNameString, extraRankedUnranked)][e] = true;
-                    debugArgLog(exports.DEBUG, `    case family: ${allowedExportsString(exportsNameString, extraRankedUnranked)} / ${e} + ${exports[allowedExportsString(exportsNameString, extraRankedUnranked)][e]}`);
-                }
-            }
-        }
-    }
-}
-
-function parseMinmaxRankFromNameString(rankExportsNameString) {
-    let re = /(\d+)([kdp])/;
-    let results = exports[rankExportsNameString].toLowerCase().match(re);
-
-    if (results) {
-        if (results[2] === "k") {
-            exports[rankExportsNameString] = 30 - parseInt(results[1]);
-            debugArgLog(exports.DEBUG, `    case family: ${rankExportsNameString} / ${results} + ${exports[rankExportsNameString]}`);
-        } else if (results[2] === "d") {
-            exports[rankExportsNameString] = 30 - 1 + parseInt(results[1]);
-            debugArgLog(exports.DEBUG, `    case family: ${rankExportsNameString} / ${results} + ${exports[rankExportsNameString]}`);
-        } else if (results[2] === "p") {
-            exports[rankExportsNameString] = 36 + parseInt(results[1]);
-            debugArgLog(exports.DEBUG, `    case family: ${rankExportsNameString} / ${results} + ${exports[rankExportsNameString]}`);
-            if (rankExportsNameString.includes("minrank")) {
-                exports.proonly = true;
-                debugArgLog(exports.proonly, `    case family: proonly (${rankExportsNameString} > 36) + ${exports.proonly}`);
-            }
-        } else {
-            console.error(`Invalid ${rankExportsNameString} ${exports[rankExportsNameString]}`);
-            process.exit();
-        }
-    }
-}
-
-function parseMinmaxrankFamilyNameString(familyNameString) {
-    const familyArray = familyArrayFromGeneralExportString(familyNameString);
-    for (let arg of familyArray) {
-        parseMinmaxRankFromNameString(arg);
-    }
-}
-
-// console messages functions:
-
-function debugArgLog(argDebug, messageString) {
-    if (argDebug) {
-        console.log(messageString);
-    }
-}
-
-// always use exports and not exports for the console checks below:
-function checkExports(allRankedUnrankedFamilies, rankedUnrankedFamilies) {
-    console.log("SHOW EXPORTS RANKED/UNRANKED GAMES SELECTION:\n-------------------------------------------------------");
-    let familyArray = [];
-    let rankedExportValue = "";
-    let unrankedExportValue = "";
-    // all / ranked / unranked exports :
-    for (let familyNameString of allRankedUnrankedFamilies) {
-        familyArray = familyArrayFromGeneralExportString(familyNameString);
-        console.log(`    ${familyArray[0].toUpperCase()}(*): -all: ${exports[familyArray[0]] || "-"}, -ranked: ${exports[familyArray[1]] || "-"}, -unranked: ${exports[familyArray[2]] || "-"}`);
-    }
-    // ranked / unranked exports :
-    for (let familyNameString of rankedUnrankedFamilies) {
-        familyArray = familyArrayFromGeneralExportString(familyNameString);
-        // for example ["komis", "komisranked", "komisunranked"];
-        if (exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
-            rankedExportValue = exports[familyArray[0]];
-            unrankedExportValue = exports[familyArray[0]];
-        } else {
-            rankedExportValue = exports[familyArray[1]] || "-";
-            unrankedExportValue = exports[familyArray[2]] || "-";
-        }
-        console.log(`    ${familyArray[0].toUpperCase()}: -ranked: ${rankedExportValue}, -unranked: ${unrankedExportValue}`);
-    }
-}
-
-function testDeprecated(deprecatedExports, komisFamilyNameString) {
     console.log("CHECK DEPRECATIONS:\n-------------------------------------------------------");
     let isDeprecated = false;
     for (let [oldName, newName] of deprecatedExports) {
@@ -545,9 +541,9 @@ function testDeprecated(deprecatedExports, komisFamilyNameString) {
         }
     }
     if (isDeprecated) {
-        console.log("ERRORS.\n");
+        console.log("[ ERRORS ! ]\n");
     } else {
-        console.log("SUCCESS.\n");
+        console.log("[ SUCCESS ]\n");
     }
 }
 
@@ -560,11 +556,11 @@ function checkWarnings(rankedUnrankedFamilies, noPauseFamilyString) {
         familyArray = familyArrayFromGeneralExportString(familyNameString);
         if (exports[familyArray[1]] && !exports[familyArray[2]]) {
             isWarning = true;
-            console.log(`Warning: --${familyArray[1]} detected but --${familyArray[2]} is missing, no value for unranked games !`);
+            console.log(`    Warning: --${familyArray[1]} detected but --${familyArray[2]} is missing, no value for unranked games !`);
         }
         if (exports[familyArray[2]] && !exports[familyArray[1]]) {
             isWarning = true;
-            console.log(`Warning: --${familyArray[2]} detected but --${familyArray[1]} is missing, no value for ranked games !`);
+            console.log(`    Warning: --${familyArray[2]} detected but --${familyArray[1]} is missing, no value for ranked games !`);
         }
     }
     /* avoid infinite games
@@ -575,8 +571,9 @@ function checkWarnings(rankedUnrankedFamilies, noPauseFamilyString) {
         console.log(`    Warning: No --${familyArray[0]}, --${familyArray[1]}, nor --${familyArray[2]}, games are likely to last forever`); 
     }
     if (isWarning) {
-        console.log("ERRORS.\n");
+        console.log("[ ERRORS ! ]\n");
     } else {
-        console.log("SUCCESS.\n");
+        console.log("[ SUCCESS ]\n");
     }
 }
+
