@@ -402,6 +402,24 @@ exports.updateFromArgv = function() {
     }
     // TODO : remove fakerank when notification.bot.ranking is server implemented
 
+    if (argv.bans) {
+        for (let user of argv.bans.split(',')) {
+            exports.banned_users[user] = true;
+        }
+    }
+
+    if (argv.bansranked) {
+        for (let user of argv.bansranked.split(',')) {
+            exports.banned_users_ranked[user] = true;
+        }
+    }
+
+    if (argv.bansunranked) {
+        for (let user of argv.bansunranked.split(',')) {
+            banned_users_unranked[user] = true;
+        }
+    }
+
     if (argv.boardsizes) {
         for (let boardsize of argv.boardsizes.split(',')) {
             if (boardsize === "all") {
