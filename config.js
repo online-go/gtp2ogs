@@ -235,115 +235,22 @@ exports.updateFromArgv = function() {
         process.exit();
     }
 
-    // console : greeting //
+    // console messages
+    // A- greeting and debug status //
+    let debugStatusMessage = "-\n-Skipping debug booting data\n-Shrinking all console notifications";
+    if (argv.debug) {
+        debugStatusMessage = "ON\n-Will show detailed debug booting data\n-Will show all console notifications\n\nk IN OPTIMIST.ARGV[k] TO EXPORTS[k] RESULT:\n-------------------------------------------------------";
+        exports.DEBUG = optimist.argv.debug; // if --debug, export an alias "DEBUG" instead
+    }
+    console.log(`\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}\n`);
+    console.log(`    case alias: DEBUG + ${exports.DEBUG}`);
 
-    console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n");
-
-    // console : warnings //
-
-    // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
-// --bans --bansranked --bansunranked are an exception, do not include here
-
-    function checkThreeSameTimeFamily() {
-        for (let e of familyArgs) {
-            let familyToTest = familyArrayFromGeneralArg(e);
-            // for example ["komis", "komisranked", "komisunranked"];
-            if ((argv[familyToTest[0]]) && ((argv[familyToTest[1]]) || (argv[familyToTest[2]]))) {
-                console.log(`Warning: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR --${familyToTest[1]} with --${familyToTest[2]}.\nBut don't use the 3 ${familyToTest[0]} arguments at the same time.`);
-            }
-        }
+    // Set all the exports from optimist.argv
+    for (let k in argv) {
+        exports[k] = argv[k];
     }
 
-    checkThreeSameTimeFamily();
-    console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
-
-    // B - warning : avoid infinite games
-    if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpausetime and co gets implemented, replace with "are likely to last for a long time"
-    }
-
-    // C - warning : check deprecated features    
-    function testDeprecated(oldName, newName) {
-        if (argv[oldName]) console.log(`Warning: --${oldName} is deprecated, use --${newName} instead.`)
-    }
-
-    const deprecatedArgs = [["botid", "username"],
-        ["bot", "username"],
-        ["id", "username"],
-        ["minrankedhandicap", "minhandicapranked"],
-        ["minunrankedhandicap", "minhandicapunranked"],
-        ["maxrankedhandicap", "maxhandicapranked"],
-        ["maxunrankedhandicap", "maxhandicapunranked"],
-        ["maxtotalgames", "maxconnectedgames"],
-        ["maxactivegames", "maxconnectedgamesperuser"],
-        ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
-        ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
-        ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
-        ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
-        ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
-        ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
-        ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
-        ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
-        ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
-        ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
-        ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
-        ["maxperiods",  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
-        ["maxperiodsranked", "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
-        ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
-        ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
-        ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
-        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
-        ["ban", "bans"],
-        ["banranked", "bansranked"],
-        ["banunranked", "bansunranked"],
-        ["boardsize", "boardsizes"],
-        ["boardsizeranked", "boardsizesranked"],
-        ["boardsizeunranked", "boardsizesunranked"],
-        ["boardsizewidth", "boardsizewidths"],
-        ["boardsizewidthranked", "boardsizewidthsranked"],
-        ["boardsizewidthunranked", "boardsizewidthsunranked"],
-        ["boardsizeheight", "boardsizeheights"],
-        ["boardsizeheightranked", "boardsizeheightsranked"],
-        ["boardsizeheightunranked", "boardsizeheightsunranked"],
-        ["komi", "komis"],
-        ["komiranked", "komisranked"],
-        ["komiunranked", "komisunranked"],
-        ["speed", "speeds"],
-        ["speedranked", "speedsranked"],
-        ["speedunranked", "speedsunranked"],
-        ["timecontrol", "timecontrols"],
-        ["timecontrolranked", "timecontrolsranked"],
-        ["timecontrolunranked", "timecontrolsunranked"]
-        ]
-    deprecatedArgs.forEach(ar => testDeprecated(...ar))
-
-    for (let e of familyArrayFromGeneralArg("komis")) {
-        if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
-        // for example if argv[komisranked]
-            if (argv[e].split(",").includes("auto")) {
-            // we need to split the argv value into an array before the includes test
-                console.log(`Warning: /--${e} auto/ is no longer supported, use /--${e} automatic/ instead`);
-            }
-            if (argv[e].split(",").includes("null")) {
-            // we need to split the argv value into an array before the includes test
-                console.log(`Warning: /--${e} null/ is no longer supported, use /--${e} automatic/ instead`);
-            }
-        }
-    }
-    
-    if (deprecatedArgs.some(e => argv[e[0]])) {
-        console.log("\n");
-    }
-    
-    console.log("\n");
-
-    // end of console messages
-
-    // Set all the argv
-    for(let k in argv) exports[k] = argv[k];
-
+    // Add / Modify exports
     // Convert timeout to microseconds once here so we don't need to do it each time it is used later.
     //
     if (argv.timeout) {
@@ -370,25 +277,25 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
-        parseMinmaxRankFromNameString("minrank");
+        parseMinmaxRankFromNameString(argv.minrank, "minrank");
     }
     if (argv.minrankranked) {
-        parseMinmaxRankFromNameString("minrankranked");
+        parseMinmaxRankFromNameString(argv.minrankranked, "minrankranked");
     }
     if (argv.minrankunranked) {
-        parseMinmaxRankFromNameString("minrankunranked");
+        parseMinmaxRankFromNameString(argv.minrankunranked, "minrankunranked");
     }
     if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("maxrank");
+        parseMinmaxRankFromNameString(argv.maxrank, "maxrank");
     }
     if (argv.maxrankranked) {
-        parseMinmaxRankFromNameString("maxrankranked");
+        parseMinmaxRankFromNameString(argv.maxrankranked, "maxrankranked");
     }
     if (argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("maxrankunranked");
+        parseMinmaxRankFromNameString(argv.maxrankunranked, "maxrankunranked");
     }
     if (argv.fakerank) {
-        parseMinmaxRankFromNameString("fakerank");
+        parseMinmaxRankFromNameString(argv.fakerank, "fakerank");
     }
     // TODO : remove fakerank when notification.bot.ranking is server implemented
 
@@ -538,29 +445,167 @@ exports.updateFromArgv = function() {
 
     exports.bot_command = argv._;
 
-    function familyArrayFromGeneralArg(generalArg) {
-        return ["", "unranked", "ranked" ].map(e => generalArg + e);
+    // Show in debug all the exports results
+    for (let k in exports) {
+        if (k === "apikey") {
+            debugLogExports(`    case hidden: ${k} + hidden`);
+        } else {
+            debugLogExports(`    result: ${k} + ${JSON.stringify(exports[k])}`);
+        }
     }
+    debugLogExports("\n");
 
-    function parseMinmaxRankFromNameString(rankArgNameString) {
-        const re = /(\d+)([kdp])/;
-        const results = argv[rankArgNameString].toLowerCase().match(re);
+    // console messages
+    // B - check deprecated features //
+    testDeprecated("komis");
 
-        if (results) {
-            if (results[2] === "k") {
-                exports[rankArgNameString] = 30 - parseInt(results[1]);
-            } else if (results[2] === "d") {
-                exports[rankArgNameString] = 30 - 1 + parseInt(results[1]);
-            } else if (results[2] === "p") {
-                exports[rankArgNameString] = 36 + parseInt(results[1]);
-                if (rankArgNameString.includes("minrank")) {
-                    exports.proonly = true;
-                }
-            } else {
-                console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
-                process.exit();
+    // C - check Warnings :
+    const rankedUnrankedFamilies = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis",
+        "speeds", "timecontrols", "minhandicap", "maxhandicap", "minmaintimeblitz","minmaintimelive",
+        "minmaintimecorr","maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz",
+        "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr",
+        "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz",
+        "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "noautohandicap", "nopause"];
+    checkWarnings(rankedUnrankedFamilies, "nopause");
+    // end of console messages
+
+}
+
+function familyArrayFromGeneralExportString(generalExportsString) {
+    return ["", "ranked", "unranked"].map(e => generalExportsString + e);
+}
+
+function parseMinmaxRankFromNameString(argvArg, rankArgNameString) {
+    const re = /(\d+)([kdp])/;
+    const results = argvArg.toLowerCase().match(re);
+
+    if (results) {
+        if (results[2] === "k") {
+            argvArg = 30 - parseInt(results[1]);
+        } else if (results[2] === "d") {
+            argvArg = 30 - 1 + parseInt(results[1]);
+        } else if (results[2] === "p") {
+            argvArg = 36 + parseInt(results[1]);
+            if (rankArgNameString.includes("minrank")) {
+                exports.proonly = true;
+            }
+        } else {
+            console.error(`Could not parse ${argvArg} + ${rankArgNameString}`);
+            process.exit();
+        }
+    }
+}
+
+// console messages functions:
+function debugLogExports(messageString) {
+    if (exports.DEBUG) {
+        console.log(messageString);
+    }
+}
+
+function testDeprecated(komisFamilyNameString) {
+    const deprecatedExports = [["botid", "username"],
+        ["bot", "username"],
+        ["id", "username"],
+        ["minrankedhandicap", "minhandicapranked"],
+        ["minunrankedhandicap", "minhandicapunranked"],
+        ["maxrankedhandicap", "maxhandicapranked"],
+        ["maxunrankedhandicap", "maxhandicapunranked"],
+        ["maxtotalgames", "maxconnectedgames"],
+        ["maxactivegames", "maxconnectedgamesperuser"],
+        ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
+        ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
+        ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
+        ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
+        ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
+        ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
+        ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
+        ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
+        ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
+        ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
+        ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
+        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
+        ["maxperiods",  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
+        ["maxperiodsranked", "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
+        ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
+        ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
+        ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
+        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
+        ["ban", "bans"],
+        ["banranked", "bansranked"],
+        ["banunranked", "bansunranked"],
+        ["boardsize", "boardsizes"],
+        ["boardsizeranked", "boardsizesranked"],
+        ["boardsizeunranked", "boardsizesunranked"],
+        ["boardsizewidth", "boardsizewidths"],
+        ["boardsizewidthranked", "boardsizewidthsranked"],
+        ["boardsizewidthunranked", "boardsizewidthsunranked"],
+        ["boardsizeheight", "boardsizeheights"],
+        ["boardsizeheightranked", "boardsizeheightsranked"],
+        ["boardsizeheightunranked", "boardsizeheightsunranked"],
+        ["komi", "komis"],
+        ["komiranked", "komisranked"],
+        ["komiunranked", "komisunranked"],
+        ["speed", "speeds"],
+        ["speedranked", "speedsranked"],
+        ["speedunranked", "speedsunranked"],
+        ["timecontrol", "timecontrols"],
+        ["timecontrolranked", "timecontrolsranked"],
+        ["timecontrolunranked", "timecontrolsunranked"]
+        ];
+    console.log("CHECK DEPRECATIONS:\n-------------------------------------------------------");
+    let isDeprecated = false;
+    for (let [oldName, newName] of deprecatedExports) {
+        if (exports[oldName]) {
+            console.log(`    Deprecated: --${oldName} is deprecated, use --${newName} instead.`);
+            isDeprecated = true;
+        }
+    }
+    for (let komiExport of familyArrayFromGeneralExportString(komisFamilyNameString)) {
+        if (exports[komiExport]) { // check to avoid undefined error if bot admin is not using it
+            if (exports[komiExport].split(",").includes("auto")) {
+                console.log(`    Deprecated: --${komiExport} /auto/ is no longer supported, use --${komiExport} /automatic/ instead`);
+                isDeprecated = true;
+            }
+            if (exports[komiExport].split(",").includes("null")) {
+                console.log(`    Deprecated: --${komiExport} /null/ is no longer supported, use --${komiExport} /automatic/ instead`);
+                isDeprecated = true;
             }
         }
     }
+    if (isDeprecated) {
+        console.log("[ ERRORS ! ]\n");
+    } else {
+        console.log("[ SUCCESS ]\n");
+    }
+}
 
+function checkWarnings(rankedUnrankedFamilies, noPauseFamilyString) {
+    console.log("CHECK WARNINGS:\n-------------------------------------------------------");
+    let familyArray = [];
+    let isWarning = false;
+    // if exports[1], need exports[2], and vice versa
+    for (let familyNameString of rankedUnrankedFamilies) {
+        familyArray = familyArrayFromGeneralExportString(familyNameString);
+        if (exports[familyArray[1]] && !exports[familyArray[2]]) {
+            isWarning = true;
+            console.log(`    Warning: --${familyArray[1]} detected but --${familyArray[2]} is missing, no value for unranked games !`);
+        }
+        if (exports[familyArray[2]] && !exports[familyArray[1]]) {
+            isWarning = true;
+            console.log(`    Warning: --${familyArray[2]} detected but --${familyArray[1]} is missing, no value for ranked games !`);
+        }
+    }
+    // avoid infinite games
+    //  TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
+    familyArray = familyArrayFromGeneralExportString(noPauseFamilyString);
+    if (!exports[familyArray[0]] && !exports[familyArray[1]] && !exports[familyArray[2]]) {
+        isWarning = true;
+        console.log(`    Warning: No --${familyArray[0]}, --${familyArray[1]}, nor --${familyArray[2]}, games are likely to last forever`); 
+    }
+    if (isWarning) {
+        console.log("[ ERRORS ! ]\n");
+    } else {
+        console.log("[ WARNINGS : SUCCESS ]\n");
+    }
 }
