@@ -304,7 +304,7 @@ class Connection {
         // check bot is available, else don't mislead user :
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
-            return { reject: true, msg: config.REJECTNEWMSG };
+            return { reject: true, msg: config.rejectnewmsg };
         }
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
