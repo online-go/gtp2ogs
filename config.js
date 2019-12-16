@@ -36,7 +36,7 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
-    let optimist = require("optimist")
+    const optimist = require("optimist")
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -238,7 +238,7 @@ exports.updateFromArgv = function() {
         .describe('nopauseunranked', 'Do not allow unranked games to be paused')
         .describe('hidden', 'Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)')
     ;
-    let argv = optimist.argv;
+    const argv = optimist.argv;
 
     if (!argv._ || argv._.length === 0) {
         optimist.showHelp();
@@ -352,7 +352,7 @@ exports.updateFromArgv = function() {
     // end of console messages
 
     // Set all the argv
-    for(var k in argv) exports[k] = argv[k];
+    for(let k in argv) exports[k] = argv[k];
 
     // Convert timeout to microseconds once here so we don't need to do it each time it is used later.
     //
@@ -553,8 +553,8 @@ exports.updateFromArgv = function() {
     }
 
     function parseMinmaxRankFromNameString(rankArgNameString) {
-        let re = /(\d+)([kdp])/;
-        let results = argv[rankArgNameString].toLowerCase().match(re);
+        const re = /(\d+)([kdp])/;
+        const results = argv[rankArgNameString].toLowerCase().match(re);
 
         if (results) {
             if (results[2] === "k") {
