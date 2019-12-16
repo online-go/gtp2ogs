@@ -43,7 +43,7 @@ exports.updateFromArgv = function() {
         .describe('username', 'Specify the username of the bot, for example GnuGo')
         .describe('apikey', 'Specify the API key for the bot')
         .describe('host', 'OGS Host to connect to')
-        .default('host', 'online-go.com')
+        .default('host', 'online-go.com') // default to OGS. If --beta, host will switch to beta OGS automatically
         .describe('port', 'OGS Port to connect to')
         .default('port', 443)
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
@@ -63,18 +63,13 @@ exports.updateFromArgv = function() {
         .describe('corrqueue', 'Process correspondence games one at a time')
         .describe('maxconnectedgames', 'Maximum number of connected games for all users')
         .default('maxconnectedgames', 20)
-        // maxconnectedgames is actually the maximum number of connected games for all users 
-        // against your bot, which means the maximum number of games your bot can play at the same time 
-        // (choose a low number to regulate your computer performance and stability)
-        // (correspondence games are currently included in the total connected games count if you use `--persist` )
+        /* for maxconnectedgames, correspondence games are currently included in the 
+        /  maxconnectedgames count if you use `--persist` )*/
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
         .default('maxconnectedgamesperuser', 3)
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-        // behaviour : 1. when only --rejectnew is used, default reject message is printed
-        // behaviour : 2. when you want to add a customized reject message, do it like that for example :
-        // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
@@ -101,11 +96,6 @@ exports.updateFromArgv = function() {
         .string('boardsizewidthsunranked')
         .describe('boardsizeheightsunranked', 'For custom board sizes, specify boardsize height(s) to accept for unranked games, for example 1')
         .string('boardsizeheightsunranked')
-        // behaviour : --boardsizes can be specified as 
-        // "custom" (allows board with custom size width x height),
-        // "all" (allows ALL boardsizes), 
-        // or for square boardsizes only (same width x height) comma separated list of explicit values.
-        // The default is "9,13,19" (square board sizes only), see README for details
         .describe('komis', 'Allowed komi values')
         .string('komis')
         .default('komis', 'automatic')
@@ -113,11 +103,6 @@ exports.updateFromArgv = function() {
         .string('komisranked')
         .describe('komisunranked', 'Allowed komi values for unranked games')
         .string('komisunranked')
-        // behaviour: --komis may be specified as 
-        // "automatic" (accept automatic komi)
-        // "all" (accept all komi values), 
-        // or comma separated list of explicit values.
-        // The default is "automatic", see README and OPTIONS-LIST for details
         .describe('speeds', 'Game speed(s) to accept')
         .default('speeds', 'blitz,live,correspondence')
         .describe('speedsranked', 'Game speed(s) to accept for ranked games')
@@ -126,10 +111,10 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        // 1- for "absolute", bot admin can allow absolute if want, but then 
-        // make sure to increase minmaintimeblitz and minmaintimelive to high values
-        // 2 - "none" is not default, can be manually allowed in timecontrol argument
-        // but then games will be very very long
+        /* 1- for "absolute", bot admin can allow absolute if want, but then 
+        /  make sure to increase minmaintimeblitz and minmaintimelive to high values
+        /  2 - "none" is not in default values, can be manually allowed in timecontrol 
+        /  argument but then games will be very very long*/
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
         .default('minmaintimeblitz', '15') // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')
@@ -178,28 +163,33 @@ exports.updateFromArgv = function() {
         .default('maxperiodscorr', 10)
         .describe('maxperiodscorrranked', 'Maximum number of periods for correspondence ranked games')
         .describe('maxperiodscorrunranked', 'Maximum number of periods for correspondence unranked games')
-        // for canadian period times, divide the period time by the number of stones per period
-        // for example max periodtime 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12
+        /* - for canadian period times, bot admin inputs periodtime for 1 stone as if timecontrol could be
+        /  "byoyomi" or "fischer" or any other timecontrol, so to calculate our min/max arg we need to divide
+        /  wanted periodtime for all the X stones by Y number of stones per period
+        /  - ex: max periodtime 10 minutes / 20 stones = 10*60 /20 = 30 seconds/stone on average
+        /  so bot admin would need to input --maxperiodtimeblitz 30 for example to allow max
+        /  10 minutes for 20 stones, or 5 minutes for 10 stones, 3 minutes for 6 stones, 
+        /  or any combination of average period time per stone * number of stones */
         .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
-        .default('minperiodtimeblitz', '5') // 5 seconds (average time per stone if time control is canadian)
+        .default('minperiodtimeblitz', '5') // 5 seconds
         .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
-        .default('maxperiodtimeblitz', '10') // 10 seconds (max)  (average time per stone if time control is canadian)
+        .default('maxperiodtimeblitz', '10') // 10 seconds
         .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games ')
         .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games ')
         .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games ')
         .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games ')
         .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
-        .default('minperiodtimelive', '10') // 10 seconds (average time per stone if time control is canadian)
+        .default('minperiodtimelive', '10') // 10 seconds
         .describe('maxperiodtimelive', 'Maximum seconds of period time for live games ')
-        .default('maxperiodtimelive', '120') // 2 minutes  (average time per stone if time control is canadian)
+        .default('maxperiodtimelive', '120') // 2 minutes
         .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games ')
         .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games ')
         .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
         .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
         .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
-        .default('minperiodtimecorr', '14400') // 4 hours (average time per stone if time control is canadian)
+        .default('minperiodtimecorr', '14400') // 4 hours
         .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
-        .default('maxperiodtimecorr', '259200') // 3 days (average time per stone if time control is canadian)
+        .default('maxperiodtimecorr', '259200') // 3 days
         .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games ')
         .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games ')
         .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games ')
@@ -416,7 +406,7 @@ exports.updateFromArgv = function() {
 
     if (argv.bansunranked) {
         for (let user of argv.bansunranked.split(',')) {
-            banned_users_unranked[user] = true;
+            exports.banned_users_unranked[user] = true;
         }
     }
 
@@ -541,7 +531,7 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.timecontrolsunranked) {
-        for (let e of argv.timecontrolunranked.split(',')) {
+        for (let e of argv.timecontrolsunranked.split(',')) {
             exports.allowed_timecontrols_unranked[e] = true;
         }
     }
