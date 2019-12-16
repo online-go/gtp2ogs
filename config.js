@@ -563,14 +563,13 @@ exports.updateFromArgv = function() {
                 exports[rankArgNameString] = 30 - 1 + parseInt(results[1]);
             } else if (results[2] === "p") {
                 exports[rankArgNameString] = 36 + parseInt(results[1]);
-                exports.proonly = true;
+                if (rankArgNameString.includes("minrank")) {
+                    exports.proonly = true;
+                }
             } else {
-                console.error(`Invalid ${rankArgNameString} ${argv[rankArgNameString]}`);
+                console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
                 process.exit();
             }
-        } else {
-            console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
-            process.exit();
         }
     }
 
