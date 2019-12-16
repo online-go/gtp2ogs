@@ -118,26 +118,22 @@ class Game {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            if (config.nopause && !config.nopauseranked && !config.nopauseunranked 
-                && clock.pause && clock.pause.paused && clock.pause.pause_control
+            if (config.nopause  || config.nopauseranked  || config.nopauseunranked) {
+                if (clock.pause && clock.pause.paused && clock.pause.pause_control
                 && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
                 && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
-                this.resumeGame();
-            }
-
-            if (config.nopauseranked && this.state.ranked && clock.pause && clock.pause.paused && clock.pause.pause_control
-                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                if (config.DEBUG) this.log("Pausing not allowed for ranked games. Resuming game.");
-                this.resumeGame();
-            }
-
-            if (config.nopauseunranked && (this.state.ranked === false) && clock.pause && clock.pause.paused && clock.pause.pause_control
-                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                if (config.DEBUG) this.log("Pausing not allowed for unranked games. Resuming game.");
-                this.resumeGame();
+                    let rankedUnranked = "";
+                    if (config.nopauseunranked && !this.state.ranked) {
+                        rankedUnranked = " for unranked games";
+                    } else if (config.nopauseranked && this.state.ranked) {
+                        rankedUnranked = " for ranked games";
+                    }
+                    if (config.DEBUG) {
+                        this.log(`Pausing not allowed${rankedUnranked}. Resuming game.`);
+                    }
+                    this.sendChat(`Pausing not allowed${rankedUnranked}. Resuming game.`); 
+                    this.resumeGame();
+                }
             }
 
             //this.log("Clock: ", JSON.stringify(clock));
@@ -528,6 +524,7 @@ function encodeMove(move) { /* {{{ */
         return "..";
     return num2char(move['x']) + num2char(move['y']);
 } /* }}} */
+
 
 Game.moves_processing = 0;
 Game.corr_moves_processing = 0;
