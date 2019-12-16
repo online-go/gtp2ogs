@@ -3,15 +3,6 @@
 let fs = require('fs')
 let console = require('console');
 
-exports.DEBUG = false;
-exports.PERSIST = false;
-exports.KGSTIME = false;
-exports.SHOWBOARD = false;
-exports.NOCLOCK = false;
-exports.GREETING = "";
-exports.FAREWELL = "";
-exports.REJECTNEWMSG = "";
-
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_users_ranked = {};
@@ -64,6 +55,7 @@ exports.updateFromArgv = function() {
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
+        // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
         .describe('noclock', 'Do not send any clock/time data to the bot')
@@ -380,23 +372,6 @@ exports.updateFromArgv = function() {
         exports.DEBUG = true;
     }
 
-    if (argv.persist) {
-        exports.PERSIST = true;
-    }
-
-    // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
-    if (argv.kgstime) {
-        exports.KGSTIME = true;
-    }
-
-    if (argv.showboard) {
-        exports.SHOWBOARD = true;
-    }
-
-    if (argv.noclock) {
-        exports.NOCLOCK = true;
-    }
-
     exports.check_rejectnew = function()
     {
         if (argv.rejectnew)  return true;
@@ -551,16 +526,6 @@ exports.updateFromArgv = function() {
         for (let e of argv.timecontrolunranked.split(',')) {
             exports.allowed_timecontrols_unranked[e] = true;
         }
-    }
-
-    if (argv.greeting) {
-        exports.GREETING = argv.greeting;
-    }
-    if (argv.farewell) {
-        exports.FAREWELL = argv.farewell;
-    }
-    if (argv.rejectnewmsg) {
-        exports.REJECTNEWMSG = argv.rejectnewmsg;
     }
 
     exports.bot_command = argv._;

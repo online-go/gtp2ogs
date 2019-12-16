@@ -490,7 +490,7 @@ class Connection {
     checkChallenge(notification) { /* {{{ */
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
-            return { reject: true, msg: config.REJECTNEWMSG };
+            return { reject: true, msg: config.rejectnewmsg };
         }
 
         let c = this.checkUser(notification);
