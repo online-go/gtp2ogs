@@ -50,7 +50,7 @@ exports.updateFromArgv = function() {
         .default('startupbuffer', 5)
         .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
         .default('timeout', 0)
-        .describe('insecure', "Don't use ssl to connect to the ggs/rest servers")
+        .describe('insecure', 'Dont use ssl to connect to the ggs/rest servers')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
@@ -116,25 +116,25 @@ exports.updateFromArgv = function() {
         /  2 - "none" is not in default values, can be manually allowed in timecontrol 
         /  argument but then games will be very very long*/
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
-        .default('minmaintimeblitz', '15') // 15 seconds
+        .default('minmaintimeblitz', 15) // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')
-        .default('maxmaintimeblitz', '300') // 5 minutes 
+        .default('maxmaintimeblitz', 300) // 5 minutes 
         .describe('minmaintimeblitzranked', 'Minimum seconds of main time for blitz ranked games ')
         .describe('maxmaintimeblitzranked', 'Maximum seconds of main time for blitz ranked games ')
         .describe('minmaintimeblitzunranked', 'Minimum seconds of main time for blitz unranked games ')
         .describe('maxmaintimeblitzunranked', 'Maximum seconds of main time for blitz unranked games ')
         .describe('minmaintimelive', 'Minimum seconds of main time for live AND blitz ')
-        .default('minmaintimelive', '60') // 1 minute
+        .default('minmaintimelive', 60) // 1 minute
         .describe('maxmaintimelive', 'Maximum seconds of main time for live AND blitz ')
-        .default('maxmaintimelive', '7200') // 2 hours 
+        .default('maxmaintimelive', 7200) // 2 hours 
         .describe('minmaintimeliveranked', 'Minimum seconds of main time for live AND blitz ranked games ')
         .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live AND blitz ranked games ')
         .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live AND blitz unranked games ')
         .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live AND blitz unranked games ')
         .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence ')
-        .default('minmaintimecorr', '259200') // 3 days
+        .default('minmaintimecorr', 259200) // 3 days
         .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence ')
-        .default('maxmaintimecorr', '604800') // 7 days
+        .default('maxmaintimecorr', 604800) // 7 days
         .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games ')
         .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games ')
         .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games ')
@@ -171,25 +171,25 @@ exports.updateFromArgv = function() {
         /  10 minutes for 20 stones, or 5 minutes for 10 stones, 3 minutes for 6 stones, 
         /  or any combination of average period time per stone * number of stones */
         .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
-        .default('minperiodtimeblitz', '5') // 5 seconds
+        .default('minperiodtimeblitz', 5) // 5 seconds
         .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
-        .default('maxperiodtimeblitz', '10') // 10 seconds
+        .default('maxperiodtimeblitz', 10) // 10 seconds
         .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games ')
         .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games ')
         .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games ')
         .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games ')
         .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
-        .default('minperiodtimelive', '10') // 10 seconds
+        .default('minperiodtimelive', 10) // 10 seconds
         .describe('maxperiodtimelive', 'Maximum seconds of period time for live games ')
-        .default('maxperiodtimelive', '120') // 2 minutes
+        .default('maxperiodtimelive', 120) // 2 minutes
         .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games ')
         .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games ')
         .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
         .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
         .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
-        .default('minperiodtimecorr', '14400') // 4 hours
+        .default('minperiodtimecorr', 14400) // 4 hours
         .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
-        .default('maxperiodtimecorr', '259200') // 3 days
+        .default('maxperiodtimecorr', 259200) // 3 days
         .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games ')
         .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games ')
         .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games ')
@@ -206,9 +206,9 @@ exports.updateFromArgv = function() {
         .string('maxrankranked')
         .describe('maxrankunranked', 'Maximum opponent rank to accept for unranked games(ex: 1d)')
         .string('maxrank')
-        .describe('greeting', 'Greeting message to appear in chat at first move (ex: "Hello, have a nice game")')
+        .describe('greeting', 'Greeting message to appear in chat at first move (ex: -Hello, have a nice game-)')
         .string('greeting')
-        .describe('farewell', 'Thank you message to appear in chat at end of game (ex: "Thank you for playing")')
+        .describe('farewell', 'Thank you message to appear in chat at end of game (ex: -Thank you for playing-)')
         .string('farewell')
         .describe('proonly', 'Only accept matches from professionals')
         .describe('rankedonly', 'Only accept ranked matches')
@@ -226,7 +226,7 @@ exports.updateFromArgv = function() {
         .describe('nopause', 'Do not allow games to be paused')
         .describe('nopauseranked', 'Do not allow ranked games to be paused')
         .describe('nopauseunranked', 'Do not allow unranked games to be paused')
-        .describe('hidden', 'Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)')
+        .describe('hidden', 'Hides the botname from the OGS game -Play against computer- bot list (but it can still accept challenges)')
     ;
     const argv = optimist.argv;
 
