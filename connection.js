@@ -385,7 +385,6 @@ class Connection {
             return (resultHandicap);
         }
 
-        // non generic boardsizes rejects first
         let extraConditionBoardsizes = false;
         if (!config[r_u_s.r_u].allow_all_boardsizes) {
             if (!config[r_u_s.r_u].allow_custom_boardsizes) {
@@ -407,8 +406,7 @@ class Connection {
                     return customBoardsizeWidthsHeightsReject("boardsizeheights", "board size HEIGHT", notification.width, notification.height, r_u_s);
                 }
             }
-         }
-
+        }
         const testsAllowedFamilies = [["boardsizes", "board size", notification.width, extraConditionBoardsizes],
                                       ["komis", "komi", notification.komi, true],
                                       ["speeds", "speed", notification.time_control.speed, true],
@@ -448,7 +446,6 @@ class Connection {
 
         const c1 = this.checkChallengePreRequirements(notification, r_u_s);
         if (c1.reject)  return c1;
-
         const c2 = this.checkChallengeSettings(notification, r_u_s);
         if (c2.reject)  return c2;
 
