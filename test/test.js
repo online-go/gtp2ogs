@@ -15,13 +15,19 @@ config.apikey = 'deadbeef';
 config.host = 'test';
 config.port = 80;
 config.username = 'testbot';
-config.allowed_boardsizes[19] = true;
-config.allow_all_komis = true;
-config.allowed_speeds['live'] = true;
-config.allowed_timecontrols['fischer'] = true;
 config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
+
+config.ranked.allowed_boardsizes[19] = true;
+config.ranked.allow_all_komis = true;
+config.ranked.allowed_speeds['live'] = true;
+config.ranked.allowed_timecontrols['fischer'] = true;
+
+config.unranked.allowed_boardsizes[19] = true;
+config.unranked.allow_all_komis = true;
+config.unranked.allowed_speeds['live'] = true;
+config.unranked.allowed_timecontrols['fischer'] = true;
 
 // Fake a socket.io-client
 class FakeSocket {

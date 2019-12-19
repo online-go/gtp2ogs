@@ -74,28 +74,3 @@ so test special characters in your messages with caution
 these special characters have been tested to work on messages, among others :  `!` 
 (one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
 
-#### G : 
-
-the ISSA (intuitive semi-syllabic aliases) have now been removed : 
-will use a config file with all needed options from now on
-
-So no need to input arguments in command line anymore, just modify your 
-config file(s)
-
-#### H :
-
-For example, if you can either use :
-- `--maxmaintimelive 600` , the general argument alone**
-- OR, if you want different settings for live ranked and unranked games, use for 
-example `--maxmaintimeliveranked 300 --maxmaintimeliveunranked 1800` but if you 
-do that then don't use `--minmaintimelive` !
-  
-in this example, if `--maxmaintimeliveranked 300 --maxmaintimeliveunranked 1800` 
-is set, then the general value `--maxmaintimelive 600` is not taken into account, 
-it will be either 300 seconds (5 minutes) for ranked games, or 1800 seconds 
-(30 minutes) for live unranked games
-
-note that some gtp2ogs arguments come with a default general value : for the 
-same reason, in that case, the default general value will not be taken into 
-account if you set a specific value for ranked and unranked games
-
