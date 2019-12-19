@@ -288,12 +288,10 @@ class Connection {
                 return { reject: true, msg: `${uid} ${notification.user[uid]} is banned ${r_u_s.for_r_u_games} on this bot by bot admin, you may try changing the ranked/unranked setting` };
             }
         }
-
         const resultRank = genericMinMaxReject("rank", "rank", notification.user.ranking, false, false, r_u_s);
         if (resultRank) {
             return (resultRank);
         }
-
         if (config[r_u_s.r_u].proonly && !notification.user.professional) {
             conn_log(notification.user.username + " is not a professional");
             return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only." };
