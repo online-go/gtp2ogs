@@ -55,17 +55,6 @@ exports.updateFromArgv = function() {
         .string('boardsizesranked')
         .describe('boardsizesunranked', 'Board size(s) to accept for unranked games')
         .string('boardsizesunranked')
-        .describe('boardsizewidths', 'For custom board sizes, specify boardsize width(s) to accept, for example 25')
-        .string('boardsizewidths')
-        .describe('boardsizeheights', 'For custom board sizes, specify boardsize height(s) to accept, for example 1')
-        .string('boardsizeheights')
-        .describe('boardsizewidthsranked', 'For custom board sizes, specify boardsize width(s) to accept for ranked games, for example 25')
-        .string('boardsizewidthsranked')
-        .describe('boardsizeheightsranked', 'For custom board sizes, specify boardsize height(s) to accept for ranked games, for example 1')
-        .string('boardsizeheightsranked')
-        .describe('boardsizewidthsunranked', 'For custom board sizes, specify boardsize width(s) to accept for unranked games, for example 25')
-        .string('boardsizewidthsunranked')
-        .describe('boardsizeheightsunranked', 'For custom board sizes, specify boardsize height(s) to accept for unranked games, for example 1')
         .string('boardsizeheightsunranked')
         .describe('komis', 'Allowed komi values')
         .string('komis')
@@ -217,7 +206,7 @@ exports.updateFromArgv = function() {
     // B) allowed_ and other "_" families :
     /* note : "banned_users_" family is not included here because
     /         it uses general arg AND ranked arg AND unranked arg */        
-    const allowedRankedUnrankedFamilies = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols"];
+    const allowedRankedUnrankedFamilies = ["boardsizes", "komis", "speeds", "timecontrols"];
 
     // C) combinations of A) and B)
     const fullRankedUnrankedFamilies = allowedRankedUnrankedFamilies
@@ -287,8 +276,11 @@ exports.updateFromArgv = function() {
     /* 3) then for the allowed_ (ex: boardsizes) and 
     /     All/ranked/Unranked (ex: bans) and other specific cases
     /     (ex: bot_command), we add specific exports : */
-    allowedBoardsizesRankedUnrankedExports("boardsizes");
-    ["komis", "speeds", "timecontrols"].forEach(e => genericAllowedFamiliesExports(e));
+    [ ["boardsizes", ["width", "height"]],
+      ["komis", ["komi", ""],
+      ["speeds", ["speed", ""],
+      ["timecontrols", ["time_control", ""]]
+    ].forEach([e,[notifNames]] => genericAllowedFamiliesExports(e, notifNames));
     bannedUsersRankedUnrankedExports("bans");
     debugLogExports("\n");
     
@@ -324,15 +316,16 @@ function generateExportsRankedUnranked(rankedUnranked) {
                     for_blc_r_u_games: ""}, // will be defined in connection.js
             banned_users: {},
             allow_all_boardsizes: false,
-            allow_custom_boardsizes: false,
-            allowed_boardsizes: [],
-            allowed_custom_boardsizewidths: [],
-            allowed_custom_boardsizeheights: [],
+            allowed_notifnames_boardsizes: [],
+            allowed_boardsizes: {},
             allow_all_komis: false,
-            allowed_komis: [],
+            allowed_notifnames_komis: [],
+            allowed_komis: {},
             allow_all_speeds: false,
+            allowed_notifnames_speeds: [],
             allowed_speeds: {},
             allow_all_timecontrols: false,
+            allowed_notifnames_timecontrols: [],
             allowed_timecontrols: {},
             check_rejectnew: function() {}
            };
@@ -396,48 +389,32 @@ function parseMinmaxRankFromNameString(arg) {
     }
 }
 
-function allowedBoardsizesRankedUnrankedExports(boardsizesString) {
-    for (let rankedUnranked of ["ranked", "unranked"]) {
-        if (exports[rankedUnranked][boardsizesString]) { // skip if ranked/unranked is false
-            for (let boardsize of exports[rankedUnranked][boardsizesString].split(',')) { // ex: "19"
-                if (boardsize === "all") {
-                    exports[rankedUnranked]["allow_all_boardsizes"] = true;
-                    debugLogExports(`    case allowed_family: ${rankedUnranked}.allow_all_boardsizes + ${exports[rankedUnranked]["allow_all_boardsizes"]}`);
-                } else if (boardsize === "custom") {
-                    exports[rankedUnranked]["allow_custom_boardsizes"] = true;
-                    debugLogExports(`    case allowed_family: ${rankedUnranked}.allow_custom_boardsizes + ${exports[rankedUnranked]["allow_custom_boardsizes"]}`);
-                    for (let width of exports[rankedUnranked]["boardsizewidths"].split(',')) {
-                        exports[rankedUnranked]["allowed_custom_boardsizewidths"][width] = true;
-                        debugLogExports(`    case allowed_family: ${rankedUnranked}.allowed_custom_boardsizewidths / ${width} + ${exports[rankedUnranked]["allowed_custom_boardsizewidths"][width]}`);
-                    }
-                    for (let height of exports[rankedUnranked]["boardsizeheights"].split(',')) {
-                        exports[rankedUnranked]["allowed_custom_boardsizeheights"][height] = true;
-                        debugLogExports(`    case allowed_family: ${rankedUnranked}.allowed_custom_boardsizeheights / ${height} + ${exports[rankedUnranked]["allowed_custom_boardsizeheights"][height]}`);
-                    }
-                } else {
-                    // ex: exports.ranked.allowed_boardsizes[19] = true;
-                    exports[rankedUnranked]["allowed_boardsizes"][boardsize] = true;
-                    debugLogExports(`    case allowed_family: ${rankedUnranked}.allowed_boardsizes / ${boardsize} + ${exports[rankedUnranked]["allowed_boardsizes"][boardsize]}`);
-                }
-            }
-        }
-    }
-}
-
-function genericAllowedFamiliesExports(familyNameString) {
+function genericAllowedFamiliesExports(familyNameString, notifNames) {
     for (let rankedUnranked of ["ranked", "unranked"]) {
         if (exports[rankedUnranked][familyNameString]) { // skip if ranked/unranked is false
-            for (let value of exports[rankedUnranked][familyNameString].split(',')) { // ex: 7.5
-                if (value === "all") {
-                    exports[rankedUnranked][`allow_all_${familyNameString}`] = true;
-                    debugLogExports(`    case allowed family: ${rankedUnranked}.allow_all_${familyNameString} + ${exports[rankedUnranked]["allow_all_" + familyNameString]}`);
-                } else if (familyNameString === "komis" && value === "automatic") {
-                    exports[rankedUnranked][`allowed_${familyNameString}`][null] = true;
-                    debugLogExports(`    case allowed family: ${rankedUnranked}.allowed_${familyNameString} / null(automatic) + ${exports[rankedUnranked]["allowed_" + familyNameString][null]}`);
+            // ex: "19" (square) or "19,21,23,25,,,1,3,5" (non square)
+            for (let value of exports[rankedUnranked][familyNameString].split(',,,')) { // ex: ["19"] (square) or ["25", "1"] (nonsquare)
+                if (notifNames.length <= value.length) { // sanity check
+                    // ex: exports.ranked.allowed_notifnames_boardsizes = ["width"] (square) or ["width", "height"] (nonsquare)
+                    exports[rankedUnranked][`allowed_notifnames_${familyNameString}`] = notifNames;
+                    debugLogExports(`    case allowed family: ${rankedUnranked}.allowed_notifnames_${familyNameString} + ${exports[rankedUnranked]["allowed_notifnames_" + familyNameString]}`);
+                    for (let notifName of notifNames) {
+                        for (let e of value.toString().split(',')) { // ex: "19"
+                            if (e === "all") {
+                                exports[rankedUnranked][`allow_all_${familyNameString}`][notifName] = true;
+                                debugLogExports(`    case allowed family: ${rankedUnranked}.allow_all_${familyNameString}.${notifName} + ${exports[rankedUnranked]["allow_all_" + familyNameString][notifName}`);
+                            } else if (familyNameString === "komis" && e === "automatic") {
+                                exports[rankedUnranked][`allowed_${familyNameString}`][notifName][null] = true;
+                                debugLogExports(`    case allowed family: ${rankedUnranked}.allowed_${familyNameString}.${notifName} / null(automatic) + ${exports[rankedUnranked]["allowed_" + familyNameString][notifName][null]}`);
+                            } else {
+                                // ex: exports.ranked.allowed_boardsizes.width.19 = true;
+                                exports[rankedUnranked][`allowed_${familyNameString}`][notifName][e] = true;
+                                debugLogExports(`    case allowed family: ${rankedUnranked}.allowed_${familyNameString}.${notifName} / ${e} + ${exports[rankedUnranked]["allowed_" + familyNameString][notifName][e]}`);
+                            }
+                        }
+                    }
                 } else {
-                    // ex: exports.ranked.allowed_komis[7.5] = true;
-                    exports[rankedUnranked][`allowed_${familyNameString}`][value] = true;
-                    debugLogExports(`    case allowed family: ${rankedUnranked}.allowed_${familyNameString} / ${value} + ${exports[rankedUnranked]["allowed_" + familyNameString][value]}`);
+                    console.log(`critical error in allowed family ${familyNameString}: notifNames.length ${notifNames.length} can't be strictly superior to value.length ${value.length}`);
                 }
             }
         }
@@ -517,12 +494,6 @@ function testDeprecated(komisFamilyNameString) {
         ["boardsize", "boardsizes"],
         ["boardsizeranked", "boardsizesranked"],
         ["boardsizeunranked", "boardsizesunranked"],
-        ["boardsizewidth", "boardsizewidths"],
-        ["boardsizewidthranked", "boardsizewidthsranked"],
-        ["boardsizewidthunranked", "boardsizewidthsunranked"],
-        ["boardsizeheight", "boardsizeheights"],
-        ["boardsizeheightranked", "boardsizeheightsranked"],
-        ["boardsizeheightunranked", "boardsizeheightsunranked"],
         ["komi", "komis"],
         ["komiranked", "komisranked"],
         ["komiunranked", "komisunranked"],

@@ -281,6 +281,8 @@ class Connection {
     //
     checkChallengePreRequirements(notification, r_u_s) { /* {{{ */
 
+        console.log(JSON.stringify(notification));
+
         // check user is acceptable first, else don't mislead user :
         for (let uid of ["username", "id"]) {
             if (config[r_u_s.r_u].banned_users[notification.user[uid]]) {
@@ -385,36 +387,14 @@ class Connection {
             return (resultHandicap);
         }
 
-        let extraConditionBoardsizes = false;
-        if (!config[r_u_s.r_u].allow_all_boardsizes) {
-            if (!config[r_u_s.r_u].allow_custom_boardsizes) {
-                extraConditionBoardsizes = true;
-                // A) if not square
-                if (notification.width !== notification.height) {
-                    conn_log(`board size ${notification.width} x ${notification.height} is not square, not allowed ${r_u_s.for_r_u_games}`);
-                    return { reject: true, msg: `Your selected board size ${notification.width} x ${notification.height} is not square, not allowed ${r_u_s.for_r_u_games} on this bot, please choose a SQUARE board size (same width and height)` };
-                }
-                // B) (if square, will reject later with the generic allowed_ families reject)
-            // 2) for custom board sizes, including square board sizes if width === height as well :
-            } else {
-                // A) if custom, check width
-                if (!config[r_u_s.r_u].allowed_custom_boardsizewidths[notification.width]) {
-                    return customBoardsizeWidthsHeightsReject("boardsizewidths", "board size WIDTH" , notification.width, notification.height, r_u_s);
-                }
-                // B) if custom, check height
-                if (!config[r_u_s.r_u].allowed_custom_boardsizeheights[notification.height]) {
-                    return customBoardsizeWidthsHeightsReject("boardsizeheights", "board size HEIGHT", notification.width, notification.height, r_u_s);
-                }
-            }
-        }
-        const testsAllowedFamilies = [["boardsizes", "board size", notification.width, extraConditionBoardsizes],
-                                      ["komis", "komi", notification.komi, true],
-                                      ["speeds", "speed", notification.time_control.speed, true],
-                                      ["timecontrols", "time control", notification.time_control.time_control, true]];
+        const testsAllowedFamilies = [["boardsizes", "board size"],
+                                      ["komis", "komi"]
+                                      ["speeds", "speed"]
+                                      ["timecontrols", "time control"]];
         let resultAllowedFamilies = false;
-        for (let [a,b,notif,extraCondition] of testsAllowedFamilies) {
-            resultAllowedFamilies = allowedFamiliesReject(a,b, notif, extraCondition, r_u_s);
-            if (resultAllowedFamilies) {
+        for (let [familyNameString, name] of testsAllowedFamilies) {
+            resultAllowedFamilies = allowedFamiliesReject(familyNameString, name, notification, r_u_s);
+            if (resultAllowedFamilies) { 
                 return resultAllowedFamilies;
             }
         }
@@ -559,18 +539,30 @@ function rankedorUnrankedString(notificationRanked, notificationTSpeed) { /* {{{
                                  for_blc_r_u_games: "for blitz ranked games"};*/
 } /* }}} */
 
-function customBoardsizeWidthsHeightsReject(familyNameString, name, notificationWidth, notificationHeight, r_u_s) { /* {{{ */
-    let notificationWH = notificationWidth;
-    if (familyNameString.includes("height")) {
-        notificationWH = notificationHeight;
+function generateNotifications(notification, notifNames, notifTwo) { /* {{{ */
+    if (notifTwo) {
+        return notifNames.map(e=> notification[notifTwo][e]);
+    } else {
+        return notifNames.map(e=> notification[e]);
     }
-    conn_log(`${name} -${notificationWH}- ${r_u_s.for_r_u_games}, not in -${config[r_u_s.r_u][familyNameString]}- `);
-    return { reject: true, msg: `In your selected board size ${notificationWidth} x ${notificationHeight} (width x height), ${name} (${notificationWH}) is not allowed ${r_u_s.for_r_u_games} on this bot, please choose among: ${config[r_u_s.r_u][familyNameString]}` };
 } /* }}} */
 
-function allowedFamiliesReject(familyNameString, name, notif, extraCondition, r_u_s) { /* {{{ */
-    if (extraCondition && (!config[r_u_s.r_u][`allow_all_${familyNameString}`])
-        && (!config[r_u_s.r_u][`allowed_${familyNameString}`][notif])) {
+function allowedFamiliesReject(familyNameString, name, notification, notifTwo, r_u_s) { /* {{{ */
+    if (!config[r_u_s.r_u][`allow_all_${familyNameString}`]) {
+        const notifs = generateNotifications(notification, config[r_u_s.r_u][`allowed_notifnames_${familyNameString}`], notifTwo);
+        for (let notif of notifs) {
+            
+
+
+
+
+
+
+        }      
+
+
+
+    if (!config[r_u_s.r_u][`allowed_${familyNameString}`][notif]) {
         let argValueConverted = config[r_u_s.r_u][familyNameString];
         let notifConverted = notif;
         if (familyNameString === "boardsizes") {
@@ -581,6 +573,10 @@ function allowedFamiliesReject(familyNameString, name, notif, extraCondition, r_
         }
         conn_log(`${name} -${notifConverted}- ${r_u_s.for_r_u_games}, not in -${argValueConverted}- `);
         return { reject: true, msg: `${name} -${notifConverted}- is not allowed on this bot ${r_u_s.for_r_u_games}, please choose among: -${argValueConverted}-` };
+
+
+
+
     }
 } /* }}} */
 

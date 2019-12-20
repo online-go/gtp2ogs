@@ -249,39 +249,26 @@ comma separated values (ex: `9,13,19` to allow square board sizes
 
 Possible boardsizes values :
 - `all` (allows ALL boardsizes, use only if your bot can handle it !), 
-- `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 
-15x15, 3x2, etc..), 
+
+
+- ......  ,, ......
+
+
+
 - or square boardsizes written in numbers comma separated (default is `9,13,19` 
 which is 9x9, 13x13, 19x19), see [notes E-](/docs/docs/NOTES.md#e-) for details
 
-#### boardsizes custom
-  If `custom` is chosen, then you need to specify these new 
-options as well :
 
-  ```--boardsizewidths``` For custom board sizes, specify boardsize width(s) 
-to accept, for example 25
 
-  ```--boardsizewidthsranked``` For custom board sizes, specify boardsize 
-width(s) to accept for ranked games, for example 25
+/*
 
-  ```--boardsizewidthsunranked``` For custom board sizes, specify boardsize 
-width(s) to accept for unranked games, for example 25
 
-  ```--boardsizeheights``` For custom board sizes, specify boardsize height(s) 
-to accept, for example 1,2,3
+width height to add
 
-  ```--boardsizeheightsranked``` For custom board sizes, specify boardsize 
-height(s) to accept for ranked games, for example 1,2,3
 
-  ```--boardsizeheightsunranked``` For custom board sizes, specify boardsize 
-height(s) to accept, for example 1,2,3
+///
 
-for example :
 
-  ```--boardsizes custom --boardsizewidths 25 --boardsizeheights 1,2,3``` 
-Allows custom board sizes 25x1 25x2 25x3 in that example
-
-for details, see [notes E-](/docs/docs/NOTES.md#e-).
 
 #### komis
 ```--komis``` Allowed komi values  (default automatic)
