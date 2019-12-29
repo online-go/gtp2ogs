@@ -36,52 +36,66 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
-    let optimist = require("optimist")
+    const optimist = require("optimist")
+           // 1) ROOT ARGUMENTS :
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
         .describe('username', 'Specify the username of the bot, for example GnuGo')
         .describe('apikey', 'Specify the API key for the bot')
+        .describe('greeting')
+        .string('greeting')
+        .describe('farewell', 'Thank you message to appear in chat at end of game (ex: -Thank you for playing-)')
+        .string('farewell')
+        .describe('rejectnew', 'Reject all new challenges with the default reject message')
+        .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
+        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
+        .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
+        .describe('debug', 'Output GTP command and responses from your Go engine')
+        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
+        .describe('json', 'Send and receive GTP commands in a JSON encoded format')
+        .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
         .describe('host', 'OGS Host to connect to')
-        .default('host', 'online-go.com')
+        .default('host', 'online-go.com') // default to OGS. If --beta, host will switch to beta OGS automatically
         .describe('port', 'OGS Port to connect to')
         .default('port', 443)
+        .describe('insecure', 'Do not use ssl to connect to the ggs/rest servers')
+        .describe('hidden', 'Hides the botname from the OGS game -Play against computer- bot list (but it can still accept challenges)')
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
         .default('startupbuffer', 5)
         .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
         .default('timeout', 0)
-        .describe('insecure', "Don't use ssl to connect to the ggs/rest servers")
-        .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
-        .describe('debug', 'Output GTP command and responses from your Go engine')
-        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
-        .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
-        .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('persist', 'Bot process remains running between moves')
+        .describe('noclock', 'Do not send any clock/time data to the bot')
+        .describe('nopause', 'Do not allow pauses during games')
+        .describe('nopauseranked', 'Do not allow pauses during ranked games')
+        .describe('nopauseunranked', 'Do not allow pauses during unranked games')
         .describe('corrqueue', 'Process correspondence games one at a time')
+        /* note: for maxconnectedgames, correspondence games are currently included
+        /  in the maxconnectedgames count if you use `--persist` )*/
         .describe('maxconnectedgames', 'Maximum number of connected games for all users')
         .default('maxconnectedgames', 20)
-        // maxconnectedgames is actually the maximum number of connected games for all users 
-        // against your bot, which means the maximum number of games your bot can play at the same time 
-        // (choose a low number to regulate your computer performance and stability)
-        // (correspondence games are currently included in the total connected games count if you use `--persist` )
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
         .default('maxconnectedgamesperuser', 3)
-        .describe('rejectnew', 'Reject all new challenges with the default reject message')
-        .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
-        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-        // behaviour : 1. when only --rejectnew is used, default reject message is printed
-        // behaviour : 2. when you want to add a customized reject message, do it like that for example :
-        // --rejectnew --rejectnewmsg "this bot is not playing today because blablablah, try again at x time, sorry"
-        .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
+        .describe('rankedonly', 'Only accept ranked matches')
+        .describe('unrankedonly', 'Only accept unranked matches')
+        /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
+        /  nor their unranked args since the general argument is for unranked games too*/
+        .describe('proonly', 'For all matches, only accept those from professionals')
+        .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
+        // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
+        //     A) ALL/RANKED/UNRANKED FAMILIES :
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
         .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
         .string('bansranked')
         .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
         .string('bansunranked')
+        //     B) GENERAL/RANKED/UNRANKED FAMILIES :
+        //         B1) ALLOWED FAMILIES :
         .describe('boardsizes', 'Board size(s) to accept')
         .string('boardsizes')
         .default('boardsizes', '9,13,19')
@@ -101,11 +115,6 @@ exports.updateFromArgv = function() {
         .string('boardsizewidthsunranked')
         .describe('boardsizeheightsunranked', 'For custom board sizes, specify boardsize height(s) to accept for unranked games, for example 1')
         .string('boardsizeheightsunranked')
-        // behaviour : --boardsizes can be specified as 
-        // "custom" (allows board with custom size width x height),
-        // "all" (allows ALL boardsizes), 
-        // or for square boardsizes only (same width x height) comma separated list of explicit values.
-        // The default is "9,13,19" (square board sizes only), see README for details
         .describe('komis', 'Allowed komi values')
         .string('komis')
         .default('komis', 'automatic')
@@ -113,11 +122,6 @@ exports.updateFromArgv = function() {
         .string('komisranked')
         .describe('komisunranked', 'Allowed komi values for unranked games')
         .string('komisunranked')
-        // behaviour: --komis may be specified as 
-        // "automatic" (accept automatic komi)
-        // "all" (accept all komi values), 
-        // or comma separated list of explicit values.
-        // The default is "automatic", see README and OPTIONS-LIST for details
         .describe('speeds', 'Game speed(s) to accept')
         .default('speeds', 'blitz,live,correspondence')
         .describe('speedsranked', 'Game speed(s) to accept for ranked games')
@@ -126,30 +130,51 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        // 1- for "absolute", bot admin can allow absolute if want, but then 
-        // make sure to increase minmaintimeblitz and minmaintimelive to high values
-        // 2 - "none" is not default, can be manually allowed in timecontrol argument
-        // but then games will be very very long
-        .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz ')
-        .default('minmaintimeblitz', '15') // 15 seconds
-        .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz ')
-        .default('maxmaintimeblitz', '300') // 5 minutes 
-        .describe('minmaintimeblitzranked', 'Minimum seconds of main time for blitz ranked games ')
-        .describe('maxmaintimeblitzranked', 'Maximum seconds of main time for blitz ranked games ')
-        .describe('minmaintimeblitzunranked', 'Minimum seconds of main time for blitz unranked games ')
-        .describe('maxmaintimeblitzunranked', 'Maximum seconds of main time for blitz unranked games ')
-        .describe('minmaintimelive', 'Minimum seconds of main time for live AND blitz ')
-        .default('minmaintimelive', '60') // 1 minute
-        .describe('maxmaintimelive', 'Maximum seconds of main time for live AND blitz ')
-        .default('maxmaintimelive', '7200') // 2 hours 
-        .describe('minmaintimeliveranked', 'Minimum seconds of main time for live AND blitz ranked games ')
-        .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live AND blitz ranked games ')
-        .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live AND blitz unranked games ')
-        .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live AND blitz unranked games ')
-        .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence ')
-        .default('minmaintimecorr', '259200') // 3 days
-        .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence ')
-        .default('maxmaintimecorr', '604800') // 7 days
+        //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS : :
+        .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
+        .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
+        .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
+        /* note: - nopause allows to disable pauses DURING games, (game.js), but
+        /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
+        /          (only for correspondence games)*/
+        .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
+        .string('minrank')
+        .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
+        .string('minrankranked')
+        .describe('minrankunranked', 'Minimum opponent rank to accept for unranked games (ex: 15k)')
+        .string('minrankunranked')
+        .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
+        .string('maxrank')
+        .describe('maxrankranked', 'Maximum opponent rank to accept for ranked games (ex: 1d)')
+        .string('maxrankranked')
+        .describe('maxrankunranked', 'Maximum opponent rank to accept for unranked games(ex: 1d)')
+        .string('maxrank')
+        .describe('minhandicap', 'Minimum handicap to accept')
+        .describe('maxhandicap', 'Maximum handicap to accept')
+        .describe('minhandicapranked', 'Minimum handicap to accept for ranked games')
+        .describe('maxhandicapranked', 'Maximum handicap to accept for ranked games')
+        .describe('minhandicapunranked', 'Minimum handicap to accept for unranked games')
+        .describe('maxhandicapunranked', 'Maximum handicap to accept for unranked games')
+        .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz games')
+        .default('minmaintimeblitz', 15) // 15 seconds
+        .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz games')
+        .default('maxmaintimeblitz', 300) // 5 minutes 
+        .describe('minmaintimeblitzranked', 'Minimum seconds of main time for blitz ranked games')
+        .describe('maxmaintimeblitzranked', 'Maximum seconds of main time for blitz ranked games')
+        .describe('minmaintimeblitzunranked', 'Minimum seconds of main time for blitz unranked games')
+        .describe('maxmaintimeblitzunranked', 'Maximum seconds of main time for blitz unranked games')
+        .describe('minmaintimelive', 'Minimum seconds of main time for live games')
+        .default('minmaintimelive', 60) // 1 minute
+        .describe('maxmaintimelive', 'Maximum seconds of main time for live ranked games')
+        .default('maxmaintimelive', 7200) // 2 hours 
+        .describe('minmaintimeliveranked', 'Minimum seconds of main time for live ranked games')
+        .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live ranked games')
+        .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live unranked games')
+        .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live unranked games')
+        .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence games')
+        .default('minmaintimecorr', 259200) // 3 days
+        .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence games')
+        .default('maxmaintimecorr', 604800) // 7 days
         .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games ')
         .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games ')
         .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games ')
@@ -178,107 +203,253 @@ exports.updateFromArgv = function() {
         .default('maxperiodscorr', 10)
         .describe('maxperiodscorrranked', 'Maximum number of periods for correspondence ranked games')
         .describe('maxperiodscorrunranked', 'Maximum number of periods for correspondence unranked games')
-        // for canadian period times, divide the period time by the number of stones per period
-        // for example max periodtime 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12
         .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
-        .default('minperiodtimeblitz', '5') // 5 seconds (average time per stone if time control is canadian)
+        .default('minperiodtimeblitz', 5) // 5 seconds
         .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
-        .default('maxperiodtimeblitz', '10') // 10 seconds (max)  (average time per stone if time control is canadian)
-        .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games ')
-        .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games ')
-        .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games ')
-        .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games ')
+        .default('maxperiodtimeblitz', 10) // 10 seconds
+        .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games')
+        .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games')
+        .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games')
+        .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games')
         .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
-        .default('minperiodtimelive', '10') // 10 seconds (average time per stone if time control is canadian)
-        .describe('maxperiodtimelive', 'Maximum seconds of period time for live games ')
-        .default('maxperiodtimelive', '120') // 2 minutes  (average time per stone if time control is canadian)
-        .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games ')
-        .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games ')
+        .default('minperiodtimelive', 10) // 10 seconds
+        .describe('maxperiodtimelive', 'Maximum seconds of period time for live games')
+        .default('maxperiodtimelive', 120) // 2 minutes
+        .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games')
+        .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games')
         .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
         .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
         .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
-        .default('minperiodtimecorr', '14400') // 4 hours (average time per stone if time control is canadian)
+        .default('minperiodtimecorr', 14400) // 4 hours
         .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
-        .default('maxperiodtimecorr', '259200') // 3 days (average time per stone if time control is canadian)
-        .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games ')
-        .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games ')
-        .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games ')
-        .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games ')
-        .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
-        .string('minrank')
-        .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
-        .string('minrankranked')
-        .describe('minrankunranked', 'Minimum opponent rank to accept for unranked games (ex: 15k)')
-        .string('minrankunranked')
-        .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
-        .string('maxrank')
-        .describe('maxrankranked', 'Maximum opponent rank to accept for ranked games (ex: 1d)')
-        .string('maxrankranked')
-        .describe('maxrankunranked', 'Maximum opponent rank to accept for unranked games(ex: 1d)')
-        .string('maxrank')
-        .describe('greeting', 'Greeting message to appear in chat at first move (ex: "Hello, have a nice game")')
-        .string('greeting')
-        .describe('farewell', 'Thank you message to appear in chat at end of game (ex: "Thank you for playing")')
-        .string('farewell')
-        .describe('proonly', 'Only accept matches from professionals')
-        .describe('rankedonly', 'Only accept ranked matches')
-        .describe('unrankedonly', 'Only accept unranked matches')
-        .describe('minhandicap', 'Min handicap for all games')
-        .describe('maxhandicap', 'Max handicap for all games')
-        .describe('minhandicapranked', 'Min handicap for ranked games')
-        .describe('maxhandicapranked', 'Max handicap for ranked games')
-        .describe('minhandicapunranked', 'Min handicap for unranked games')
-        .describe('maxhandicapunranked', 'Max handicap for unranked games')
-        .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
-        .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
-        .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        .describe('fakerank', 'Temporary manual bot ranking input by bot admin to fix autohandicap bypass issue, see /docs/OPTIONS-LIST.md for details')
-        .describe('nopause', 'Do not allow games to be paused')
-        .describe('nopauseranked', 'Do not allow ranked games to be paused')
-        .describe('nopauseunranked', 'Do not allow unranked games to be paused')
-        .describe('hidden', 'Hides the botname from the OGS game "Play against computer" bot list (but it can still accept challenges)')
+        .default('maxperiodtimecorr', 259200) // 3 days
+        .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games')
+        .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games')
+        .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games')
+        .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games')
     ;
-    let argv = optimist.argv;
+    const argv = optimist.argv;
 
     if (!argv._ || argv._.length === 0) {
         optimist.showHelp();
         process.exit();
     }
 
-    // console : greeting //
+    // console messages
+    // A- greeting and debug status //
+    let debugStatusMessage = "OFF";
+    if (argv.debug) {
+        debugStatusMessage = "ON\n-Will show detailed debug booting data\n-Will show all console notifications";
+    }
+    console.log(`\ngtp2ogs version 6.0\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}`);
+    // B - check deprecated argv //
+    testDeprecatedArgv(optimist.argv, "komis");
 
-    console.log("\nYou are using gtp2ogs version 6.0\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n");
+    /* EXPORTS FROM OPTIMIST.ARGV */
+    /* 0) root exports*/
+    for (let k in argv) {
+        exports[k] = argv[k];
+    }
 
-    // console : warnings //
+    /* Add and Modify exports*/
+    if (argv.debug) {
+        exports.DEBUG = true;
+    }
+    for (let k of ["timeout", "startupbuffer"]) {
+        if (argv[k]) {
+            // Convert some times to microseconds once here so
+            // we don't need to do it each time it is used later.
+            exports[k] = argv[k] * 1000;
+        }
+    }
+    if (argv.beta) {
+        exports.host = 'beta.online-go.com';
+    }
+    if (argv.fakerank) {
+        exports.fakerank = parseRank(argv.fakerank);
+    }
+    exports.bot_command = argv._;
+    exports.check_rejectnew = function()
+    {
+        if (argv.rejectnew)  return true;
+        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
+        return false;
+    };
+    if (exports.DEBUG) {
+        let result = exports;
+        delete result.apikey;
+        console.log(`ROOT EXPORTS (apikey hidden):\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
+    }
 
-    // A - warning : dont use 3 settings of the same family (general, ranked, unranked) at the same time
-    const familyArgs = ["boardsizes", "boardsizewidths", "boardsizeheights", "komis", "speeds", "timecontrols", "minhandicap", "maxhandicap", "noautohandicap", "minmaintimeblitz", "minmaintimelive", "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", "maxperiodtimecorr", "minrank", "maxrank", "nopause"];
-// --bans --bansranked --bansunranked are an exception, do not include here
+    /* 2) specifc r_u cases :*/
+    if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
+        exports.minrank = parseRank(argv.minrank);
+    }
+    if (argv.minrankranked) {
+        exports.minrankranked = parseRank(argv.minrankranked);
+    }
+    if (argv.minrankunranked) {
+        exports.minrankunranked = parseRank(argv.minrankunranked);
+    }
+    if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
+        exports.maxrank = parseRank(argv.maxrank);
+    }
+    if (argv.maxrankranked) {
+        exports.maxrankranked = parseRank(argv.maxrankranked);
+    }
+    if (argv.maxrankunranked) {
+        exports.maxrankunranked = parseRank(argv.maxrankunranked);
+    }
 
-    function checkThreeSameTimeFamily() {
-        for (let e of familyArgs) {
-            let familyToTest = familyArrayFromGeneralArg(e);
-            // for example ["komis", "komisranked", "komisunranked"];
-            if ((argv[familyToTest[0]]) && ((argv[familyToTest[1]]) || (argv[familyToTest[2]]))) {
-                console.log(`Warning: You are using --${familyToTest[0]} in combination with --${familyToTest[1]} and/or --${familyToTest[2]}. \n Use either --${familyToTest[0]} alone, OR --${familyToTest[1]} with --${familyToTest[2]}.\nBut don't use the 3 ${familyToTest[0]} arguments at the same time.`);
+    if (argv.bans) {
+        for (let user of argv.bans.split(',')) {
+            exports.banned_users[user] = true;
+        }
+    }
+    if (argv.bansranked) {
+        for (let user of argv.bansranked.split(',')) {
+            exports.banned_users_ranked[user] = true;
+        }
+    }
+    if (argv.bansunranked) {
+        for (let user of argv.bansunranked.split(',')) {
+            exports.banned_users_unranked[user] = true;
+        }
+    }
+
+    if (argv.boardsizes) {
+        for (let boardsize of argv.boardsizes.split(',')) {
+            if (boardsize === "all") {
+                exports.allow_all_boardsizes = true;
+            } else if (boardsize === "custom") {
+                exports.allow_custom_boardsizes = true;
+                for (let boardsizewidth of argv.boardsizewidths.split(',')) {
+                    exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
+                }
+                for (let boardsizeheight of argv.boardsizeheights.split(',')) {
+                    exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
+                }
+            } else {
+                exports.allowed_boardsizes[boardsize] = true;
+            }
+        }
+    }
+    if (argv.boardsizesranked) {
+        for (let boardsizeranked of argv.boardsizesranked.split(',')) {
+            if (boardsizeranked === "all") {
+                exports.allow_all_boardsizes_ranked = true;
+            } else if (boardsizeranked === "custom") {
+                exports.allow_custom_boardsizes_ranked = true;
+                for (let boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
+                    exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
+                }
+                for (let boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
+                    exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
+                }
+            } else {
+                exports.allowed_boardsizes_ranked[boardsizeranked] = true;
+            }
+        }
+    }
+    if (argv.boardsizesunranked) {
+        for (let boardsizeunranked of argv.boardsizesunranked.split(',')) {
+            if (boardsizeunranked === "all") {
+                exports.allow_all_boardsizes_unranked = true;
+            } else if (boardsizeunranked === "custom") {
+                exports.allow_custom_boardsizes_unranked = true;
+                for (let boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
+                    exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
+                }
+                for (let boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
+                    exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
+                }
+            } else {
+                exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
             }
         }
     }
 
-    checkThreeSameTimeFamily();
-    console.log("\n"); /*after final warning, we skip a line to make it more pretty*/
-
-    // B - warning : avoid infinite games
-    if (!argv.nopause && !argv.nopauseranked && !argv.nopauseunranked) {
-        console.log("Warning : No nopause setting detected, games are likely to last forever"); // TODO : when --maxpausetime and co gets implemented, replace with "are likely to last for a long time"
+    if (argv.komis) {
+        for (let komi of argv.komis.split(',')) {
+            if (komi === "all") {
+                exports.allow_all_komis = true;
+            } else if (komi === "automatic") {
+                exports.allowed_komis[null] = true;
+            } else {
+                exports.allowed_komis[komi] = true;
+            }
+        }
+    }
+    if (argv.komisranked) {
+        for (let komiranked of argv.komisranked.split(',')) {
+            if (komiranked === "all") {
+                exports.allow_all_komis_ranked = true;
+            } else if (komiranked === "automatic") {
+                exports.allowed_komis_ranked[null] = true;
+            } else {
+                exports.allowed_komis_ranked[komiranked] = true;
+            }
+        }
+    }
+    if (argv.komisunranked) {
+        for (let komiunranked of argv.komisunranked.split(',')) {
+            if (komiunranked === "all") {
+                exports.allow_all_komis_unranked = true;
+            } else if (komiunranked === "automatic") {
+                exports.allowed_komis_unranked[null] = true;
+            } else {
+                exports.allowed_komis_unranked[komiunranked] = true;
+            }
+        }
     }
 
-    // C - warning : check deprecated features    
-    function testDeprecated(oldName, newName) {
-        if (argv[oldName]) console.log(`Warning: --${oldName} is deprecated, use --${newName} instead.`)
+    if (argv.speeds) {
+        for (let e of argv.speeds.split(',')) {
+            exports.allowed_speeds[e] = true;
+        }
+    }
+    if (argv.speedsranked) {
+        for (let e of argv.speedsranked.split(',')) {
+            exports.allowed_speeds_ranked[e] = true;
+        }
+    }
+    if (argv.speedsunranked) {
+        for (let e of argv.speedsunranked.split(',')) {
+            exports.allowed_speeds_unranked[e] = true;
+        }
     }
 
-    const deprecatedArgs = [["botid", "username"],
+    if (argv.timecontrols) {
+        for (let e of argv.timecontrols.split(',')) {
+            exports.allowed_timecontrols[e] = true;
+        }
+    }
+    if (argv.timecontrolsranked) {
+        for (let e of argv.timecontrolsranked.split(',')) {
+            exports.allowed_timecontrols_ranked[e] = true;
+        }
+    }
+    if (argv.timecontrolsunranked) {
+        for (let e of argv.timecontrolsunranked.split(',')) {
+            exports.allowed_timecontrols_unranked[e] = true;
+        }
+    }
+
+    // console messages
+    // C - check exports warnings :
+    checkExportsWarnings("nopause");
+
+    // Show in debug all the ranked/unranked exports results
+    if (exports.DEBUG) {
+        let result = exports;
+        delete result.apikey;
+        console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
+    }
+}
+
+// console messages:
+function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
+    const deprecatedArgv = [["botid", "username"],
         ["bot", "username"],
         ["id", "username"],
         ["minrankedhandicap", "minhandicapranked"],
@@ -311,12 +482,6 @@ exports.updateFromArgv = function() {
         ["boardsize", "boardsizes"],
         ["boardsizeranked", "boardsizesranked"],
         ["boardsizeunranked", "boardsizesunranked"],
-        ["boardsizewidth", "boardsizewidths"],
-        ["boardsizewidthranked", "boardsizewidthsranked"],
-        ["boardsizewidthunranked", "boardsizewidthsunranked"],
-        ["boardsizeheight", "boardsizeheights"],
-        ["boardsizeheightranked", "boardsizeheightsranked"],
-        ["boardsizeheightunranked", "boardsizeheightsunranked"],
         ["komi", "komis"],
         ["komiranked", "komisranked"],
         ["komiunranked", "komisunranked"],
@@ -326,252 +491,61 @@ exports.updateFromArgv = function() {
         ["timecontrol", "timecontrols"],
         ["timecontrolranked", "timecontrolsranked"],
         ["timecontrolunranked", "timecontrolsunranked"]
-        ]
-    deprecatedArgs.forEach(ar => testDeprecated(...ar))
-
-    for (let e of familyArrayFromGeneralArg("komis")) {
-        if (argv[e]) { // we add a check here to avoid undefined error if bot admin is not using this argv
-        // for example if argv[komisranked]
-            if (argv[e].split(",").includes("auto")) {
-            // we need to split the argv value into an array before the includes test
-                console.log(`Warning: /--${e} auto/ is no longer supported, use /--${e} automatic/ instead`);
-            }
-            if (argv[e].split(",").includes("null")) {
-            // we need to split the argv value into an array before the includes test
-                console.log(`Warning: /--${e} null/ is no longer supported, use /--${e} automatic/ instead`);
+        ];
+    for (let [oldName, newName] of deprecatedArgv) {
+        if (optimistArgv[oldName]) {
+            console.log(`Deprecated: --${oldName} is no longer supported, use --${newName} instead.`);
+        }
+    }
+    for (let komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
+        if (optimistArgv[komisGRUArg]) {
+            for (let komi of ["auto","null"]) {
+                if (optimistArgv[komisGRUArg].split(",").includes(komi)) {
+                    console.log(`Deprecated: --${komisGRUArg} /${komi}/ is no longer supported, use --${komisGRUArg} /automatic/ instead`);
+                }
             }
         }
     }
-    
-    if (deprecatedArgs.some(e => argv[e[0]])) {
-        console.log("\n");
-    }
-    
     console.log("\n");
+}
 
-    // end of console messages
 
-    // Set all the argv
-    for(var k in argv) exports[k] = argv[k];
+// optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
+function familyArrayNamesGRU(familyNameString) {
+    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
+}
 
-    // Convert timeout to microseconds once here so we don't need to do it each time it is used later.
-    //
-    if (argv.timeout) {
-        exports.timeout = argv.timeout * 1000;
-    }
-
-    if (argv.startupbuffer) {
-        exports.startupbuffer = argv.startupbuffer * 1000;
-    }
-
-    if (argv.beta) {
-        exports.host = 'beta.online-go.com';
-    }
-
-    if (argv.debug) {
-        exports.DEBUG = true;
-    }
-
-    exports.check_rejectnew = function()
-    {
-        if (argv.rejectnew)  return true;
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        return false;
-    }
-
-    if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
-        parseMinmaxRankFromNameString("minrank");
-    }
-    if (argv.minrankranked) {
-        parseMinmaxRankFromNameString("minrankranked");
-    }
-    if (argv.minrankunranked) {
-        parseMinmaxRankFromNameString("minrankunranked");
-    }
-    if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("maxrank");
-    }
-    if (argv.maxrankranked) {
-        parseMinmaxRankFromNameString("maxrankranked");
-    }
-    if (argv.maxrankunranked) {
-        parseMinmaxRankFromNameString("maxrankunranked");
-    }
-    if (argv.fakerank) {
-        parseMinmaxRankFromNameString("fakerank");
-    }
-    // TODO : remove fakerank when notification.bot.ranking is server implemented
-
-    if (argv.bans) {
-        for (let user of argv.bans.split(',')) {
-            exports.banned_users[user] = true;
-        }
-    }
-
-    if (argv.bansranked) {
-        for (let user of argv.bansranked.split(',')) {
-            exports.banned_users_ranked[user] = true;
-        }
-    }
-
-    if (argv.bansunranked) {
-        for (let user of argv.bansunranked.split(',')) {
-            banned_users_unranked[user] = true;
-        }
-    }
-
-    if (argv.boardsizes) {
-        for (let boardsize of argv.boardsizes.split(',')) {
-            if (boardsize === "all") {
-                exports.allow_all_boardsizes = true;
-            } else if (boardsize === "custom") {
-                exports.allow_custom_boardsizes = true;
-                for (let boardsizewidth of argv.boardsizewidths.split(',')) {
-                    exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
-                }
-                for (let boardsizeheight of argv.boardsizeheights.split(',')) {
-                    exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
-                }
-            } else {
-                exports.allowed_boardsizes[boardsize] = true;
-            }
-        }
-    }
-
-    if (argv.boardsizesranked) {
-        for (let boardsizeranked of argv.boardsizesranked.split(',')) {
-            if (boardsizeranked === "all") {
-                exports.allow_all_boardsizes_ranked = true;
-            } else if (boardsizeranked === "custom") {
-                exports.allow_custom_boardsizes_ranked = true;
-                for (let boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
-                    exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
-                }
-                for (let boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
-                    exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
-                }
-            } else {
-                exports.allowed_boardsizes_ranked[boardsizeranked] = true;
-            }
-        }
-    }
-
-    if (argv.boardsizesunranked) {
-        for (let boardsizeunranked of argv.boardsizesunranked.split(',')) {
-            if (boardsizeunranked === "all") {
-                exports.allow_all_boardsizes_unranked = true;
-            } else if (boardsizeunranked === "custom") {
-                exports.allow_custom_boardsizes_unranked = true;
-                for (let boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
-                    exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
-                }
-                for (let boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
-                    exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
-                }
-            } else {
-                exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
-            }
-        }
-    }
-
-    if (argv.komis) {
-        for (let komi of argv.komis.split(',')) {
-            if (komi === "all") {
-                exports.allow_all_komis = true;
-            } else if (komi === "automatic") {
-                exports.allowed_komis[null] = true;
-            } else {
-                exports.allowed_komis[komi] = true;
-            }
-        }
-    }
-
-    if (argv.komisranked) {
-        for (let komiranked of argv.komisranked.split(',')) {
-            if (komiranked === "all") {
-                exports.allow_all_komis_ranked = true;
-            } else if (komiranked === "automatic") {
-                exports.allowed_komis_ranked[null] = true;
-            } else {
-                exports.allowed_komis_ranked[komiranked] = true;
-            }
-        }
-    }
-
-    if (argv.komisunranked) {
-        for (let komiunranked of argv.komisunranked.split(',')) {
-            if (komiunranked === "all") {
-                exports.allow_all_komis_unranked = true;
-            } else if (komiunranked === "automatic") {
-                exports.allowed_komis_unranked[null] = true;
-            } else {
-                exports.allowed_komis_unranked[komiunranked] = true;
-            }
-        }
-    }
-
-    if (argv.speeds) {
-        for (let e of argv.speeds.split(',')) {
-            exports.allowed_speeds[e] = true;
-        }
-    }
-
-    if (argv.speedsranked) {
-        for (let e of argv.speedsranked.split(',')) {
-            exports.allowed_speeds_ranked[e] = true;
-        }
-    }
-
-    if (argv.speedsunranked) {
-        for (let e of argv.speedsunranked.split(',')) {
-            exports.allowed_speeds_unranked[e] = true;
-        }
-    }
-
-    if (argv.timecontrols) {
-        for (let e of argv.timecontrols.split(',')) {
-            exports.allowed_timecontrols[e] = true;
-        }
-    }
-
-    if (argv.timecontrolsranked) {
-        for (let e of argv.timecontrolsranked.split(',')) {
-            exports.allowed_timecontrols_ranked[e] = true;
-        }
-    }
-
-    if (argv.timecontrolsunranked) {
-        for (let e of argv.timecontrolunranked.split(',')) {
-            exports.allowed_timecontrols_unranked[e] = true;
-        }
-    }
-
-    exports.bot_command = argv._;
-
-    function familyArrayFromGeneralArg(generalArg) {
-        return ["", "unranked", "ranked" ].map(e => generalArg + e);
-    }
-
-    function parseMinmaxRankFromNameString(rankArgNameString) {
-        let re = /(\d+)([kdp])/;
-        let results = argv[rankArgNameString].toLowerCase().match(re);
+function parseRank(arg) {
+    if (arg) {
+        const re = /(\d+)([kdp])/;
+        const results = arg.toLowerCase().match(re);
 
         if (results) {
             if (results[2] === "k") {
-                exports[rankArgNameString] = 30 - parseInt(results[1]);
+                return (30 - parseInt(results[1]));
             } else if (results[2] === "d") {
-                exports[rankArgNameString] = 30 - 1 + parseInt(results[1]);
+                return (30 - 1 + parseInt(results[1]));
             } else if (results[2] === "p") {
-                exports[rankArgNameString] = 36 + parseInt(results[1]);
-                exports.proonly = true;
+                return (36 + parseInt(results[1]));
             } else {
-                console.error(`Invalid ${rankArgNameString} ${argv[rankArgNameString]}`);
+                console.error(`error : could not parse rank "${arg}"`);
                 process.exit();
             }
-        } else {
-            console.error(`Could not parse ${rankArgNameString} ${argv[rankArgNameString]}`);
-            process.exit();
         }
     }
+}
 
+function checkExportsWarnings(noPauseString) {
+    console.log("CHECK EXPORTS WARNINGS:\n-------------------------------------------------------");
+    let isWarning = false;
+    // avoid infinite games
+    //  TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
+    for (let r_u of ["ranked","unranked"]) {
+        if (!exports[noPauseString] || !exports[`${noPauseString}${r_u}`]) {
+            isWarning = true;
+            console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`); 
+        }
+    }
+    if (isWarning) console.log("[ WARNINGS ! ]\n");
+    else console.log("[ SUCCESS ]\n");
 }
