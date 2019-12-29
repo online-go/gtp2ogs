@@ -15,8 +15,23 @@ for example `--username GnuGo` for the bot admin of GnuGo
 
 #### B : 
 
-a list of gtp2ogs arguments is also available 
-[here](https://github.com/online-go/gtp2ogs/blob/devel/gtp2ogs.js) (ctrl+f "describe")
+example : `--boardsizes 19` or `--boardsizes 9,19` (most common sizes : 19x19 and 9x9) 
+
+or `--boardsizes all` (if you made some fancy bot)
+    
+if you want to use a "custom" board size, you need to specify wanted custom width(s) 
+and height(s) desired
+
+for example : `--boardsizes custom --boardsizewidths 25 --boardsizeheights 1` 
+will allow only 25x1 board size
+
+or another example `--boardsizes custom --boardsizewidths 9,10,11 --boardsizeheights 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25` 
+will allow all possible combinations of width and height here (there 3 multiplied by 
+17 possible combinations here, which is 51 possible board sizes !
+
+finally, it is possible to play "official" boardsizes too with this setting, 
+for example `--boardsizes custom --boardsizewidths 9 --boardsizeheights 9,19` will 
+allow 9x9 and 9x19 board sizes
 
 #### C : 
 
@@ -47,25 +62,35 @@ the value 7.5 for example (and not 0.5)
 
 #### E : 
 
-example : `--boardsizes 19` or `--boardsizes 9,19` (most common sizes : 19x19 and 9x9) 
+for timecontrols :
 
-or `--boardsizes all` (if you made some fancy bot)
-    
-if you want to use a "custom" board size, you need to specify wanted custom width(s) 
-and height(s) desired
+"absolute" and/or "none" can be manually allowed by bot admin in
+timecontrol if want, but then :
 
-for example : `--boardsizes custom --boardsizewidths 25 --boardsizeheights 1` 
-will allow only 25x1 board size
+- for absolute games : make sure you increase --minmaintime/blitz*live*corr 
+higher than default (with current defaults, bot will timeout in just a few moves)
+- for "none" : games would be very very long
 
-or another example `--boardsizes custom --boardsizewidths 9,10,11 --boardsizeheights 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25` 
-will allow all possible combinations of width and height here (there 3 multiplied by 
-17 possible combinations here, which is 51 possible board sizes !
+#### F :
 
-finally, it is possible to play "official" boardsizes too with this setting, 
-for example `--boardsizes custom --boardsizewidths 9 --boardsizeheights 9,19` will 
-allow 9x9 and 9x19 board sizes
+Currently, when handicap is automatic, `notification.handicap` always 
+returns `-1` regardless of actual handicap stone number (ex: `0`, `3`, 
+`5` stones, etc.)
 
-#### F : 
+Example use case : 
+- `--fakerank 6d` and `--maxhandicap 4` and user ranking 
+`2k`
+- 
+
+**important note** : until the min/maxhandicap bypass issue is fixed 
+(at the server level), it is recommended for botadmin (at the gtp2ogs 
+level) to use the `--fakerank` option, or `--noautohandicapranked`,
+ see for details :
+[#165](https://github.com/online-go/gtp2ogs/pull/165), 
+[#207](https://github.com/online-go/gtp2ogs/pull/207),
+[#28](https://github.com/online-go/gtp2ogs/issues/28).
+
+#### G : 
 
 when using the "msg" arguments (`--greeting` , `--farewell` , `--rejectnew --rejectnewmsg` , 
 some special characters will make gtp2ogs crash, such as `!!` (two times `!`) , 
@@ -73,29 +98,3 @@ so test special characters in your messages with caution
 
 these special characters have been tested to work on messages, among others :  `!` 
 (one time `!`) , `?` , `,` , `(` , `)` , `:` , `;` 
-
-#### G : 
-
-the ISSA (intuitive semi-syllabic aliases) have now been removed : 
-will use a config file with all needed options from now on
-
-So no need to input arguments in command line anymore, just modify your 
-config file(s)
-
-#### H :
-
-For example, if you can either use :
-- `--maxmaintimelive 600` , the general argument alone**
-- OR, if you want different settings for live ranked and unranked games, use for 
-example `--maxmaintimeliveranked 300 --maxmaintimeliveunranked 1800` but if you 
-do that then don't use `--minmaintimelive` !
-  
-in this example, if `--maxmaintimeliveranked 300 --maxmaintimeliveunranked 1800` 
-is set, then the general value `--maxmaintimelive 600` is not taken into account, 
-it will be either 300 seconds (5 minutes) for ranked games, or 1800 seconds 
-(30 minutes) for live unranked games
-
-note that some gtp2ogs arguments come with a default general value : for the 
-same reason, in that case, the default general value will not be taken into 
-account if you set a specific value for ranked and unranked games
-
