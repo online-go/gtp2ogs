@@ -420,8 +420,6 @@ class Connection {
         }
         /*------- end of BOARDSIZES -------*/
 
-
-
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
             return genericAllowedFamiliesReject("komis", notification.komi);
         }
