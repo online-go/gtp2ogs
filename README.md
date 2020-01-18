@@ -3,9 +3,9 @@
 [![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
 
 
-This javascript tool allows all bots/AI compatible with 
+This javascript tool allows all bots/AI that support 
 [GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
-to communicate with [OGS (Online-Go.com Server)](https://online-go.com/)
+to communicate with [OGS (Online-Go.com Server)](https://online-go.com/).
 
 After being configured, gtp2ogs is ready to work as-is, 
 but it is also possible to [customize](#extra--custom-branches) it.

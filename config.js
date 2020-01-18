@@ -523,14 +523,14 @@ function parseRank(arg) {
                 return (36 + parseInt(results[1]));
             }
         } else {
-                console.error(`error : could not parse rank -${arg}-`);
+                console.error(`error: could not parse rank -${arg}-`);
                 process.exit();
         }
     }
 }
 
 function checkExportsWarnings(noPauseString) {
-    console.log("CHECK EXPORTS WARNINGS:\n-------------------------------------------------------");
+    console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
     // avoid infinite games
     // TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
