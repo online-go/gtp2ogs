@@ -327,7 +327,7 @@ class Game {
             doneProcessing();
             cb(moves)
 
-            if (!config.PERSIST && this.bot !== null) {
+            if (!config.persist && this.bot !== null) {
                 this.ensureBotKilled();
             }
         }, botError);
@@ -375,7 +375,7 @@ class Game {
         if (this.state.phase !== 'play')
             return;
         if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-            this.sendChat( config.GREETING, "discussion");
+            this.sendChat( config.greeting, "discussion");
             this.greeted = true;
         }
 
@@ -444,7 +444,7 @@ class Game {
     gameOver() /* {{{ */
     {
         if (config.farewell && this.state)
-            this.sendChat(config.FAREWELL, "discussion");
+            this.sendChat(config.farewell, "discussion");
 
         // Display result
         let s = this.state;

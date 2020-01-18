@@ -3,24 +3,21 @@
 [![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
 
 
-This javascript tool allows Go bots that support GTP 
-[(Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
-to communicate with OGS [(Online-Go.com Server)](https://online-go.com/)
+This javascript tool allows all bots/AI that support 
+[GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
+to communicate with [OGS (Online-Go.com Server)](https://online-go.com/).
 
-No programming knowledge is needed to use it : just install it and it works.
+After being configured, gtp2ogs is ready to work as-is, 
+but it is also possible to [customize](#extra--custom-branches) it.
 
-Programming knowledge is needed only to add extra features such as displaying
-and sending winrates and variations at every move, for example.
-
-Note that some contributors already provide their custom gtp2ogs branches 
-so you can download them directly or ask them if you want these features, 
-see [custom branches](#custom-branches)
-
-When you have a bot on OGS, you have total control over it : 
-you put it online when you want only, and there are many settings to choose 
-game settings to accept (rank, boardisze, correspondence games, etc..), but 
-also options to control your GPU/computing device power spent (max number of 
-simultaneous games, corrqueue, etc..)
+Being a bot admin on OGS means :
+- you can put your bot online whenever you want
+- choose settings to automatically accept or reject challenges 
+(example: rank, boardsize, blitz/live/correspondence, etc.), or to 
+control your GPU/computing device power spent (max number of 
+simultaneous games, corrqueue, etc.)
+- choose your bot-specific options (for example `-v 1600` for leela-zero, 
+etc.)
 
 # Full tutorial 
 
@@ -64,7 +61,7 @@ On all operating systems, gtp2ogs will be installed in 2 different directories, 
 
 ### 3. Recommended : Upgrade to devel branch
 
-This step is **is recommended**
+This step is **highly recommended**
 
 By default, npm installs an old branch of gtp2ogs that does not include latest 
 improvements, new features, and fixes
@@ -127,38 +124,19 @@ you want
 note 3 : to play on [beta OGS server](https://beta.online-go.com/) instead of the 
 [OGS server](https://online-go.com/), add the `--beta` argument
 
-### Extra : add features by editing gtp2ogs files
-
-This step is totally not needed but can be much appreciated
-
-To do that, programming knowledge is needed (or you can ask for help)
-
-However, some contributors freely provide their custom branches, see 
-[custom branches](#custom-branches)
-
-# Options
-
-Before putting `<gtp2ogsarguments>`, you have to put these options first :
-
-  ```--username``` Specify the username of the bot, for example `--username GnuGo`, 
-currently there is no profile number log in support on ogs, see 
-[notes A-](/docs/NOTES.md#a-) for details
-
-  ```--apikey``` Specify the API key for the bot, for example `--apikey 5srvb5es4se7651741r61devr864re`
-
-Then, the following options are placed in the above ```<gtp2ogsarguments>``` 
-section. Put a space in between options when there are more than one.
-Also put a space in between the option and the parameter, for example :
-
-  ```--startupbuffer 2 --boardsizes 13,19 --noclock --unrankedonly --maxconnectedgamesperuser 1 --maxmaintimelive 600 --maxperiodtimecorr 86400 --maxconnectedgames 10 --bans UserX,playerY --maxperiodsblitzranked 5 --maxperiodsliveranked 10 --maxperiodscorrranked 5```
+# Options :
 
 **You can find a list of all possible to use gtp2ogs arguments here**
 
-**[List of all Options](/docs/OPTIONS-LIST.md)**
+**<<<<<<<<<< [List of all Options](/docs/OPTIONS-LIST.md) >>>>>>>>>>**
 
-(Since the list takes a lot of place, it has been moved on a separate page)
 
-use the ones you want only, no need to use them all !
+Before putting `<gtp2ogsarguments>`, you have to put the options [username](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#username) 
+and [apikey](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#apikey) 
+first.
+
+Then, choose the wanted ```<gtp2ogsarguments>``` from the above [list of all options](/docs/OPTIONS-LIST.md) section (no need to use all these options, only the ones you want), 
+and separate each option with a space
 
 After that, add a ``` -- ``` (with one space before and one space after the `--` ), 
 to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as 
@@ -166,59 +144,37 @@ shown in
 [Most common usage earlier](#4-most-common-usage--start-gtp2ogsjs-using-nodejs)
 
 note : some gtp2ogsarguments have default so they are enabled even if you don't 
-specify them, such as `--komi` which default is "automatic" even if you dont specify 
-it ! (default value is overwritten when you set your own value)
+specify them.
 
-note 2 : if an argument has ranked and unranked in the same "family", use:
-- either the general argument alone,
-- OR, if you want to specify different settings for ranked and unranked games, use 
-both the ranked and the unranked argument with wanted values, and then don't use the 
-general argument ! (see [notes H-](/docs/NOTES.md#h-) for details)
-- the exception that confirms this rule is `--bans` : since bans is a string that 
-does not conflict with its ranked/unranked options, it is possible to use both 
-general value `--bans A,B` AND specific values at the same time too 
-`--bansranked X,Y --bansunranked Z` , see 
-[Options-List](/docs/OPTIONS-LIST.md) for details
+# Example of use :
 
-## Notes :
+We are using the AI PhoenixGo on linux in this example, 
+but it works the same way on other platforms and AI :
 
-A page summarizing the notes and details about gtp2ogs use can be viewed [here](/docs/NOTES.md)
+```sudo node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --beta --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username testbot --debug --startupbuffer 2 --bans 454,someplayer,489,512 --noclock --unrankedonly --maxconnectedgames 10 --maxconnectedgamesperuser 1 --minrank 5d --noautohandicapranked --maxhandicap 0 --fakerank 8d --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2019/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2019/PhoenixGo/etc/mcts_1gpu_beta.conf --v=1```
 
-# Custom branches
+# Extra : Custom branches
 
-Some branches add some nice features like 
-**displaying variations (PV) ingame for Leela zero and PhoenixGo**
+Some branches add some not obligatory, but still nice features such as 
+**displaying variations (PV) ingame for Leela zero and PhoenixGo** 
 
-See [Custom Branches](/docs/CUSTOM-BRANCHES.md)
+You may customize your gtp2ogs code by yourself if you have the programming 
+knowledge.
 
-# Discord chat : 
+However, some contributors freely provide their custom branches, see 
+[Custom Branches](/docs/CUSTOM-BRANCHES.md) for details.
 
-if you're read that far, maybe you'll be interested to share your bot experience with 
-bot admins or see talked topic !
+# Community Involvment
 
-come on the leela zero discord in `#bots` channel and follow the talk with everyone !
+- You may be interested in [Contributing](/docs/CONTRIBUTING.md)
 
-https://discord.gg/HZ23Cp9
+- You may also use [Issues](https://github.com/online-go/gtp2ogs/issues) 
+to report issues.
 
-This discord can also be useful if you want to have fast and quick, interactive chat !
+- You may be interested in joining the Discord chat : 
+In leela zero discord (`#bots` channel) : https://discord.gg/HZ23Cp9
 
-You can also use the discord to ask simple and quick questions
-
-However, if you have a problem and it needs some explanations and time, it is common 
-github practices to use the ["Issues"](https://github.com/online-go/gtp2ogs/issues) 
-forum instead
-
-# Contributing
-
-You like gtp2ogs and want to improve it ?
-
-found a bugfix ?
-
-want to add a new feature ?
-
-Welcome !
-
-come help us all make gtp2ogs more awesome than it already is ! 
-
-Read Contributing instructions [here](/docs/CONTRIBUTING.md)
-
+This discord can also be useful if you want to have fast and quick, 
+interactive chat, or ask simple and quick questions (github Issues are 
+preferred for long problems because they live a track that can be useful 
+later) !

@@ -1,4 +1,4 @@
-below is a list of all possible to use gtp2ogs arguments, 
+below is a list of all available gtp2ogs arguments, 
 
 Since they take a lot of place all the list has been moved here
 
@@ -50,32 +50,52 @@ currently provides :
 note : command line arguments should not be separated by skipping 
 lines, it was done here only for clearer display
 
-# FULL LIST 
+# 1) ROOT ARGUMENTS :
 
-The options below are clickable links, so that you can share the 
-link to the wanted option :
+  Arguments in this category work the same way no matter what 
+the ranked/unranked status is.
 
-#### host
-```--host``` OGS Host to connect to (default online-go.com)
+Note: about the "messages" arguments, some combinations of 
+characters in messages make gtp2ogs crash !!
+see for details [notes G-](/docs/docs/NOTES.md#g-)
 
-#### port
-```--port``` OGS Port to connect to (default 443)
+#### username
+  ```--username``` Specify the username of the bot, for example 
+`--username GnuGo`, see [notes A-](/docs/NOTES.md#a-) for details
 
-#### startupbuffer
-  ```--startupbuffer``` Subtract this many seconds from time 
-available on first move (default 5)
+#### apikey
+  ```--apikey``` Specify the API key for the bot, for example 
+`--apikey 5srvb5es4se7651741r61devr864re`
 
-#### timeout
-```--timeout``` Disconnect from a game after this many seconds (if set) 
-(default 0)
+note : in debug, the apikey is replaced with a "hidden" for 
+security reasons
 
-#### insecure
-```--insecure```  Don't use ssl to connect to the ggs/rest servers
+#### greeting
+  ```--greeting "Hello, have a nice game"``` 
+Greeting message to appear in chat at first move 
+(ex: "Hello, have a nice game")
 
-#### beta
-```--beta```  Connect to the [beta server](https://beta.online-go.com/) 
-instead of [OGS](https://online-go.com/) (sets ggs/rest hosts to the 
-beta server)
+see for details [notes G-](/docs/docs/NOTES.md#g-)
+
+#### farewell
+  ```--farewell "Thank you for playing"``` 
+Thank you message to appear in chat at end of game 
+(ex: "Thank you for playing")
+
+see for details [notes G-](/docs/docs/NOTES.md#g-)
+
+#### rejectnew arguments :
+  ```--rejectnew``` Reject all new challenges with the default 
+reject message
+
+  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` 
+if you add the rejectnewmsg argument, Reject all new challenges with a 
+customized message instead of the default message.
+
+see for details [notes G-](/docs/docs/NOTES.md#g-)
+
+  ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
+file exists (checked each time, can use for load-balancing)
 
 #### debug
 ```--debug```  Output GTP command and responses from your Go engine
@@ -87,56 +107,108 @@ output to a text file
 #### json
 ```--json```  Send and receive GTP commands in a JSON encoded format
 
+#### beta
+```--beta```  Connect to the [beta server](https://beta.online-go.com/) 
+instead of [OGS](https://online-go.com/) (changes host automatically)
+
+#### host
+```--host``` OGS Host to connect to
+
+#### port
+```--port``` OGS Port to connect to
+
+#### insecure
+```--insecure```  Do not use ssl to connect to the ggs/rest servers
+
+#### hidden
+  ```--hidden``` Hides the botname from the OGS game "Play against 
+computer" bot list (but it can still accept challenges)
+
+#### startupbuffer
+  ```--startupbuffer``` Subtract this many seconds from time 
+available on first move (if set)
+
+#### timeout
+```--timeout``` Disconnect from a game after this many seconds (if set)
+
 #### kgstime
   ```--kgstime```  Set this if bot understands the kgs-time_settings command
 
 #### showboard
-  ```--showboard```  Set this if bot understands the showboard GTP command, 
-and if you want to display the showboard output
+  ```--showboard```  Set this if bot understands the showboard 
+GTP command, and if you want to display the showboard output
 
-- This breaks some bots which dont support it 
-- And this makes the log much bigger, so may not be desired even if supported
+- This breaks some bots which dont support it (ex: PhoenixGo)
+- And this makes the log much bigger, so may not be desired even 
+if supported
 
 So default is disabled
+
+#### persist
+  ```--persist```  Bot process remains running between moves
 
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot
 
-#### persist
-  ```--persist```  Bot process remains running between moves
+#### nopause
+
+  ```--nopause```  Do not allow pauses during games
+
+  ```--nopauseranked``` Do not allow pauses during ranked games
+
+  ```--nopauseunranked``` Do not allow pauses during unranked games
 
 #### corrqueue
   ```--corrqueue``` Process correspondence games one at a time
 
 #### maxconnectedgames
   ```--maxconnectedgames``` Maximum number of connected games 
-for all users against your bot (correspondence games are currently included in 
-the connected games count, see [#59](https://github.com/online-go/gtp2ogs/issues/59) 
-for details) , which means the maximum number of games your bot can play at the 
-same time (choose a low number to regulate your computer performance and 
-stability) (default 20)
+for all users against your bot (correspondence games are currently 
+included in the connected games count, see 
+[#59](https://github.com/online-go/gtp2ogs/issues/59) for details), 
+which means the maximum number of games your bot can play at the 
+same time (choose a low number to regulate your computer performance 
+and stability)
 
 #### maxconnectedgamesperuser
   ```--maxconnectedgamesperuser``` Maximum number of 
-connected games per user against this bot (default 3)
+connected games per user against this bot
 
-#### rejectnew and rejectnewmsg
-  ```--rejectnew``` Reject all new challenges with the default 
-reject message
 
-  ```--rejectnew --rejectnewmsg "not accepting games because blablablah"``` 
-if you add the rejectnewmsg argument, Reject all new challenges with a customized 
-message instead of the default message. This message has to be included in 
-"not accepting games because blablablah" (for example to explain why, for how long, 
-if your bot is busy playing a tournament, etc...)
+#### only (part 1)
+  ```--rankedonly``` Only accept ranked matches
 
-#### rejectnewfile
-  ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
-file exists (checked each time, can use for load-balancing)
+  ```--unrankedonly```  Only accept unranked matches
+
+  ```--proonly``` For all matches, only accept those from professionals
+
+#### fakerank
+  ```--fakerank``` Fake bot ranking to calculate automatic handicap 
+stones number in autohandicap (-1) based on rankDifference between 
+fakerank and user ranking, to fix the bypass minhandicap maxhandicap 
+issue if handicap is -automatic
+
+see [notes F-](/docs/docs/NOTES.md#f-) for details
+
+# 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
+
+  Arguments in this category allow us to accept or reject 
+a challenge based on the notification (challenge settings)
+
+##     A) ALL/RANKED/UNRANKED FAMILIES :
+
+  Here the general argument (ex: --bans) does not confict with 
+the ranked and unranked arguments for accepting/rejecting matches.
+
+example: 
+`--bans A,B --bansranked X,Y --bansunranked Z`
+result of these bans arguments :
+- banned users for ranked games : A,B,X,Y
+- banned users for unranked games : A,B,Z
 
 #### bans
-  ```--bans``` Comma separated list of user names or IDs 
-(e.g.  UserA,UserB,UserC  do not put spaces in between)
+  ```--bans``` Comma separated list of user names or IDs who 
+are banned from ranked and unranked games
 
   ```--bansranked``` Comma separated list of user names or IDs who 
 are banned from ranked games
@@ -144,80 +216,113 @@ are banned from ranked games
   ```--bansunranked``` Comma separated list of user names or IDs who 
 are banned from unranked games
 
-The "bans" arguments are an exception to the general rule of using only general 
-argument alone, or specific ranked/unranked instead :
+##     B) GENERAL/RANKED/UNRANKED FAMILIES :
 
-Because, since bans is a string, we allow both general value `--bans A,B` AND 
-specific values at the same time too `--bansranked X,Y --bansunranked Z`, the 
-result will be Players banned : 
+  Here you can either use :
 
-- for ranked games : A,B,X,Y
-- for unranked games : A,B,Z 
+- only the general argument (ex: `--maxhandicap 2`), the same setting 
+will be used for ranked and unranked games
+
+- OR both the ranked AND the unranked arguments 
+(ex: `--maxhandicapranked 0 --maxhandicapunranked 9`), 
+and in that case, the general argument will be ignored 
+and instead the ranked and unranked will be used depending 
+on whether the game is ranked or unranked.
+
+##         B1) ALLOWED FAMILIES :
+
+  For the allowed families arguments, you can either use the value :
+- `all` : will allow ALL possible values
+- for text-only families ("blitz", "fischer", "white", etc.), 
+comma-separated values (without space) will allow every value inputted, 
+every other value will be rejected
+- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
+(boardsizes)), it is possible to use as well the "range" 
+operator `:` to navigate one by one from min to max (ex: 
+`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
+
+example: `--speeds all`
+example 2: `--speedsranked live,correspondence --speedsunranked all`
+example 3: `--komis 0.5,5.5:7.5,automatic`
 
 #### boardsizes
+
   ```--boardsizes``` Board size(s) to accept
 
   ```--boardsizesranked``` Board size(s) to accept for ranked games
 
   ```--boardsizesunranked``` Board size(s) to accept for unranked games
 
-Possible boardsizes values :
+Possible boardsize width value(s) :
+- `all` (allows all board size widths)
+- `custom` (format switches from allow square boardsizes only 
+to allow combinations of boardsize widths/heights)
+- comma separated and `:` separated values, for example 
+`25` (allows 25x25), or `9,13,15:17,19` (allows 
+9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-- `all` (allows ALL boardsizes, use only if your bot can handle it !), 
-- `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 
-15x15, 3x2, etc..), 
-- or square boardsizes written in numbers comma separated (default is `9,13,19` 
-which is 9x9, 13x13, 19x19), see [notes E-](/docs/docs/NOTES.md#e-) for details
+#### boardsize widths/heights
 
-#### boardsizes custom
-if ```--boardsizes custom``` is chosen, then you need to specify these new 
-options as well :
+  ```--boardsizewidths``` For custom board sizes, boardsize 
+width(s) to accept
 
-  ```--boardsizewidths``` For custom board sizes, specify boardsize width(s) 
-to accept, for example 25
+  ```--boardsizewidthranked``` For custom board sizes, boardsize 
+width(s) to accept for ranked games
 
-  ```--boardsizewidthsranked``` For custom board sizes, specify boardsize 
-width(s) to accept for ranked games, for example 25
+  ```--boardsizeswidthsunranked``` For custom board sizes, boardsize 
+width(s) to accept for unranked games
 
-  ```--boardsizewidthsunranked``` For custom board sizes, specify boardsize 
-width(s) to accept for unranked games, for example 25
+Possible boardsize width value(s) :
+- `all` (allows all board size widths)
+- comma separated values, for example `25`, or `9,13,19`
 
-  ```--boardsizeheights``` For custom board sizes, specify boardsize height(s) 
-to accept, for example 1,2,3
+```--boardsizeheights``` For custom board sizes, boardsize 
+height(s) to accept
 
-  ```--boardsizeheightsranked``` For custom board sizes, specify boardsize 
-height(s) to accept for ranked games, for example 1,2,3
+```--boardsizeheightranked``` For custom board sizes, boardsize 
+height(s) to accept for ranked games
 
-  ```--boardsizeheightsunranked``` For custom board sizes, specify boardsize 
-height(s) to accept, for example 1,2,3
+```--boardsizesheightsunranked``` For custom board sizes, boardsize 
+height(s) to accept for unranked games
 
-for example :
+Possible boardsize height value(s):
+- `all` (allows all board size heights)
+- comma separated values, for example `1`, or `1,2,3` 
 
-  ```--boardsizes custom --boardsizewidths 25 --boardsizeheights 1,2,3``` 
-Allows custom board sizes 25x1 25x2 25x3 in that example, see 
-[notes E-](/docs/docs/NOTES.md#e-) for details
+  For custom boardsizes, we allow all combinations of allowed 
+widths and heights, for example :
+
+- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9,19` 
+will allow all these boardsizes combinations:
+```
+9x1,9x2,9x3,9x9,9x19
+13x1,13x2,13x3,13x9,13x19
+15x1,15x2,15x3,15x9,15x19
+19x1,19x2,19x3,19x9,19x19
+25x1,25x2,25x3,25x3,25x19
+```
+
+see [notes B-](/docs/docs/NOTES.md#b-) for details:
 
 #### komis
-```--komis``` Allowed komi values  (default automatic)
+  ```--komis``` Allowed komi values
 
-```--komisranked``` Allowed komi values for ranked games
+  ```--komisranked``` Allowed komi values for ranked games
 
-```--komisunranked``` Allowed komi values for unranked games
+  ```--komisunranked``` Allowed komi values for unranked games
  
-Possible komi values : 
-- `automatic` (allows automatic komi), 
-- `all` (allows all komi values), When `all` is used alone, all 
-komi values are allowed. 
-- comma separated values, for example `7.5`, or `7.5,6.5,0.5,automatic` 
+Possible komi value(s):
+- `all` (allows all komis)
+- comma separated and `:` separated values, 
+for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
+5.5, 6.5, 7.5, 0.5, automatic.
 
-When an argument other than `all` is used, only the chosen argument komi 
-values are allowed and all other komi values are rejected see 
-[notes C-](/docs/docs/NOTES.md#c-) and [notes D-](/docs/docs/NOTES.md#d-) 
-for details
+For extra komi explanations, see :
+- [notes C-](/docs/docs/NOTES.md#c-)
+- [notes D-](/docs/docs/NOTES.md#d-)
 
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
-(default blitz,live,correspondence)
 
   ```--speedsranked``` Comma separated list of Game speed(s) to 
 accept for ranked games
@@ -225,9 +330,14 @@ accept for ranked games
   ```--speedsunranked``` Comma separated list of Game speed(s) to 
 accept for unranked games
 
+Possible speed value(s) :
+- `all` (allows all speeds)
+- comma separated values, for example `blitz`, or `live, correspondence`
+
+Full list of possible values :  `blitz`,  `live`, `correspondence`.
+
 #### timecontrols
-  ```--timecontrols``` Time control(s) to accept (default fischer,
-byoyomi,simple,canadian)
+  ```--timecontrols``` Time control(s) to accept
 
   ```--timecontrolsranked``` Time control(s) to accept for ranked 
 games
@@ -235,15 +345,75 @@ games
   ```--timecontrolsunranked``` Time control(s) to accept for unranked 
 games
 
-note : "absolute" and/or "none" can be manually allowed by bot 
-admin in timecontrol if want, but then : 
+Possible timecontrol value(s) :
+- `all` (allows all timecontrol values)
+- comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
-- for absolute games : make sure you increase `--minmaintime/blitz*live*corr` 
-a lot higher than default (with current defaults, bot will timeout 
-in just a few moves)
-- for "none" : games would be very very long
+Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
+`simple`, `absolute`, `none`.
 
-#### minmaintime
+see [notes E-](/docs/docs/NOTES.md#e-) for details
+
+##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+
+#### noautohandicap
+  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
+
+  ```--noautohandicapranked``` Do not allow handicap to be set to 
+-automatic- for ranked games
+  
+  ```--noautohandicapunranked``` Do not allow handicap to be set to 
+-automatic- for unranked games
+
+#### min/max handicap
+
+  min :
+
+  ```--minhandicap```  Minimum handicap to accept
+
+  ```--minhandicapranked```  Mininimum handicap to accept for ranked games
+
+  ```--minhandicapunranked``` Minimum handicap to accept for unranked games
+
+  max :
+
+  ```--maxhandicap```  Maximum handicap to accept for all games
+
+  ```--maxhandicapranked``` Maximum handicap to accept for ranked games
+
+  ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
+
+**important note** : see 
+[fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
+
+#### min/max rank
+
+  min :
+
+  ```--minrank``` Minimum opponent rank to accept (e.g. 15k)
+
+  ```--minrankranked``` Minimum opponent rank to accept for 
+ranked games (e.g. 15k)
+
+  ```--minrankunranked``` Minimum opponent rank to accept for 
+unranked games (e.g. 15k)
+
+  max :
+
+  ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
+
+  ```--maxrankranked``` Maximum opponent rank to accept for 
+ranked games (e.g. 1d)
+
+  ```--maxrankunranked``` Maximum opponent rank to accept for 
+unranked games (e.g. 1d)
+
+#### min/max maintime blitz/live/corr
+
+
+  min :
+
+
   ```--minmaintimeblitz``` Minimum seconds of main time for 
 blitz games (default 15 , which is 15 seconds)
 
@@ -271,7 +441,10 @@ correspondence ranked games
  ```--minmaintimecorrunranked``` Minimum seconds of main time 
 for correspondence unranked games 
 
-#### maxmaintime
+
+  max :
+
+
   ```--maxmaintimeblitz``` Maximum seconds of main time for 
 blitz games (default 300, which is 5 minutes)
 
@@ -299,9 +472,14 @@ correspondence ranked games
   ```--maxmaintimecorrunranked``` Maximum seconds of main time for 
 correspondence unranked games 
 
-#### minperiods
+#### min/max periods blitz/live/corr
+
+
+  min :
+
+
   ```--minperiodsblitz``` Minimum number of periods for 
-blitz games (default 3)
+blitz games
 
   ```--minperiodsblitzranked``` Minimum number of periods 
 for blitz ranked games
@@ -310,7 +488,7 @@ for blitz ranked games
 for blitz unranked games
 
   ```--minperiodslive``` Minimum number of periods for 
-live games (default 3)
+live games
 
   ```--minperiodsliveranked``` Minimum number of periods 
 for live ranked games
@@ -319,7 +497,7 @@ for live ranked games
 for live unranked games
 
   ```--minperiodscorr``` Minimum number of periods for 
-correspondence games (default 3)
+correspondence games
 
   ```--minperiodscorrranked``` Minimum number of periods 
 for correspondence ranked games
@@ -327,9 +505,12 @@ for correspondence ranked games
   ```--minperiodscorrunranked``` Minimum number of periods 
 for correspondence unranked games
 
-#### maxperiods
+
+  max :
+
+
   ```--maxperiodsblitz``` Maximum number of periods for 
-blitz games (default 20)
+blitz games
 
   ```--maxperiodsblitzranked``` Maximum number of periods 
 for blitz ranked games
@@ -338,7 +519,7 @@ for blitz ranked games
 for blitz unranked games
 
   ```--maxperiodslive``` Maximum number of periods for 
-live games (default 20)
+live games
 
   ```--maxperiodsliveranked``` Maximum number of periods 
 for live ranked games
@@ -347,7 +528,7 @@ for live ranked games
 for live unranked games
 
   ```--maxperiodscorr``` Maximum number of periods for 
-correspondence games (default 10)
+correspondence games
 
   ```--maxperiodscorrranked``` Maximum number of periods 
 for correspondence ranked games
@@ -355,12 +536,17 @@ for correspondence ranked games
   ```--maxperiodscorrunranked``` Maximum number of periods 
 for correspondence unranked games
 
-#### minperiodtime
- For period times below, if timecontrol is canadian, divide the period 
-time by the number of stones per period, 
+#### min/max periodtime blitz/live/corr
+
+ For period times below, if timecontrol is canadian, divide the 
+wanted period time for all the stones by the number of stones per period, 
 
 for example max periodtime 
-5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 
+5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
+
+
+  min :
+
 
   ```--minperiodtimeblitz``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
@@ -392,12 +578,9 @@ for example max periodtime
   ```--minperiodtimecorrunranked``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence unranked games 
 
-#### maxperiodtime 
- For period times below, if timecontrol is canadian, divide the period time 
-by the number of stones per period, 
 
-for example max periodtime 
-5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 
+  max :
+
 
   ```--maxperiodtimeblitz``` Maximum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
@@ -429,118 +612,8 @@ for example max periodtime
   ```--maxperiodtimecorrunranked``` Maximum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence unranked games 
 
-#### minrank
-  ```--minrank``` Minimum opponent rank to accept (e.g. 15k)
+# extra : notes :
 
-  ```--minrankranked``` Minimum opponent rank to accept for 
-ranked games (e.g. 15k)
-
-  ```--minrankunranked``` Minimum opponent rank to accept for 
-unranked games (e.g. 15k)
-
-#### maxrank
-  ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
-
-  ```--maxrankranked``` Maximum opponent rank to accept for 
-ranked games (e.g. 1d)
-
-  ```--maxrankunranked``` Maximum opponent rank to accept for 
-unranked games (e.g. 1d)
-
-#### greeting
-  ```--greeting "Hello, have a nice game"``` 
-Greeting message to appear in chat at first move (ex: "Hello, have a nice game")
-
-#### farewell
-  ```--farewell "Thank you for playing"``` 
-Thank you message to appear in chat at end of game (ex: "Thank you for playing")
-
-#### only
-  ```--rankedonly``` Only accept ranked matches
-
-  ```--unrankedonly```  Only accept unranked matches
-
-  ```--proonly``` Only accept matches from professionals
-
-#### minhandicap
-  ```--minhandicap```  Min handicap for all games
-
-  ```--minhandicapranked```  Min handicap for ranked games
-
-  ```--minhandicapunranked``` Min handicap for unranked games
-
-**important note** : until the min/max bypass issue is fixed (at
-the server level), it is recommended for botadmin (at the gtp2ogs 
-level) to use the `--fakerank` option, or `--noautohandicapranked`,
- see for details :
-[#165](https://github.com/online-go/gtp2ogs/pull/165), 
-[#207](https://github.com/online-go/gtp2ogs/pull/207),
-[#28](https://github.com/online-go/gtp2ogs/issues/28).
-
-note 2 : currently, since "automatic" handicap returns the server 
-value `notification.handicap` `-1`, using `--minhandicap 0` will 
-also disable automatic handicap (because `-1 < 0`), regardless of 
-the number of automatic handicap stones
-
-#### maxhandicap
-  ```--maxhandicap```  Max handicap for all games
-
-  ```--maxhandicapranked``` Max handicap for ranked games
-
-  ```--maxhandicapunranked``` Max handicap for unranked games
-
-**important note** : until the min/max bypass issue is fixed (at
-the server level), it is recommended for botadmin (at the gtp2ogs 
-level) to use the `--fakerank` option, or `--noautohandicapranked`,
- see for details :
-[#165](https://github.com/online-go/gtp2ogs/pull/165), 
-[#207](https://github.com/online-go/gtp2ogs/pull/207),
-[#28](https://github.com/online-go/gtp2ogs/issues/28).
-  
-#### noautohandicap
-  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
-
-  ```--noautohandicapranked``` Do not allow handicap to be set to 
--automatic- for ranked games
-  
-  ```--noautohandicapunranked``` Do not allow handicap to be set to 
--automatic- for unranked games
-
-#### fakerank
-  ```--fakerank``` Temporary manual bot ranking input by bot admin 
-to fix autohandicap bypass issue, by manualy counting min and max 
-number of handicap stones allowed if handicap is "automatic"
-
-This is a temporary fix until server sends handicap notification as
-an object telling if handicap is automatic or user-defined, as well
-as the number of stones if automatic or user-defined (we currently
-only know the latter, automatic always returns `-1` regardless of
-actual handicap stone number)
-
-for example ```--fakerank 6d``` and ```--maxhandicap 4``` will allow 
-automatic handicap only for opponents ranked between 2d-6d for 
-automatic handicap, but players of any rank (even 25k or 9d+) will be 
-notified that they are still able to play up to 4 handicap stones games 
-by going in -custom handicap- and manually inputting the number of 
-handicap stones
-
-**important note** : until the min/max bypass issue is fixed (at
-the server level), it is recommended for botadmin (at the gtp2ogs 
-level) to use the `--fakerank` option, or `--noautohandicapranked`,
- see for details :
-[#165](https://github.com/online-go/gtp2ogs/pull/165), 
-[#207](https://github.com/online-go/gtp2ogs/pull/207),
-[#28](https://github.com/online-go/gtp2ogs/issues/28).
-
-#### nopause
-  ```--nopause```  Do not allow games to be paused
-
-  ```--nopauseranked``` Do not allow ranked games to be paused
-
-  ```--nopauseunranked``` Do not allow unranked games to be paused
-
-#### hidden
-  ```--hidden``` Hides the botname from the OGS game "Play against 
-computer" bot list (but it can still accept challenges)
+Additional notes have been added [here](/docs/NOTES.md)
 
 -> **continue reading in [README.md/Options](/README.md/#options)**
