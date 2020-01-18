@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
 
 
-This javascript tool allows all bots/AI that support 
+This javascript tool allows all bots/AI compatible with 
 [GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol) 
 to communicate with [OGS (Online-Go.com Server)](https://online-go.com/)
 
@@ -151,7 +151,7 @@ specify them.
 We are using the AI PhoenixGo on linux in this example, 
 but it works the same way on other platforms and AI :
 
-```sudo node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --beta --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username testbot --debug --startupbuffer 2 --bans 454,someplayer,489,512 --noclock --unrankedonly --maxconnectedgames 10 --maxconnectedgamesperuser 1 --minrank 5d --noautohandicapranked --maxhandicap 0 --fakerank 8d --boardsizes 19,,, --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2019/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2019/PhoenixGo/etc/mcts_1gpu_beta.conf --v=1```
+```sudo node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --beta --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username testbot --debug --startupbuffer 2 --bans 454,someplayer,489,512 --noclock --unrankedonly --maxconnectedgames 10 --maxconnectedgamesperuser 1 --minrank 5d --noautohandicapranked --maxhandicap 0 --fakerank 8d --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2019/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2019/PhoenixGo/etc/mcts_1gpu_beta.conf --v=1```
 
 # Extra : Custom branches
 
@@ -178,4 +178,3 @@ This discord can also be useful if you want to have fast and quick,
 interactive chat, or ask simple and quick questions (github Issues are 
 preferred for long problems because they live a track that can be useful 
 later) !
-

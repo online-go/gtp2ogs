@@ -37,7 +37,7 @@ exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
-           // 1) ROOT ARGUMENTS :
+        // 1) ROOT ARGUMENTS :
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -103,17 +103,17 @@ exports.updateFromArgv = function() {
         .string('boardsizesranked')
         .describe('boardsizesunranked', 'Board size(s) to accept for unranked games')
         .string('boardsizesunranked')
-        .describe('boardsizewidths', 'For custom board sizes, specify boardsize width(s) to accept, for example 25')
+        .describe('boardsizewidths', 'For custom board sizes, boardsize width(s) to accept')
         .string('boardsizewidths')
-        .describe('boardsizeheights', 'For custom board sizes, specify boardsize height(s) to accept, for example 1')
+        .describe('boardsizeheights', 'For custom board sizes, boardsize height(s) to accept')
         .string('boardsizeheights')
-        .describe('boardsizewidthsranked', 'For custom board sizes, specify boardsize width(s) to accept for ranked games, for example 25')
+        .describe('boardsizewidthsranked', 'For custom board sizes, boardsize width(s) to accept for ranked games')
         .string('boardsizewidthsranked')
-        .describe('boardsizeheightsranked', 'For custom board sizes, specify boardsize height(s) to accept for ranked games, for example 1')
+        .describe('boardsizeheightsranked', 'For custom board sizes, boardsize height(s) to accept for ranked games')
         .string('boardsizeheightsranked')
-        .describe('boardsizewidthsunranked', 'For custom board sizes, specify boardsize width(s) to accept for unranked games, for example 25')
+        .describe('boardsizewidthsunranked', 'For custom board sizes, boardsize width(s) to accept for unranked games')
         .string('boardsizewidthsunranked')
-        .describe('boardsizeheightsunranked', 'For custom board sizes, specify boardsize height(s) to accept for unranked games, for example 1')
+        .describe('boardsizeheightsunranked', 'For custom board sizes, boardsize height(s) to accept for unranked games')
         .string('boardsizeheightsunranked')
         .describe('komis', 'Allowed komi values')
         .string('komis')
@@ -275,11 +275,6 @@ exports.updateFromArgv = function() {
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
         return false;
     };
-    if (exports.DEBUG) {
-        let result = exports;
-        delete result.apikey;
-        console.log(`ROOT EXPORTS (apikey hidden):\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
-    }
 
     /* 2) specifc r_u cases :*/
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
@@ -441,8 +436,7 @@ exports.updateFromArgv = function() {
 
     // Show in debug all the ranked/unranked exports results
     if (exports.DEBUG) {
-        let result = exports;
-        delete result.apikey;
+        let result = { ...exports };
         console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
     }
 }
@@ -527,10 +521,10 @@ function parseRank(arg) {
                 return (30 - 1 + parseInt(results[1]));
             } else if (results[2] === "p") {
                 return (36 + parseInt(results[1]));
-            } else {
-                console.error(`error : could not parse rank "${arg}"`);
-                process.exit();
             }
+        } else {
+                console.error(`error : could not parse rank -${arg}-`);
+                process.exit();
         }
     }
 }
@@ -539,7 +533,7 @@ function checkExportsWarnings(noPauseString) {
     console.log("CHECK EXPORTS WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
     // avoid infinite games
-    //  TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
+    // TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
     for (let r_u of ["ranked","unranked"]) {
         if (!exports[noPauseString] || !exports[`${noPauseString}${r_u}`]) {
             isWarning = true;

@@ -1,4 +1,4 @@
-below is a list of all possible to use gtp2ogs arguments, 
+below is a list of all available gtp2ogs arguments, 
 
 Since they take a lot of place all the list has been moved here
 
@@ -49,7 +49,6 @@ currently provides :
 
 note : command line arguments should not be separated by skipping 
 lines, it was done here only for clearer display
-
 
 # 1) ROOT ARGUMENTS :
 
@@ -136,11 +135,12 @@ available on first move (if set)
   ```--kgstime```  Set this if bot understands the kgs-time_settings command
 
 #### showboard
-  ```--showboard```  Set this if bot understands the showboard GTP command, 
-and if you want to display the showboard output
+  ```--showboard```  Set this if bot understands the showboard 
+GTP command, and if you want to display the showboard output
 
 - This breaks some bots which dont support it (ex: PhoenixGo)
-- And this makes the log much bigger, so may not be desired even if supported
+- And this makes the log much bigger, so may not be desired even 
+if supported
 
 So default is disabled
 
@@ -163,11 +163,12 @@ So default is disabled
 
 #### maxconnectedgames
   ```--maxconnectedgames``` Maximum number of connected games 
-for all users against your bot (correspondence games are currently included in 
-the connected games count, see [#59](https://github.com/online-go/gtp2ogs/issues/59) 
-for details) , which means the maximum number of games your bot can play at the 
-same time (choose a low number to regulate your computer performance and 
-stability)
+for all users against your bot (correspondence games are currently 
+included in the connected games count, see 
+[#59](https://github.com/online-go/gtp2ogs/issues/59) for details), 
+which means the maximum number of games your bot can play at the 
+same time (choose a low number to regulate your computer performance 
+and stability)
 
 #### maxconnectedgamesperuser
   ```--maxconnectedgamesperuser``` Maximum number of 
@@ -232,71 +233,76 @@ on whether the game is ranked or unranked.
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
-- comma-separated values (without space) will allow every value inputted, 
+- for text-only families ("blitz", "fischer", "white", etc.), 
+comma-separated values (without space) will allow every value inputted, 
 every other value will be rejected
+- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
+(boardsizes)), it is possible to use as well the "range" 
+operator `:` to navigate one by one from min to max (ex: 
+`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
 
-#### bans
-  ```--bans``` Comma separated list of user names or IDs 
-(e.g.  UserA,UserB,UserC  do not put spaces in between)
-
-  ```--bansranked``` Comma separated list of user names or IDs who 
-are banned from ranked games
-
-  ```--bansunranked``` Comma separated list of user names or IDs who 
-are banned from unranked games
-
-The "bans" arguments are an exception to the general rule of using only general 
-argument alone, or specific ranked/unranked instead :
-
-Because, since bans is a string, we allow both general value `--bans A,B` AND 
-specific values at the same time too `--bansranked X,Y --bansunranked Z`, the 
-result will be Players banned : 
-
-- for ranked games : A,B,X,Y
-- for unranked games : A,B,Z 
+example: `--speeds all`
+example 2: `--speedsranked live,correspondence --speedsunranked all`
+example 3: `--komis 0.5,5.5:7.5,automatic`
 
 #### boardsizes
+
   ```--boardsizes``` Board size(s) to accept
 
   ```--boardsizesranked``` Board size(s) to accept for ranked games
 
   ```--boardsizesunranked``` Board size(s) to accept for unranked games
 
-Possible boardsizes values :
+Possible boardsize width value(s) :
+- `all` (allows all board size widths)
+- `custom` (format switches from allow square boardsizes only 
+to allow combinations of boardsize widths/heights)
+- comma separated and `:` separated values, for example 
+`25` (allows 25x25), or `9,13,15:17,19` (allows 
+9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-- `all` (allows ALL boardsizes, use only if your bot can handle it !), 
-- `custom` (allows specified custom boardsize (for example 25x1, 9x9, 17x2 , 
-15x15, 3x2, etc..), 
-- or square boardsizes written in numbers comma separated (default is `9,13,19` 
-which is 9x9, 13x13, 19x19), see [notes E-](/docs/docs/NOTES.md#e-) for details
+#### boardsize widths/heights
 
-#### boardsizes custom
-if ```--boardsizes custom``` is chosen, then you need to specify these new 
-options as well :
+  ```--boardsizewidths``` For custom board sizes, boardsize 
+width(s) to accept
 
-  ```--boardsizewidths``` For custom board sizes, specify boardsize width(s) 
-to accept, for example 25
+  ```--boardsizewidthranked``` For custom board sizes, boardsize 
+width(s) to accept for ranked games
 
-  ```--boardsizewidthsranked``` For custom board sizes, specify boardsize 
-width(s) to accept for ranked games, for example 25
+  ```--boardsizeswidthsunranked``` For custom board sizes, boardsize 
+width(s) to accept for unranked games
 
-  ```--boardsizewidthsunranked``` For custom board sizes, specify boardsize 
-width(s) to accept for unranked games, for example 25
+Possible boardsize width value(s) :
+- `all` (allows all board size widths)
+- comma separated values, for example `25`, or `9,13,19`
 
-  ```--boardsizeheights``` For custom board sizes, specify boardsize height(s) 
-to accept, for example 1,2,3
+```--boardsizeheights``` For custom board sizes, boardsize 
+height(s) to accept
 
-  ```--boardsizeheightsranked``` For custom board sizes, specify boardsize 
-height(s) to accept for ranked games, for example 1,2,3
+```--boardsizeheightranked``` For custom board sizes, boardsize 
+height(s) to accept for ranked games
 
-  ```--boardsizeheightsunranked``` For custom board sizes, specify boardsize 
-height(s) to accept, for example 1,2,3
+```--boardsizesheightsunranked``` For custom board sizes, boardsize 
+height(s) to accept for unranked games
 
-for example :
+Possible boardsize height value(s):
+- `all` (allows all board size heights)
+- comma separated values, for example `1`, or `1,2,3` 
 
-  ```--boardsizes custom --boardsizewidths 25 --boardsizeheights 1,2,3``` 
-Allows custom board sizes 25x1 25x2 25x3 in that example, see 
-[notes E-](/docs/docs/NOTES.md#e-) for details
+  For custom boardsizes, we allow all combinations of allowed 
+widths and heights, for example :
+
+- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9,19` 
+will allow all these boardsizes combinations:
+```
+9x1,9x2,9x3,9x9,9x19
+13x1,13x2,13x3,13x9,13x19
+15x1,15x2,15x3,15x9,15x19
+19x1,19x2,19x3,19x9,19x19
+25x1,25x2,25x3,25x3,25x19
+```
+
+see [notes B-](/docs/docs/NOTES.md#b-) for details:
 
 #### komis
   ```--komis``` Allowed komi values
@@ -305,9 +311,11 @@ Allows custom board sizes 25x1 25x2 25x3 in that example, see
 
   ```--komisunranked``` Allowed komi values for unranked games
  
-Possible komi values (other than `all`) : 
-- `automatic` (allows automatic komi), 
-- comma separated values, for example `7.5`, or `7.5,6.5,0.5,automatic`
+Possible komi value(s):
+- `all` (allows all komis)
+- comma separated and `:` separated values, 
+for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
+5.5, 6.5, 7.5, 0.5, automatic.
 
 For extra komi explanations, see :
 - [notes C-](/docs/docs/NOTES.md#c-)
@@ -322,6 +330,12 @@ accept for ranked games
   ```--speedsunranked``` Comma separated list of Game speed(s) to 
 accept for unranked games
 
+Possible speed value(s) :
+- `all` (allows all speeds)
+- comma separated values, for example `blitz`, or `live, correspondence`
+
+Full list of possible values :  `blitz`,  `live`, `correspondence`.
+
 #### timecontrols
   ```--timecontrols``` Time control(s) to accept
 
@@ -330,6 +344,10 @@ games
 
   ```--timecontrolsunranked``` Time control(s) to accept for unranked 
 games
+
+Possible timecontrol value(s) :
+- `all` (allows all timecontrol values)
+- comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
 `simple`, `absolute`, `none`.
@@ -365,7 +383,8 @@ see [notes E-](/docs/docs/NOTES.md#e-) for details
 
   ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
-**important note** : see [fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
+**important note** : see 
+[fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
 
 #### min/max rank
 
