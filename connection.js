@@ -801,9 +801,9 @@ function familyObjectMIBL(familyNameString) {
 }
 
 function checkObjectArgsToArgNameString(familyObjectArgNameStrings, notificationRanked) {
-    if (config[familyObjectArgNameStrings.unranked] && !notificationRanked) {
+    if (config[familyObjectArgNameStrings.unranked] !== undefined && !notificationRanked) {
         return familyObjectArgNameStrings.unranked;
-    } else if (config[familyObjectArgNameStrings.ranked] && notificationRanked) {
+    } else if (config[familyObjectArgNameStrings.ranked] !== undefined && notificationRanked) {
         return familyObjectArgNameStrings.ranked;
     } else { /* beware : since we don't always provide defaults for the general arg, we would 
              /  need to check it if we use this function in other functions than the minMax ones (ex: minrank, minhandicap) */ 
@@ -833,7 +833,7 @@ function minMaxHandicapRankRejectResult(familyNameString, familyNotification, is
     let argNameString = "";
     for (let familyObject of [minFamilyObject, maxFamilyObject]) {
         argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (config[argNameString] && minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+        if (config[argNameString] !== undefined && minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
             let argToString = config[argNameString];
             let familyNameStringConverted = familyNameString;
             let familyNotificationConverted = familyNotification;
