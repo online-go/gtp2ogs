@@ -1,21 +1,54 @@
 #### A : 
 
-Currently, ogs does not support profile id number authentification, 
-so you have to use bot username only. 
+For numbers +/- text allowed families, it is possible to choose a 
+range of allowed values faster using the "range" operator `:` ,
+and optionally the "increment" operator `::` (default increment is `1`).
 
-For example, for this famous bot https://online-go.com/player/58441/GnuGo, 
-bot admin has to use the bot name `GnuGo` and currently bot admin cannot 
-use profile number `58441` (it will not work).
+- "range":
 
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that 
-still required names and not id numbers, contrary to what this 
-line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) 
-that added confusion to how to use gtp2ogs for bot admins have 
-been removed
+instead of doing `9,10,11,12,13,14,15,16,17,18,19`, you can simply do 
+`9:19` which means select all values from 9 to 19 with a +1 distance 
+between each value (increment)
 
-To sum up, to connect your bot on OGS, you need and you have 
-to simply use bot name, for example `--username GnuGo` for 
-the bot admin of GnuGo
+range can be safely reversed: `19:9` will work the exact same as `9:19`, 
+because the range algorithm detects min and max value before applying 
+the increment.
+
+- "increment":
+
+increment is the distance between two values in the range.
+
+Default increment is `1`, for example `9:19::1` is the same as `9:19`.
+
+Because we detect min and max before doing the range, increment can be 
+both positive and negative, it will work the exact same way.
+
+For safety reasons, minimum increment was set to `0.25` (absolute 
+value), so any absolute value lower than `0.25` will be set to `0.25`. 
+Note that this excludes the case where increment `0` would create an 
+infinite loop.
+
+Finally, decimal increments such as (`0.5` or `19.5`) only work 
+for komis.
+
+Other families, for example boardsizes, can only be 
+integers (`0`, `1`) so in that case the increment will be 
+ceiled to next value, for example `2.5` will be `3`, `2.189` 
+will be ceiled to `3`.
+
+examples :
+- `9:19::2` is `9,11,13,15,17,19`
+- `9:19::2`, `9:19::-2`, `19:9::2`, `19:9::-2` are all the exact same
+- `9:19::0.5` for boardsizes will be same as `9:19::1` which is the same 
+as `9:19`
+- `
+
+Finally range and increments can be used many times, and don't conflict 
+with text, for example:
+
+- `--boardsizes 9,13:19::2,21:25` is `9,13,15,17,19,21,22,23,24,25`
+- `--komis -7:7,automatic,0.5,5.5:7.5` is 
+`-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,automatic,0.5,5.5,6.5,7.5`.
 
 #### B : 
 
@@ -110,9 +143,13 @@ always returns `-1` regardless of actual handicap stone number
 (ex: `0`, `3`, `5` stones, etc.)
 
 Example use case : 
-- `--fakerank 6d` and `--maxhandicap 4` and user ranking 
-`2k`
-- 
+`--fakerank 6d --maxhandicap 4` and user ranking `2k`:
+
+- Automatic handicap stones: 6d - 2k = 8 rank difference 
+=> 8 automatic handicap stones
+- but max handicap is 4 stones
+- 8 (detected automatic stones wanted by user) > 
+max stones allowed 4 => challenge rejected
 
 **important note** : until the min/maxhandicap bypass issue 
 is fixed (at the server level), it is recommended for botadmin 
@@ -132,3 +169,22 @@ special characters in your messages with caution
 these special characters have been tested to work on messages, 
 among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , 
 `:` , `;` 
+
+####  H:
+
+Currently, ogs does not support profile id number authentification, 
+so you have to use bot username only. 
+
+For example, for this famous bot https://online-go.com/player/58441/GnuGo, 
+bot admin has to use the bot name `GnuGo` and currently bot admin cannot 
+use profile number `58441` (it will not work).
+
+Therefore, the old `id` aliases (`id` , `botid` , `bot`), that 
+still required names and not id numbers, contrary to what this 
+line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) 
+that added confusion to how to use gtp2ogs for bot admins have 
+been removed
+
+To sum up, to connect your bot on OGS, you need and you have 
+to simply use bot name, for example `--username GnuGo` for 
+the bot admin of GnuGo

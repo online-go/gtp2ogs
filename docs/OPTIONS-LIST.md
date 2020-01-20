@@ -25,7 +25,9 @@ currently provides :
 --rejectnewmsg "Currently, this bot is not accepting games, try again later "
 --boardsizes 9,13,19
 --komis automatic
---speeds blitz,live,correspondence
+--rules chinese
+--challengercolors all
+--speeds all
 --timecontrols fischer,byoyomi,simple,canadian
 --minmaintimeblitz 15
 --maxmaintimeblitz 300
@@ -57,11 +59,11 @@ the ranked/unranked status is.
 
 Note: about the "messages" arguments, some combinations of 
 characters in messages make gtp2ogs crash !!
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### username
   ```--username``` Specify the username of the bot, for example 
-`--username GnuGo`, see [notes A-](/docs/NOTES.md#a-) for details
+`--username GnuGo`, see [notes H-](/docs/NOTES.md#H-) for details
 
 #### apikey
   ```--apikey``` Specify the API key for the bot, for example 
@@ -75,14 +77,14 @@ security reasons
 Greeting message to appear in chat at first move 
 (ex: "Hello, have a nice game")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### farewell
   ```--farewell "Thank you for playing"``` 
 Thank you message to appear in chat at end of game 
 (ex: "Thank you for playing")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### rejectnew arguments :
   ```--rejectnew``` Reject all new challenges with the default 
@@ -92,7 +94,7 @@ reject message
 if you add the rejectnewmsg argument, Reject all new challenges with a 
 customized message instead of the default message.
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
   ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
@@ -180,7 +182,15 @@ connected games per user against this bot
 
   ```--unrankedonly```  Only accept unranked matches
 
+  ```--privateonly```  Only accept private matches
+
+  ```--publiconly```  Only accept public (non-private) matches
+
   ```--proonly``` For all matches, only accept those from professionals
+
+  ```--proonlyranked``` For ranked games, only accept those from professionals
+
+  ```--proonlyunranked``` For ranked games, only accept those from professionals
 
 #### fakerank
   ```--fakerank``` Fake bot ranking to calculate automatic handicap 
@@ -188,7 +198,7 @@ stones number in autohandicap (-1) based on rankDifference between
 fakerank and user ranking, to fix the bypass minhandicap maxhandicap 
 issue if handicap is -automatic
 
-see [notes F-](/docs/docs/NOTES.md#f-) for details
+see [notes F-](/docs/NOTES.md#f-) for details
 
 # 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
 
@@ -234,12 +244,14 @@ on whether the game is ranked or unranked.
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
 - for text-only families ("blitz", "fischer", "white", etc.), 
-comma-separated values (without space) will allow every value inputted, 
-every other value will be rejected
+comma-separated values (without space) will allow every value 
+inputted, every other value will be rejected
 - for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
 (boardsizes)), it is possible to use as well the "range" 
 operator `:` to navigate one by one from min to max (ex: 
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
+`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`), 
+as well as the "increment" operator (ex: `13:19::2` is `13,15,17,19`, 
+see [notes A-](/docs/NOTES.md#a-) for details.
 
 example: `--speeds all`
 example 2: `--speedsranked live,correspondence --speedsunranked all`
@@ -287,22 +299,22 @@ height(s) to accept for unranked games
 
 Possible boardsize height value(s):
 - `all` (allows all board size heights)
-- comma separated values, for example `1`, or `1,2,3` 
+- comma separated values, for example `1`, or `1:3` 
 
   For custom boardsizes, we allow all combinations of allowed 
 widths and heights, for example :
 
-- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9,19` 
-will allow all these boardsizes combinations:
+- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9:19::5` 
+(is `1,2,3,9,14,19`) will allow all these boardsizes combinations:
 ```
-9x1,9x2,9x3,9x9,9x19
-13x1,13x2,13x3,13x9,13x19
-15x1,15x2,15x3,15x9,15x19
-19x1,19x2,19x3,19x9,19x19
-25x1,25x2,25x3,25x3,25x19
+9x1,9x2,9x3,9x9,9x14,9x19
+13x1,13x2,13x3,13x9,13x14,13x19
+15x1,15x2,15x3,15x9,15x14,15x19
+19x1,19x2,19x3,19x9,19x14,19x19
+25x1,25x2,25x3,25x3,25x14,25x19
 ```
 
-see [notes B-](/docs/docs/NOTES.md#b-) for details:
+see [notes B-](/docs/NOTES.md#b-) for details.
 
 #### komis
   ```--komis``` Allowed komi values
@@ -315,11 +327,43 @@ Possible komi value(s):
 - `all` (allows all komis)
 - comma separated and `:` separated values, 
 for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
-5.5, 6.5, 7.5, 0.5, automatic.
+(5.5, 6.5, 7.5, 0.5, automatic), or `-2:3::0.5` (allows komis 
+(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
 
 For extra komi explanations, see :
-- [notes C-](/docs/docs/NOTES.md#c-)
-- [notes D-](/docs/docs/NOTES.md#d-)
+- [notes C-](/docs/NOTES.md#c-)
+- [notes D-](/docs/NOTES.md#d-)
+
+#### rules
+
+  ```--rules``` Board size(s) to accept
+
+  ```--rulesranked``` Board size(s) to accept for ranked games
+
+  ```--rulesunranked``` Board size(s) to accept for unranked games
+
+Possible rules value(s) : 
+- `all` (allows all rules)
+- comma separated values, for example `chinese`, or `chinese,japanese,aga` 
+
+Full list of possible values :  `chinese`, `japanese`, AGA, etc. 
+(will update actual rule name string later TODO)
+
+#### challengercolors
+
+  ```--challengercolors``` Challenger color(s) to accept
+
+  ```--challengercolorsranked``` Challenger color(s) to accept 
+for ranked games
+
+  ```--challengercolorsunranked``` Challenger color(s) to accept 
+for unranked games
+
+Possible challengercolors value(s) : 
+- `all` (allows all challengercolors)
+- comma separated values, for example `white`, or `automatic,random` 
+
+Full list of possible values :  `black`, `white`, `automatic`, `random`
 
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
@@ -352,7 +396,7 @@ Possible timecontrol value(s) :
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
 `simple`, `absolute`, `none`.
 
-see [notes E-](/docs/docs/NOTES.md#e-) for details
+see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
 
@@ -364,6 +408,21 @@ see [notes E-](/docs/docs/NOTES.md#e-) for details
   
   ```--noautohandicapunranked``` Do not allow handicap to be set to 
 -automatic- for unranked games
+
+#### nopauseonweekends
+
+note: this setting has no effect on pausing DURING games, here 
+we only accept or reject a match if it comes with the setting 
+"Pause on week-ends" (specific to correspondence games)
+
+  ```--nopauseonweekends```  Do not accept matches that come with the 
+option -pauses on weekends- (specific to correspondence games)
+
+  ```--nopauseonweekendsranked``` Do not accept ranked matches that come 
+with the option -pauses on weekends- (specific to correspondence games)
+
+  ```--nopauseonweekendsunranked``` Do not accept unranked matches that 
+come with the option -pauses on weekends- (specific to correspondence games)
 
 #### min/max handicap
 
@@ -384,7 +443,7 @@ see [notes E-](/docs/docs/NOTES.md#e-) for details
   ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
 **important note** : see 
-[fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
+[fakerank](#fakerank).
 
 #### min/max rank
 

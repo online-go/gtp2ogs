@@ -274,13 +274,16 @@ class Connection {
     //
     checkChallenge(notification) {
 
+        // load config.ranked or config.unranked depending on notification.ranked
+        const r_u_strings = generate_r_u_strings_connection(notification.ranked, notification.time_control.speed);
+        const config_r_u = config[r_u_strings.r_u];
         let result = {};
         for (let test of [this.checkChallengeMandatory,
-                          this.checkChallengeSanityChecks,
+                          //this.checkChallengeSanityChecks,
                           this.checkChallengeBooleans,
                           this.checkChallengeAllowedFamilies,
                           this.checkChallengeSettings]) {
-            result = test.bind(this)(notification);
+            result = test.bind(this)(notification, config_r_u, r_u_strings);
             if (result.reject) return result;
         }
 
@@ -289,24 +292,19 @@ class Connection {
     }
     // Check challenge mandatory conditions
     //
-    checkChallengeMandatory(notification) {
+    checkChallengeMandatory(notification, config_r_u, r_u_strings) {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (let uid of ["username", "id"]) {
-            if (config.banned_users[notification.user[uid]]) {
-                return bannedFamilyReject("bans", uid, notification.user[uid]);
-            }
-            if (notification.ranked && config.banned_users_ranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansranked", uid, [notification.user[uid]]);
-            }
-            if (!notification.ranked && config.banned_users_unranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansunranked", uid, [notification.user[uid]]);
+            if (config_r_u.banned_users[notification.user[uid]]) {
+                conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`);
+                return { reject: true, msg: `You (${uid} ${notification.user[uid]}) are banned ${r_u_strings.for_r_u_games} on this bot by bot admin, you may try changing the ranked/unranked setting` };
             }
         }
-        const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
-        if (resultRank) return resultRank;
+        const resultMinMaxRank = genericMinMaxRejectResult("rank", "rank", notification.user.ranking, false, config_r_u, r_u_strings);
+        if (resultMinMaxRank) return resultMinMaxRank;
 
-        // check bot is available, else don't mislead user :
+        // check bot is available, else don't mislead user:
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
@@ -332,43 +330,34 @@ class Connection {
     }
     // Check challenge sanity checks
     //
-    checkChallengeSanityChecks(notification) {
+    //checkChallengeSanityChecks(notification, config_r_u, r_u_strings) {
 
-        // TODO : add all sanity checks here of all unhandled notifications
-        // Sanity check, user can't choose rules. Bots only play chinese.
-        if (["chinese"].indexOf(notification.rules) < 0) {
-            conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
-            return { reject: true, msg: "The " + notification.rules + " rules are not allowed for this bot, please choose allowed rules such as chinese rules. " };
-        }
+        // TODO: add all sanity checks here of all unhandled notifications
 
-        return { reject: false }; // OK !
+        //return { reject: false }; // OK !
 
-    }
+    //}
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification) {
+    checkChallengeBooleans(notification, config_r_u, r_u_strings) {
 
-        if (config.proonly && !notification.user.professional) {
-            conn_log(notification.user.username + " is not a professional");
-            return { reject: true, msg: "You are not a professional player, this bot accepts games vs professionals only. " };
-        }
-        if (config.rankedonly && !notification.ranked) {
-            conn_log("Ranked games only");
-            return { reject: true, msg: "This bot accepts ranked games only. " };
-        }
-        if (config.unrankedonly && notification.ranked) {
-            conn_log("Unranked games only");
-            return { reject: true, msg: "This bot accepts Unranked games only. " };
-        }
-        if (notification.handicap === -1) {
-            if (config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
-                return noAutohandicapReject("noautohandicap");
-            }
-            if (config.noautohandicapranked && notification.ranked) {
-                return noAutohandicapReject("noautohandicapranked");
-            }
-            if (config.noautohandicapunranked && !notification.ranked) {
-                return noAutohandicapReject("noautohandicapunranked");
+        let for_r_u_g = "";
+        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g],
+                                  //[config.privateonly, "Non-private games are", !notification.private, for_r_u_g],
+                                  [config.rankedonly, "Unranked games are", !notification.ranked, for_r_u_g],
+                                  [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g] ];
+
+        for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
+        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional, for_r_u_g],
+                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends, for_r_u_g],
+                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1), for_r_u_g] ];
+
+        for (let test of [testBooleanArgs, testBooleanArgs_r_u]) {
+            for (let [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
+                if (arg && notifCondition) {
+                    conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
+                    return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
+                }
             }
         }
 
@@ -377,85 +366,47 @@ class Connection {
     }
     // Check challenge allowed families settings are allowed
     //
-    checkChallengeAllowedFamilies(notification) {
+    checkChallengeAllowedFamilies(notification, config_r_u, r_u_strings) {
 
-        /*------- begining of BOARDSIZES -------*/
-        // 1) for square board sizes only
-        //     A) if not square
-        if (notification.width !== notification.height) {
-            if (!config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-                return boardsizeNotificationIsNotSquareReject("boardsizes", notification.width, notification.height);
+        const testsAllowedFamilies = [ ["boardsizes", "Board size", notification.width],
+                                       ["boardsizewidths", "Board size WIDTH", notification.width],
+                                       ["boardsizeheights", "Board size HEIGHT", notification.height],
+                                       ["komis", "Komi", notification.komi],
+                                       ["rules", "Rule", notification.rules],
+                                       ["challengercolors", "Player Color", notification.challenger_color],
+                                       ["speeds", "Speed", notification.time_control.speed],
+                                       ["timecontrols", "Time control", notification.time_control.time_control] ];
+        let notifDisplayed = "";
+        let allowedValuesString = "";
+        for (let [familyNameString, nameF, familyNotification] of testsAllowedFamilies) {
+            if (!config_r_u[`allow_all_${familyNameString}`]) {
+                allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
+                if (familyNameString === "boardsizes") {
+                    if (config_r_u[`allow_custom_boardsizes`]) {
+                        continue; // test reject specifically later using boardsizewidths or boardsizeheights
+                    } else if (notification.width !== notification.height) {
+                        // if not custom AND not square AND allowed notif => reject, ex: 19x18
+                        notifDisplayed = `${notification.width}x${notification.height}`;
+                        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+                        conn_log(`${nameF} ${notifDisplayed} is not square, not allowed ${r_u_strings.for_r_u_games}`);
+                        return { reject: true, msg: `${nameF} ${notifDisplayed} is not square, not allowed ${r_u_strings.for_r_u_games} on this bot, please choose among: ` };
+                    }
+                }
+                notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
+                if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]) {
+                    if (familyNameString === "boardsizes") {
+                        notifDisplayed = `${notification.width}x${notification.height}`;
+                        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+                    } else if (["boardsizewidths","boardsizeheights"].includes(familyNameString) && config_r_u[`allow_custom_boardsizes`]) {
+                        notifDisplayed = `${notification.width}x${notification.height}`;
+                        allowedValuesString = boardsizesWidthsHeightsToDisplayString(config_r_u);
+                    } else if (familyNameString === "komis" && notifDisplayed === "null") {
+                        notifDisplayed = "automatic"; // allowed_challengercolors is already "automatic" in config.js, no need to change it
+                    }
+                    conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
+                    return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot ${r_u_strings.for_r_u_games}, please choose among:\n-${allowedValuesString}-` };
+                }
             }
-            if (!config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-                return boardsizeNotificationIsNotSquareReject("boardsizesranked", notification.width, notification.height);
-            }
-            if (!config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-                return boardsizeNotificationIsNotSquareReject("boardsizesunranked", notification.width, notification.height);
-            }
-        }
-        //     B) if square, check if square board size is allowed
-        if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizes", notification.width);
-        }
-        if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            return genericAllowedFamiliesReject("boardsizesranked", notification.width);
-        }
-        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
-        }
-
-        // 2) for custom board sizes, including square board sizes if width === height as well
-        //     A) if custom, check width
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizewidths[notification.width] && !config.boardsizewidthsranked && !config.boardsizewidthsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidths", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidthsranked", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidthsunranked", notification.width, notification.height);
-        }
-        //     B) if custom, check height
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !config.boardsizeheightsranked && !config.boardsizeheightsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheights", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheightsranked", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheightsunranked", notification.width, notification.height);
-        }
-        /*------- end of BOARDSIZES -------*/
-
-        if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            return genericAllowedFamiliesReject("komis", notification.komi);
-        }
-        if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            return genericAllowedFamiliesReject("komisranked", notification.komi);
-        }
-        if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            return genericAllowedFamiliesReject("komisunranked", notification.komi);
-        }
-
-        if (!config.allowed_speeds[notification.time_control.speed] && !config.speedsranked && !config.speedsunranked) {
-            return genericAllowedFamiliesReject("speeds", notification.time_control.speed);
-        }
-        if (!config.allowed_speeds_ranked[notification.time_control.speed] && notification.ranked && config.speedsranked) {
-            return genericAllowedFamiliesReject("speedsranked", notification.time_control.speed);
-        }
-        if (!config.allowed_speeds_unranked[notification.time_control.speed] && !notification.ranked && config.speedsunranked) {
-            return genericAllowedFamiliesReject("speedsunranked", notification.time_control.speed);
-        }
-
-        // note : "absolute" and/or "none" are possible, but not in defaults, see OPTIONS-LIST for details
-        if (!config.allowed_timecontrols[notification.time_control.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrols", notification.time_control.time_control);
-        }
-        if (!config.allowed_timecontrols_ranked[notification.time_control.time_control] && notification.ranked && config.timecontrolsranked) { 
-            return genericAllowedFamiliesReject("timecontrolsranked", notification.time_control.time_control);
-        }
-        if (!config.allowed_timecontrols_unranked[notification.time_control.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrolsunranked", notification.time_control.time_control);
         }
 
         return { reject: false }; // OK !
@@ -463,24 +414,29 @@ class Connection {
     }
     // Check challenge settings are allowed
     //
-    checkChallengeSettings(notification) {
+    checkChallengeSettings(notification, config_r_u, r_u_strings) {
 
-        let handicapSettings =  {notif: notification.handicap, isFakeHandicap: config.fakerank || false};
+        let handicapNotif =  notification.handicap;
         if (notification.handicap === -1 && config.fakerank) {
-            // TODO : modify or remove fakerank code whenever server sends us automatic handicap 
-            //        notification.handicap different from -1.
-            /* adding a .floor : 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+            // TODO: modify or remove fakerank code whenever server sends us automatic handicap 
+            //       notification.handicap different from -1.
+            /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
             /  but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone*/
-            handicapSettings.notif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
+            handicapNotif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
-        const resultHandicap = minMaxHandicapRankRejectResult("handicap", handicapSettings.notif, handicapSettings.isFakeHandicap, notification.ranked);
-        if (resultHandicap) return resultHandicap;
-        const resultMaintime = UHMAEATRejectResult("maintime", notification.time_control, notification.ranked);
-        if (resultMaintime) return resultMaintime;
-        const resultPeriods = minMaxPeriodsRejectResult("periods", notification.time_control.periods, notification.time_control.speed, notification.ranked);
-        if (resultPeriods) return resultPeriods;
-        const resultPeriodtime = UHMAEATRejectResult("periodtime", notification.time_control, notification.ranked);
-        if (resultPeriodtime) return resultPeriodtime;
+        for (let blitzLiveCorr of ["blitz", "live", "corr"]) {
+            if (notification.time_control.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
+                const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakerank || false],
+                                      [`maintime${blitzLiveCorr}`, "main time", notification.time_control, false],
+                                      [`periods${blitzLiveCorr}`, "number of periods", notification.time_control.periods, false],
+                                      [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
+                let resultMinMax = false;
+                for (let [f,n,notif,isFakeHandicap] of testsMinMax) {
+                    resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
+                    if (resultMinMax) return resultMinMax;
+                }
+            }
+        }
 
         return { reject: false };  // Ok !
 
@@ -493,7 +449,7 @@ class Connection {
         const accepting = (c0.reject ? "Rejecting" : "Accepting");
         conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
                          accepting, notification.user.username, rankToString(notification.user.ranking),
-                         notification.width, notification.width,
+                         notification.width, notification.height,
                          handi, notification.game_id));
 
         if (!c0.reject) {
@@ -682,132 +638,70 @@ function conn_log() {
     }
 }
 
-function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special) {
-    const isExtra = (extra !== "");
-    if (argNameString.includes("unranked")) {
-        return `${before}${extra}unranked games`; //ex: "for blitz unranked games"
-    } else if (argNameString.includes("ranked")) {
-        return `${before}${extra}ranked games`;   //ex: "for ranked games"
-    } else if (isExtra) {
-        return `${before}${extra}games`           //ex: "for correspondence games"
-    } else if (special !== "") {
-        return `${before}${special}games`         //ex: "from all games"
-    } else {
-        return "";
+function generate_r_u_strings_connection(rankedSetting, speedSetting) {
+    let r_u = "unranked";
+    if (rankedSetting) {
+        r_u = "ranked";
     }
+    return { r_u,
+             for_r_u_games: `for ${r_u} games`,
+             for_blc_r_u_games: `for ${speedSetting} ${r_u} games`,
+             from_r_u_games: `from ${r_u} games` };
 }
 
 function rankToString(r) {
     const R = Math.floor(r);
-    if (R >= 30)  return (R-30+1) + 'd'; // R>=30 : 1 dan or stronger
-    else          return (30-R) + 'k';   // R<30  : 1 kyu or weaker
-}
-
-function bannedFamilyReject(argNameString, uid, notificationUid) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
-    conn_log(`${uid} ${notificationUid} is banned ${rankedUnranked}`);
-    return { reject: true, msg: `You (${uid} ${notificationUid}) are banned ${rankedUnranked} on this bot by bot admin, you may try changing the ranked/unranked setting` };
-}
-
-function noAutohandicapReject(argNameString) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    conn_log(`no autohandicap ${rankedUnranked}`);
-    return { reject: true, msg: `For easier bot management, -automatic- handicap is disabled on this bot ${rankedUnranked}, please manually select the number of handicap stones you want in -custom handicap-, for example 2 handicap stones, you may try changing the ranked/unranked setting` };
-}
-
-function boardsizeNotificationIsNotSquareReject(argNameString, notificationWidth, notificationHeight) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    conn_log(`boardsize ${notificationWidth} x ${notificationHeight} is not square, not allowed ${rankedUnranked}`);
-    return { reject: true, msg: `Your selected board size ${notificationWidth} x ${notificationHeight} is not square, not allowed ${rankedUnranked} on this bot, please choose a SQUARE board size (same width and height), for example try 9x9 or 19x19}` };
+    if (R >= 30)  return (R-30+1) + 'd'; // R>=30: 1 dan or stronger
+    else          return (30-R) + 'k';   // R<30:  1 kyu or weaker
 }
 
 function boardsizeSquareToDisplayString(boardsizeSquare) {
     return boardsizeSquare
-    .toString()
     .split(',')
     .map(e => e.trim())
     .map(e => `${e}x${e}`)
     .join(', ');
 }
 
-function pluralFamilyStringToSingularString(plural) {
-    let pluralToConvert = plural.split("unranked")[0].split("ranked")[0].split("");
-    // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
-    pluralToConvert.pop();
-    // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
-    pluralToConvert = pluralToConvert.join("");
-    // for example ["s", "p", "e", "e", "d"] -> "speed"
-    return pluralToConvert;
-}
-
-function genericAllowedFamiliesReject(argNameString, notificationUnit) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    const argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
-    // for example "speedsranked" -> "speed"
-    let argValueString = config[argNameString];
-    let notificationUnitConverted = notificationUnit;
-
-    if (argFamilySingularString.includes("boardsize")) {
-        argValueString = boardsizeSquareToDisplayString(config[argNameString]);
-        // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
-        notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
-    } else if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
-        notificationUnitConverted = "automatic";
+function boardsizesWidthsHeightsToDisplayString(config_r_u) {
+    let allowedBoardsizesObject = { widths: [], heights: [] };
+    for (let widthsHeights in allowedBoardsizesObject) {
+        if (config_r_u[`allow_all_boardsize${widthsHeights}`]) {
+            allowedBoardsizesObject[widthsHeights] = ["(all)"];
+        } else {
+            allowedBoardsizesObject[widthsHeights] = Object.keys(config_r_u[`allowed_boardsize${widthsHeights}`]);
+        }
     }
-    conn_log(`${argFamilySingularString} ${rankedUnranked} -${notificationUnitConverted}-, not in -${argValueString}- `);
-    return { reject: true, msg: `${argFamilySingularString} -${notificationUnitConverted}- is not allowed on this bot ${rankedUnranked}, please choose one of these allowed ${argFamilySingularString}s ${rankedUnranked}: -${argValueString}-` };
-    /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
-                     choose one of these allowed speeds for ranked games: -live,correspondence-"*/
-}
-
-function customBoardsizeWidthsHeightsReject(argNameString, notificationWidth, notificationHeight) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    let widthHeight = "width";
-    let notificationUnit = notificationWidth;
-    if (argNameString.includes("height")) {
-        widthHeight = "height";
-        notificationUnit = notificationHeight;
+    let boardsizesCombinations = [];
+    for (let w of allowedBoardsizesObject.widths) {
+        for (let h of allowedBoardsizesObject.heights) {
+            boardsizesCombinations.push(`${w}x${h}`);
+        }
     }
-    conn_log(`boardsize ${widthHeight} ${rankedUnranked} -${notificationUnit}-, not in -${config[argNameString]}- `);
-    return { reject: true, msg: `In your selected board size ${notificationWidth} x ${notificationHeight} (width x height), boardsize ${widthHeight.toUpperCase()} (${notificationUnit}) is not allowed ${rankedUnranked} on this bot, please choose one of these allowed CUSTOM boardsize ${widthHeight.toUpperCase()}S values ${rankedUnranked}: ${config[argNameString]}` };
+    return boardsizesCombinations.join(', ');
 }
 
-function familyArrayFromFamilyNameString(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => familyNameString + e);
+function familyObjectMIBL(familyNameString, config_r_u) {
+    return [ { arg: config_r_u[`min${familyNameString}`], isMin: true, isMax: false,
+               MIBL: {minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low"} },
+             { arg: config_r_u[`max${familyNameString}`], isMin: false, isMax: true,
+               MIBL: {minMax: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high"} }
+           ].filter(e => e.arg !== undefined);
 }
 
-function familyObjectMIBL(familyNameString) {
-    let minMax = "";
-    let incDec = "";
-    let belAbo = "";
-    let lowHig = "";
-    const isMin = familyNameString.includes("min");
-    const isMax = familyNameString.includes("max");
-    if (isMin) {
-        minMax = "Minimum";
-        incDec = "increase";
-        belAbo = "below";
-        lowHig = "low";
-    } else {
-        minMax = "Maximum";
-        incDec = "reduce";
-        belAbo = "above";
-        lowHig = "high";
-    }
-    const familyArray = familyArrayFromFamilyNameString(familyNameString);
-    return { argNameStrings: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
-             MIBL: { minMax, incDec, belAbo, lowHig },
-             isMM: { isMin, isMax } };
-}
-
-function checkObjectArgsToArgNameString(familyObjectArgNameStrings, notificationRanked) {
-    if (config[familyObjectArgNameStrings.unranked] !== undefined && !notificationRanked) {
-        return familyObjectArgNameStrings.unranked;
-    } else if (config[familyObjectArgNameStrings.ranked] !== undefined && notificationRanked) {
-        return familyObjectArgNameStrings.ranked;
-    } else { /* beware : since we don't always provide defaults for the general arg, we would 
-             /  need to check it if we use this function in other functions than the minMax ones (ex: minrank, minhandicap) */ 
-        return familyObjectArgNameStrings.all;
+function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, config_r_u, r_u_strings) {
+    let fullObject = false;
+    for (let familyObject of familyObjectMIBL(familyNameString, config_r_u)) {
+        fullObject = UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings);
+        if (fullObject) { // exit the function if we don't reject
+            if (isFakerankReject) {
+                conn_log(`Automatic handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF}, but ${familyObject.MIBL.minMax} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}`);
+                return { reject: true, msg: `-Automatic- handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF} based on rank difference between you and this bot,\nBut ${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}:\nPlease ${familyObject.MIBL.incDec} the number of ${fullObject.nameF} in -custom- handicap.` };
+            } else {
+                conn_log(`${fullObject.notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} ${fullObject.arg}`);
+                return { reject: true, msg: `${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} is ${fullObject.arg}, ${fullObject.ending}.` };
+            }
+        }
     }
 }
 
@@ -827,46 +721,6 @@ function minMaxCondition(arg, familyNotification, isMin) {
     }
 }
 
-function minMaxHandicapRankRejectResult(familyNameString, familyNotification, isFakeHandicap, notificationRanked) {
-    const minFamilyObject = familyObjectMIBL("min" + familyNameString);
-    const maxFamilyObject = familyObjectMIBL("max" + familyNameString);
-    let argNameString = "";
-    for (let familyObject of [minFamilyObject, maxFamilyObject]) {
-        argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (config[argNameString] !== undefined && minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
-            let argToString = config[argNameString];
-            let familyNameStringConverted = familyNameString;
-            let familyNotificationConverted = familyNotification;
-            let rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-            let endingSentence = "";
-            if (familyNameString === "handicap") {
-                familyNameStringConverted = "handicap stones";
-                endingSentence = `please ${familyObject.MIBL.incDec} the number of ${familyNameStringConverted}`;
-                // handicap specific rejects below :
-                if (familyObject.isMM.isMin && familyNotificationConverted === 0 && config[argNameString] > 0) {
-                    rankedUnranked = beforeRankedUnrankedGamesSpecial("", "even ", argNameString, "");
-                    conn_log(`No ${rankedUnranked} (handicap games only)`);
-                    return { reject: true, msg: `This bot does not play ${rankedUnranked}, please manually select the number of ${familyNameStringConverted} in -custom handicap- : minimum is ${argToString} ${familyNameStringConverted}, or try changing ranked/unranked game setting.` };
-                } else if (familyObject.isMM.isMax && familyNotificationConverted > 0 && config[argNameString] === 0) {
-                    rankedUnranked = beforeRankedUnrankedGamesSpecial("", "handicap ", argNameString, "");
-                    conn_log(`No ${rankedUnranked} (even games only)'`);
-                    return { reject: true, msg: `This bot does not play ${rankedUnranked}, please choose handicap -none- (0 handicap stones), or try changing ranked/unranked game setting.` };
-                } else if (isFakeHandicap) { // fakerank specific reject
-                    conn_log(`Automatic handicap ${rankedUnranked} was set to ${familyNotificationConverted} stones, but ${familyObject.MIBL.minMax} handicap ${rankedUnranked} is ${argToString} stones`);
-                    return { reject: true, msg: `Your automatic handicap ${rankedUnranked} was automatically set to ${familyNotificationConverted} stones based on rank difference between you and this bot,\nBut ${familyObject.MIBL.minMax} handicap ${rankedUnranked} is ${argToString} stones \nPlease ${familyObject.MIBL.incDec} the number of handicap stones in -custom handicap- instead of -automatic handicap-` };
-                }
-            } else if (familyNameString === "rank") {
-                argToString = rankToString(config[argNameString]);
-                familyNotificationConverted = rankToString(familyNotificationConverted);
-                endingSentence = `your rank is too ${familyObject.MIBL.lowHig}`;
-            }
-            // if we are not in any "handicap" specific reject case, we return the generic return below instead :
-            conn_log(`${familyNotificationConverted} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${familyNameStringConverted} ${rankedUnranked} ${argToString}`);
-            return { reject: true, msg: `${familyObject.MIBL.minMax} ${familyNameStringConverted} ${rankedUnranked} is ${argToString}, ${endingSentence}.` };
-        }
-    }
-}
-
 function timespanToDisplayString(timespan) {
     let ss = timespan % 60;
     let mm = Math.floor(timespan / 60 % 60);
@@ -879,85 +733,58 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) {
-    /*// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree *** (version 4.0) ///////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    / 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
-    / 2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
-    / 3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
-    / 4) - for canadian periodtimes, don't multiply notificationT.period_time by the number of stones
-    /      per period (already for X stones)
-    /    - But config[argNameString] is for 1 stone, so multiply it.
-    /      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
-
-    for (let blitzLiveCorr of ["blitz", "live", "corr"]) {
-        if (notificationT.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
-            const minFamilyObject = familyObjectMIBL("min" + mainPeriodTime + blitzLiveCorr);
-            const maxFamilyObject = familyObjectMIBL("max" + mainPeriodTime + blitzLiveCorr);
-            const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTime, notificationT);
-            let argNameString = "";
-            let argNumberConverted = -1;
-            for (let familyObject of [minFamilyObject, maxFamilyObject]) {
-                for (let setting of timecontrolsSettings) {
-                    if (notificationT.time_control === setting[0]) {
-                        argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-                        argNumberConverted = config[argNameString];
-                        if (setting[0] === "canadian" && mainPeriodTime === "periodtime") {
-                            argNumberConverted = argNumberConverted * notificationT.stones_per_period;
-                        }
-                        if (minMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-                            const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
-                            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", notificationT.speed + " ", argNameString, "");
-                            let endingSentence = "";
-                            if ((notificationT.time_control === "canadian") && (mainPeriodTime === "periodtime")) {
-                                endingSentence = ", or change the number of stones per period";
-                            }
-                            conn_log(`${timespanToDisplayString(setting[2])} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${argToString}`);
-                            return { reject : true, msg: `${familyObject.MIBL.minMax} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} is ${argToString}, please ${familyObject.MIBL.incDec} ${setting[1]}${endingSentence}.` };
-                            /* example : "Minimum (Main/Period) Time for blitz ranked games
-                             * in byoyomi is 1 minutes, please increase (Main/Period) Time."*/
-                        }
-                    }
-                }
+function UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings) {
+    /*// UHMAEAT: Universal Highly Modulable And Expandable Argv Tree ////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+    let ending = "";
+    const arg = familyObject.arg;
+    if ( ["maintime", "periodtime"].some(e => familyNameString.includes(e)) ) {
+        /* 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
+        /  2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
+        /  3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
+        /  4) - for canadian periodtimes, don't multiply familyNotification.period_time by the number of stones
+        /       per period (already for X stones)
+        /     - But config[argNameString] is for 1 stone, so multiply it.
+        /       e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
+        let timesObject = {};
+        if (familyNameString.includes("maintime")) {
+            timesObject = { fischer:  [{nameF: "Initial Time", notif: familyNotification.initial_time, arg, ending},
+                                       {nameF: "Max Time", notif: familyNotification.max_time, arg, ending}],
+                            byoyomi:  [{nameF: "Main Time", notif: familyNotification.main_time, arg, ending}],
+                            canadian: [{nameF: "Main Time", notif: familyNotification.main_time, arg, ending}],
+                            absolute: [{nameF: "Total Time", notif: familyNotification.total_time, arg, ending}] };
+        } else {
+            timesObject = { fischer:  [{nameF: "Increment Time", notif: familyNotification.time_increment, arg, ending}],
+                            byoyomi:  [{nameF: "Period Time", notif: familyNotification.period_time, arg, ending}],
+                            canadian: [{nameF: `Period Time for all the ${familyNotification.stones_per_period} stones`,
+                                        notif: familyNotification.period_time, arg: arg * familyNotification.stones_per_period,
+                                        ending: ", or change the number of stones per period"}],
+                            simple:   [{nameF: "Time per move", notif: familyNotification.per_move, arg, ending}],
+                            absolute: [{nameF: "Total Time", notif: familyNotification.total_time, arg, ending}] };
+        }
+        for (let obj of timesObject[familyNotification.time_control]) {
+            if (minMaxCondition(obj.arg, obj.notif, familyObject.isMin)) {
+                return { nameF: `${obj.nameF} (${familyNotification.time_control})`, ending, for_r_u_g: r_u_strings.for_blc_r_u_games,
+                         arg: timespanToDisplayString(obj.arg), notif: timespanToDisplayString(obj.notif) };
             }
         }
-    }
-}
-
-function timecontrolsMainPeriodTime(mpt, notificationT) {
-    if (mpt === "maintime") {
-        return [["fischer", "Initial Time", notificationT.initial_time],
-                ["fischer", "Max Time", notificationT.max_time],
-                ["byoyomi", "Main Time", notificationT.main_time],
-                ["canadian", "Main Time", notificationT.main_time],
-                ["absolute", "Total Time", notificationT.total_time]];
-    } else {
-        return [["fischer", "Increment Time", notificationT.time_increment],
-                ["byoyomi", "Period Time", notificationT.period_time],
-                ["canadian", "Period Time for all the " + notificationT.stones_per_period + " stones", notificationT.period_time],
-                ["simple", "Time per move", notificationT.per_move]];
-    }
-}
-
-function minMaxPeriodsRejectResult(familyNameString, familyNotification, notificationTSpeed, notificationRanked) {
-    /* "fischer", "simple", "absolute", "none", don't have a periods number,
-    /  so this function only applies to "byoyomi" and "canadian"*/
-    for (let blitzLiveCorr of ["blitz", "live", "corr"]) {
-        if (notificationTSpeed === convertBlitzLiveCorr(blitzLiveCorr)) {
-            const minFamilyObject = familyObjectMIBL("min" + familyNameString + blitzLiveCorr);
-            const maxFamilyObject = familyObjectMIBL("max" + familyNameString + blitzLiveCorr);
-            /* example : {argNameStrings {all: "minperiodsblitz", ranked: "minperiodsblitzranked", unranked: "minperiodsblitzunranked"},
-                                    MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
-                                    isMM {isMin: true, isMax: false}};*/
-            let argNameString = "";
-            for (let familyObject of [minFamilyObject, maxFamilyObject]) {
-                argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-                if (minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-                    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", notificationTSpeed + " ", argNameString, "");
-                    conn_log(`${familyNotification} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${familyNameString} ${rankedUnranked} ${config[argNameString]}`);
-                    return { reject: true, msg: `${familyObject.MIBL.minMax} ${familyNameString} ${rankedUnranked} ${config[argNameString]}, please ${familyObject.MIBL.incDec} the number of ${familyNameString}.` };
-                }
+    } else if (minMaxCondition(familyObject.arg, familyNotification, familyObject.isMin)) { // "periods", "rank", "handicap"
+        const notif = familyNotification;
+        if (familyNameString.includes("periods")) {
+            return {nameF, ending, for_r_u_g: r_u_strings.for_blc_r_u_games, arg, notif};
+        } else if (familyNameString === "rank") {
+            return {nameF, ending: `your rank is too ${familyObject.MIBL.lowHig}`,
+                    for_r_u_g: r_u_strings.for_r_u_games, arg: rankToString(arg),
+                    notif: rankToString(notif)};
+        } else { //"handicap"
+            if (familyObject.isMax && (arg === 0) && notif > 0) {
+                ending = " (even games only)";
+            } else if (familyObject.isMin && (arg > 0) && notif === 0) {
+                ending = " (handicap games only)";
+            } else {
+                ending = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
             }
+            return {nameF, ending, for_r_u_g: r_u_strings.for_r_u_games, arg, notif};
         }
     }
 }
