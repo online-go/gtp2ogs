@@ -457,11 +457,11 @@ function familyArrayNamesGRU(familyNameString) {
 }
 
 function argObjectRU(optimistArgv, familyNameString) {
-    const [general,ranked,unranked] = familyArrayNamesGRU(familyNameString).map(e => optimistArgv[e]);
+    const [general,ranked,unranked] = familyArrayNamesGRU(familyNameString).map(e => optimistArgv[e] || undefined);
     if (general !== undefined && ranked === undefined && unranked === undefined) { // a var declared 0 == undefined, but !== undefined
         return { ranked: general, unranked: general };
     } else {
-        return { ranked: ranked || undefined, unranked: unranked || undefined };
+        return { ranked, unranked };
     }
 }
 
