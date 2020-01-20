@@ -358,8 +358,12 @@ exports.updateFromArgv = function() {
     if (exports.DEBUG) {
         let result = { ...exports };
         for (let r_u of ["ranked", "unranked"]) {
-            console.log(`${r_u.toUpperCase()} EXPORTS RESULT (apikey hidden):\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
+            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:\n-------------------------------------------------------\n${JSON.stringify(result[r_u])}\n`);
         }
+        result.apikey = "hidden";
+        delete result.ranked;
+        delete result.unranked;
+        console.log(`ROOT EXPORTS RESULT:\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
     }
 }
 
