@@ -323,8 +323,8 @@ exports.updateFromArgv = function() {
                         } else if (value.includes(":") && ["boardsizes, boardsizewidths, boardsizeheights, komis"].includes(familyNameString)) {
                             let [a,b,increment] = value.split(":").map(e => Number(e));
                             increment = Math.abs(increment) || 1; // default is 1
-                            if (familyNameString !== "komis") increment = Math.ceil(increment); // integer only
                             if (increment < 0.25) increment = 0.25; //avoid extremly long lists
+                            if (familyNameString !== "komis") increment = Math.ceil(increment); // integer only
                             for (let i = Math.min(a,b); i <= Math.max(a,b); i = i + increment) {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
                             }
