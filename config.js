@@ -329,7 +329,7 @@ exports.updateFromArgv = function() {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
                                 n = n+1;
                             }
-                            if (n > 1000) throw new `range too wide in allowed ${familyNameString}, stopped at ${n}th value ${i}`;
+                            if (n > 1000) throw new `range too wide in allowed ${familyNameString}, prematurely exited the list.`;
                         } else {
                             exports[r_u][`allowed_${familyNameString}`][String(value)] = true;
                         }
