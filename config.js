@@ -322,12 +322,14 @@ exports.updateFromArgv = function() {
                             exports[r_u][`allowed_${familyNameString}`]["null"] = true;
                         } else if (value.includes(":") && ["boardsizes, boardsizewidths, boardsizeheights, komis"].includes(familyNameString)) {
                             let [a,b,increment] = value.split(":").map(e => Number(e));
-                            increment = Math.abs(increment) || 1; // default is 1
-                            if (increment < 0.25) increment = 0.25; //avoid extremly long lists
+                            increment = Math.abs(increment) || 1; // default is 1, this also removes value 0 (infinite loop)
                             if (familyNameString !== "komis") increment = Math.ceil(increment); // integer only
-                            for (let i = Math.min(a,b); i <= Math.max(a,b); i = i + increment) {
+                            let n = 0 // avoid extremly long lists
+                            for (let i = Math.min(a,b); i <= Math.max(a,b) && n <= 1000; i = i + increment) {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
+                                n = n+1;
                             }
+                            if (n > 1000) throw new `range too wide in allowed ${familyNameString}, stopped at ${n}th value ${i}`;
                         } else {
                             exports[r_u][`allowed_${familyNameString}`][String(value)] = true;
                         }

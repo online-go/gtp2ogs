@@ -2,7 +2,10 @@
 
 For numbers +/- text allowed families, it is possible to choose a 
 range of allowed values faster using the "range" operator `:` ,
-and optionally the "increment" operator `::` (default increment is `1`).
+and optionally the "increment" operator `:` (default increment is `1`).
+
+note: for safety reasons, the max list length using the "range" 
+with/without the "increment" operator is 1000 values.
 
 - "range":
 
@@ -18,15 +21,10 @@ the increment.
 
 increment is the distance between two values in the range.
 
-Default increment is `1`, for example `9:19::1` is the same as `9:19`.
+Default increment is `1`, for example `9:19:1` is the same as `9:19`.
 
 Because we detect min and max before doing the range, increment can be 
 both positive and negative, it will work the exact same way.
-
-For safety reasons, minimum increment was set to `0.25` (absolute 
-value), so any absolute value lower than `0.25` will be set to `0.25`. 
-Note that this excludes the case where increment `0` would create an 
-infinite loop.
 
 Finally, decimal increments such as (`0.5` or `19.5`) only work 
 for komis.
@@ -37,16 +35,16 @@ ceiled to next value, for example `2.5` will be `3`, `2.189`
 will be ceiled to `3`.
 
 examples :
-- `9:19::2` is `9,11,13,15,17,19`
-- `9:19::2`, `9:19::-2`, `19:9::2`, `19:9::-2` are all the exact same
-- `9:19::0.5` for boardsizes will be same as `9:19::1` which is the same 
+- `9:19:2` is `9,11,13,15,17,19`
+- `9:19:2`, `9:19:-2`, `19:9:2`, `19:9:-2` are all the exact same
+- `9:19:0.5` for boardsizes will be same as `9:19:1` which is the same 
 as `9:19`
 - `
 
 Finally range and increments can be used many times, and don't conflict 
 with text, for example:
 
-- `--boardsizes 9,13:19::2,21:25` is `9,13,15,17,19,21,22,23,24,25`
+- `--boardsizes 9,13:19:2,21:25` is `9,13,15,17,19,21,22,23,24,25`
 - `--komis -7:7,automatic,0.5,5.5:7.5` is 
 `-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,automatic,0.5,5.5,6.5,7.5`.
 
