@@ -152,14 +152,6 @@ So default is disabled
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot
 
-#### nopause
-
-  ```--nopause```  Do not allow pauses during games
-
-  ```--nopauseranked``` Do not allow pauses during ranked games
-
-  ```--nopauseunranked``` Do not allow pauses during unranked games
-
 #### corrqueue
   ```--corrqueue``` Process correspondence games one at a time
 
@@ -250,7 +242,7 @@ inputted, every other value will be rejected
 (boardsizes)), it is possible to use as well the "range" 
 operator `:` to navigate one by one from min to max (ex: 
 `5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`), 
-as well as the "increment" operator (ex: `13:19::2` is `13,15,17,19`, 
+as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`, 
 see [notes A-](/docs/NOTES.md#a-) for details.
 
 example: `--speeds all`
@@ -304,7 +296,7 @@ Possible boardsize height value(s):
   For custom boardsizes, we allow all combinations of allowed 
 widths and heights, for example :
 
-- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9:19::5` 
+- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9:19:5` 
 (is `1,2,3,9,14,19`) will allow all these boardsizes combinations:
 ```
 9x1,9x2,9x3,9x9,9x14,9x19
@@ -327,7 +319,7 @@ Possible komi value(s):
 - `all` (allows all komis)
 - comma separated and `:` separated values, 
 for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
-(5.5, 6.5, 7.5, 0.5, automatic), or `-2:3::0.5` (allows komis 
+(5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis 
 (-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
 
 For extra komi explanations, see :
@@ -408,6 +400,14 @@ see [notes E-](/docs/NOTES.md#e-) for details
   
   ```--noautohandicapunranked``` Do not allow handicap to be set to 
 -automatic- for unranked games
+
+#### nopause
+
+  ```--nopause```  Do not allow pauses during games
+
+  ```--nopauseranked``` Do not allow pauses during ranked games
+
+  ```--nopauseunranked``` Do not allow pauses during unranked games
 
 #### nopauseonweekends
 
