@@ -341,25 +341,22 @@ class Connection {
     //
     checkChallengeBooleans(notification, config_r_u, r_u_strings) {
 
-        let for_r_u_g = "";
-        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private],
-                                  //[config.privateonly, "Non-private games are", !notification.private],
-                                  [config.rankedonly, "Unranked games are", !notification.ranked],
-                                  [config.unrankedonly, "Ranked games are", notification.ranked]
-                                ].forEach( e => e.concat([""]) );
-
-        for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
+        const testBooleanArgs =     [ //[config.publiconly, "Private games are", notification.private],
+                                      //[config.privateonly, "Non-private games are", !notification.private],
+                                      [config.rankedonly, "Unranked games are", !notification.ranked],
+                                      [config.unrankedonly, "Ranked games are", notification.ranked]
+                                    ].map( e => e.concat([""]) );
         const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional],
                                       [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends],
                                       [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1)]
-                                    ].forEach( e => e.concat([` ${r_u_strings.for_r_u_games}`]) );
+                                    ].map( e => e.concat([` ${r_u_strings.for_r_u_games}`]) );
 
-        for (let test of [testBooleanArgs, testBooleanArgs_r_u]) {
-            for (let [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
-                if (arg && notifCondition) {
-                    conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
-                    return { reject: true, msg: `${nameF} not allowed on this bot${for_r_u_games_converted}.` };
-                }
+        for (let [arg, nameF, notifCondition, for_r_u_games_converted] of [testBooleanArgs, testBooleanArgs_r_u]) {
+            if (arg && notifCondition) {
+                conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
+                return { reject: true, msg: `${nameF} not allowed on this bot${for_r_u_games_converted}.` };
+            }
+        }
 
         return { reject: false }; // OK !
 
@@ -391,7 +388,7 @@ class Connection {
                     if (familyNameString.includes("boardsize")) {
                         notifDisplayed = `${notification.width}x${notification.height}`;
                         if (familyNameString === "boardsizes") allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-                        else allowedValuesString = boardsizesWidthsHeightsToDisplayString(config_r_u);
+                        else allowedValuesString = boardsizeWidthsHeightsToDisplayString(customWidthsHeights(config_r_u));
                     } else if (familyNameString === "komis" && notifDisplayed === "null") {
                         notifDisplayed = "automatic"; // allowed_challengercolors is already "automatic" in config.js, no need to change it
                     }
@@ -655,18 +652,20 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function boardsizesWidthsHeightsToDisplayString(config_r_u) {
-    let allowedBoardsizesObject = { widths: [], heights: [] };
-    for (let widthsHeights in allowedBoardsizesObject) {
-        if (config_r_u[`allow_all_boardsize${widthsHeights}`]) {
-            allowedBoardsizesObject[widthsHeights] = ["(all)"];
-        } else {
-            allowedBoardsizesObject[widthsHeights] = Object.keys(config_r_u[`allowed_boardsize${widthsHeights}`]);
+function customWidthsHeights(config_r_u) {
+    let widthsHeightsObject = { widths: ["(all)"], heights: ["(all)"] };
+    for (let widthsHeights in widthsHeightsObject) {
+        if (!config_r_u[`allow_all_boardsize${widthsHeights}`]) {
+            widthsHeightsObject[widthsHeights] = Object.keys(config_r_u[`allowed_boardsize${e}`]);
         }
     }
+    return widthsHeightsObject;
+}
+
+function boardsizeWidthsHeightsToDisplayString(widthsHeightsObject) {
     let boardsizesCombinations = [];
-    for (let w of allowedBoardsizesObject.widths) {
-        for (let h of allowedBoardsizesObject.heights) {
+    for (let w of widthsHeightsObject.widths) {
+        for (let h of widthsHeightsObject.heights) {
             boardsizesCombinations.push(`${w}x${h}`);
         }
     }
