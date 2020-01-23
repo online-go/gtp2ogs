@@ -301,7 +301,7 @@ class Connection {
                 return { reject: true, msg: `You (${uid} ${notification.user[uid]}) are banned ${r_u_strings.for_r_u_games} on this bot by bot admin, you may try changing the ranked/unranked setting` };
             }
         }
-        const resultMinMaxRank = genericMinMaxRejectResult("rank", "rank", notification.user.ranking, false, config_r_u, r_u_strings);
+        const resultMinMaxRank = genericMinMaxRejectResult("rank", "rank", notification.user.ranking, false, r_u_strings);
         if (resultMinMaxRank) return resultMinMaxRank;
 
         // check bot is available, else don't mislead user:
@@ -432,7 +432,7 @@ class Connection {
                                       [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
                 let resultMinMax = false;
                 for (let [f,n,notif,isFakeHandicap] of testsMinMax) {
-                    resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
+                    resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, r_u_strings);
                     if (resultMinMax) return resultMinMax;
                 }
             }
@@ -681,17 +681,17 @@ function boardsizesWidthsHeightsToDisplayString(config_r_u) {
     return boardsizesCombinations.join(', ');
 }
 
-function familyObjectMIBL(familyNameString, config_r_u) {
-    return [ { arg: config_r_u[`min${familyNameString}`], isMin: true, isMax: false,
+function familyObjectMIBL(minMaxArgs) {
+    return [ { arg: minMaxArgs[0], isMin: true, isMax: false,
                MIBL: {minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low"} },
-             { arg: config_r_u[`max${familyNameString}`], isMin: false, isMax: true,
+             { arg: minMaxArgs[1], isMin: false, isMax: true,
                MIBL: {minMax: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high"} }
            ].filter(e => e.arg !== undefined);
 }
 
-function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, config_r_u, r_u_strings) {
+function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, r_u_strings) {
     let fullObject = false;
-    for (let familyObject of familyObjectMIBL(familyNameString, config_r_u)) {
+    for (let familyObject of familyObjectMIBL(["min","max"].map( e => `${e}${familyNameString}` ))) {
         fullObject = UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings);
         if (fullObject) { // exit the function if we don't reject
             if (isFakerankReject) {
