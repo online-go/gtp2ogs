@@ -398,14 +398,6 @@ class Connection {
             }
         }
 
-    } else if (notification.width !== notification.height) {
-        // if not custom AND value is allowed (ex:19) AND not square (ex: 19x18)
-        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-        notifDisplayed = `${notification.width}x${notification.height}`;
-        conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
-        return { reject: true, msg: `${nameF} ${notifDisplayed} is  not allowed on this bot ${r_u_strings.for_r_u_games}, please choose among:\n-${allowedValuesString}-` };
-    }
-
         return { reject: false }; // OK !
 
     }
