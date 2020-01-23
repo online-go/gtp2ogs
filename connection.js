@@ -341,23 +341,20 @@ class Connection {
     //
     checkChallengeBooleans(notification, config_r_u, r_u_strings) {
 
-        let for_r_u_g = "";
-        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g],
-                                  //[config.privateonly, "Non-private games are", !notification.private, for_r_u_g],
-                                  [config.rankedonly, "Unranked games are", !notification.ranked, for_r_u_g],
-                                  [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g] ];
+        const testBooleanArgs =     [ //[config.publiconly, "Private games are", notification.private],
+                                      //[config.privateonly, "Non-private games are", !notification.private],
+                                      [config.rankedonly, "Unranked games are", !notification.ranked],
+                                      [config.unrankedonly, "Ranked games are", notification.ranked]
+                                    ].concat([""]);
+        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional],
+                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends],
+                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1)]
+                                    ].concat([r_u_strings.for_r_u_games]);
 
-        for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
-        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional, for_r_u_g],
-                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends, for_r_u_g],
-                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1), for_r_u_g] ];
-
-        for (let test of [testBooleanArgs, testBooleanArgs_r_u]) {
-            for (let [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
-                if (arg && notifCondition) {
-                    conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
-                    return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
-                }
+        for (let [arg,nameF,notifCondition, for_r_u_games_converted] of [testBooleanArgs, testBooleanArgs_r_u]) {
+            if (arg && notifCondition) {
+                conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
+                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
             }
         }
 
@@ -376,22 +373,22 @@ class Connection {
                                        ["challengercolors", "Player Color", notification.challenger_color],
                                        ["speeds", "Speed", notification.time_control.speed],
                                        ["timecontrols", "Time control", notification.time_control.time_control] ];
-        let notifDisplayed = "";
-        let allowedValuesString = "";
         for (let [familyNameString, nameF, familyNotification] of testsAllowedFamilies) {
             if (!config_r_u[`allow_all_${familyNameString}`]) {
-                allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
+                let allowedValuesString = "";
+                let notifDisplayed = "";
                 if (familyNameString === "boardsizes") {
                     if (config_r_u[`allow_custom_boardsizes`]) {
-                        continue; // test reject specifically later using boardsizewidths or boardsizeheights
+                        continue;
                     } else if (notification.width !== notification.height) {
-                        // if not custom AND not square AND allowed notif => reject, ex: 19x18
-                        notifDisplayed = `${notification.width}x${notification.height}`;
+                        // if not custom AND value is allowed (ex:19) AND not square (ex: 19x18)
                         allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+                        notifDisplayed = `${notification.width}x${notification.height}`;
                         conn_log(`${nameF} ${notifDisplayed} is not square, not allowed ${r_u_strings.for_r_u_games}`);
                         return { reject: true, msg: `${nameF} ${notifDisplayed} is not square, not allowed ${r_u_strings.for_r_u_games} on this bot, please choose among: ` };
                     }
                 }
+                allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
                 notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
                 if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]) {
                     if (familyNameString === "boardsizes") {
