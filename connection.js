@@ -375,28 +375,20 @@ class Connection {
                                        ["timecontrols", "Time control", notification.time_control.time_control] ];
         for (let [familyNameString, nameF, familyNotification] of testsAllowedFamilies) {
             if (!config_r_u[`allow_all_${familyNameString}`]) {
-                let allowedValuesString = "";
-                let notifDisplayed = "";
-                if (familyNameString === "boardsizes") {
-                    if (config_r_u[`allow_custom_boardsizes`]) {
-                        continue;
-                    } else if (notification.width !== notification.height) {
-                        // if not custom AND value is allowed (ex:19) AND not square (ex: 19x18)
-                        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-                        notifDisplayed = `${notification.width}x${notification.height}`;
-                        conn_log(`${nameF} ${notifDisplayed} is not square, not allowed ${r_u_strings.for_r_u_games}`);
-                        return { reject: true, msg: `${nameF} ${notifDisplayed} is not square, not allowed ${r_u_strings.for_r_u_games} on this bot, please choose among: ` };
-                    }
+                if (config_r_u[`allow_custom_${familyNameString}`]) {
+                    if (familyNameString === "boardsizes") continue;
+                } else {
+                    if (["boardsizewidths", "boardsizeheights"].includes(familyNameString)) continue;
                 }
-                allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
-                notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
-                if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]) {
-                    if (familyNameString === "boardsizes") {
+                let notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
+                if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]
+                    || (familyNameString === "boardsizes" && notification.width !== notification.height)) {
+                    // if "boardsizes" (square) && value is allowed (ex:19) && notif is not square (ex: 19x18)
+                    let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
+                    if (familyNameString.includes("boardsize")) {
                         notifDisplayed = `${notification.width}x${notification.height}`;
-                        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-                    } else if (["boardsizewidths","boardsizeheights"].includes(familyNameString) && config_r_u[`allow_custom_boardsizes`]) {
-                        notifDisplayed = `${notification.width}x${notification.height}`;
-                        allowedValuesString = boardsizesWidthsHeightsToDisplayString(config_r_u);
+                        if (familyNameString === "boardsizes") allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+                        else allowedValuesString = boardsizesWidthsHeightsToDisplayString(config_r_u);
                     } else if (familyNameString === "komis" && notifDisplayed === "null") {
                         notifDisplayed = "automatic"; // allowed_challengercolors is already "automatic" in config.js, no need to change it
                     }
@@ -405,6 +397,14 @@ class Connection {
                 }
             }
         }
+
+    } else if (notification.width !== notification.height) {
+        // if not custom AND value is allowed (ex:19) AND not square (ex: 19x18)
+        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+        notifDisplayed = `${notification.width}x${notification.height}`;
+        conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
+        return { reject: true, msg: `${nameF} ${notifDisplayed} is  not allowed on this bot ${r_u_strings.for_r_u_games}, please choose among:\n-${allowedValuesString}-` };
+    }
 
         return { reject: false }; // OK !
 
