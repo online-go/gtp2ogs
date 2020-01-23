@@ -383,7 +383,7 @@ class Connection {
                 let notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
                 if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]
                     || (familyNameString === "boardsizes" && notification.width !== notification.height)) {
-                    // if "boardsizes" (square) && value is allowed (ex:19) && notif is not square (ex: 19x18)
+                    // if "boardsizes" (square) && notif is not square (ex: 19x18)
                     let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
                     if (familyNameString.includes("boardsize")) {
                         notifDisplayed = `${notification.width}x${notification.height}`;
