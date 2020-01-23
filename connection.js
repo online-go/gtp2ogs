@@ -382,8 +382,7 @@ class Connection {
                 }
                 let notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
                 if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]
-                    || (familyNameString === "boardsizes" && notification.width !== notification.height)) {
-                    // if "boardsizes" (square) && notif is not square (ex: 19x18)
+                || (familyNameString === "boardsizes" && notification.width !== notification.height)) { // ex: 19x18
                     let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
                     if (familyNameString.includes("boardsize")) {
                         notifDisplayed = `${notification.width}x${notification.height}`;
@@ -656,7 +655,7 @@ function customWidthsHeights(config_r_u) {
     let widthsHeightsObject = { widths: ["(all)"], heights: ["(all)"] };
     for (let widthsHeights in widthsHeightsObject) {
         if (!config_r_u[`allow_all_boardsize${widthsHeights}`]) {
-            widthsHeightsObject[widthsHeights] = Object.keys(config_r_u[`allowed_boardsize${e}`]);
+            widthsHeightsObject[widthsHeights] = Object.keys(config_r_u[`allowed_boardsize${widthsHeights}`]);
         }
     }
     return widthsHeightsObject;
