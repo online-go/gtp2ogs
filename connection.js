@@ -341,22 +341,23 @@ class Connection {
     //
     checkChallengeBooleans(notification, config_r_u, r_u_strings) {
 
-        const testBooleanArgs =     [ //[config.publiconly, "Private games are", notification.private],
-                                      //[config.privateonly, "Non-private games are", !notification.private],
-                                      [config.rankedonly, "Unranked games are", !notification.ranked],
-                                      [config.unrankedonly, "Ranked games are", notification.ranked]
-                                    ].concat([""]);
-        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional],
-                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends],
-                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1)]
-                                    ].concat([r_u_strings.for_r_u_games]);
+        let for_r_u_g = "";
+        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g],
+                                  //[config.privateonly, "Non-private games are", !notification.private, for_r_u_g],
+                                  [config.rankedonly, "Unranked games are", !notification.ranked, for_r_u_g],
+                                  [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g] ];
 
-        for (let [arg,nameF,notifCondition, for_r_u_games_converted] of [testBooleanArgs, testBooleanArgs_r_u]) {
-            if (arg && notifCondition) {
-                conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
-                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
-            }
-        }
+        for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
+        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional, for_r_u_g],
+                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends, for_r_u_g],
+                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1), for_r_u_g] ];
+
+        for (let test of [testBooleanArgs, testBooleanArgs_r_u]) {
+            for (let [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
+                if (arg && notifCondition) {
+                    conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
+                    return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
+                }
 
         return { reject: false }; // OK !
 
