@@ -178,12 +178,6 @@ connected games per user against this bot
 
   ```--publiconly```  Only accept public (non-private) matches
 
-  ```--proonly``` For all matches, only accept those from professionals
-
-  ```--proonlyranked``` For ranked games, only accept those from professionals
-
-  ```--proonlyunranked``` For ranked games, only accept those from professionals
-
 #### fakerank
   ```--fakerank``` Fake bot ranking to calculate automatic handicap 
 stones number in autohandicap (-1) based on rankDifference between 
@@ -392,14 +386,13 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
 
-#### noautohandicap
-  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
+#### only (part 2)
 
-  ```--noautohandicapranked``` Do not allow handicap to be set to 
--automatic- for ranked games
-  
-  ```--noautohandicapunranked``` Do not allow handicap to be set to 
--automatic- for unranked games
+  ```--proonly``` For all matches, only accept those from professionals
+
+  ```--proonlyranked``` For ranked games, only accept those from professionals
+
+  ```--proonlyunranked``` For ranked games, only accept those from professionals
 
 #### nopause
 
@@ -407,7 +400,7 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
   ```--nopauseranked``` Do not allow pauses during ranked games
 
-  ```--nopauseunranked``` Do not allow pauses during unranked games
+  ```--nopauseunranked``` Do not allow pauses during unranked gamesc
 
 #### nopauseonweekends
 
@@ -423,6 +416,15 @@ with the option -pauses on weekends- (specific to correspondence games)
 
   ```--nopauseonweekendsunranked``` Do not accept unranked matches that 
 come with the option -pauses on weekends- (specific to correspondence games)
+
+#### noautohandicap
+  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
+
+  ```--noautohandicapranked``` Do not allow handicap to be set to 
+-automatic- for ranked games
+  
+  ```--noautohandicapunranked``` Do not allow handicap to be set to 
+-automatic- for unranked games
 
 #### min/max handicap
 
@@ -442,8 +444,7 @@ come with the option -pauses on weekends- (specific to correspondence games)
 
   ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
-**important note** : see 
-[fakerank](#fakerank).
+**important note** : see [fakerank](#fakerank).
 
 #### min/max rank
 
@@ -469,9 +470,7 @@ unranked games (e.g. 1d)
 
 #### min/max maintime blitz/live/corr
 
-
   min :
-
 
   ```--minmaintimeblitz``` Minimum seconds of main time for 
 blitz games (default 15 , which is 15 seconds)
@@ -500,9 +499,7 @@ correspondence ranked games
  ```--minmaintimecorrunranked``` Minimum seconds of main time 
 for correspondence unranked games 
 
-
   max :
-
 
   ```--maxmaintimeblitz``` Maximum seconds of main time for 
 blitz games (default 300, which is 5 minutes)
@@ -533,9 +530,7 @@ correspondence unranked games
 
 #### min/max periods blitz/live/corr
 
-
   min :
-
 
   ```--minperiodsblitz``` Minimum number of periods for 
 blitz games
@@ -564,9 +559,7 @@ for correspondence ranked games
   ```--minperiodscorrunranked``` Minimum number of periods 
 for correspondence unranked games
 
-
   max :
-
 
   ```--maxperiodsblitz``` Maximum number of periods for 
 blitz games
@@ -603,9 +596,7 @@ wanted period time for all the stones by the number of stones per period,
 for example max periodtime 
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
 
-
   min :
-
 
   ```--minperiodtimeblitz``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
@@ -637,9 +628,7 @@ for example max periodtime
   ```--minperiodtimecorrunranked``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence unranked games 
 
-
   max :
-
 
   ```--maxperiodtimeblitz``` Maximum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
