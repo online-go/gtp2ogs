@@ -319,7 +319,7 @@ exports.updateFromArgv = function() {
                     for (let allowedValue of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
                         if (familyNameString === "komis" && allowedValue === "automatic") {
                             exports[r_u][`allowed_${familyNameString}`]["null"] = true;
-                        } else if (allowedValue.includes(":") && ["boardsizes, boardsizewidths, boardsizeheights, komis"].includes(familyNameString)) {
+                        } else if (allowedValue.includes(":")) {
                             let [a,b,increment] = allowedValue.split(":").map(e => Number(e));
                             increment = Math.abs(increment) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
                             if (familyNameString !== "komis") increment = Math.ceil(increment); // integer only
