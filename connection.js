@@ -663,7 +663,7 @@ function boardsizeWidthsHeightsToDisplayString(widths, heights) {
     let widthsConverted = widths;
     let heightsConverted = heights;
     for (let e of [widthsConverted, heightsConverted]) {
-        if (e.length === 0) e = ["all"];
+        if (e.length === 0) e = ["(all)"];
     }
     let boardsizesCombinations = [];
     for (let w of widthsConverted) {
