@@ -311,18 +311,17 @@ exports.updateFromArgv = function() {
         const argObject = argObjectRU(optimist.argv, familyNameString);
         for (let r_u in argObject) {
             if (argObject[r_u]) {
-                let values = argObject[r_u].split(',');
-                if (values.includes("all")) {
+                if (argObject[r_u] === "all") {
                     exports[r_u][`allow_all_${familyNameString}`] = true;
-                } else if (familyNameString === "boardsizes" && values.includes("custom")) {
+                } else if (argObject[r_u] === "custom") {
                     exports[r_u][`allow_custom_${familyNameString}`] = true;
                 } else {
-                    for (let value of values) { // ex: ["9", "13", "15:17", "19"]
-                        if (familyNameString === "komis" && value === "automatic") {
+                    for (let allowedValue of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
+                        if (familyNameString === "komis" && allowedValue === "automatic") {
                             exports[r_u][`allowed_${familyNameString}`]["null"] = true;
-                        } else if (value.includes(":") && ["boardsizes, boardsizewidths, boardsizeheights, komis"].includes(familyNameString)) {
-                            let [a,b,increment] = value.split(":").map(e => Number(e));
-                            increment = Math.abs(increment) || 1; // default is 1, this also removes value 0 (infinite loop)
+                        } else if (allowedValue.includes(":") && ["boardsizes, boardsizewidths, boardsizeheights, komis"].includes(familyNameString)) {
+                            let [a,b,increment] = allowedValue.split(":").map(e => Number(e));
+                            increment = Math.abs(increment) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
                             if (familyNameString !== "komis") increment = Math.ceil(increment); // integer only
                             let n = 0 // avoid extremly long lists
                             for (let i = Math.min(a,b); i <= Math.max(a,b) && n <= 1000; i = i + increment) {
@@ -331,7 +330,7 @@ exports.updateFromArgv = function() {
                             }
                             if (n > 1000) throw new `range too wide in allowed ${familyNameString}, prematurely exited the list.`;
                         } else {
-                            exports[r_u][`allowed_${familyNameString}`][String(value)] = true;
+                            exports[r_u][`allowed_${familyNameString}`][String(allowedValue)] = true;
                         }
                     }
                 }

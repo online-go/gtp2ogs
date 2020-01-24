@@ -389,8 +389,13 @@ class Connection {
                     let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
                     if (familyNameString.includes("boardsize")) {
                         notifDisplayed = `${notification.width}x${notification.height}`;
-                        if (familyNameString === "boardsizes") allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-                        else allowedValuesString = boardsizeWidthsHeightsToDisplayString(customWidthsHeights(config_r_u));
+                        if (familyNameString === "boardsizes") {
+                            allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+                        } else {
+                            allowedValuesString = boardsizeWidthsHeightsToDisplayString(
+                                                  Object.keys(config_r_u[`allowed_boardsizewidths`]),
+                                                  Object.keys(config_r_u[`allowed_boardsizeheights`]));
+                        }
                     } else if (familyNameString === "komis" && notifDisplayed === "null") {
                         notifDisplayed = "automatic"; // allowed_challengercolors is already "automatic" in config.js, no need to change it
                     }
@@ -654,20 +659,15 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function customWidthsHeights(config_r_u) {
-    let widthsHeightsObject = { widths: ["(all)"], heights: ["(all)"] };
-    for (let widthsHeights in widthsHeightsObject) {
-        if (!config_r_u[`allow_all_boardsize${widthsHeights}`]) {
-            widthsHeightsObject[widthsHeights] = Object.keys(config_r_u[`allowed_boardsize${widthsHeights}`]);
-        }
+function boardsizeWidthsHeightsToDisplayString(widths, heights) {
+    let widthsConverted = widths;
+    let heightsConverted = heights;
+    for (let e of [widthsConverted, heightsConverted]) {
+        if (e.length === 0) e = ["all"];
     }
-    return widthsHeightsObject;
-}
-
-function boardsizeWidthsHeightsToDisplayString(widthsHeightsObject) {
     let boardsizesCombinations = [];
-    for (let w of widthsHeightsObject.widths) {
-        for (let h of widthsHeightsObject.heights) {
+    for (let w of widthsConverted) {
+        for (let h of heightsConverted) {
             boardsizesCombinations.push(`${w}x${h}`);
         }
     }
