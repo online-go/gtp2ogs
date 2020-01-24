@@ -665,13 +665,16 @@ function boardsizeWidthsHeightsToDisplayString(widths, heights) {
     for (let e of [widthsConverted, heightsConverted]) {
         if (e.length === 0) e = ["(all)"];
     }
-    let boardsizesCombinations = [];
-    for (let w of widthsConverted) {
+    let combinations = [];
+    for (let i = 0; i < widthsConverted.length; i++) {
         for (let h of heightsConverted) {
-            boardsizesCombinations.push(`${w}x${h}`);
+            combinations.push(`${widthsConverted[i]}x${h}`);
+        }
+        if (i > 1 && i < widthsConverted.length - 1) {
+            combinations.push("\n");
         }
     }
-    return boardsizesCombinations.join(', ');
+    return combinations.join(', ');
 }
 
 function familyObjectMIBL(minMaxArgs) {
