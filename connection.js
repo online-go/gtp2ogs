@@ -392,7 +392,7 @@ class Connection {
                         if (familyNameString === "boardsizes") {
                             allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
                         } else {
-                            let [widths, heights] = 
+                            const [widths, heights] = 
                                 ["widths", "heights"].map( e => Object.keys(config_r_u[`allowed_boardsize${e}`]) );
                             allowedValuesString = boardsizeWidthsHeightsToDisplayString(widths, heights);
                         }
