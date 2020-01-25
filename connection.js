@@ -392,9 +392,9 @@ class Connection {
                         if (familyNameString === "boardsizes") {
                             allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
                         } else {
-                            allowedValuesString = boardsizeWidthsHeightsToDisplayString(
-                                                  Object.keys(config_r_u[`allowed_boardsizewidths`]),
-                                                  Object.keys(config_r_u[`allowed_boardsizeheights`]));
+                            let [widths, heights] = 
+                                ["widths", "heights"].map( e => Object.keys(config_r_u[`allowed_boardsize${e}`]) );
+                            allowedValuesString = boardsizeWidthsHeightsToDisplayString(widths, heights);
                         }
                     } else if (familyNameString === "komis" && notifDisplayed === "null") {
                         notifDisplayed = "automatic"; // allowed_challengercolors is already "automatic" in config.js, no need to change it
