@@ -124,30 +124,30 @@ class Bot {
             return -1;
         }
     }
-    log() { /* {{{ */
+    log() {
         let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
 
         console.log.apply(null, arr);
-    } /* }}} */
-    error() { /* {{{ */
+    }
+    error() {
         let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
 
         console.error.apply(null, arr);
-    } /* }}} */
-    verbose() { /* {{{ */
+    }
+    verbose() {
         let arr = ["[" + this.pid() + "]"];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
 
         console.verbose.apply(null, arr);
-    } /* }}} */
+    }
     loadClock(state) {
         //
         // References:
@@ -331,7 +331,7 @@ class Bot {
         } */
     }
     
-    loadState(state, cb, eb) { /* {{{ */
+    loadState(state, cb, eb) {
         if (this.dead) {
             if (config.DEBUG) { this.log("Attempting to load dead bot") }
             this.failed = true;
@@ -383,9 +383,9 @@ class Bot {
             this.command("showboard", cb, eb);
         }
         return true;
-    } /* }}} */
+    }
 
-    command(str, cb, eb, final_command) { /* {{{ */
+    command(str, cb, eb, final_command) {
         if (this.dead) {
             if (config.DEBUG) { this.log("Attempting to send a command to dead bot:", str) }
             this.failed = true;
@@ -426,13 +426,13 @@ class Bot {
             this.command_error_callbacks.shift();
             if (eb) eb(e);
         }
-    } /* }}} */
+    }
 
     // For commands like genmove, place_free_handicap ... :
     // Send @cmd to engine and call @cb with returned moves.
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
-    getMoves(cmd, state, cb, eb) { /* {{{ */
+    getMoves(cmd, state, cb, eb) {
         // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
         // subtract that missing time from what we tell the bot.
         //
@@ -471,9 +471,9 @@ class Bot {
             eb,
             true /* final command */
         )
-    } /* }}} */
+    }
 
-    kill() { /* {{{ */
+    kill() {
         this.log("Stopping bot");
         this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
         this.dead = true;
@@ -486,24 +486,24 @@ class Bot {
                 this.proc.kill(9);
             }, 5000);
         }
-    } /* }}} */
+    }
     sendMove(move, width, color){
         if (config.DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
         this.command("play " + color + " " + move2gtpvertex(move, width));
     }
-    sendHandicapMoves(moves, width) { /* {{{ */
+    sendHandicapMoves(moves, width) {
         let cmd = "set_free_handicap";
         for (let i = 0; i < moves.length; i++)
             cmd += " " + move2gtpvertex(moves[i], width);
         this.command(cmd);
-    } /* }}} */
+    }
     // Called on game over, in case you need something special.
     //
     gameOver() {
     }
 }
 
-function decodeMoves(move_obj, board_size) { /* {{{ */
+function decodeMoves(move_obj, board_size) {
     let ret = [];
     let width = board_size;
     let height = board_size;
@@ -591,31 +591,31 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
 
     return ret;
-} /* }}} */
-function char2num(ch) { /* {{{ */
+}
+function char2num(ch) {
     if (ch === ".") return -1;
     return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
-} /* }}} */
-function pretty_char2num(ch) { /* {{{ */
+}
+function pretty_char2num(ch) {
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-} /* }}} */
-function move2gtpvertex(move, board_size) { /* {{{ */
+}
+function move2gtpvertex(move, board_size) {
     if (move.x < 0) {
         return "pass";
     }
     return num2gtpchar(move['x']) + (board_size-move['y'])
-} /* }}} */
-function gtpchar2num(ch) { /* {{{ */
+}
+function gtpchar2num(ch) {
     if (ch === "." || !ch)
         return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-} /* }}} */
-function num2gtpchar(num) { /* {{{ */
+}
+function num2gtpchar(num) {
     if (num === -1) 
         return ".";
     return "abcdefghjklmnopqrstuvwxyz"[num];
-} /* }}} */
+}
 
 exports.Bot = Bot;
 exports.decodeMoves = decodeMoves;

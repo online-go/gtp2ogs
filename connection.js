@@ -14,7 +14,7 @@ let Game = require('./game').Game;
 /****************/
 /** Connection **/
 /****************/
-let ignorable_notifications = {
+const ignorable_notifications = {
     'gameStarted': true,
     'gameEnded': true,
     'gameDeclined': true,
@@ -68,7 +68,7 @@ class Connection {
                 this.bot_id = obj.id;
                 this.jwt = obj.jwt;
                 if (!this.bot_id) {
-                    console.error("ERROR: Bot account is unknown to the system: " +   config.username);
+                    console.error("ERROR: Bot account is unknown to the system: " + config.username);
                     process.exit();
                 }
                 conn_log("Bot is username: " + config.username);
@@ -90,14 +90,14 @@ class Connection {
                     /* Choose a corr game to make a move
                     /  TODO: Choose the game with least time remaining*/
                     let candidates = [];
-                    for (let game_id in this.connected_games) {
+                    for (const game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
                             candidates.push(this.connected_games[game_id]);
                         }
                     }
                     // Pick a random game that needs a move.
                     if (candidates.length > 0) {
-                        let game = candidates[Math.floor(Math.random()*candidates.length)];
+                        const game = candidates[Math.floor(Math.random()*candidates.length)];
                         game.makeMove(game.state.moves.length);
                     }
                 }
@@ -122,7 +122,7 @@ class Connection {
 
             conn_log("Disconnected from server");
 
-            for (let game_id in this.connected_games) {
+            for (const game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
             }
         });
@@ -208,13 +208,13 @@ class Connection {
     }
     disconnectIdleGames() {
         if (config.DEBUG) conn_log("Looking for idle games to disconnect");
-        for (let game_id in this.connected_games) {
-            let state = this.connected_games[game_id].state;
+        for (const game_id in this.connected_games) {
+            const state = this.connected_games[game_id].state;
             if (state === null) {
                 if (config.DEBUG) conn_log("No game state, not checking idle status for", game_id);
                 continue;
             }
-            let idle_time = Date.now() - state.clock.last_move;
+            const idle_time = Date.now() - state.clock.last_move;
             if ((state.clock.current_player !== this.bot_id) && (idle_time > config.timeout)) {
                 if (config.DEBUG) conn_log("Found idle game", game_id, ", other player has been idling for", idle_time, ">", config.timeout);
                 this.disconnectFromGame(game_id);
@@ -222,8 +222,8 @@ class Connection {
         }
     }
     dumpStatus() {
-        for (let game_id in this.connected_games) {
-            let game = this.connected_games[game_id];
+        for (const game_id in this.connected_games) {
+            const game = this.connected_games[game_id];
             let msg = [];
             msg.push('game_id=' + game_id + ':');
             if (game.state === null) {
@@ -236,7 +236,7 @@ class Connection {
             if (game.state.clock.current_player === this.bot_id) {
                 msg.push('bot_turn');
             }
-            let idle_time = (Date.now() - game.state.clock.last_move) / 1000;
+            const idle_time = (Date.now() - game.state.clock.last_move) / 1000;
             msg.push('idle_time=' + idle_time + 's');
             if (game.bot === null) {
                 msg.push('no_bot');
@@ -255,7 +255,7 @@ class Connection {
         });
     }
     connection_reset() {
-        for (let game_id in this.connected_games) {
+        for (const game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
         if (this.socket) this.socket.emit('notification/connect', this.auth({}), (x) => {
@@ -277,13 +277,12 @@ class Connection {
         // load config.ranked or config.unranked depending on notification.ranked
         const r_u_strings = generate_r_u_strings_connection(notification.ranked, notification.time_control.speed);
         const config_r_u = config[r_u_strings.r_u];
-        let result = {};
         for (let test of [this.checkChallengeMandatory,
                           //this.checkChallengeSanityChecks,
                           this.checkChallengeBooleans,
                           this.checkChallengeAllowedFamilies,
                           this.checkChallengeSettings]) {
-            result = test.bind(this)(notification, config_r_u, r_u_strings);
+            const result = test.bind(this)(notification, config_r_u, r_u_strings);
             if (result.reject) return result;
         }
 
@@ -295,7 +294,7 @@ class Connection {
     checkChallengeMandatory(notification, config_r_u, r_u_strings) {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
-        for (let uid of ["username", "id"]) {
+        for (const uid of ["username", "id"]) {
             if (config_r_u.banned_users[notification.user[uid]]) {
                 conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`);
                 return { reject: true, msg: `You (${uid} ${notification.user[uid]}) are banned ${r_u_strings.for_r_u_games} on this bot by bot admin, you may try changing the ranked/unranked setting` };
@@ -341,19 +340,19 @@ class Connection {
     //
     checkChallengeBooleans(notification, config_r_u, r_u_strings) {
 
-        let for_r_u_g = "";
-        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g],
-                                  //[config.privateonly, "Non-private games are", !notification.private, for_r_u_g],
-                                  [config.rankedonly, "Unranked games are", !notification.ranked, for_r_u_g],
-                                  [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g] ];
+        const for_r_u_g_empty = "";
+        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g_empty],
+                                  //[config.privateonly, "Non-private games are", !notification.private, for_r_u_g_empty],
+                                  [config.rankedonly, "Unranked games are", !notification.ranked, for_r_u_g_empty],
+                                  [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g_empty] ];
 
-        for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
-        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional, for_r_u_g],
-                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends, for_r_u_g],
-                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1), for_r_u_g] ];
+        const for_r_u_g_full = ` ${r_u_strings.for_r_u_games}`;
+        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional, for_r_u_g_full],
+                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends, for_r_u_g_full],
+                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1), for_r_u_g_full] ];
 
-        for (let test of [testBooleanArgs, testBooleanArgs_r_u]) {
-            for (let [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
+        for (const test of [testBooleanArgs, testBooleanArgs_r_u]) {
+            for (const [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
                 if (arg && notifCondition) {
                     conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
                     return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
@@ -376,7 +375,7 @@ class Connection {
                                        ["challengercolors", "Player Color", notification.challenger_color],
                                        ["speeds", "Speed", notification.time_control.speed],
                                        ["timecontrols", "Time control", notification.time_control.time_control] ];
-        for (let [familyNameString, nameF, familyNotification] of testsAllowedFamilies) {
+        for (const [familyNameString, nameF, familyNotification] of testsAllowedFamilies) {
             if (!config_r_u[`allow_all_${familyNameString}`]) {
                 if (config_r_u[`allow_custom_${familyNameString}`]) {
                     if (familyNameString === "boardsizes") continue;
@@ -384,8 +383,8 @@ class Connection {
                     if (["boardsizewidths", "boardsizeheights"].includes(familyNameString)) continue;
                 }
                 let notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
-                if (!config_r_u[`allowed_${familyNameString}`][notifDisplayed]
-                || (familyNameString === "boardsizes" && notification.width !== notification.height)) { // ex: 19x18
+                if ( !config_r_u[`allowed_${familyNameString}`][notifDisplayed] ||
+                     (familyNameString === "boardsizes" && notification.width !== notification.height) ) { // ex: 19x18
                     let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
                     if (familyNameString.includes("boardsize")) {
                         notifDisplayed = `${notification.width}x${notification.height}`;
@@ -413,23 +412,22 @@ class Connection {
     //
     checkChallengeSettings(notification, config_r_u, r_u_strings) {
 
-        let handicapNotif =  notification.handicap;
-        if (notification.handicap === -1 && config.fakerank) {
-            // TODO: modify or remove fakerank code whenever server sends us automatic handicap 
-            //       notification.handicap different from -1.
-            /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
-            /  but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone*/
-            handicapNotif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
-        }
-        for (let blitzLiveCorr of ["blitz", "live", "corr"]) {
+        // TODO: modify or remove fakerank code whenever server sends us automatic handicap 
+        //       notification.handicap different from -1.
+        /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+        /  but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone*/
+        const handicapNotif = (notification.handicap === -1 && config.fakerank) ?
+                              Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank)) :
+                              notification.handicap;
+
+        for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
             if (notification.time_control.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
                 const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakerank || false],
                                       [`maintime${blitzLiveCorr}`, "main time", notification.time_control, false],
                                       [`periods${blitzLiveCorr}`, "number of periods", notification.time_control.periods, false],
                                       [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
-                let resultMinMax = false;
-                for (let [f,n,notif,isFakeHandicap] of testsMinMax) {
-                    resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
+                for (const [f,n,notif,isFakeHandicap] of testsMinMax) {
+                    const resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
                     if (resultMinMax) return resultMinMax;
                 }
             }
@@ -472,7 +470,7 @@ class Connection {
         }
     }
     processMove(gamedata) {
-        let game = this.connectToGame(gamedata.id)
+        const game = this.connectToGame(gamedata.id)
         game.makeMove(gamedata.move_number);
     }
     processStoneRemoval(gamedata) {
@@ -494,8 +492,8 @@ class Connection {
         this.games_by_player[player].push(game_id);
     }
     removeGameForPlayer(game_id) {
-        for (let player in this.games_by_player) {
-            let idx = this.games_by_player[player].indexOf(game_id);
+        for (const player in this.games_by_player) {
+            const idx = this.games_by_player[player].indexOf(game_id);
             if (idx === -1)  continue;
 
             this.games_by_player[player].splice(idx, 1);  // Remove element
@@ -518,8 +516,8 @@ class Connection {
         this.socket.emit('net/ping', {client: (new Date()).getTime()});
     }}}
     handlePong(data) {{{
-        let now = Date.now();
-        let latency = now - data.client;
+        const now = Date.now();
+        const latency = now - data.client;
         this.network_latency = latency;
         this.clock_drift = ((now-latency/2) - data.server);
     }}}
@@ -534,18 +532,17 @@ class Connection {
 function request(method, host, port, path, data) {
     return new Promise((resolve, reject) => {
         if (config.DEBUG) {
-            /* Modern NodeJS offers shallow copy syntax:
-            /  let noapidata = { ...data, apikey: "hidden"};
-            
-            / Make a deep copy just in case.*/
-            let noapidata = JSON.parse(JSON.stringify(data));
-            noapidata.apikey = "hidden";
+            /* Keeping a backup of old deep copy syntax just in case.
+            /  let noapidata = JSON.parse(JSON.stringify(data));
+            /  noapidata.apikey = "hidden";*/
 
+            // Modern NodeJS offers shallow copy syntax:
+            const noapidata = { ...data, apikey: "hidden"};
             console.debug(method, host, port, path, noapidata);
         }
 
         let enc_data_type = "application/x-www-form-urlencoded";
-        for (let k in data) {
+        for (const k in data) {
             if (typeof(data[k]) === "object") {
                 enc_data_type = "application/json";
             }
@@ -576,7 +573,7 @@ function request(method, host, port, path, data) {
             }
         };
         if (headers) {
-            for (let k in headers) {
+            for (const k in headers) {
                 options.headers[k] = headers[k];
             }
         }
@@ -618,7 +615,7 @@ function conn_log() {
     let arr = ["# "];
     let errlog = false;
     for (let i=0; i < arguments.length; ++i) {
-        let param = arguments[i];
+        const param = arguments[i];
         if (typeof(param) === 'object' && 'error' in param) {
             errlog = true;
             arr.push(param.error);
@@ -636,10 +633,7 @@ function conn_log() {
 }
 
 function generate_r_u_strings_connection(rankedSetting, speedSetting) {
-    let r_u = "unranked";
-    if (rankedSetting) {
-        r_u = "ranked";
-    }
+    const r_u = rankedSetting ? "unranked" : "ranked";
     return { r_u,
              for_r_u_games: `for ${r_u} games`,
              for_blc_r_u_games: `for ${speedSetting} ${r_u} games`,
@@ -648,8 +642,7 @@ function generate_r_u_strings_connection(rankedSetting, speedSetting) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    if (R >= 30)  return (R-30+1) + 'd'; // R>=30: 1 dan or stronger
-    else          return (30-R) + 'k';   // R<30:  1 kyu or weaker
+    (R >= 30) ? ((R-30+1) + 'd') : ((30-R) + 'k');
 }
 
 function boardsizeSquareToDisplayString(boardsizeSquare) {
@@ -663,7 +656,7 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
 function boardsizeWidthsHeightsToDisplayString(widths, heights) {
     let combinations = [];
     for (let i = 0; i < widths.length; i++) {
-        for (let h of heights) {
+        for (const h of heights) {
             combinations.push(`${widths[i]}x${h}`);
         }
         if (i > 1 && i < widths.length - 1) {
@@ -682,9 +675,8 @@ function familyObjectMIBL(minMaxArgs) {
 }
 
 function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, config_r_u, r_u_strings) {
-    let fullObject = false;
-    for (let familyObject of familyObjectMIBL(["min","max"].map( e =>  config_r_u[`${e}${familyNameString}`] ))) {
-        fullObject = UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings);
+    for (const familyObject of familyObjectMIBL(["min","max"].map( e =>  config_r_u[`${e}${familyNameString}`] ))) {
+        const fullObject = UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings);
         if (fullObject) { // exit the function if we don't reject
             if (isFakerankReject) {
                 conn_log(`Automatic handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF}, but ${familyObject.MIBL.minMax} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}`);
@@ -698,27 +690,20 @@ function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, 
 }
 
 function convertBlitzLiveCorr(blitzLiveCorr) {
-    if (blitzLiveCorr === "corr") {
-        return "correspondence";
-    } else {
-        return blitzLiveCorr;
-    }
+    (blitzLiveCorr === "corr") ? "correspondence" : blitzLiveCorr;
 }
 
 function minMaxCondition(arg, familyNotification, isMin) {
-    if (isMin) {
-        return familyNotification < arg; // to reject in minimum, we need notification < arg
-    } else {
-        return familyNotification > arg;
-    }
+    // to reject in minimum, we need notification < arg
+    isMin ? (familyNotification < arg) : (familyNotification > arg);
 }
 
 function timespanToDisplayString(timespan) {
-    let ss = timespan % 60;
-    let mm = Math.floor(timespan / 60 % 60);
-    let hh = Math.floor(timespan / (60*60) % 24);
-    let dd = Math.floor(timespan / (60*60*24));
-    let text = ["days", "hours", "minutes", "seconds"];
+    const ss = timespan % 60;
+    const mm = Math.floor(timespan / 60 % 60);
+    const hh = Math.floor(timespan / (60*60) % 24);
+    const dd = Math.floor(timespan / (60*60*24));
+    const text = ["days", "hours", "minutes", "seconds"];
     return [dd, hh, mm, ss]
     .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
     .filter(e => e !== "")
@@ -754,10 +739,10 @@ function UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_
                             simple:   [{nameF: "Time per move", notif: familyNotification.per_move, arg, ending}],
                             absolute: [{nameF: "Total Time", notif: familyNotification.total_time, arg, ending}] };
         }
-        for (let obj of timesObject[familyNotification.time_control]) {
-            if (minMaxCondition(obj.arg, obj.notif, familyObject.isMin)) {
-                return { nameF: `${obj.nameF} (${familyNotification.time_control})`, ending, for_r_u_g: r_u_strings.for_blc_r_u_games,
-                         arg: timespanToDisplayString(obj.arg), notif: timespanToDisplayString(obj.notif) };
+        for (const timecontrolObject of timesObject[familyNotification.time_control]) {
+            if (minMaxCondition(timecontrolObject.arg, timecontrolObject.notif, familyObject.isMin)) {
+                return { nameF: `${timecontrolObject.nameF} (${familyNotification.time_control})`, ending, for_r_u_g: r_u_strings.for_blc_r_u_games,
+                         arg: timespanToDisplayString(timecontrolObject.arg), notif: timespanToDisplayString(timecontrolObject.notif) };
             }
         }
     } else if (minMaxCondition(familyObject.arg, familyNotification, familyObject.isMin)) { // "periods", "rank", "handicap"

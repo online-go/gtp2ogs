@@ -225,10 +225,7 @@ exports.updateFromArgv = function() {
 
     // console messages
     // A- greeting and debug status //
-    let debugStatusMessage = "OFF";
-    if (optimist.argv.debug) {
-        debugStatusMessage = "ON\n-Will show detailed debug booting data\n-Will show all console notifications";
-    }
+    const debugStatusMessage = optimist.argv.debug ? "ON\n-Will show detailed debug booting data\n-Will show all console notifications" : "OFF";
     console.log(`\ngtp2ogs version 6.0\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}`);
     // B - check deprecated argv //
     testDeprecatedArgv(optimist.argv, "komis");
@@ -260,7 +257,7 @@ exports.updateFromArgv = function() {
 
     /* EXPORTS FROM OPTIMIST.ARGV */
     /* 0) root exports*/
-    for (let k in optimist.argv) {
+    for (const k in optimist.argv) {
         if (!full_r_u_Args.includes(k)) {
             /* Add and Modify exports*/
             if (k === "host" && optimist.argv.beta) {
@@ -292,37 +289,37 @@ exports.updateFromArgv = function() {
 
     // r_u exports
     /* 1) general r_u cases:*/
-    for (let familyNameString of genericMain_r_u_Families) {
+    for (const familyNameString of genericMain_r_u_Families) {
         const argObject = argObjectRU(optimist.argv, familyNameString);
-        for (let r_u in argObject) {
+        for (const r_u in argObject) {
             exports[r_u][familyNameString] = argObject[r_u];
         }
     }
 
     /* 2) specific r_u cases:*/
-    for (let familyNameString of rank_r_u_Families) {
+    for (const familyNameString of rank_r_u_Families) {
         const argObject = argObjectRU(optimist.argv, familyNameString);
-        for (let r_u in argObject) {
+        for (const r_u in argObject) {
             exports[r_u][familyNameString] = parseRank(argObject[r_u]);
         }
     }
 
-    for (let familyNameString of allowed_r_u_Families) {
+    for (const familyNameString of allowed_r_u_Families) {
         const argObject = argObjectRU(optimist.argv, familyNameString);
-        for (let r_u in argObject) {
+        for (const r_u in argObject) {
             if (argObject[r_u]) {
                 if (argObject[r_u] === "all") {
                     exports[r_u][`allow_all_${familyNameString}`] = true;
                 } else if (argObject[r_u] === "custom") {
                     exports[r_u][`allow_custom_${familyNameString}`] = true;
                 } else {
-                    for (let allowedValue of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
+                    for (const allowedValue of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
                         if (familyNameString === "komis" && allowedValue === "automatic") {
                             exports[r_u][`allowed_${familyNameString}`]["null"] = true;
                         } else if (allowedValue.includes(":")) {
-                            let [a,b,increment] = allowedValue.split(":").map(e => Number(e));
+                            let [numberA, numberB, increment] = allowedValue.split(":").map(e => Number(e));
                             increment = Math.abs(increment) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
-                            let [min, max] = [Math.min(a,b), Math.max(a,b)]; 
+                            const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)]; 
                             for (let i = min; i <= max; i = i + increment) {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
                                 if ((Math.abs(max-min)/increment) > 1000) {
@@ -338,13 +335,13 @@ exports.updateFromArgv = function() {
         }
     }
 
-    for (let bansString of all_r_u_Families) {
-        let [general,ranked,unranked] = familyArrayNamesGRU(bansString).map(e => optimist.argv[e]);
-        for (let [arg, r_u_arr] of [ [general, ["ranked", "unranked"]], [ranked, ["ranked"]], [unranked, ["unranked"]] ]) {
+    for (const familyNameString of all_r_u_Families) {
+        const [general,ranked,unranked] = familyArrayNamesGRU(familyNameString).map(e => optimist.argv[e]);
+        for (const [arg, r_u_arr] of [ [general, ["ranked", "unranked"]], [ranked, ["ranked"]], [unranked, ["unranked"]] ]) {
             if (arg) {
-                for (let user of arg.split(',')) {
-                    for (let r_u of r_u_arr) {
-                        exports[r_u]["banned_users"][String(user)] = true;
+                for (const allValue of arg.split(',')) {
+                    for (const r_u of r_u_arr) {
+                        exports[r_u]["banned_users"][String(allValue)] = true;
                     }
                 }
             }
@@ -357,23 +354,19 @@ exports.updateFromArgv = function() {
 
     // Show in debug all the ranked/unranked exports results
     if (exports.DEBUG) {
-        let result = { ...exports };
-        for (let r_u of ["ranked", "unranked"]) {
-            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:\n-------------------------------------------------------\n${JSON.stringify(result[r_u])}\n`);
+        const exportsResult = { ...exports, apikey: "hidden"};
+        for (const r_u of ["ranked", "unranked"]) {
+            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:\n-------------------------------------------------------\n${JSON.stringify(exportsResult)}\n`);
         }
-        result.apikey = "hidden";
-        delete result.ranked;
-        delete result.unranked;
-        console.log(`ROOT EXPORTS RESULT:\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
     }
 }
 
 // before starting:
 function generateExports_r_u(allowed_r_u_Families) {
-    for (let r_u of ["ranked", "unranked"]) {
+    for (const r_u of ["ranked", "unranked"]) {
         exports[r_u] = { banned_users: {},
                          allow_custom_boardsizes: false };
-        for (let familyNameString of allowed_r_u_Families) {
+        for (const familyNameString of allowed_r_u_Families) {
             exports[r_u][`allow_all_${familyNameString}`] = false;
             exports[r_u][`allowed_${familyNameString}`] = {};
         }
@@ -425,7 +418,7 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         ["timecontrolranked", "timecontrolsranked"],
         ["timecontrolunranked", "timecontrolsunranked"]
         ];
-    for (let [oldName, newName] of deprecatedArgv) {
+    for (const [oldName, newName] of deprecatedArgv) {
         if (optimistArgv[oldName]) {
             const begining = `Deprecated: --${oldName} is no longer supported`;
             if (newName) {
@@ -435,9 +428,9 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
             }
         }
     }
-    for (let komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
+    for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
         if (optimistArgv[komisGRUArg]) {
-            for (let komi of ["auto","null"]) {
+            for (const komi of ["auto","null"]) {
                 if (optimistArgv[komisGRUArg].split(",").includes(komi)) {
                     throw new `Deprecated: --${komisGRUArg} /${komi}/ is no longer supported, use --${komisGRUArg} /automatic/ instead`;
                 }
@@ -450,7 +443,7 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
 // exports arrays:
 function full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families) {
     let finalArray = [];
-    for (let familyNameString of full_r_u_Families) {
+    for (const familyNameString of full_r_u_Families) {
         familyArrayNamesGRU(familyNameString).forEach(e => finalArray.push(e));
     }
     return finalArray;
@@ -492,9 +485,9 @@ function parseRank(arg) {
 function checkExportsWarnings(noPauseString) {
     console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
-    // avoid infinite games
-    // TODO: whenever --maxpausetime +ranked + unranked gets implemented, remove this
-    for (let r_u of ["ranked","unranked"]) {
+    for (const r_u of ["ranked","unranked"]) {
+        // avoid infinite games
+        // TODO: whenever --maxpausetime +ranked + unranked gets implemented, remove this
         if (!exports[r_u][noPauseString]) {
             isWarning = true;
             console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`);
@@ -502,17 +495,13 @@ function checkExportsWarnings(noPauseString) {
 
         // warn about potentially problematic timecontrols:
         const pTcs = [["absolute", "(no period time)"], ["none", "(infinite time)"]];
-        if (exports[r_u]["allow_all_timecontrols"] === true) {
-            isWarning = true;
-            console.log(`    Warning: potentially problematic time control for ${r_u} games detected (-${pTcs[0][0]}- ${pTcs[0][1]} and -${pTcs[1][0]}- ${pTcs[1][1]} in -all-): may cause unwanted time management problems with users`);
-        }
-        for (let [tc, descr] of pTcs) {
-            if (exports[r_u]["allowed_timecontrols"][tc] === true) {
+        for (const [tc, descr] of pTcs) {
+            if (exports[r_u]["allowed_timecontrols"][tc] === true ||
+                exports[r_u]["allow_all_timecontrols"] === true) {
                 isWarning = true;
                 console.log(`    Warning: potentially problematic time control for ${r_u} games detected -${tc}- ${descr}: may cause unwanted time management problems with users`);
             }
         }
     }
-    if (isWarning) console.log("[ WARNINGS ! ]\n");
-    else console.log("[ SUCCESS ]\n");
+    if (!isWarning) console.log("[ SUCCESS ]\n");
 }

@@ -12,7 +12,7 @@ let config = require('./config');
 /** Game **/
 /**********/
 class Game {
-    constructor(conn, game_id) { /* {{{ */
+    constructor(conn, game_id) {
         this.conn = conn;
         this.game_id = game_id;
         this.socket = conn.socket;
@@ -233,7 +233,7 @@ class Game {
                 this.scheduleRetry();
             }
         }, 1000);
-    } /* }}} */
+    }
 
     // Kill the bot, if it is currently running.
     ensureBotKilled() {
@@ -249,7 +249,7 @@ class Game {
         }
     }
     // Start the bot.
-    ensureBotStarted(eb) { /* {{{ */
+    ensureBotStarted(eb) {
         if (this.bot && this.bot.dead) {
             this.ensureBotKilled();
         }
@@ -276,11 +276,11 @@ class Game {
                 this.log("State loaded for new bot");
             }
         }, eb);
-    } /* }}} */
+    }
 
     // Send @cmd to bot and call @cb with returned moves.
     //
-    getBotMoves(cmd, cb, eb) { /* {{{ */
+    getBotMoves(cmd, cb, eb) {
         ++Game.moves_processing;
         this.processing = true;
         if (config.corrqueue && this.state.time_control.speed === "correspondence")
@@ -323,7 +323,7 @@ class Game {
                 this.ensureBotKilled();
             }
         }, botError);
-    } /* }}} */
+    }
 
     scheduleRetry() {
         if (config.DEBUG) {
@@ -338,7 +338,7 @@ class Game {
     }
     // Send move to server.
     // 
-    uploadMove(move) { /* {{{ */
+    uploadMove(move) {
         if (move.resign) {
             this.log("Resigning");
             this.socket.emit('game/resign', this.auth({
@@ -354,13 +354,13 @@ class Game {
             'move': encodeMove(move)
         }));
         //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
-    } /* }}} */
+    }
 
     // Get move from bot and upload to server.
     // Handle handicap stones with bot as black transparently
     // (we get all of them at once with place_free_handicap).
     //
-    makeMove(move_number) { /* {{{ */
+    makeMove(move_number) {
         if (config.DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!==", move_number, "?"); }
         if (!this.state || this.state.moves.length !== move_number)
             return;
@@ -409,12 +409,12 @@ class Game {
         };
 
         this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, this.scheduleRetry);
-    } /* }}} */
+    }
 
-    auth(obj) { /* {{{ */
+    auth(obj) {
         return this.conn.auth(obj);
-    } /* }}} */
-    disconnect() { /* {{{ */
+    }
+    disconnect() {
         this.conn.removeGameForPlayer(this.game_id);
 
         if (this.processing) {
@@ -432,8 +432,8 @@ class Game {
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
         }));
-    } /* }}} */
-    gameOver() /* {{{ */
+    }
+    gameOver()
     {
         if (config.farewell && this.state)
             this.sendChat(config.farewell, "discussion");
@@ -459,8 +459,8 @@ class Game {
             if (config.DEBUG) console.log("Starting disconnect Timeout in Game " + this.game_id + " gameOver()");
             this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
         }
-    } /* }}} */
-    header() { /* {{{ */
+    }
+    header() {
         if (!this.state)  return;
         let color = 'W  ';  // Playing white against ...
         let player = this.state.players.black;
@@ -474,8 +474,8 @@ class Game {
 
         // XXX doesn't work, getting garbage ranks here ...
         // let rank = rankToString(player.rank);
-    } /* }}} */
-    log() { /* {{{ */
+    }
+    log() {
         let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
         let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
         let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
@@ -484,7 +484,7 @@ class Game {
             arr.push(arguments[i]);
 
         console.log.apply(null, arr);
-    } /* }}} */
+    }
     sendChat(str, move_number, type = "discussion") {
         if (!this.connected) return;
 
@@ -511,22 +511,19 @@ class Game {
     }
 }
 
-function num2char(num) { /* {{{ */
+function num2char(num) {
     if (num === -1) return ".";
     return "abcdefghijklmnopqrstuvwxyz"[num];
-} /* }}} */
-function encodeMove(move) { /* {{{ */
+}
+function encodeMove(move) {
     if (move['x'] === -1) 
         return "..";
     return num2char(move['x']) + num2char(move['y']);
-} /* }}} */
-function generate_r_u_strings_game(rankedSetting) { /* {{{ */
-    let r_u = "unranked";
-    if (rankedSetting) {
-        r_u = "ranked";
-    }
+}
+function generate_r_u_strings_game(rankedSetting) {
+    const r_u = rankedSetting ? "unranked" : "ranked";
     return { r_u, for_r_u_games: `for ${r_u} games` };
-} /* }}} */
+}
 
 Game.moves_processing = 0;
 Game.corr_moves_processing = 0;
