@@ -322,13 +322,13 @@ exports.updateFromArgv = function() {
                         } else if (allowedValue.includes(":")) {
                             let [a,b,increment] = allowedValue.split(":").map(e => Number(e));
                             increment = Math.abs(increment) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
-                            if (familyNameString !== "komis") increment = Math.ceil(increment); // integer only
-                            let n = 0 // avoid extremly long lists
-                            for (let i = Math.min(a,b); i <= Math.max(a,b) && n <= 1000; i = i + increment) {
+                            let [min, max] = [Math.min(a,b), Math.max(a,b)]; 
+                            for (let i = min; i <= max; i = i + increment) {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
-                                n = n+1;
+                                if ((Math.abs(max-min)/increment) > 1000) {
+                                    throw new `please reduce list length in ${familyNameString}, max is 1000 elements per range.`;
+                                }
                             }
-                            if (n > 1000) throw new `range too wide in allowed ${familyNameString}, prematurely exited the list.`;
                         } else {
                             exports[r_u][`allowed_${familyNameString}`][String(allowedValue)] = true;
                         }

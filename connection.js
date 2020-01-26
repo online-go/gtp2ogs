@@ -392,8 +392,9 @@ class Connection {
                         if (familyNameString === "boardsizes") {
                             allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
                         } else {
-                            const [widths, heights] = 
+                            let [widths, heights] = 
                                 ["widths", "heights"].map( e => Object.keys(config_r_u[`allowed_boardsize${e}`]) );
+                            [widths, heights].forEach( e => { if (e.length === 0) e.push("(all)"); } );
                             allowedValuesString = boardsizeWidthsHeightsToDisplayString(widths, heights);
                         }
                     } else if (familyNameString === "komis" && notifDisplayed === "null") {
@@ -660,17 +661,12 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
 }
 
 function boardsizeWidthsHeightsToDisplayString(widths, heights) {
-    let widthsConverted = widths;
-    let heightsConverted = heights;
-    for (let e of [widthsConverted, heightsConverted]) {
-        if (e.length === 0) e = ["(all)"];
-    }
     let combinations = [];
-    for (let i = 0; i < widthsConverted.length; i++) {
-        for (let h of heightsConverted) {
-            combinations.push(`${widthsConverted[i]}x${h}`);
+    for (let i = 0; i < widths.length; i++) {
+        for (let h of heights) {
+            combinations.push(`${widths[i]}x${h}`);
         }
-        if (i > 1 && i < widthsConverted.length - 1) {
+        if (i > 1 && i < widths.length - 1) {
             combinations.push("\n");
         }
     }
