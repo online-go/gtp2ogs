@@ -317,8 +317,8 @@ exports.updateFromArgv = function() {
                         if (familyNameString === "komis" && allowedValue === "automatic") {
                             exports[r_u][`allowed_${familyNameString}`]["null"] = true;
                         } else if (allowedValue.includes(":")) {
-                            let [numberA, numberB, increment] = allowedValue.split(":").map(e => Number(e));
-                            increment = Math.abs(increment) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
+                            let [numberA, numberB, incr] = allowedValue.split(":").map(e => Number(e));
+                            const increment = Math.abs(incr) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
                             const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)]; 
                             for (let i = min; i <= max; i = i + increment) {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;

@@ -68,10 +68,10 @@ class Connection {
                 this.bot_id = obj.id;
                 this.jwt = obj.jwt;
                 if (!this.bot_id) {
-                    console.error("ERROR: Bot account is unknown to the system: " + config.username);
+                    console.error(`ERROR: Bot account is unknown to the system: ${config.username}`);
                     process.exit();
                 }
-                conn_log("Bot is username: " + config.username);
+                conn_log(`Bot is username: ${config.username}`);
                 conn_log("Bot is user id:", this.bot_id);
                 socket.emit('authenticate', this.auth({}))
                 socket.emit('notification/connect', this.auth({}), (x) => {
@@ -642,7 +642,7 @@ function generate_r_u_strings_connection(rankedSetting, speedSetting) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    (R >= 30) ? ((R-30+1) + 'd') : ((30-R) + 'k');
+    return (R >= 30) ? ((R-30+1) + 'd') : ((30-R) + 'k');
 }
 
 function boardsizeSquareToDisplayString(boardsizeSquare) {
@@ -659,7 +659,7 @@ function boardsizeWidthsHeightsToDisplayString(widths, heights) {
         for (const h of heights) {
             combinations.push(`${widths[i]}x${h}`);
         }
-        if (i > 1 && i < widths.length - 1) {
+        if (i >= 1 && i < widths.length - 1) {
             combinations.push("\n");
         }
     }
@@ -690,12 +690,12 @@ function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, 
 }
 
 function convertBlitzLiveCorr(blitzLiveCorr) {
-    (blitzLiveCorr === "corr") ? "correspondence" : blitzLiveCorr;
+    return (blitzLiveCorr === "corr") ? "correspondence" : blitzLiveCorr;
 }
 
 function minMaxCondition(arg, familyNotification, isMin) {
     // to reject in minimum, we need notification < arg
-    isMin ? (familyNotification < arg) : (familyNotification > arg);
+    return isMin ? (familyNotification < arg) : (familyNotification > arg);
 }
 
 function timespanToDisplayString(timespan) {
