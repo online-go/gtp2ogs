@@ -185,9 +185,9 @@ class Bot {
             // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
             // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
             //
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
+            const black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
                 - black_offset + (state.clock.black_time.periods - 1) * state.time_control.period_time), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
+            const white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
                 - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
 
             this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
@@ -207,8 +207,8 @@ class Bot {
         } else if (state.time_control.system === 'canadian') {
             // Canadian Byoyomi is the only time controls GTP v2 officially supports.
             // 
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+            const black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            const white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             this.command("time_settings " + state.time_control.main_time + " "
                 + state.time_control.period_time + " " + state.time_control.stones_per_period);
@@ -224,14 +224,14 @@ class Bot {
             // This should let the bot know a good approximation of how to handle 
             // the time remaining.
             //
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+            const black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            const white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             this.command("time_settings " + (state.time_control.initial_time - state.time_control.time_increment)
                 + " " + state.time_control.time_increment + " 1");
 
-            // Always tell the bot we are in main time ('0') so it doesn't try to think all of timeleft per move. But
-            // subtract the increment time above to avoid timeouts.
+            // Always tell the bot we are in main time ('0') so it doesn't try to think all of timeleft per move.
+            // But subtract the increment time above to avoid timeouts.
             //
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
@@ -243,24 +243,25 @@ class Bot {
 
             if (state.clock.black_time)
             {
-                let black_timeleft = Math.max( Math.floor((state.clock.black_time - now)/1000 - black_offset), 0);
+                const black_timeleft = Math.max( Math.floor((state.clock.black_time - now)/1000 - black_offset), 0);
                 this.command("time_left black " + black_timeleft + " 1");
                 this.command("time_left white 1 1");
             } else {
-                let white_timeleft = Math.max( Math.floor((state.clock.white_time - now)/1000 - white_offset), 0);
+                const white_timeleft = Math.max( Math.floor((state.clock.white_time - now)/1000 - white_offset), 0);
                 this.command("time_left black 1 1");
                 this.command("time_left white " + white_timeleft + " 1");
             }
 
         } else if (state.time_control.system === 'absolute') {
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
+            const black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
+            const white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
             this.command("time_settings " + state.time_control.total_time + " 0 0");
 
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
         }
+        
         // OGS doesn't actually send 'none' time control type
         //
         /* else if (state.time_control.system === 'none') {
