@@ -65,8 +65,6 @@ exports.updateFromArgv = function() {
         .default('startupbuffer', 5)
         .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
         .default('timeout', 0)
-        // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
-        .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
         .describe('persist', 'Bot process remains running between moves')
         .describe('noclock', 'Do not send any clock/time data to the bot')
@@ -484,11 +482,17 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         ["speedunranked", "speedsunranked"],
         ["timecontrol", "timecontrols"],
         ["timecontrolranked", "timecontrolsranked"],
-        ["timecontrolunranked", "timecontrolsunranked"]
+        ["timecontrolunranked", "timecontrolsunranked"],
+        ["kgstime", false]
         ];
-    for (let [oldName, newName] of deprecatedArgv) {
+    for (const [oldName, newName] of deprecatedArgv) {
         if (optimistArgv[oldName]) {
-            console.log(`Deprecated: --${oldName} is no longer supported, use --${newName} instead.`);
+            const begining = `Deprecated: --${oldName} is no longer supported`;
+            if (newName) {
+                throw new `${begining}, use --${newName} instead.`;
+            } else {
+                throw new `${begining}, see all supported options list https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`;
+            }
         }
     }
     for (let komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
