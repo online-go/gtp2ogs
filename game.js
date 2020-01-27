@@ -462,9 +462,9 @@ class Game {
     }
     header() {
         if (!this.state)  return;
-        const userIsBot = this.state.players.black.username === config.username;
-        const color = userIsBot ? '  B' : 'W  ';  // Playing white against ...
-        const player = userIsBot ? this.state.players.white : this.state.players.black;
+        const botIsBlack = this.state.players.black.username === config.username;
+        const color = botIsBlack ? '  B' : 'W  ';  // Playing white against ...
+        const player = botIsBlack ? this.state.players.white : this.state.players.black;
         const handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
         return sprintf("%s %s  [%ix%i]  %s", color, player.username, this.state.width, this.state.width, handi);
 
