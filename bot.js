@@ -160,7 +160,7 @@ class Bot {
         //
         if (config.noclock) return;
 
-        //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
+        //const now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
         const now = Date.now() - this.conn.clock_drift;
 
         const offset = ((this.firstmove===true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
@@ -178,7 +178,7 @@ class Bot {
                                           + " "
                                           + state.time_control.stones_per_period);
 
-            for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
+            for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
                                                                    ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 const time_settings_two_three =
@@ -200,9 +200,9 @@ class Bot {
             // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
             // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
             //
-            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
+            const black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
                 - black_offset + (state.clock.black_time.periods - 1) * state.time_control.period_time), 0);
-            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
+            const white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
                 - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
 
             this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time)
@@ -227,7 +227,7 @@ class Bot {
             this.command("time_settings 0 " + state.time_control.per_move
                                             + " 1");
 
-            for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
+            for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
                                                                    ["white", state.clock.white_time, white_offset] ]) {
                 if (color_time) {
                     const color_timeleft = Math.max(Math.floor((color_time - now) / 1000 - color_offset), 0);
@@ -252,7 +252,7 @@ class Bot {
             // But subtract the increment time above to avoid timeouts.
             //
 
-            for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
+            for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
                                                                    ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 this.command(`time_left ${color_string} ${color_timeleft} 0`);
@@ -262,7 +262,7 @@ class Bot {
             this.command("time_settings " + state.time_control.total_time
                                           + " 0 0");
 
-            for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
+            for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
                                                                    ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 this.command(`time_left ${color_string} ${color_timeleft} 0`);
