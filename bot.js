@@ -179,7 +179,7 @@ class Bot {
                                           + state.time_control.stones_per_period);
 
             for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
-                                                                   ["white", state.clock.white_time, white_offset] ]) {
+                                                                     ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 const time_settings_two_three =
                     color_timeleft > 0 ? `${color_timeleft} 0`
@@ -228,7 +228,7 @@ class Bot {
                                             + " 1");
 
             for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
-                                                                   ["white", state.clock.white_time, white_offset] ]) {
+                                                                     ["white", state.clock.white_time, white_offset] ]) {
                 if (color_time) {
                     const color_timeleft = Math.max(Math.floor((color_time - now) / 1000 - color_offset), 0);
                     const color_string_opposite = color_string === "black" ? "white" : "black";
@@ -253,7 +253,7 @@ class Bot {
             //
 
             for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
-                                                                   ["white", state.clock.white_time, white_offset] ]) {
+                                                                     ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 this.command(`time_left ${color_string} ${color_timeleft} 0`);
             }
@@ -263,7 +263,7 @@ class Bot {
                                           + " 0 0");
 
             for (const [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
-                                                                   ["white", state.clock.white_time, white_offset] ]) {
+                                                                     ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 this.command(`time_left ${color_string} ${color_timeleft} 0`);
             }
