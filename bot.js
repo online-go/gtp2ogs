@@ -181,10 +181,10 @@ class Bot {
             for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
                                                                    ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
-                const time_setting_three = color_timeleft > 0
-                    ? `${color_timeleft} 0`
-                    : `${Math.floor(color_time.block_time - color_offset)} ${color_time.moves_left}`;
-                this.command(`time_left ${color_string} ${time_setting_three}`);
+                const time_settings_two_three =
+                    color_timeleft > 0 ? `${color_timeleft} 0`
+                                       : `${Math.floor(color_time.block_time - color_offset)} ${color_time.moves_left}`;
+                this.command(`time_left ${color_string} ${time_settings_two_three}`);
             }
 
         } else if (state.time_control.system === 'byoyomi') {
@@ -200,18 +200,18 @@ class Bot {
             // OGS enforces the number of periods is always 1 or greater. Let's pretend the final period is a Canadian Byoyomi of 1 stone.
             // This lets the bot know it can use the full period per move, not try to fit the rest of the game into the time left.
             //
-            const black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
+            let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time
                 - black_offset + (state.clock.black_time.periods - 1) * state.time_control.period_time), 0);
-            const white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
+            let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time
                 - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
-            const color_timeleft = (state.clock.current_player === state.clock.black_player_id
-                                       ? (black_timeleft > 0 ? 0 : black_offset)
-                                       : (white_timeleft > 0 ? 0 : white_offset)
-                                   );
 
             this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time)
                                           + " "
-                                          + Math.floor(state.time_control.period_time - color_timeleft)
+                                          + Math.floor(state.time_control.period_time - (state.clock.current_player === state.clock.black_player_id
+                                                                                          ? (black_timeleft > 0 ? 0 : black_offset)
+                                                                                          : (white_timeleft > 0 ? 0 : white_offset)
+                                                                                        )
+                                                      )
                                           + " 1");
 
             // Since we're faking byoyomi using Canadian, time_left actually does mean the time left to play our 1 stone.
@@ -220,6 +220,22 @@ class Bot {
                 : Math.floor(state.time_control.period_time - black_offset) + " 1") );
             this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
                 : Math.floor(state.time_control.period_time - white_offset) + " 1") );
+
+        } else if (state.time_control.system === 'simple') {
+            // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
+            //
+            this.command("time_settings 0 " + state.time_control.per_move
+                                            + " 1");
+
+            for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
+                                                                   ["white", state.clock.white_time, white_offset] ]) {
+                if (color_time) {
+                    const color_timeleft = Math.max(Math.floor((color_time - now) / 1000 - color_offset), 0);
+                    const color_string_opposite = color_string === "black" ? "white" : "black";
+                    this.command(`time_left ${color_string} ${color_timeleft} 1`);
+                    this.command(`time_left ${color_string_opposite} 1 1`);
+                }
+            }
 
         } else if (state.time_control.system === 'fischer') {
             // Not supported by KGS time settings and I assume most bots.
@@ -250,22 +266,6 @@ class Bot {
                                                                    ["white", state.clock.white_time, white_offset] ]) {
                 const color_timeleft = Math.max(Math.floor(color_time.thinking_time - color_offset), 0);
                 this.command(`time_left ${color_string} ${color_timeleft} 0`);
-            }
-
-        } else if (state.time_control.system === 'simple') {
-            // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
-            //
-            this.command("time_settings 0 " + state.time_control.per_move
-                                            + " 1");
-
-            for (let [color_string, color_time, color_offset] of [ ["black", state.clock.black_time, black_offset],
-                                                                   ["white", state.clock.white_time, white_offset] ]) {
-                if (color_time) {
-                    const color_timeleft = Math.max(Math.floor((color_time - now)/1000 - color_offset), 0);
-                    const color_string_opposite = color_string === "black" ? "white" : "black";
-                    this.command(`time_left ${color_string} ${color_timeleft} 1`);
-                    this.command(`time_left ${color_string_opposite} 1 1`);
-                }
             }
         }
 
