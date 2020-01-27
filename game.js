@@ -43,7 +43,7 @@ class Game {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
 
-            let prev_phase = (this.state ? this.state.phase : null);
+            const prev_phase = (this.state ? this.state.phase : null);
             this.state = gamedata;
             this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
             this.log("gamedata     " + this.header());
@@ -82,7 +82,7 @@ class Game {
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
-            let gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
+            const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
 
             if (this.bot && gamedataChanged) {
                 this.log("Killing bot because of gamedata change after bot was started");
@@ -174,7 +174,7 @@ class Game {
                 this.state.moves.push(move.move);
 
                 // Log opponent moves
-                let m = decodeMoves(move.move, this.state.width)[0];
+                const m = decodeMoves(move.move, this.state.width)[0];
                 if ((this.my_color === "white" && (this.state.handicap) >= this.state.moves.length) ||
                     move.move_number % 2 === this.opponent_evenodd)
                     this.log("Got     " + move2gtpvertex(m, this.state.width));
@@ -286,7 +286,7 @@ class Game {
         if (config.corrqueue && this.state.time_control.speed === "correspondence")
             ++Game.corr_moves_processing;
 
-        let doneProcessing = () => {
+        const doneProcessing = () => {
             this.procesing = false;
             --Game.moves_processing;
             if (config.corrqueue && this.state.time_control.speed === "correspondence") {
@@ -296,7 +296,7 @@ class Game {
         };
 
         let failed = false;
-        let botError = (e) => {
+        const botError = (e) => {
             if (failed)  return;
 
             failed = true;
@@ -371,11 +371,11 @@ class Game {
             this.greeted = true;
         }
 
-        let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
+        const doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
             this.state.moves.length < this.state.handicap);
 
         if (!doing_handicap) {  // Regular genmove ...
-            let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+            const sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
             this.getBotMoves("genmove " + this.my_color, sendTheMove, this.scheduleRetry);
             return;
         }
@@ -386,24 +386,24 @@ class Game {
             return;
         }
 
-        let warnAndResign = (msg) => {
+        const warnAndResign = (msg) => {
             this.log(msg);
             this.ensureBotKilled();
             this.uploadMove({'resign': true});
         }
 
         // Get handicap stones from bot and return first one.
-        let storeMoves = (moves) => {
+        const storeMoves = (moves) => {
             if (moves.length !== this.state.handicap) {  // Sanity check
                 warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
                 return;
             }
-            for (let i in moves)                     // Sanity check
+            for (const i in moves) {                    // Sanity check
                 if (moves[i].pass || moves[i].x < 0) {
                     warnAndResign("place_free_handicap returned a pass, resigning.");
                     return;
                 }
-
+            }
             this.handicap_moves = moves;
             this.uploadMove(this.handicap_moves.shift());
         };
@@ -439,15 +439,15 @@ class Game {
             this.sendChat(config.farewell, "discussion");
 
         // Display result
-        let s = this.state;
-        let col = (s.winner === s.players.black.id ? 'B' : 'W' );
-        let res = s.outcome;   res = res[0].toUpperCase() + res.substr(1);
-        let m = s.outcome.match(/(.*) points/);
+        const s = this.state;
+        const col = (s.winner === s.players.black.id ? 'B' : 'W' );
+        let res = s.outcome[0].toUpperCase() + s.outcome.substr(1);
+        const m = s.outcome.match(/(.*) points/);
         if (m)  res = m[1];
         if (res === 'Resignation')  res = 'R';
         if (res === 'Cancellation') res = 'Can';
         if (res === 'Timeout')      res = 'Time';
-        let winloss = (s.winner === this.conn.bot_id ? "W" : "   L");
+        const winloss = (s.winner === this.conn.bot_id ? "W" : "   L");
         this.log(sprintf("Game over.   Result: %s+%-5s  %s", col, res, winloss));
 
         if (this.bot) {
@@ -462,27 +462,23 @@ class Game {
     }
     header() {
         if (!this.state)  return;
-        let color = 'W  ';  // Playing white against ...
-        let player = this.state.players.black;
-        if (player.username === config.username) {
-            player = this.state.players.white;
-            color = '  B';
-        }
-        let name = player.username;
-        let handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
+        const name = player.username;
+        const color = (name === config.username) ? '  B' : 'W  ';  // Playing white against ...
+        const player = (name === config.username) ? this.state.players.white : this.state.players.black;
+        const handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
         return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
 
         // XXX doesn't work, getting garbage ranks here ...
-        // let rank = rankToString(player.rank);
+        // const rank = rankToString(player.rank);
     }
     log() {
-        let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
-        let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
+        const moves = (this.state && this.state.moves ? this.state.moves.length : 0);
+        const movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
         let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
 
-        for (let i=0; i < arguments.length; ++i)
+        for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
-
+        }
         console.log.apply(null, arr);
     }
     sendChat(str, move_number, type = "discussion") {
@@ -504,9 +500,8 @@ class Game {
         }));
     }    
     getOpponent() {
-        let player = this.state.players.white;
-        if (player.id === this.conn.bot_id)
-            player = this.state.players.black;
+        const player = (this.state.players.white.id === this.conn.bot_id) ? 
+                       this.state.players.black : this.state.players.white;
         return player;
     }
 }
