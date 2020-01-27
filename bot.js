@@ -60,10 +60,10 @@ class Bot {
                 this.log("<<<", stdout_buffer.trim());
             }
 
-            let lines = stdout_buffer.split("\n");
+            const lines = stdout_buffer.split("\n");
             stdout_buffer = "";
             for (let i=0; i < lines.length; ++i) {
-                let line = lines[i];
+                const line = lines[i];
                 if (line.trim() === "") {
                     continue;
                 }
@@ -71,7 +71,7 @@ class Bot {
                     while (lines[i].trim() !== "") {
                         ++i;
                     }
-                    let cb = this.command_callbacks.shift();
+                    const cb = this.command_callbacks.shift();
                     this.command_error_callbacks.shift();
                     if (cb) cb(line.substr(1).trim());
                 }
@@ -83,14 +83,14 @@ class Bot {
                     }
                     this.failed = true;
                     this.command_callbacks.shift();
-                    let eb = this.command_error_callbacks.shift();
+                    const eb = this.command_error_callbacks.shift();
                     if (eb) eb(line.substr(1).trim());
                 }
                 else {
                     this.log("Unexpected output: ", line);
                     this.failed = true;
                     this.command_callbacks.shift();
-                    let eb = this.command_error_callbacks.shift();
+                    const eb = this.command_error_callbacks.shift();
                     if (eb) eb();
                     //throw new Error("Unexpected output: " + line);
                 }
@@ -102,7 +102,7 @@ class Bot {
             }
             this.command_callbacks.shift();
             this.dead = true;
-            let eb = this.command_error_callbacks.shift();
+            const eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
         });
         this.proc.stdin.on('error', (code) => {
@@ -112,7 +112,7 @@ class Bot {
             this.command_callbacks.shift();
             this.dead = true;
             this.failed = true;
-            let eb = this.command_error_callbacks.shift();
+            const eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
         });
     }}}
@@ -171,8 +171,8 @@ class Bot {
         let black_offset = 0;
         let white_offset = 0;
 
-        //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
-        let now = Date.now() - this.conn.clock_drift;
+        //const now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
+        const now = Date.now() - this.conn.clock_drift;
 
         if (state.clock.current_player === state.clock.black_player_id) {
             black_offset = ((this.firstmove===true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
@@ -252,6 +252,7 @@ class Bot {
                 this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
                     : Math.floor(state.time_control.period_time - white_offset) + " 1") );
             }
+
         } else if (state.time_control.system === 'canadian') {
             // Canadian Byoyomi is the only time controls GTP v2 officially supports.
             // 
@@ -270,6 +271,7 @@ class Bot {
                 : Math.floor(state.clock.black_time.block_time - black_offset) + " " + state.clock.black_time.moves_left));
             this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
                 : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
+
         } else if (state.time_control.system === 'fischer') {
             // Not supported by kgs-time_settings and I assume most bots. A better way than absolute is to handle this with
             // a fake Canadian byoyomi. This should let the bot know a good approximation of how to handle
@@ -291,6 +293,7 @@ class Bot {
             //
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
+
         } else if (state.time_control.system === 'simple') {
             // Simple could also be viewed as a Canadian byomoyi that starts immediately with # of stones = 1
             //
@@ -306,6 +309,7 @@ class Bot {
                 this.command("time_left black 1 1");
                 this.command("time_left white " + white_timeleft + " 1");
             }
+
         } else if (state.time_control.system === 'absolute') {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
@@ -318,6 +322,7 @@ class Bot {
             this.command("time_left black " + black_timeleft + " 0");
             this.command("time_left white " + white_timeleft + " 0");
         }
+        
         // OGS doesn't actually send 'none' time control type
         //
         /* else if (state.time_control.system === 'none') {
