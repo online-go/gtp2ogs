@@ -462,9 +462,10 @@ class Game {
     }
     header() {
         if (!this.state)  return;
-        const color = (player.username === config.username) ? '  B' : 'W  ';  // Playing white against ...
-        const player = (player.username === config.username) ? this.state.players.white : this.state.players.black;
-        const handi = (this.state && this.state.handicap) ? "H" + this.state.handicap : "  ";
+        const userIsBot = this.state.players.black.username === config.username;
+        const color = userIsBot ? '  B' : 'W  ';  // Playing white against ...
+        const player = userIsBot ? this.state.players.white : this.state.players.black;
+        const handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
         return sprintf("%s %s  [%ix%i]  %s", color, player.username, this.state.width, this.state.width, handi);
 
         // XXX doesn't work, getting garbage ranks here ...
