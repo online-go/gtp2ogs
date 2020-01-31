@@ -393,7 +393,7 @@ class Connection {
                         } else {
                             const [widths, heights] = 
                                   ["widths", "heights"].map( e => Object.keys(config_r_u[`allowed_boardsize${e}`]) )
-                                                       .map( e => { e.length === 0 ? "(all)" : e; } );
+                                                       .map( e => (e.length === 0 ? ["(all)"] : e) );
                             allowedValuesString = boardsizeWidthsHeightsToDisplayString(widths, heights);
                         }
                     } else if (familyNameString === "komis" && notifDisplayed === "null") {
