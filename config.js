@@ -13,7 +13,6 @@ const allowed_r_u_Families = ["boardsizes",
                               "timecontrols"
                              ];
 generateExports_r_u(allowed_r_u_Families);
-exports.check_rejectnew = function() {};
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
@@ -291,16 +290,8 @@ exports.updateFromArgv = function() {
             }
         }
     }
-    exports.check_rejectnew = function()
-    {
-        if (optimist.argv.rejectnew) {
-            return true;
-        } else if (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile))  {
-            return true;
-        } else {
-            return false;
-        }
-    };
+    exports.is_rejectnew = optimist.argv.rejectnew ||
+                           (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile));
 
     // r_u exports
     /* 1) general r_u cases:*/
