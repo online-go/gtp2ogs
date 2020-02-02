@@ -241,12 +241,7 @@ exports.updateFromArgv = function() {
 
     /* exports arrays
     /  A) general case:*/
-    const genericMain_r_u_Families = ["minmaintimeblitz", "minmaintimelive",
-    "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr",
-    "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz",
-    "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive",
-    "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", 
-    "maxperiodtimecorr", "minhandicap", "maxhandicap", "noautohandicap",
+    const genericMain_r_u_Families = ["noautohandicap",
     "proonly", "nopauseonweekends", "nopause"];
 
     /* B) specific cases:
@@ -254,6 +249,10 @@ exports.updateFromArgv = function() {
     const rank_r_u_Families = ["minrank", "maxrank"];
     // bans family is an example of All/ranked/unranked family:
     // export general AND ranked AND unranked args
+    const genericMinMax_r_u_Families = ["maintimeblitz", "maintimelive",
+        "maintimecorr", "periodsblitz", "periodslive", "periodscorr",
+        "periodtimeblitz", "periodtimelive", "periodtimecorr", "handicap",
+        "handicapranked", "handicapunranked"];
     const all_r_u_Families = ["bans"];
     // note: allowed_r_u_Families use a different formula before
     //       exporting, included here as well
@@ -261,6 +260,7 @@ exports.updateFromArgv = function() {
     // C) combinations of all r_u args, to export separately
     const full_r_u_Families = genericMain_r_u_Families
                               .concat(rank_r_u_Families,
+                                      genericMinMax_r_u_Families,
                                       all_r_u_Families,
                                       allowed_r_u_Families);
     const full_r_u_Args = full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families);
@@ -307,6 +307,17 @@ exports.updateFromArgv = function() {
         const argObject = argObjectRU(optimist.argv, familyNameString);
         for (const r_u in argObject) {
             exports[r_u][familyNameString] = parseRank(argObject[r_u]);
+        }
+    }
+
+    for (const familyNameString of genericMinMax_r_u_Families) {
+        const argObject = argObjectRU(optimist.argv, familyNameString);
+        for (const r_u in argObject) {
+            const [minArg, maxArg] = argObject[r_u].split(':');
+            for (const [arg, minMax] of [ [minArg, "min"],
+                                          [maxArg, "max"] ]) {
+                exports[r_u][`${minMax}familyNameString`] = Number(arg);
+            }
         }
     }
 
@@ -390,60 +401,70 @@ function generateExports_r_u(allowed_r_u_Families) {
 }
 
 // console messages:
+function minMaxDeprecations(name, isBlitzLiveCorr) {
+    let oldMinMaxNames = [`min${name}`, `max${name}`];
+    let newNamesMsg = `${name} min:max`;
+    if (isBlitzLiveCorr) {
+        oldMinMaxNames = oldMinMaxNames.concat(oldMinMaxNames.map( str => `${str}blitz` ))
+                                       .concat(oldMinMaxNames.map( str => `${str}live` ))
+                                       .concat(oldMinMaxNames.map( str => `${str}corr` ));
+        newNames = `${newNamesMsg}, --${names}blitz min:max, 
+                   --${names}live min:max, --${names}corr min:max`;
+    }
+
+    return [minMaxNames, newNames];
+}
+
 function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
-    const deprecatedArgv = [["botid", "username"],
-        ["bot", "username"],
-        ["id", "username"],
-        ["minrankedhandicap", "minhandicapranked"],
-        ["minunrankedhandicap", "minhandicapunranked"],
-        ["maxrankedhandicap", "maxhandicapranked"],
-        ["maxunrankedhandicap", "maxhandicapunranked"],
-        ["maxtotalgames", "maxconnectedgames"],
-        ["maxactivegames", "maxconnectedgamesperuser"],
-        ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
-        ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
-        ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
-        ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
-        ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
-        ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
-        ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
-        ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
-        ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
-        ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
-        ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
-        ["maxperiods",  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
-        ["maxperiodsranked", "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
-        ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
-        ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
-        ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
-        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
-        ["ban", "bans"],
-        ["banranked", "bansranked"],
-        ["banunranked", "bansunranked"],
-        ["boardsize", "boardsizes"],
-        ["boardsizeranked", "boardsizesranked"],
-        ["boardsizeunranked", "boardsizesunranked"],
-        ["komi", "komis"],
-        ["komiranked", "komisranked"],
-        ["komiunranked", "komisunranked"],
-        ["speed", "speeds"],
-        ["speedranked", "speedsranked"],
-        ["speedunranked", "speedsunranked"],
-        ["timecontrol", "timecontrols"],
-        ["timecontrolranked", "timecontrolsranked"],
-        ["timecontrolunranked", "timecontrolsunranked"]
-        ];
-    for (const [oldName, newName] of deprecatedArgv) {
-        if (optimistArgv[oldName]) {
-            const beginning = `Deprecated: --${oldName} is no longer supported`;
-            if (newName) {
-                throw new `${beginning}, use --${newName} instead.`;
-            } else {
-                throw new `${beginning}, see all supported options list 
-                           https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`;
+    const deprecatedArgv = [ [["bot", "id", "botid"], "username"],
+        [["maxunrankedhandicap"], "maxhandicapunranked"],
+        [["maxtotalgames"], "maxconnectedgames"],
+        [["maxactivegames"], "maxconnectedgamesperuser"],
+        minMaxDeprecations("rank", false),
+        minMaxDeprecations("rankranked", false),
+        minMaxDeprecations("rankunranked", false),
+        minMaxDeprecations("handicap", false),
+        minMaxDeprecations("handicapranked", false),
+        minMaxDeprecations("handicapunranked", false),
+        minMaxDeprecations("maintime", true),
+        minMaxDeprecations("maintimeranked", true),
+        minMaxDeprecations("maintimeunranked", true),
+        minMaxDeprecations("periodtime", true),
+        minMaxDeprecations("periodtimeranked", true),
+        minMaxDeprecations("periodtimeunranked", true),
+        minMaxDeprecations("periods", true),
+        minMaxDeprecations("periodsranked", true),
+        minMaxDeprecations("periodsunranked", true),
+        [["ban"], "bans"],
+        [["banranked"], "bansranked"],
+        [["banunranked"], "bansunranked"],
+        [["boardsize"], "boardsizes"],
+        [["boardsizeranked"], "boardsizesranked"],
+        [["boardsizeunranked"], "boardsizesunranked"],
+        [["komi"], "komis"],
+        [["komiranked"], "komisranked"],
+        [["komiunranked"], "komisunranked"],
+        [["speed"], "speeds"],
+        [["speedranked"], "speedsranked"],
+        [["speedunranked"], "speedsunranked"],
+        [["timecontrol"], "timecontrols"],
+        [["timecontrolranked"], "timecontrolsranked"],
+        [["timecontrolunranked"], "timecontrolsunranked"]
+    ];
+    for (const [oldNames, newNameMsg] of deprecatedArgv) {
+        for (oldName of oldNames) {
+            if (optimistArgv[oldName]) {
+                const beginning = `Deprecated: --${oldName} is no longer supported`;
+                const ending = `see all supported options list for details:
+                                \nhttps://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`
+                if (newNameMsg) {
+                    throw new `${beginning}, use --${newNameMsg} instead, ${ending}`;
+                } else {
+                    throw new `${beginning}, ${ending}`;
+                }
             }
         }
+
     }
     for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
         if (optimistArgv[komisGRUArg]) {
