@@ -3,9 +3,15 @@
 let fs = require('fs')
 let console = require('console');
 
-const allowed_r_u_Families = ["boardsizes","boardsizewidths", "boardsizeheights",
-                              "komis", "rules", "challengercolors", "speeds",
-                              "timecontrols"];
+const allowed_r_u_Families = ["boardsizes",
+                              "boardsizewidths",
+                              "boardsizeheights",
+                              "komis",
+                              "rules",
+                              "challengercolors",
+                              "speeds",
+                              "timecontrols"
+                             ];
 generateExports_r_u(allowed_r_u_Families);
 exports.check_rejectnew = function() {};
 
@@ -225,18 +231,23 @@ exports.updateFromArgv = function() {
 
     // console messages
     // A- greeting and debug status //
-    const debugStatusMessage = optimist.argv.debug ? "ON\n-Will show detailed debug booting data\n-Will show all console notifications" : "OFF";
-    console.log(`\ngtp2ogs version 6.0\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}`);
+
+    const debugStatus = optimist.argv.debug ? "ON" : "OFF";
+    console.log(`\ngtp2ogs version 6.0
+                 \n--------------------
+                 \n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel
+                 \nDebug status: ${debugStatus}`);
     // B - check deprecated argv //
     testDeprecatedArgv(optimist.argv, "komis");
 
     /* exports arrays
     /  A) general case:*/
-    const genericMain_r_u_Families = ["minmaintimeblitz","minmaintimelive",
-    "minmaintimecorr","maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr", "minperiodsblitz",
-    "minperiodslive", "minperiodscorr", "maxperiodsblitz", "maxperiodslive", "maxperiodscorr",
-    "minperiodtimeblitz", "minperiodtimelive", "minperiodtimecorr", "maxperiodtimeblitz",
-    "maxperiodtimelive", "maxperiodtimecorr", "minhandicap", "maxhandicap", "noautohandicap",
+    const genericMain_r_u_Families = ["minmaintimeblitz", "minmaintimelive",
+    "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr",
+    "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz",
+    "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive",
+    "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", 
+    "maxperiodtimecorr", "minhandicap", "maxhandicap", "noautohandicap",
     "proonly", "nopauseonweekends", "nopause"];
 
     /* B) specific cases:
@@ -270,7 +281,7 @@ exports.updateFromArgv = function() {
                 exports[k] = optimist.argv[k];
             } else if (k === "debug") {
                 exports.DEBUG = optimist.argv.debug;
-                exports[k] = optimist.argv[k]; //TODO: remove either of these
+                exports[k] = optimist.argv[k]; //TODO: remove either of these DEBUG or debug
             } else if (k === "_") {
                 exports.bot_command = optimist.argv[k];
             } else if (k === "fakerank") {
@@ -282,9 +293,13 @@ exports.updateFromArgv = function() {
     }
     exports.check_rejectnew = function()
     {
-        if (optimist.argv.rejectnew)  return true;
-        if (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile))  return true;
-        return false;
+        if (optimist.argv.rejectnew) {
+            return true;
+        } else if (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile))  {
+            return true;
+        } else {
+            return false;
+        }
     };
 
     // r_u exports
@@ -313,21 +328,23 @@ exports.updateFromArgv = function() {
                 } else if (argObject[r_u] === "custom") {
                     exports[r_u][`allow_custom_${familyNameString}`] = true;
                 } else {
-                    for (const allowedValue of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
-                        if (familyNameString === "komis" && allowedValue === "automatic") {
+                    for (const allowedArg of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
+                        if (familyNameString === "komis" && allowedArg === "automatic") {
                             exports[r_u][`allowed_${familyNameString}`]["null"] = true;
-                        } else if (allowedValue.includes(":")) {
-                            const [numberA, numberB, incr] = allowedValue.split(":").map(e => Number(e));
+                        } else if (allowedArg.includes(":")) {
+                            const [numberA, numberB, incr] = allowedArg.split(":").map( n => Number(n) );
                             const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
-                            const increment = Math.abs(incr) || 1; // default is 1, this also removes allowedValue 0 (infinite loop)
+                            const increment = Math.abs(incr) || 1; // default is 1, this also removes allowedArg 0 (infinite loop)
+                            // if too much incrementations, sanity check
+                            const threshold = 1000;
+                            if (( Math.abs(max-min)/increment ) > threshold) {
+                                throw new `please reduce list length in ${familyNameString}, max is ${threshold} elements per range.`;
+                            }
                             for (let i = min; i <= max; i = i + increment) {
                                 exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
-                                if ((Math.abs(max-min)/increment) > 1000) {
-                                    throw new `please reduce list length in ${familyNameString}, max is 1000 elements per range.`;
-                                }
                             }
                         } else {
-                            exports[r_u][`allowed_${familyNameString}`][String(allowedValue)] = true;
+                            exports[r_u][`allowed_${familyNameString}`][allowedArg] = true;
                         }
                     }
                 }
@@ -336,12 +353,17 @@ exports.updateFromArgv = function() {
     }
 
     for (const familyNameString of all_r_u_Families) {
-        const [general,ranked,unranked] = familyArrayNamesGRU(familyNameString).map(e => optimist.argv[e]);
-        for (const [arg, r_u_arr] of [ [general, ["ranked", "unranked"]], [ranked, ["ranked"]], [unranked, ["unranked"]] ]) {
+        const [generalArg, rankedArg, unrankedArg] = familyArrayNamesGRU(familyNameString)
+                                                     .map( argNameString => optimist.argv[argNameString] );
+        const arg_r_u_arrays = [ [generalArg, ["ranked", "unranked"]],
+                                 [rankedArg, ["ranked"]],
+                                 [unrankedArg, ["unranked"]]
+                               ];
+        for (const [arg, r_u_arr] of arg_r_u_arrays) {
             if (arg) {
-                for (const allValue of arg.split(',')) {
+                for (const argExport of arg.split(',')) {
                     for (const r_u of r_u_arr) {
-                        exports[r_u]["banned_users"][String(allValue)] = true;
+                        exports[r_u]["banned_users"][String(argExport)] = true;
                     }
                 }
             }
@@ -356,7 +378,10 @@ exports.updateFromArgv = function() {
     if (exports.DEBUG) {
         const exportsResult = { ...exports, apikey: "hidden"};
         for (const r_u of ["ranked", "unranked"]) {
-            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:\n-------------------------------------------------------\n${JSON.stringify(exportsResult)}\n`);
+            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:
+                         \n-------------------------------------------------------
+                         \n${JSON.stringify(exportsResult)}
+                         \n`);
         }
     }
 }
@@ -420,11 +445,12 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         ];
     for (const [oldName, newName] of deprecatedArgv) {
         if (optimistArgv[oldName]) {
-            const begining = `Deprecated: --${oldName} is no longer supported`;
+            const beginning = `Deprecated: --${oldName} is no longer supported`;
             if (newName) {
-                throw new `${begining}, use --${newName} instead.`;
+                throw new `${beginning}, use --${newName} instead.`;
             } else {
-                throw new `${begining}, see all supported options list https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`;
+                throw new `${beginning}, see all supported options list 
+                           https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`;
             }
         }
     }
@@ -432,7 +458,8 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         if (optimistArgv[komisGRUArg]) {
             for (const komi of ["auto","null"]) {
                 if (optimistArgv[komisGRUArg].split(",").includes(komi)) {
-                    throw new `Deprecated: --${komisGRUArg} /${komi}/ is no longer supported, use --${komisGRUArg} /automatic/ instead`;
+                    throw new `Deprecated: --${komisGRUArg} /${komi}/ is 
+                               no longer supported, use --${komisGRUArg} /automatic/ instead`;
                 }
             }
         }
@@ -444,22 +471,26 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
 function full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families) {
     let finalArray = [];
     for (const familyNameString of full_r_u_Families) {
-        familyArrayNamesGRU(familyNameString).forEach(e => finalArray.push(e));
+        familyArrayNamesGRU(familyNameString).forEach(str => finalArray.push(str));
     }
     return finalArray;
 }
 
 // optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
 function familyArrayNamesGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
+    return ["", "ranked", "unranked"].map( str => `${familyNameString}${str}` );
 }
 
 function argObjectRU(optimistArgv, familyNameString) {
-    const [general,ranked,unranked] = familyArrayNamesGRU(familyNameString).map(e => optimistArgv[e] || undefined);
-    if (general !== undefined && ranked === undefined && unranked === undefined) { // a var declared 0 == undefined, but !== undefined
-        return { ranked: general, unranked: general };
+    const [generalArg, rankedArg, unrankedArg] = familyArrayNamesGRU(familyNameString)
+                                                 .map( argNameString => optimistArgv[argNameString] || undefined );
+    // a var declared 0 == undefined, but !== undefined
+    if (generalArg !== undefined
+        && rankedArg === undefined
+        && unrankedArg === undefined) {
+        return { ranked: generalArg, unranked: generalArg };
     } else {
-        return { ranked, unranked };
+        return { ranked: rankedArg, unranked: unrankedArg };
     }
 }
 
@@ -483,23 +514,29 @@ function parseRank(arg) {
 }
 
 function checkExportsWarnings(noPauseString) {
-    console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
+    console.log(`CHECKING WARNINGS:
+                 \n-------------------------------------------------------`);
     let isWarning = false;
     for (const r_u of ["ranked","unranked"]) {
         // avoid infinite games
-        // TODO: whenever --maxpausetime +ranked + unranked gets implemented, remove this
+        // TODO: if --maxpausetimeGRU gets implemented, we can remove this
         if (!exports[r_u][noPauseString]) {
             isWarning = true;
-            console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`);
+            console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, 
+                         ${r_u} games are likely to last forever`);
         }
 
         // warn about potentially problematic timecontrols:
-        const pTcs = [["absolute", "(no period time)"], ["none", "(infinite time)"]];
+        const pTcs = [ ["absolute", "(no period time)"],
+                       ["none", "(infinite time)"]
+                     ];
         for (const [tc, descr] of pTcs) {
             if (exports[r_u]["allowed_timecontrols"][tc] === true ||
                 exports[r_u]["allow_all_timecontrols"] === true) {
                 isWarning = true;
-                console.log(`    Warning: potentially problematic time control for ${r_u} games detected -${tc}- ${descr}: may cause unwanted time management problems with users`);
+                console.log(`    Warning: potentially problematic time control for ${r_u} games 
+                             detected -${tc}- ${descr}: may cause unwanted time management 
+                             problems with users`);
             }
         }
     }
