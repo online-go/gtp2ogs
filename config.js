@@ -1,7 +1,7 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let fs = require('fs')
-let console = require('console');
+const fs = require('fs')
+const console = require('console');
 
 const allowed_r_u_Families = ["boardsizes",
                               "boardsizewidths",

@@ -1,12 +1,12 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let sprintf = require('sprintf-js').sprintf;
+const sprintf = require('sprintf-js').sprintf;
 
-let Bot = require('./bot').Bot;
-let decodeMoves = require('./bot').decodeMoves;
-let move2gtpvertex = require('./bot').move2gtpvertex;
-let console = require('./console').console;
-let config = require('./config');
+const Bot = require('./bot').Bot;
+const decodeMoves = require('./bot').decodeMoves;
+const move2gtpvertex = require('./bot').move2gtpvertex;
+const console = require('./console').console;
+const config = require('./config');
 
 /**********/
 /** Game **/

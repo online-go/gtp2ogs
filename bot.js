@@ -1,8 +1,8 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let child_process = require('child_process');
-let console = require('./console').console;
-let config = require('./config');
+const child_process = require('child_process');
+const console = require('./console').console;
+const config = require('./config');
 
 /*********/
 /** Bot **/
