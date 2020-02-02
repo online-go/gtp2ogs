@@ -363,7 +363,7 @@ exports.updateFromArgv = function() {
             if (arg) {
                 for (const argExport of arg.split(',')) {
                     for (const r_u of r_u_arr) {
-                        exports[r_u]["banned_users"][String(argExport)] = true;
+                        exports[r_u]["banned_users"][argExport] = true;
                     }
                 }
             }
