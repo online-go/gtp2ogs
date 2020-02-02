@@ -172,10 +172,10 @@ class Bot {
         const now = Date.now() - this.conn.clock_drift;
 
         const offset = ((this.firstmove===true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
-        const offset_is_black = state.clock.current_player === state.clock.black_player_id;
+        const cur_player_is_black = state.clock.current_player === state.clock.black_player_id;
 
-        const black_offset = offset_is_black ? offset : 0;
-        const white_offset = offset_is_black ? 0 : offset;
+        const black_offset = cur_player_is_black ? offset : 0;
+        const white_offset = cur_player_is_black ? 0 : offset;
 
         if (state.time_control.system === 'byoyomi') {
             // GTP spec says time_left should have 0 for stones until main_time has run out.
