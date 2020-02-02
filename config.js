@@ -133,15 +133,12 @@ exports.updateFromArgv = function() {
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
         //         B3) MINMAX GENERAL/RANKED/UNRANKED ARGUMENTS:
-        .describe('rank', 'min:max opponent ranks to accept (ex 15k:1d)')
+        .describe('rank', 'minimum:maximum opponent ranks to accept (example 15k:1d)')
         .string('rank')
-
-
-        .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
-        .string('minrankranked')
-        .describe('minrankunranked', 'Minimum opponent rank to accept for unranked games (ex: 15k)')
-        .string('minrankunranked')
-
+        .describe('rankranked', 'minimum:maximum opponent ranks to accept for ranked games (example 15k:1d)')
+        .string('rankranked')
+        .describe('rankunranked', 'minimum:maximum opponent ranks to accept for unranked games (example 15k:1d)')
+        .string('rankunranked')
         .describe('minhandicap', 'Minimum handicap to accept')
 
         .describe('minhandicapranked', 'Minimum handicap to accept for ranked games')
@@ -252,6 +249,8 @@ exports.updateFromArgv = function() {
         "maintimecorr", "periodsblitz", "periodslive", "periodscorr",
         "periodtimeblitz", "periodtimelive", "periodtimecorr", "handicap",
         "handicapranked", "handicapunranked"];
+    const full_min_max_r_u_Families = rank_r_u_Families
+                                      .concat(genericMinMax_r_u_Families);
     const all_r_u_Families = ["bans"];
     // note: allowed_r_u_Families use a different formula before
     //       exporting, included here as well
@@ -306,20 +305,19 @@ exports.updateFromArgv = function() {
     }
 
     /* 2) specific r_u cases:*/
-    for (const familyNameString of rank_r_u_Families) {
-        const argObject = argObjectRU(optimist.argv, familyNameString);
-        for (const r_u in argObject) {
-            exports[r_u][familyNameString] = parseRank(argObject[r_u]);
-        }
-    }
 
-    for (const familyNameString of genericMinMax_r_u_Families) {
+    for (const familyNameString of full_min_max_r_u_Families) {
         const argObject = argObjectRU(optimist.argv, familyNameString);
         for (const r_u in argObject) {
             const [minArg, maxArg] = argObject[r_u].split(':');
             for (const [arg, minMax] of [ [minArg, "min"],
                                           [maxArg, "max"] ]) {
-                exports[r_u][`${minMax}familyNameString`] = Number(arg);
+                if (genericMinMax_r_u_Families.includes(familyNameString)) {
+                    exports[r_u][`${minMax}familyNameString`] = Number(arg);
+                } else {
+                    exports[r_u][`${minMax}familyNameString`] = parseRank(arg);
+                }
+
             }
         }
     }
