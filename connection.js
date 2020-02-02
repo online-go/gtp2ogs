@@ -304,7 +304,7 @@ class Connection {
         if (resultMinMaxRank) return resultMinMaxRank;
 
         // check bot is available, else don't mislead user:
-        if (config.is_rejectnew) {
+        if (config.check_rejectnew) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }

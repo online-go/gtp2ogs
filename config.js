@@ -13,6 +13,7 @@ const allowed_r_u_Families = ["boardsizes",
                               "timecontrols"
                              ];
 generateExports_r_u(allowed_r_u_Families);
+exports.check_rejectnew = function() {};
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
@@ -131,24 +132,22 @@ exports.updateFromArgv = function() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
-        .string('minrank')
+        //         B3) MINMAX GENERAL/RANKED/UNRANKED ARGUMENTS:
+        .describe('rank', 'min:max opponent ranks to accept (ex 15k:1d)')
+        .string('rank')
+
+
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
         .string('minrankranked')
         .describe('minrankunranked', 'Minimum opponent rank to accept for unranked games (ex: 15k)')
         .string('minrankunranked')
-        .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
-        .string('maxrank')
-        .describe('maxrankranked', 'Maximum opponent rank to accept for ranked games (ex: 1d)')
-        .string('maxrankranked')
-        .describe('maxrankunranked', 'Maximum opponent rank to accept for unranked games(ex: 1d)')
-        .string('maxrank')
+
         .describe('minhandicap', 'Minimum handicap to accept')
-        .describe('maxhandicap', 'Maximum handicap to accept')
+
         .describe('minhandicapranked', 'Minimum handicap to accept for ranked games')
-        .describe('maxhandicapranked', 'Maximum handicap to accept for ranked games')
+
         .describe('minhandicapunranked', 'Minimum handicap to accept for unranked games')
-        .describe('maxhandicapunranked', 'Maximum handicap to accept for unranked games')
+
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz games')
         .default('minmaintimeblitz', 15) // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz games')
@@ -290,8 +289,12 @@ exports.updateFromArgv = function() {
             }
         }
     }
-    exports.is_rejectnew = optimist.argv.rejectnew ||
-                           (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile));
+    exports.check_rejectnew = function () 
+    {
+        if (optimist.argv.rejectnew)  return true;
+        if (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile))  return true;
+        return false;
+    };
 
     // r_u exports
     /* 1) general r_u cases:*/
