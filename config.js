@@ -471,7 +471,7 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
 function full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families) {
     let finalArray = [];
     for (const familyNameString of full_r_u_Families) {
-        familyArrayNamesGRU(familyNameString).forEach(str => finalArray.push(str));
+        familyArrayNamesGRU(familyNameString).forEach(argNameString => finalArray.push(argNameString));
     }
     return finalArray;
 }
