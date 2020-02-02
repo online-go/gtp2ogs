@@ -478,7 +478,7 @@ function full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families) {
 
 // optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
 function familyArrayNamesGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map( str => `${familyNameString}${str}` );
+    return ["", "ranked", "unranked"].map( GRU => `${familyNameString}${GRU}` );
 }
 
 function argObjectRU(optimistArgv, familyNameString) {
