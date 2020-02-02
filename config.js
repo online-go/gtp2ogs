@@ -133,15 +133,14 @@ exports.updateFromArgv = function() {
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
         //         B3) MINMAX GENERAL/RANKED/UNRANKED ARGUMENTS:
-        .describe('rank', 'minimum:maximum opponent ranks to accept (example 15k:1d)')
+        .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept (example 15k:1d)')
         .string('rank')
-        .describe('rankranked', 'minimum:maximum opponent ranks to accept for ranked games (example 15k:1d)')
+        .describe('rankranked', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked games (example 15k:1d)')
         .string('rankranked')
-        .describe('rankunranked', 'minimum:maximum opponent ranks to accept for unranked games (example 15k:1d)')
+        .describe('rankunranked', 'minimum:maximum (weakest:strongest) opponent ranks to accept for unranked games (example 15k:1d)')
         .string('rankunranked')
-        .describe('minhandicap', 'Minimum handicap to accept')
-
-        .describe('minhandicapranked', 'Minimum handicap to accept for ranked games')
+        .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
+        .describe('handicapranked', 'minimum:maximum number of handicap stones to accept for ranked games (example -1:9), -1 is automatic handicap')
 
         .describe('minhandicapunranked', 'Minimum handicap to accept for unranked games')
 
@@ -313,9 +312,9 @@ exports.updateFromArgv = function() {
             for (const [arg, minMax] of [ [minArg, "min"],
                                           [maxArg, "max"] ]) {
                 if (genericMinMax_r_u_Families.includes(familyNameString)) {
-                    exports[r_u][`${minMax}familyNameString`] = Number(arg);
+                    exports[r_u][`${minMax}${familyNameString}`] = Number(arg);
                 } else {
-                    exports[r_u][`${minMax}familyNameString`] = parseRank(arg);
+                    exports[r_u][`${minMax}${familyNameString}`] = parseRank(arg);
                 }
 
             }
