@@ -1,15 +1,15 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let querystring = require('querystring');
+const querystring = require('querystring');
 
-let io = require('socket.io-client');
-let http = require('http');
-let https = require('https');
-let sprintf = require('sprintf-js').sprintf;
+const io = require('socket.io-client');
+const http = require('http');
+const https = require('https');
+const sprintf = require('sprintf-js').sprintf;
 
-let console = require('./console').console;
-let config = require('./config');
-let Game = require('./game').Game;
+const console = require('./console').console;
+const config = require('./config');
+const Game = require('./game').Game;
 
 /****************/
 /** Connection **/
@@ -392,7 +392,7 @@ class Connection {
                             allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
                         } else {
                             const [widths, heights] = 
-                                  ["widths", "heights"].map( e => Object.keys(config_r_u[`allowed_boardsize${e}`]) )
+                                  ["widths", "heights"].map( str => Object.keys(config_r_u[`allowed_boardsize${str}`]) )
                                                        .map( arr => (arr.length === 0 ? ["(all)"] : arr) );
                             allowedValuesString = boardsizeWidthsHeightsToDisplayString(widths, heights);
                         }
@@ -675,7 +675,7 @@ function familyObjectMIBL(minMaxArgs) {
 }
 
 function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, config_r_u, r_u_strings) {
-    for (const familyObject of familyObjectMIBL(["min","max"].map( e =>  config_r_u[`${e}${familyNameString}`] ))) {
+    for (const familyObject of familyObjectMIBL(["min","max"].map( str =>  config_r_u[`${str}${familyNameString}`] ))) {
         const fullObject = UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings);
         if (fullObject) { // exit the function if we don't reject
             if (isFakerankReject) {
