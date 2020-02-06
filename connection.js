@@ -666,17 +666,19 @@ function boardsizeWidthsHeightsToDisplayString(widths, heights) {
     return combinations.join(', ');
 }
 
-function familyObjectMIBL(minMaxArgs) {
-    return [ { arg: minMaxArgs[0], isMin: true, isMax: false,
-               MIBL: {minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low"} },
-             { arg: minMaxArgs[1], isMin: false, isMax: true,
-               MIBL: {minMax: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high"} }
-           ].filter(e => e.arg !== undefined);
+function convertBlitzLiveCorr(blitzLiveCorr) {
+    return (blitzLiveCorr === "corr") ? "correspondence" : blitzLiveCorr;
+}
+
+function isMinMaxArg(arg, minArg) {
+    return (arg === minArg ? true : false);
 }
 
 function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, config_r_u, r_u_strings) {
-    for (const familyObject of familyObjectMIBL(["min","max"].map( str =>  config_r_u[`${str}${familyNameString}`] ))) {
-        const fullObject = UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings);
+    const [minArg, maxArg] = config_r_u[familyNameString].split(':');
+    for (const minMaxArg of [minArg, maxArg]) {
+        const isMin = isMinMaxArg(minMaxArg, minArg);
+        const fullObject = UHMAEAT(minMaxArg, isMin, familyNameString, nameF, familyObject, familyNotification, r_u_strings);
         if (fullObject) { // exit the function if we don't reject
             if (isFakerankReject) {
                 conn_log(`Automatic handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF}, but ${familyObject.MIBL.minMax} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}`);
@@ -689,13 +691,18 @@ function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, 
     }
 }
 
-function convertBlitzLiveCorr(blitzLiveCorr) {
-    return (blitzLiveCorr === "corr") ? "correspondence" : blitzLiveCorr;
-}
-
 function minMaxCondition(arg, familyNotification, isMin) {
     // to reject in minimum, we need notification < arg
     return isMin ? (familyNotification < arg) : (familyNotification > arg);
+}
+
+
+function argMIBL(isMin) {
+    if (isMin) {
+        return { MIBL: { minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" } };
+    } else {
+        return { MIBL: { minMax: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high" } };
+    }
 }
 
 function timespanToDisplayString(timespan) {
@@ -710,11 +717,12 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_strings) {
+function UHMAEAT(arg, isMin, familyNameString, nameF, familyObject, familyNotification, r_u_strings) {
     /*// UHMAEAT: Universal Highly Modulable And Expandable Argv Tree ////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
     let ending = "";
-    const arg = familyObject.arg;
+    const isMin = minMaxArg(arg);
+    const MIBL = argMIBL(isMin);
     if ( ["maintime", "periodtime"].some(e => familyNameString.includes(e)) ) {
         /* 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
         /  2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
@@ -741,27 +749,44 @@ function UHMAEAT(familyNameString, nameF, familyObject, familyNotification, r_u_
         }
         for (const timecontrolObject of timesObject[familyNotification.time_control]) {
             if (minMaxCondition(timecontrolObject.arg, timecontrolObject.notif, familyObject.isMin)) {
-                return { nameF: `${timecontrolObject.nameF} (${familyNotification.time_control})`, ending, for_r_u_g: r_u_strings.for_blc_r_u_games,
-                         arg: timespanToDisplayString(timecontrolObject.arg), notif: timespanToDisplayString(timecontrolObject.notif) };
+                return { nameF: `${timecontrolObject.nameF} (${familyNotification.time_control})`,
+                         ending,
+                         for_r_u_g: r_u_strings.for_blc_r_u_games,
+                         arg: timespanToDisplayString(timecontrolObject.arg),
+                         notif: timespanToDisplayString(timecontrolObject.notif),
+                         MIBL };
             }
         }
     } else if (minMaxCondition(familyObject.arg, familyNotification, familyObject.isMin)) { // "periods", "rank", "handicap"
         const notif = familyNotification;
         if (familyNameString.includes("periods")) {
-            return {nameF, ending, for_r_u_g: r_u_strings.for_blc_r_u_games, arg, notif};
+            return { nameF,
+                     ending,
+                     for_r_u_g: r_u_strings.for_blc_r_u_games,
+                     arg,
+                     notif,
+                     MIBL };
         } else if (familyNameString === "rank") {
-            return {nameF, ending: `your rank is too ${familyObject.MIBL.lowHig}`,
-                    for_r_u_g: r_u_strings.for_r_u_games, arg: rankToString(arg),
-                    notif: rankToString(notif)};
+            return { nameF,
+                     ending: `your rank is too ${familyObject.MIBL.lowHig}`,
+                     for_r_u_g: r_u_strings.for_r_u_games,
+                     arg: rankToString(arg),
+                     notif: rankToString(notif),
+                     MIBL };
         } else { //"handicap"
-            if (familyObject.isMax && (arg === 0) && notif > 0) {
+            if (!familyObject.isMin && (arg === 0) && notif > 0) {
                 ending = " (even games only)";
             } else if (familyObject.isMin && (arg > 0) && notif === 0) {
                 ending = " (handicap games only)";
             } else {
                 ending = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
             }
-            return {nameF, ending, for_r_u_g: r_u_strings.for_r_u_games, arg, notif};
+            return { nameF,
+                     ending,
+                     for_r_u_g: r_u_strings.for_r_u_games,
+                     arg,
+                     notif,
+                     MIBL };
         }
     }
 }

@@ -66,159 +66,65 @@ exports.updateFromArgv = function() {
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
         //     A) ALL/RANKED/UNRANKED FAMILIES:
-        .describe('bans', 'Comma separated list of usernames or IDs')
+        .describe('bans', 'Comma separated list of usernames or IDs for all games / ranked games only / unranked games only')
         .string('bans')
-        .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
-        .string('bansranked')
-        .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
-        .string('bansunranked')
-        //     B) GENERAL/RANKED/UNRANKED FAMILIES:
-        //         B1) ALLOWED FAMILIES:
-        .describe('boardsizes', 'Board size(s) to accept')
+        //     B) RANKED/UNRANKED FAMILIES:
+        //         B1) ALLOWED FAMILIES RANKED/UNRANKED:
+        .describe('boardsizes', 'Board size(s) to accept for ranked / unranked games')
         .string('boardsizes')
-        .default('boardsizes', '9,13,19')
-        .describe('boardsizesranked', 'Board size(s) to accept for ranked games')
-        .string('boardsizesranked')
-        .describe('boardsizesunranked', 'Board size(s) to accept for unranked games')
-        .string('boardsizesunranked')
-        .describe('boardsizewidths', 'For custom board sizes, boardsize width(s) to accept')
+        .default('boardsizes', '9,13,19/...')
+        .describe('boardsizewidths', 'For custom board sizes, boardsize width(s) to accept for ranked / unranked games')
         .string('boardsizewidths')
-        .describe('boardsizeheights', 'For custom board sizes, boardsize height(s) to accept')
+        .describe('boardsizeheights', 'For custom board sizes, boardsize height(s) to accept for ranked / unranked games')
         .string('boardsizeheights')
-        .describe('boardsizewidthsranked', 'For custom board sizes, boardsize width(s) to accept for ranked games')
-        .string('boardsizewidthsranked')
-        .describe('boardsizeheightsranked', 'For custom board sizes, boardsize height(s) to accept for ranked games')
-        .string('boardsizeheightsranked')
-        .describe('boardsizewidthsunranked', 'For custom board sizes, boardsize width(s) to accept for unranked games')
-        .string('boardsizewidthsunranked')
-        .describe('boardsizeheightsunranked', 'For custom board sizes, boardsize height(s) to accept for unranked games')
-        .string('boardsizeheightsunranked')
-        .describe('komis', 'Allowed komi values')
+        .describe('komis', 'Allowed komi values for ranked / unranked games')
         .string('komis')
-        .default('komis', 'automatic')
-        .describe('komisranked', 'Allowed komi values for ranked games')
-        .string('komisranked')
-        .describe('komisunranked', 'Allowed komi values for unranked games')
-        .string('komisunranked')
+        .default('komis', 'automatic/...')
         .describe('rules', 'Rule(s) to accept')
-        .default('rules', 'chinese')
-        .describe('rulesranked', 'Rule(s) to accept for ranked games')
-        .describe('rulesunranked', 'Rule(s) to accept for unranked games')
-        .describe('challengercolors', 'Challenger color(s) to accept')
-        .default('challengercolors', 'all')
-        .describe('challengercolorsranked', 'Challenger color(s) to accept for ranked games')
-        .describe('challengercolorsunranked', 'Challenger color(s) to accept for unranked games')
-        .describe('speeds', 'Game speed(s) to accept')
-        .default('speeds', 'all')
-        .describe('speedsranked', 'Game speed(s) to accept for ranked games')
-        .describe('speedsunranked', 'Game speed(s) to accept for unranked games')
-        .describe('timecontrols', 'Time control(s) to accept')
-        .default('timecontrols', 'fischer,byoyomi,simple,canadian')
-        .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
-        .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS:
-        .describe('proonly', 'For all matches, only accept those from professionals')
-        .describe('proonlyranked', 'For ranked matches, only accept those from professionals')
-        .describe('proonlyunranked', 'For unranked matches, only accept those from professionals')
+        .default('rules', 'chinese/...')
+        .describe('challengercolors', 'Challenger color(s) to accept for ranked / unranked games')
+        .default('challengercolors', 'all/...')
+        .describe('speeds', 'Game speed(s) to accept for ranked / unranked games')
+        .default('speeds', 'all/...')
+        .describe('timecontrols', 'Time control(s) to accept for ranked / unranked games')
+        .default('timecontrols', 'fischer,byoyomi,simple,canadian/...')
+        //         B2) BOOLEANS RANKED/UNRANKED:
+        .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
         /* note: - nopause allows to disable pauses DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
-        .describe('nopause', 'Do not allow pauses during games')
-        .describe('nopauseranked', 'Do not allow pauses during ranked games')
-        .describe('nopauseunranked', 'Do not allow pauses during unranked games')
-        .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games)')
-        .describe('nopauseonweekendsranked', 'Do not accept ranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
-        .describe('nopauseonweekendsunranked', 'Do not accept unranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
-        .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
-        .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
-        .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        //         B3) MINMAX GENERAL/RANKED/UNRANKED ARGUMENTS:
-        .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept (example 15k:1d)')
+        .describe('nopause', 'Do not allow pauses during games for ranked / unranked games')
+        .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games) for ranked / unranked games')
+        .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
+        //         B3) MINMAX FAMILIES RANKED/UNRANKED:
+        .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
-        .describe('rankranked', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked games (example 15k:1d)')
-        .string('rankranked')
-        .describe('rankunranked', 'minimum:maximum (weakest:strongest) opponent ranks to accept for unranked games (example 15k:1d)')
-        .string('rankunranked')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
-        .describe('handicapranked', 'minimum:maximum number of handicap stones to accept for ranked games (example -1:9), -1 is automatic handicap')
 
-        .describe('minhandicapunranked', 'Minimum handicap to accept for unranked games')
+        .describe('maintimeblitz', 'minimum:maximum seconds of main time for blitz games ranked / unranked')
+        .default('maintimeblitz', '15:300/...') // 15 seconds : 5 minutes
+        .describe('maintimelive', 'minimum:maximum seconds of main time for live games ranked / unranked')
+        .default('maintimelive', '60:7200/...') // 1 minute : 2 hours
+        .describe('maintimecorr', 'minimum:maximum seconds of main time for correspondence games ranked / unranked')
+        .default('maintimecorr', '259200:604800') // 3 days : 7 days
 
-        .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz games')
-        .default('minmaintimeblitz', 15) // 15 seconds
-        .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz games')
-        .default('maxmaintimeblitz', 300) // 5 minutes 
-        .describe('minmaintimeblitzranked', 'Minimum seconds of main time for blitz ranked games')
-        .describe('maxmaintimeblitzranked', 'Maximum seconds of main time for blitz ranked games')
-        .describe('minmaintimeblitzunranked', 'Minimum seconds of main time for blitz unranked games')
-        .describe('maxmaintimeblitzunranked', 'Maximum seconds of main time for blitz unranked games')
-        .describe('minmaintimelive', 'Minimum seconds of main time for live games')
-        .default('minmaintimelive', 60) // 1 minute
-        .describe('maxmaintimelive', 'Maximum seconds of main time for live ranked games')
-        .default('maxmaintimelive', 7200) // 2 hours 
-        .describe('minmaintimeliveranked', 'Minimum seconds of main time for live ranked games')
-        .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live ranked games')
-        .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live unranked games')
-        .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live unranked games')
-        .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence games')
-        .default('minmaintimecorr', 259200) // 3 days
-        .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence games')
-        .default('maxmaintimecorr', 604800) // 7 days
-        .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games ')
-        .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games ')
-        .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games ')
-        .describe('maxmaintimecorrunranked', 'Maximum seconds of main time for correspondence unranked games ')
-        .describe('minperiodsblitz', 'Minimum number of periods for blitz games')
-        .default('minperiodsblitz', 3)
-        .describe('minperiodsblitzranked', 'Minimum number of periods for blitz ranked games')
-        .describe('minperiodsblitzunranked', 'Minimum number of periods for blitz unranked games')
-        .describe('maxperiodsblitz', 'Maximum number of periods for blitz games')
-        .default('maxperiodsblitz', 20)
-        .describe('maxperiodsblitzranked', 'Maximum number of periods for blitz ranked games')
-        .describe('maxperiodsblitzunranked', 'Maximum number of periods for blitz unranked games')
-        .describe('minperiodslive', 'Minimum number of periods for live games')
-        .default('minperiodslive', 3)
-        .describe('minperiodsliveranked', 'Minimum number of periods for live ranked games')
-        .describe('minperiodsliveunranked', 'Minimum number of periods for live unranked games')
-        .describe('maxperiodslive', 'Maximum number of periods for live games')
-        .default('maxperiodslive', 20)
-        .describe('maxperiodsliveranked', 'Maximum number of periods for live ranked games')
-        .describe('maxperiodsliveunranked', 'Maximum number of periods for live unranked games')
-        .describe('minperiodscorr', 'Minimum number of periods for correspondence games')
-        .default('minperiodscorr', 3)
-        .describe('minperiodscorrranked', 'Minimum number of periods for correspondence ranked games')
-        .describe('minperiodscorrunranked', 'Minimum number of periods for correspondence unranked games')
-        .describe('maxperiodscorr', 'Maximum number of periods for correspondence games')
-        .default('maxperiodscorr', 10)
-        .describe('maxperiodscorrranked', 'Maximum number of periods for correspondence ranked games')
-        .describe('maxperiodscorrunranked', 'Maximum number of periods for correspondence unranked games')
-        .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
-        .default('minperiodtimeblitz', 5) // 5 seconds
-        .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
-        .default('maxperiodtimeblitz', 10) // 10 seconds
-        .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games')
-        .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games')
-        .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games')
-        .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games')
-        .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
-        .default('minperiodtimelive', 10) // 10 seconds
-        .describe('maxperiodtimelive', 'Maximum seconds of period time for live games')
-        .default('maxperiodtimelive', 120) // 2 minutes
-        .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games')
-        .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games')
-        .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
-        .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
-        .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
-        .default('minperiodtimecorr', 14400) // 4 hours
-        .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
-        .default('maxperiodtimecorr', 259200) // 3 days
-        .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games')
-        .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games')
-        .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games')
-        .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games')
+        .describe('periodsblitz', 'minimum:maximum number of periods for blitz games ranked / unranked')
+        .default('periodsblitz', '3:20/...')
+        .describe('periodslive', 'minimum:maximum number of periods for live games ranked / unranked')
+        .default('periodslive', '3:20/...')
+        .describe('periodscorr', 'minimum:maximum number of periods for correspondence games ranked / unranked')
+        .default('periodscorr', '3:10/...')
+
+        .describe('periodtimeblitz', 'minimum:maximum seconds of period time for blitz games ranked / unranked')
+        .default('periodtimeblitz', '5:10/...') // 5 seconds : 10 seconds
+        .describe('periodtimelive', 'minimum:maximum seconds of period time for live games ranked / unranked')
+        .default('periodtimelive', '10:120/...') // 10 seconds : 2 minutes
+        .describe('periodtimecorr', 'minimum:maximum seconds of period time for correspondence games ranked / unranked')
+        .default('periodtimecorr', '14400:259200/...') // 4 hours : 3 days
     ;
 
-    if (!optimist.argv._ || optimist.argv._.length === 0) {
+    const argv = optimist.argv;
+    if (!argv._ || argv._.length === 0) {
         optimist.showHelp();
         process.exit();
     }
@@ -226,13 +132,13 @@ exports.updateFromArgv = function() {
     // console messages
     // A- greeting and debug status //
 
-    const debugStatus = optimist.argv.debug ? "ON" : "OFF";
-    console.log(`\ngtp2ogs version 6.0
-                 \n--------------------
-                 \n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel
-                 \nDebug status: ${debugStatus}`);
+    const debugStatus = argv.debug ? "ON" : "OFF";
+    console.log(`\ngtp2ogs version 6.0`
+                + `\n--------------------`
+                + `\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel`
+                + `\nDebug status: ${debugStatus}`);
     // B - check deprecated argv //
-    testDeprecatedArgv(optimist.argv, "komis");
+    //testDeprecatedArgv(argv, "komis");
 
     /* exports arrays
     /  A) general case:*/
@@ -241,13 +147,13 @@ exports.updateFromArgv = function() {
 
     /* B) specific cases:
     /  rank family args need parsing before exporting*/
-    const rank_r_u_Families = ["minrank", "maxrank"];
+    const rank_r_u_Families = ["rank"];
     // bans family is an example of All/ranked/unranked family:
     // export general AND ranked AND unranked args
-    const genericMinMax_r_u_Families = ["maintimeblitz", "maintimelive",
-        "maintimecorr", "periodsblitz", "periodslive", "periodscorr",
-        "periodtimeblitz", "periodtimelive", "periodtimecorr", "handicap",
-        "handicapranked", "handicapunranked"];
+    const genericMinMax_r_u_Families = ["handicap",
+        "maintimeblitz", "maintimelive","maintimecorr",
+        "periodsblitz", "periodslive", "periodscorr",
+        "periodtimeblitz", "periodtimelive", "periodtimecorr"];
     const full_min_max_r_u_Families = rank_r_u_Families
                                       .concat(genericMinMax_r_u_Families);
     const all_r_u_Families = ["bans"];
@@ -256,57 +162,54 @@ exports.updateFromArgv = function() {
 
     // C) combinations of all r_u args, to export separately
     const full_r_u_Families = genericMain_r_u_Families
-                              .concat(rank_r_u_Families,
-                                      genericMinMax_r_u_Families,
-                                      all_r_u_Families,
-                                      allowed_r_u_Families);
-    const full_r_u_Args = full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families);
+                              .concat(full_min_max_r_u_Families,
+                                      allowed_r_u_Families,
+                                      all_r_u_Families);
 
-    /* EXPORTS FROM OPTIMIST.ARGV */
+    /* EXPORTS FROM argv */
     /* 0) root exports*/
-    for (const k in optimist.argv) {
-        if (!full_r_u_Args.includes(k)) {
+    for (const k in argv) {
+        if (!full_r_u_Families.includes(k)) {
             /* Add and Modify exports*/
-            if (k === "host" && optimist.argv.beta) {
+            if (k === "host" && argv.beta) {
                 exports[k] = 'beta.online-go.com';
             } else if (["timeout","startupbuffer"].includes(k)) {
                 // Convert some times to microseconds once here so
                 // we don't need to do it each time it is used later.
-                exports[k] = optimist.argv[k]*1000;
+                exports[k] = argv[k]*1000;
             } else if (k === "apikey") {
-                exports[k] = optimist.argv[k];
+                exports[k] = argv[k];
             } else if (k === "debug") {
-                exports.DEBUG = optimist.argv.debug;
-                exports[k] = optimist.argv[k]; //TODO: remove either of these DEBUG or debug
+                exports.DEBUG = argv.debug;
+                exports[k] = argv[k]; //TODO: remove either of these DEBUG or debug
             } else if (k === "_") {
-                exports.bot_command = optimist.argv[k];
+                exports.bot_command = argv[k];
             } else if (k === "fakerank") {
-                exports[k] = parseRank(optimist.argv[k]);
+                exports[k] = parseRank(argv[k]);
             } else { // ex: "persist", "maxconnectedgames", etc.
-                exports[k] = optimist.argv[k];
+                exports[k] = argv[k];
             }
         }
     }
     exports.check_rejectnew = function () 
     {
-        if (optimist.argv.rejectnew)  return true;
-        if (optimist.argv.rejectnewfile && fs.existsSync(optimist.argv.rejectnewfile))  return true;
+        if (argv.rejectnew)  return true;
+        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
         return false;
     };
 
     // r_u exports
     /* 1) general r_u cases:*/
     for (const familyNameString of genericMain_r_u_Families) {
-        const argObject = argObjectRU(optimist.argv, familyNameString);
+        const argObject = argObjectRU(argv[familyNameString], familyNameString);
         for (const r_u in argObject) {
             exports[r_u][familyNameString] = argObject[r_u];
         }
     }
 
     /* 2) specific r_u cases:*/
-
     for (const familyNameString of full_min_max_r_u_Families) {
-        const argObject = argObjectRU(optimist.argv, familyNameString);
+        const argObject = argObjectRU(argv[familyNameString], familyNameString);
         for (const r_u in argObject) {
             const [minArg, maxArg] = argObject[r_u].split(':');
             for (const [arg, minMax] of [ [minArg, "min"],
@@ -322,7 +225,7 @@ exports.updateFromArgv = function() {
     }
 
     for (const familyNameString of allowed_r_u_Families) {
-        const argObject = argObjectRU(optimist.argv, familyNameString);
+        const argObject = argObjectRU(argv[familyNameString], familyNameString);
         for (const r_u in argObject) {
             if (argObject[r_u]) {
                 if (argObject[r_u] === "all") {
@@ -355,10 +258,9 @@ exports.updateFromArgv = function() {
     }
 
     for (const familyNameString of all_r_u_Families) {
-        const [generalArg, rankedArg, unrankedArg] = familyArrayNamesGRU(familyNameString)
-                                                     .map( argNameString => optimist.argv[argNameString] );
-        const arg_r_u_arrays = [ [generalArg, ["ranked", "unranked"]],
-                                 [rankedArg, ["ranked"]],
+        const [allGamesArg, rankedArg, unrankedArg] = argv[familyNameString].split('/');
+        const arg_r_u_arrays = [ [allGamesArg, ["ranked", "unranked"]],
+                                 [rankedArg,   ["ranked"]],
                                  [unrankedArg, ["unranked"]]
                                ];
         for (const [arg, r_u_arr] of arg_r_u_arrays) {
@@ -371,6 +273,15 @@ exports.updateFromArgv = function() {
             }
         }
     }
+
+    // r_u fonctionnal checks exports
+    exports.checkMinMaxArgs_r_u = function(notif, r_u, familyNameString) {
+        const rankedUnrankedArgsString = argv[familyNameString];
+        const arg_r_u = argObjectRU(rankedUnrankedArgsString, familyNameString)
+        const [min, max] = arg_r_u.split(':');                                  }
+        return { minReject: notif < min,
+                 maxReject: max < notif }
+    }
     
     // console messages
     // C - check exports warnings:
@@ -380,10 +291,10 @@ exports.updateFromArgv = function() {
     if (exports.DEBUG) {
         const exportsResult = { ...exports, apikey: "hidden"};
         for (const r_u of ["ranked", "unranked"]) {
-            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:
-                         \n-------------------------------------------------------
-                         \n${JSON.stringify(exportsResult)}
-                         \n`);
+            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:`
+                         + `\n-------------------------------------------------------`
+                         + `\n${JSON.stringify(exportsResult)}`
+                         + `\n`);
         }
     }
 }
@@ -401,25 +312,40 @@ function generateExports_r_u(allowed_r_u_Families) {
 }
 
 // console messages:
-function minMaxDeprecations(name, isBlitzLiveCorr) {
+/*function minMaxDeprecations(name, isBlitzLiveCorr) {
     let oldMinMaxNames = [`min${name}`, `max${name}`];
-    let newNamesMsg = `${name} min:max`;
+    let newNamesSentence = `${name} min:max`;
     if (isBlitzLiveCorr) {
-        oldMinMaxNames = oldMinMaxNames.concat(oldMinMaxNames.map( str => `${str}blitz` ))
-                                       .concat(oldMinMaxNames.map( str => `${str}live` ))
-                                       .concat(oldMinMaxNames.map( str => `${str}corr` ));
-        newNames = `${newNamesMsg}, --${names}blitz min:max, 
-                   --${names}live min:max, --${names}corr min:max`;
+        for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
+            oldMinMaxNames.push([`min${name}${blitzLiveCorr}`, `max${name}${blitzLiveCorr}`]);
+            newNamesSentence = newNamesSentence + `, --${name}${blitzLiveCorr} min:max`;
+        }
     }
 
-    return [minMaxNames, newNames];
+    return [oldMinMaxNames, newNamesSentence];
 }
 
 function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
-    const deprecatedArgv = [ [["bot", "id", "botid"], "username"],
+    const deprecatedArgvArrays = [ 
+        [["bot", "id", "botid"], "username"],
         [["maxunrankedhandicap"], "maxhandicapunranked"],
         [["maxtotalgames"], "maxconnectedgames"],
         [["maxactivegames"], "maxconnectedgamesperuser"],
+        [["ban"], "bans"],
+        [["banranked"], "bansranked"],
+        [["banunranked"], "bansunranked"],
+        [["boardsize"], "boardsizes"],
+        [["boardsizeranked"], "boardsizesranked"],
+        [["boardsizeunranked"], "boardsizesunranked"],
+        [["komi"], "komis"],
+        [["komiranked"], "komisranked"],
+        [["komiunranked"], "komisunranked"],
+        [["speed"], "speeds"],
+        [["speedranked"], "speedsranked"],
+        [["speedunranked"], "speedsunranked"],
+        [["timecontrol"], "timecontrols"],
+        [["timecontrolranked"], "timecontrolsranked"],
+        [["timecontrolunranked"], "timecontrolsunranked"],
         minMaxDeprecations("rank", false),
         minMaxDeprecations("rankranked", false),
         minMaxDeprecations("rankunranked", false),
@@ -435,24 +361,10 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         minMaxDeprecations("periods", true),
         minMaxDeprecations("periodsranked", true),
         minMaxDeprecations("periodsunranked", true),
-        [["ban"], "bans"],
-        [["banranked"], "bansranked"],
-        [["banunranked"], "bansunranked"],
-        [["boardsize"], "boardsizes"],
-        [["boardsizeranked"], "boardsizesranked"],
-        [["boardsizeunranked"], "boardsizesunranked"],
-        [["komi"], "komis"],
-        [["komiranked"], "komisranked"],
-        [["komiunranked"], "komisunranked"],
-        [["speed"], "speeds"],
-        [["speedranked"], "speedsranked"],
-        [["speedunranked"], "speedsunranked"],
-        [["timecontrol"], "timecontrols"],
-        [["timecontrolranked"], "timecontrolsranked"],
-        [["timecontrolunranked"], "timecontrolsunranked"]
     ];
-    for (const [oldNames, newNameMsg] of deprecatedArgv) {
-        for (oldName of oldNames) {
+    for (const deprecatedArgvArray of deprecatedArgvArrays) {
+        const [oldNames, newNameMsg] = deprecatedArgvArray;
+        for (const oldName of oldNames) {
             if (optimistArgv[oldName]) {
                 const beginning = `Deprecated: --${oldName} is no longer supported`;
                 const ending = `see all supported options list for details:
@@ -464,7 +376,6 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
                 }
             }
         }
-
     }
     for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
         if (optimistArgv[komisGRUArg]) {
@@ -477,33 +388,24 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         }
     }
     console.log("\n");
-}
+}*/
 
-// exports arrays:
-function full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families) {
-    let finalArray = [];
-    for (const familyNameString of full_r_u_Families) {
-        familyArrayNamesGRU(familyNameString).forEach(argNameString => finalArray.push(argNameString));
+// arg functionnal checks:
+function argObjectRU(rankedUnrankedArgsString, familyNameString) {
+    const rankedUnrankedArgs = rankedUnrankedArgsString.split('/');
+    if (rankedUnrankedArgs.length !== 2) {
+        throw new `Error in in ${familyNameString} : unexpected use of the `
+                  + `ranked/unranked separator : expected 2 parts, not `
+                  + `${rankedUnrankedArgs.length}`;
     }
-    return finalArray;
-}
-
-// optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
-function familyArrayNamesGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map( GRU => `${familyNameString}${GRU}` );
-}
-
-function argObjectRU(optimistArgv, familyNameString) {
-    const [generalArg, rankedArg, unrankedArg] = familyArrayNamesGRU(familyNameString)
-                                                 .map( argNameString => optimistArgv[argNameString] || undefined );
-    // a var declared 0 == undefined, but !== undefined
-    if (generalArg !== undefined
-        && rankedArg === undefined
-        && unrankedArg === undefined) {
-        return { ranked: generalArg, unranked: generalArg };
-    } else {
-        return { ranked: rankedArg, unranked: unrankedArg };
+    const [ranked, unranked] = rankedUnrankedArgs
+                               .map( str => "all" ? true : str )
+                               .map( str => "..." ? ranked : str );
+    if (ranked === "...") {
+        throw new `Error in ${familyNameString} : can't use keyword - ... - `
+                  + `for the ranked setting, only for the unranked setting.`
     }
+    return { ranked, unranked };
 }
 
 function parseRank(arg) {

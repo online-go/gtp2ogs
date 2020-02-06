@@ -23,30 +23,21 @@ currently provides :
 --maxconnectedgames 20
 --maxconnectedgamesperuser 3
 --rejectnewmsg "Currently, this bot is not accepting games, try again later "
---boardsizes 9,13,19
---komis automatic
---rules chinese
---challengercolors all
---speeds all
---timecontrols fischer,byoyomi,simple,canadian
---minmaintimeblitz 15
---maxmaintimeblitz 300
---minmaintimelive 60
---maxmaintimelive 7200
---minmaintimecorr 259200
---maxmaintimecorr 604800
---minperiodsblitz 3
---maxperiodsblitz 20
---minperiodslive 3
---maxperiodslive 20
---minperiodscorr 3
---maxperiodscorr 10
---minperiodtimeblitz 5
---maxperiodtimeblitz 10
---minperiodtimelive 10
---maxperiodtimelive 120
---minperiodtimecorr 14400
---maxperiodtimecorr 259200
+--boardsizes 9,13,19/...
+--komis automatic/...
+--rules chinese/...
+--challengercolors all/...
+--speeds all/...
+--timecontrols fischer,byoyomi,simple,canadian/...
+--maintimeblitz 15:300/...
+--maintimelive 60:7200/...
+--maintimecorr 259200:604800/...
+--periodsblitz 3:20/...
+--periodslive 3:20/...
+--periodscorr 3:10/...
+--periodtimeblitz 5:10/...
+--periodtimelive 10:120/...
+--minperiodtimecorr 14400:259200/...
 ```
 
 note : command line arguments should not be separated by skipping 
@@ -191,28 +182,28 @@ see [notes F-](/docs/NOTES.md#f-) for details
   Arguments in this category allow us to accept or reject 
 a challenge based on the notification (challenge settings)
 
-##     A) ALL/RANKED/UNRANKED FAMILIES :
+##     A) ALL/RANKED/UNRANKED FAMILIES:
 
   Here the general argument (ex: --bans) does not confict with 
 the ranked and unranked arguments for accepting/rejecting matches.
 
 example: 
+
+
 `--bans A,B --bansranked X,Y --bansunranked Z`
 result of these bans arguments :
 - banned users for ranked games : A,B,X,Y
 - banned users for unranked games : A,B,Z
 
+
+
 #### bans
   ```--bans``` Comma separated list of user names or IDs who 
 are banned from ranked and unranked games
 
-  ```--bansranked``` Comma separated list of user names or IDs who 
-are banned from ranked games
 
-  ```--bansunranked``` Comma separated list of user names or IDs who 
-are banned from unranked games
 
-##     B) GENERAL/RANKED/UNRANKED FAMILIES :
+##     B) RANKED/UNRANKED FAMILIES :
 
   Here you can either use :
 
@@ -225,7 +216,7 @@ and in that case, the general argument will be ignored
 and instead the ranked and unranked will be used depending 
 on whether the game is ranked or unranked.
 
-##         B1) ALLOWED FAMILIES :
+##         B1) ALLOWED FAMILIES RANKED/UNRANKED:
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
@@ -247,9 +238,7 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
   ```--boardsizes``` Board size(s) to accept
 
-  ```--boardsizesranked``` Board size(s) to accept for ranked games
 
-  ```--boardsizesunranked``` Board size(s) to accept for unranked games
 
 Possible boardsize width value(s) :
 - `all` (allows all board size widths)
@@ -264,24 +253,12 @@ to allow combinations of boardsize widths/heights)
   ```--boardsizewidths``` For custom board sizes, boardsize 
 width(s) to accept
 
-  ```--boardsizewidthranked``` For custom board sizes, boardsize 
-width(s) to accept for ranked games
 
-  ```--boardsizeswidthsunranked``` For custom board sizes, boardsize 
-width(s) to accept for unranked games
 
-Possible boardsize width value(s) :
-- `all` (allows all board size widths)
-- comma separated values, for example `25`, or `9,13,19`
 
 ```--boardsizeheights``` For custom board sizes, boardsize 
 height(s) to accept
 
-```--boardsizeheightranked``` For custom board sizes, boardsize 
-height(s) to accept for ranked games
-
-```--boardsizesheightsunranked``` For custom board sizes, boardsize 
-height(s) to accept for unranked games
 
 Possible boardsize height value(s):
 - `all` (allows all board size heights)
@@ -305,9 +282,7 @@ see [notes B-](/docs/NOTES.md#b-) for details.
 #### komis
   ```--komis``` Allowed komi values
 
-  ```--komisranked``` Allowed komi values for ranked games
 
-  ```--komisunranked``` Allowed komi values for unranked games
  
 Possible komi value(s):
 - `all` (allows all komis)
@@ -324,9 +299,7 @@ For extra komi explanations, see :
 
   ```--rules``` Board size(s) to accept
 
-  ```--rulesranked``` Board size(s) to accept for ranked games
 
-  ```--rulesunranked``` Board size(s) to accept for unranked games
 
 Possible rules value(s) : 
 - `all` (allows all rules)
@@ -339,11 +312,7 @@ Full list of possible values :  `chinese`, `japanese`, AGA, etc.
 
   ```--challengercolors``` Challenger color(s) to accept
 
-  ```--challengercolorsranked``` Challenger color(s) to accept 
-for ranked games
 
-  ```--challengercolorsunranked``` Challenger color(s) to accept 
-for unranked games
 
 Possible challengercolors value(s) : 
 - `all` (allows all challengercolors)
@@ -354,11 +323,7 @@ Full list of possible values :  `black`, `white`, `automatic`, `random`
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
 
-  ```--speedsranked``` Comma separated list of Game speed(s) to 
-accept for ranked games
 
-  ```--speedsunranked``` Comma separated list of Game speed(s) to 
-accept for unranked games
 
 Possible speed value(s) :
 - `all` (allows all speeds)
@@ -369,11 +334,7 @@ Full list of possible values :  `blitz`,  `live`, `correspondence`.
 #### timecontrols
   ```--timecontrols``` Time control(s) to accept
 
-  ```--timecontrolsranked``` Time control(s) to accept for ranked 
-games
 
-  ```--timecontrolsunranked``` Time control(s) to accept for unranked 
-games
 
 Possible timecontrol value(s) :
 - `all` (allows all timecontrol values)
@@ -384,23 +345,22 @@ Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
 
 see [notes E-](/docs/NOTES.md#e-) for details
 
-##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+##         B2) BOOLEANS RANKED/UNRANKED:
+
+
+
 
 #### only (part 2)
 
   ```--proonly``` For all matches, only accept those from professionals
 
-  ```--proonlyranked``` For ranked games, only accept those from professionals
 
-  ```--proonlyunranked``` For ranked games, only accept those from professionals
 
 #### nopause
 
   ```--nopause```  Do not allow pauses during games
 
-  ```--nopauseranked``` Do not allow pauses during ranked games
 
-  ```--nopauseunranked``` Do not allow pauses during unranked gamesc
 
 #### nopauseonweekends
 
@@ -411,184 +371,75 @@ we only accept or reject a match if it comes with the setting
   ```--nopauseonweekends```  Do not accept matches that come with the 
 option -pauses on weekends- (specific to correspondence games)
 
-  ```--nopauseonweekendsranked``` Do not accept ranked matches that come 
-with the option -pauses on weekends- (specific to correspondence games)
 
-  ```--nopauseonweekendsunranked``` Do not accept unranked matches that 
-come with the option -pauses on weekends- (specific to correspondence games)
 
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
 
-  ```--noautohandicapranked``` Do not allow handicap to be set to 
--automatic- for ranked games
-  
-  ```--noautohandicapunranked``` Do not allow handicap to be set to 
--automatic- for unranked games
 
-#### min/max handicap
+##         B2) MINMAX FAMILIES RANKED/UNRANKED:
 
-  min :
+
+#### handicap
+
+
 
   ```--minhandicap```  Minimum handicap to accept
 
-  ```--minhandicapranked```  Mininimum handicap to accept for ranked games
 
-  ```--minhandicapunranked``` Minimum handicap to accept for unranked games
-
-  max :
-
-  ```--maxhandicap```  Maximum handicap to accept for all games
-
-  ```--maxhandicapranked``` Maximum handicap to accept for ranked games
-
-  ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
 **important note** : see [fakerank](#fakerank).
 
-#### min/max rank
+#### rank
 
-  min :
+
 
   ```--minrank``` Minimum opponent rank to accept (e.g. 15k)
 
-  ```--minrankranked``` Minimum opponent rank to accept for 
-ranked games (e.g. 15k)
 
-  ```--minrankunranked``` Minimum opponent rank to accept for 
-unranked games (e.g. 15k)
 
-  max :
 
-  ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
 
-  ```--maxrankranked``` Maximum opponent rank to accept for 
-ranked games (e.g. 1d)
+#### maintime blitz/live/corr
 
-  ```--maxrankunranked``` Maximum opponent rank to accept for 
-unranked games (e.g. 1d)
 
-#### min/max maintime blitz/live/corr
-
-  min :
 
   ```--minmaintimeblitz``` Minimum seconds of main time for 
 blitz games (default 15 , which is 15 seconds)
 
-  ```--minmaintimeblitzranked``` Minimum seconds of main time for 
-blitz ranked games 
 
-  ```--minmaintimeblitzunranked``` Minimum seconds of main time 
-for blitz unranked games 
 
   ```--minmaintimelive``` Minimum seconds of main time for 
 live games (default 30 , which is 30 seconds)
 
-  ```--minmaintimeliveranked``` Minimum seconds of main time for 
-live ranked games 
 
-  ```--minmaintimeliveunranked``` Minimum seconds of main time 
-for live unranked games 
 
   ```--minmaintimecorr``` Minimum seconds of main time for 
 correspondence games (default 259200 , which is 3 days)
 
-  ```--minmaintimecorrranked``` Minimum seconds of main time for 
-correspondence ranked games 
 
- ```--minmaintimecorrunranked``` Minimum seconds of main time 
-for correspondence unranked games 
 
-  max :
+#### periods blitz/live/corr
 
-  ```--maxmaintimeblitz``` Maximum seconds of main time for 
-blitz games (default 300, which is 5 minutes)
-
-  ```--maxmaintimeblitzranked``` Maximum seconds of main time for 
-blitz ranked games 
-
-  ```--maxmaintimeblitzunranked``` Maximum seconds of main time for 
-blitz unranked games 
-
-  ```--maxmaintimelive``` Maximum seconds of main time for 
-live games (default 7200, which is 2 hours)
-
-  ```--maxmaintimeliveranked``` Maximum seconds of main time for 
-live ranked games 
-
- ```--maxmaintimeliveunranked``` Maximum seconds of main time for 
-live unranked games 
-
-  ```--maxmaintimecorr``` Maximum seconds of main time for 
-correspondence games (default 604800, which is 7 days)
-
-  ```--maxmaintimecorrranked``` Maximum seconds of main time for 
-correspondence ranked games 
-
-  ```--maxmaintimecorrunranked``` Maximum seconds of main time for 
-correspondence unranked games 
-
-#### min/max periods blitz/live/corr
-
-  min :
 
   ```--minperiodsblitz``` Minimum number of periods for 
 blitz games
 
-  ```--minperiodsblitzranked``` Minimum number of periods 
-for blitz ranked games
 
-  ```--minperiodsblitzunranked``` Minimum number of periods 
-for blitz unranked games
 
   ```--minperiodslive``` Minimum number of periods for 
 live games
 
-  ```--minperiodsliveranked``` Minimum number of periods 
-for live ranked games
 
-  ```--minperiodsliveunranked``` Minimum number of periods 
-for live unranked games
 
   ```--minperiodscorr``` Minimum number of periods for 
 correspondence games
 
-  ```--minperiodscorrranked``` Minimum number of periods 
-for correspondence ranked games
 
-  ```--minperiodscorrunranked``` Minimum number of periods 
-for correspondence unranked games
 
-  max :
 
-  ```--maxperiodsblitz``` Maximum number of periods for 
-blitz games
 
-  ```--maxperiodsblitzranked``` Maximum number of periods 
-for blitz ranked games
-
-  ```--maxperiodsblitzunranked``` Maximum number of periods 
-for blitz unranked games
-
-  ```--maxperiodslive``` Maximum number of periods for 
-live games
-
-  ```--maxperiodsliveranked``` Maximum number of periods 
-for live ranked games
-
-  ```--maxperiodsliveunranked``` Maximum number of periods 
-for live unranked games
-
-  ```--maxperiodscorr``` Maximum number of periods for 
-correspondence games
-
-  ```--maxperiodscorrranked``` Maximum number of periods 
-for correspondence ranked games
-
-  ```--maxperiodscorrunranked``` Maximum number of periods 
-for correspondence unranked games
-
-#### min/max periodtime blitz/live/corr
+#### periodtime blitz/live/corr
 
  For period times below, if timecontrol is canadian, divide the 
 wanted period time for all the stones by the number of stones per period, 
@@ -596,69 +447,25 @@ wanted period time for all the stones by the number of stones per period,
 for example max periodtime 
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
 
-  min :
+
 
   ```--minperiodtimeblitz``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
 (default 5 , which is 5 seconds)
 
-  ```--minperiodtimeblitzranked``` Minimum seconds per period 
-(average time per stone if timecontrol is canadian) for blitz ranked games 
 
-  ```--minperiodtimeblitzunranked``` Minimum seconds per period 
-(average time per stone if timecontrol is canadian) for blitz unranked games 
 
   ```--minperiodtimelive``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for live games 
 (default 10 , which is 10 seconds)
 
-   ```--minperiodtimeliveranked``` Minimum seconds per period 
-(average time per stone if timecontrol is canadian) for live ranked games 
 
-   ```--minperiodtimeliveunranked``` Minimum seconds per period 
-(average time per stone if timecontrol is canadian) for live unranked games 
 
   ```--minperiodtimecorr``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence games 
 (default 14400 , which is 4 hours)
 
-  ```--minperiodtimecorrranked``` Minimum seconds per period 
-(average time per stone if timecontrol is canadian) for correspondence ranked games 
 
-  ```--minperiodtimecorrunranked``` Minimum seconds per period 
-(average time per stone if timecontrol is canadian) for correspondence unranked games 
-
-  max :
-
-  ```--maxperiodtimeblitz``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for blitz games 
-(default 10 , which is 10 seconds)
-
-  ```--maxperiodtimeblitzranked``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for blitz ranked games
-
-  ```--maxperiodtimeblitzunranked``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for blitz unranked games 
-
-  ```--maxperiodtimelive``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for live games 
-(default 120 , which is 2 minutes)
-
-  ```--maxperiodtimeliveranked``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for live ranked games 
-
-  ```--maxperiodtimeliveunranked``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for live unranked games 
-
-  ```--maxperiodtimecorr``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for correspondence games 
-(default 259200 , which is 3 days)
-
-  ```--maxperiodtimecorrranked``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for correspondence ranked games 
-
-  ```--maxperiodtimecorrunranked``` Maximum seconds per period 
-(average time per stone if timecontrol is canadian) for correspondence unranked games 
 
 # extra : notes :
 
