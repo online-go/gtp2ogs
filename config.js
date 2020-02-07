@@ -9,6 +9,7 @@ exports.updateFromArgv = function() {
     const optimist = require("optimist")
         // 1) ROOT ARGUMENTS:
         //     A) CHALLENGE-UNRELATED ARGS:
+        //         A1) ROOT:
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -18,6 +19,8 @@ exports.updateFromArgv = function() {
         .string('greeting')
         .describe('farewell', 'Thank you message to appear in chat at end of game (ex: -Thank you for playing-)')
         .string('farewell')
+        .describe('rejectnewmsg', 'Adds a customized reject message included in quote your message quote')
+        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
@@ -38,6 +41,9 @@ exports.updateFromArgv = function() {
         .describe('persist', 'Bot process remains running between moves')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('corrqueue', 'Process correspondence games one at a time')
+        .describe('fakebotrank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference'
+                              + 'between fakebotrank and user ranking, to fix the bypass minhandicap maxhandicap issue')
+        //         A2) RANKED/UNRANKED:
         /* note: - nopause allows to disable pauses DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
@@ -50,8 +56,6 @@ exports.updateFromArgv = function() {
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
         .default('maxconnectedgamesperuser', 3)
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
-        .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
-        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
@@ -59,7 +63,6 @@ exports.updateFromArgv = function() {
         /  nor their unranked args since the general argument is for unranked games too*/
         .describe('privateonly', 'Only accept private matches')
         .describe('publiconly', 'Only accept public (non-private) matches')
-        .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) CHECK CHALLENGE ARGS RANKED/UNRANKED:
         //     A) ALL/RANKED/UNRANKED FAMILIES:
         .describe('bans', 'Comma separated list of usernames or IDs for all games / ranked games only / unranked games only')
@@ -132,51 +135,40 @@ exports.updateFromArgv = function() {
     // B - check deprecated argv //
     //testDeprecatedArgv(argv, "komis");
 
-    // ALL/RANKED/UNRANKED ARGS:
-    const comma_all_ranked_unranked = ["bans"];
+    // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
+    const full_ranked_unranked_argNames = ["bans",
+    "boardsizes", "boardsizewidths", "boardsizeheights", "komis",
+    "rules", "challengercolors", "speeds", "timecontrols",
+    "proonly", "noautohandicap", "nopauseonweekends", "nopause",
+    "rank", "handicap",
+    "maintimeblitz", "maintimelive","maintimecorr",
+    "periodsblitz", "periodslive", "periodscorr",
+    "periodtimeblitz", "periodtimelive", "periodtimecorr"];
 
-    // RANKED/UNRANKED ARGS:
-    // 1) booleans:
-    const booleans_ranked_unranked = ["noautohandicap",
-    "proonly", "nopauseonweekends", "nopause"];
-
-    // 2) comma_ranked_unranked:
-    const comma_ranked_unranked = ["boardsizes",
-        "boardsizewidths", "boardsizeheights", "komis",
-        "rules", "challengercolors", "speeds", "timecontrols"];
-
-    // 3) min max:
-    const min_max_ranked_unranked = ["rank", "handicap",
-        "maintimeblitz", "maintimelive","maintimecorr",
-        "periodsblitz", "periodslive", "periodscorr",
-        "periodtimeblitz", "periodtimelive", "periodtimecorr"];
-
-    const full_ranked_unranked_argNames = booleans_ranked_unranked
-                                          .concat(comma_ranked_unranked,
-                                                  min_max_ranked_unranked,
-                                                  comma_all_ranked_unranked);
+    const full_check_challenge_root_argNames = ["maxconnectedgames",
+        "maxconnectedgamesperuser","rejectnew", "rejectnewfile",
+        "rankedonly", "unrankedonly", "privateonly", "publiconly"]
 
     /* EXPORTS FROM argv */
     /* 0) root, challenge unrelated exports exports*/
     for (const k in argv) {
-        if (!full_ranked_unranked_argNames.includes(k)) {
+        if (!full_ranked_unranked_argNames.includes(k) &&
+            !full_check_challenge_root_argNames.includes(k)) {
             /* Add and Modify exports*/
             if (k === "host" && argv.beta) {
                 exports[k] = 'beta.online-go.com';
             } else if (["timeout","startupbuffer"].includes(k)) {
                 // Convert some times to microseconds once here so
                 // we don't need to do it each time it is used later.
-                exports[k] = argv[k]*1000;
-            } else if (k === "apikey") {
-                exports[k] = argv[k];
+                exports[k] = argv[k] * 1000;
             } else if (k === "debug") {
                 exports.DEBUG = argv.debug;
-                exports[k] = argv[k]; //TODO: remove either of these DEBUG or debug
+                exports[k] = argv[k]; // TODO: remove either of these DEBUG or debug
             } else if (k === "_") {
                 exports.bot_command = argv[k];
-            } else if (k === "fakerank") {
+            } else if (k === "fakebotrank") {
                 exports[k] = parseRank(argv[k]);
-            } else { // ex: "persist", "maxconnectedgames", etc.
+            } else {
                 exports[k] = argv[k];
             }
         }
@@ -191,14 +183,24 @@ exports.updateFromArgv = function() {
         return false;
     };
 
-    // 2)ranked/unranked args:
-    exports.check_booleanArgs_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_booleans_root = function (notif, familyNameString)
     {
-        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        return { reject: (arg && notif) };
+        return argv[familyNameString] && notif;
     }
 
-    exports.check_minMaxArgs_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_max_root = function (notif, familyNameString)
+    {
+        return notif > argv[familyNameString];
+    }
+
+    // 2) ranked/unranked args:
+    exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
+    {
+        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        return arg && notif;
+    }
+
+    exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
         const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
         const [min, max] = arg.split(':');
@@ -209,7 +211,8 @@ exports.updateFromArgv = function() {
                  maxReject };
     };
 
-    exports.check_comma_RU = function (notif, rankedStatus, familyNameString) {
+    exports.check_comma_RU = function (notif, rankedStatus, familyNameString)
+    {
         const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
         if (arg !== true) { // skip "all", is allowed
             

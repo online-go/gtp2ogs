@@ -412,17 +412,17 @@ class Connection {
     //
     checkChallengeSettings(notification, config_r_u, r_u_strings) {
 
-        // TODO: modify or remove fakerank code whenever server sends us automatic handicap 
+        // TODO: modify or remove fakebotrank code whenever server sends us automatic handicap 
         //       notification.handicap different from -1.
         /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
         /  but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone*/
-        const handicapNotif = (notification.handicap === -1 && config.fakerank) ?
-                              Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank)) :
+        const handicapNotif = (notification.handicap === -1 && config.fakebotrank) ?
+                              Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
                               notification.handicap;
 
         for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
             if (notification.time_control.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
-                const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakerank || false],
+                const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakebotrank || false],
                                       [`maintime${blitzLiveCorr}`, "main time", notification.time_control, false],
                                       [`periods${blitzLiveCorr}`, "number of periods", notification.time_control.periods, false],
                                       [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
@@ -674,13 +674,13 @@ function isMinMaxArg(arg, minArg) {
     return (arg === minArg ? true : false);
 }
 
-function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakerankReject, config_r_u, r_u_strings) {
+function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakeBotRankReject, config_r_u, r_u_strings) {
     const [minArg, maxArg] = config_r_u[familyNameString].split(':');
     for (const minMaxArg of [minArg, maxArg]) {
         const isMin = isMinMaxArg(minMaxArg, minArg);
         const fullObject = UHMAEAT(minMaxArg, isMin, familyNameString, nameF, familyObject, familyNotification, r_u_strings);
         if (fullObject) { // exit the function if we don't reject
-            if (isFakerankReject) {
+            if (isFakeBotRankReject) {
                 conn_log(`Automatic handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF}, but ${familyObject.MIBL.minMax} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}`);
                 return { reject: true, msg: `-Automatic- handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF} based on rank difference between you and this bot,\nBut ${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}:\nPlease ${familyObject.MIBL.incDec} the number of ${fullObject.nameF} in -custom- handicap.` };
             } else {

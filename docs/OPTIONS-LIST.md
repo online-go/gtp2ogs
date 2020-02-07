@@ -169,11 +169,11 @@ connected games per user against this bot
 
   ```--publiconly```  Only accept public (non-private) matches
 
-#### fakerank
-  ```--fakerank``` Fake bot ranking to calculate automatic handicap 
+#### fakebotrank
+  ```--fakebotrank``` Fake bot ranking to calculate automatic handicap 
 stones number in autohandicap (-1) based on rankDifference between 
-fakerank and user ranking, to fix the bypass minhandicap maxhandicap 
-issue if handicap is -automatic
+fakebotrank and user ranking, to fix the bypass minhandicap maxhandicap 
+issue
 
 see [notes F-](/docs/NOTES.md#f-) for details
 
@@ -388,7 +388,7 @@ option -pauses on weekends- (specific to correspondence games)
 
 
 
-**important note** : see [fakerank](#fakerank).
+**important note** : see [fakebotrank](#fakebotrank).
 
 #### rank
 

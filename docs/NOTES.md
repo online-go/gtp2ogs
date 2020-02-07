@@ -141,7 +141,7 @@ always returns `-1` regardless of actual handicap stone number
 (ex: `0`, `3`, `5` stones, etc.)
 
 Example use case : 
-`--fakerank 6d --maxhandicap 4` and user ranking `2k`:
+`--fakebotrank 6d --maxhandicap 4` and user ranking `2k`:
 
 - Automatic handicap stones: 6d - 2k = 8 rank difference 
 => 8 automatic handicap stones
@@ -151,7 +151,7 @@ max stones allowed 4 => challenge rejected
 
 **important note** : until the min/maxhandicap bypass issue 
 is fixed (at the server level), it is recommended for botadmin 
-(at the gtp2ogs level) to use the `--fakerank` option, or 
+(at the gtp2ogs level) to use the `--fakebotrank` option, or 
 `--noautohandicapranked`, see for details :
 [#165](https://github.com/online-go/gtp2ogs/pull/165), 
 [#207](https://github.com/online-go/gtp2ogs/pull/207),
