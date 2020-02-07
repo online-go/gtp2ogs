@@ -281,18 +281,7 @@ exports.updateFromArgv = function() {
     
     // console messages
     // C - check exports warnings:
-    checkExportsWarnings("nopause");
-
-    // Show in debug all the ranked/unranked exports results
-    if (exports.DEBUG) {
-        const exportsResult = { ...exports, apikey: "hidden"};
-        for (const r_u of ["ranked", "unranked"]) {
-            console.log(`${r_u.toUpperCase()} EXPORTS RESULT:`
-                         + `\n-------------------------------------------------------`
-                         + `\n${JSON.stringify(exportsResult)}`
-                         + `\n`);
-        }
-    }
+    checkArgvWarnings("nopause");
 }
 
 // console messages:
@@ -411,32 +400,42 @@ function parseRank(arg) {
     }
 }
 
-function checkReasonableArgs(noPauseString) {
+function args_strings_RU(arg) {
+    const [ranked, unranked] = arg.split('/');
+    return ( [[ranked, "ranked"],
+              [unranked, "unranked"]] );
+}
+
+function checkArgvWarnings(noPauseString) {
     console.log(`CHECKING WARNINGS:
                  \n-------------------------------------------------------`);
     let isWarning = false;
-    for (const r_u of ["ranked","unranked"]) {
+    const args_strings_RU_nopause = args_strings_RU(argv[noPauseString]);
+    for (const [rankedUnranked, r_u_string] of args_strings_RU_nopause) {
         // avoid infinite games
-        // TODO: if --maxpausetimeGRU gets implemented, we can remove this
-        if (!exports[r_u][noPauseString]) {
+        // TODO: if --maxpausetime gets implemented, we can remove this
+        if (!rankedUnranked) {
             isWarning = true;
-            console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, 
-                         ${r_u} games are likely to last forever`);
-        }
-
-        // warn about potentially problematic timecontrols:
-        const pTcs = [ ["absolute", "(no period time)"],
-                       ["none", "(infinite time)"]
-                     ];
-        for (const [tc, descr] of pTcs) {
-            if (exports[r_u]["allowed_timecontrols"][tc] === true ||
-                exports[r_u]["allow_all_timecontrols"] === true) {
-                isWarning = true;
-                console.log(`    Warning: potentially problematic time control for ${r_u} games 
-                             detected -${tc}- ${descr}: may cause unwanted time management 
-                             problems with users`);
-            }
+            console.log(`    Warning: Nopause setting for ${r_u_string} games, `
+                        + `${r_u_string} games are likely to last forever`);
         }
     }
+
+
+
+
+    // warn about potentially problematic timecontrols:
+    const pTcs = [ ["absolute", "(no period time)"],
+                   ["none", "(infinite time)"] ];
+    for (const [tc, descr] of pTcs) {
+        if (exports[r_u]["allowed_timecontrols"][tc] === true ||
+            exports[r_u]["allow_all_timecontrols"] === true) {
+            isWarning = true;
+            console.log(`    Warning: potentially problematic time control for ${r_u} games 
+                             detected -${tc}- ${descr}: may cause unwanted time management 
+                             problems with users`);
+        }
+    }
+
     if (!isWarning) console.log("[ SUCCESS ]\n");
 }
