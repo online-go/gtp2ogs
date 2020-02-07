@@ -127,12 +127,12 @@ exports.updateFromArgv = function() {
 
     // console messages
     // A- greeting and debug status //
-
     const debugStatus = argv.debug ? "ON" : "OFF";
     console.log(`\ngtp2ogs version 6.0`
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}`);
+                
     // B - check deprecated argv //
     //testDeprecatedArgv(argv, "komis");
 
@@ -163,8 +163,9 @@ exports.updateFromArgv = function() {
                 // we don't need to do it each time it is used later.
                 exports[k] = argv[k] * 1000;
             } else if (k === "debug") {
+                // TODO: remove either of these, DEBUG or debug
                 exports.DEBUG = argv.debug;
-                exports[k] = argv[k]; // TODO: remove either of these DEBUG or debug
+                exports[k] = argv[k];
             } else if (k === "_") {
                 exports.bot_command = argv[k];
             } else if (k === "fakebotrank") {
@@ -203,65 +204,61 @@ exports.updateFromArgv = function() {
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        const [min, max] = arg.split(':');
-        const minReject = notif < min;
-        const maxReject = max < notif;
-        return { reject: minReject || maxReject,
-                 minReject,
-                 maxReject };
+        const args = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const [minArg, maxArg] = args.split(':')
+                                     .map( str => Number(str) );
+        const minReject = notif < minArg;
+        const maxReject = maxArg < notif;
+        // if an arg is missing, Number(undefined) returns NaN,
+        // and any math operation on NaN returns false (don't reject challenge)
+        return minReject || maxReject;
     };
 
     exports.check_comma_RU = function (notif, rankedStatus, familyNameString)
     {
-        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        if (arg !== true) { // skip "all", is allowed
-            
-        }
-
-
-
-
-
-
- 
-        return { reject: false };
-    }
-
-
-
-    for (const familyNameString of allowed_r_u_Families) {
-        const argObject = argObjectRU(argv[familyNameString], familyNameString);
-        for (const r_u in argObject) {
-            if (argObject[r_u]) {
-                if (argObject[r_u] === "all") {
-                    exports[r_u][`allow_all_${familyNameString}`] = true;
-                } else if (argObject[r_u] === "custom") {
-                    exports[r_u][`allow_custom_${familyNameString}`] = true;
-                } else {
-                    for (const allowedArg of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
-                        if (familyNameString === "komis" && allowedArg === "automatic") {
-                            exports[r_u][`allowed_${familyNameString}`]["null"] = true;
-                        } else if (allowedArg.includes(":")) {
-                            const [numberA, numberB, incr] = allowedArg.split(":").map( n => Number(n) );
-                            const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
-                            const increment = Math.abs(incr) || 1; // default is 1, this also removes allowedArg 0 (infinite loop)
-                            // if too much incrementations, sanity check
-                            const threshold = 1000;
-                            if (( Math.abs(max-min)/increment ) > threshold) {
-                                throw new `please reduce list length in ${familyNameString}, max is ${threshold} elements per range.`;
-                            }
-                            for (let i = min; i <= max; i = i + increment) {
-                                exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
-                            }
-                        } else {
-                            exports[r_u][`allowed_${familyNameString}`][allowedArg] = true;
+        const argsXargs = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        if (argsXargs !== true) { // skip "all", is allowed
+            // for "boardsizes":
+            //   - commaArgs is widths. Heights default to widths so that bot admin 
+            //     doesnt need to input 9,13,19x9,13,19 but only 9,13,19 (square boardsizes)
+            //   - if bot admin wants to allow non square boardsizes, bot admin has to use the
+            //     "x" separator for example "(widths)x(heights)", for example 9,13,19x1,2,3,9,13,19
+            // for other comma separated families:
+            //   boardsizeHeights are ignored and only commaArgs are checked
+            const [commaArgs, boardsizeHeightsArgs] = 
+                  argsXargs.split('x')
+                           .map( str => (widthsHeightsArgs.length !== 2) ? widthsArgs
+                                                                         : str );
+            for (const arg of commaArgs.split(',')) {
+                if (["boardsizes", "komis"].includes(familyNameString)) { // numbers family
+                    const notifConverted = notif
+                                           .map( str => String(notif) === "null" ? "automatic"
+                                                                                 : Number(str) );
+                    if (commaArgs !== boardsizeHeightsArgs) {
+                        // "boardsizes", case: non square args
+                        for (const commaArgsHeightsArgs of [commaArgs, boardsizeHeightsArgs]) {
+                            
                         }
+
                     }
+                    const [minArg, maxArg] = arg.split(':')
+                                                .map( str => Number(str) );
+                    const minReject = notifConverted < minArg;
+                    const maxReject = maxArg < notifConverted;
+                    // if no ":" min:max operator is used, we just check minArg (same as arg)
+                    // ex: "0.5" or only checks if notifConverted === "0.5"
+                    //     but "0.5:7.5" checks if notifConverted is between 0.5 and 7.5
+                    return minReject || maxReject;
+                } else { // words families
+                    return notif === arg; // ex: "byoyomi"
                 }
             }
         }
+        return false;
     }
+
+
+
 
     for (const familyNameString of all_r_u_Families) {
         const [allGamesArg, rankedArg, unrankedArg] = argv[familyNameString].split('/');
@@ -400,6 +397,15 @@ function parseRank(arg) {
         }
     }
 }
+
+function minMaxReject(argsString, notif) {
+    const [minArg, maxArg] = args.split(':')
+    .map( str => Number(str) );
+    const minReject = notif < minArg;
+    const maxReject = maxArg < notif;
+    return minReject || maxReject;
+}
+
 
 function args_strings_RU(arg) {
     const [ranked, unranked] = arg.split('/');
