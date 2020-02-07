@@ -3,21 +3,12 @@
 const fs = require('fs')
 const console = require('console');
 
-const allowed_r_u_Families = ["boardsizes",
-                              "boardsizewidths",
-                              "boardsizeheights",
-                              "komis",
-                              "rules",
-                              "challengercolors",
-                              "speeds",
-                              "timecontrols"
-                             ];
-generateExports_r_u(allowed_r_u_Families);
 exports.check_rejectnew = function() {};
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
         // 1) ROOT ARGUMENTS:
+        //     A) CHALLENGE-UNRELATED ARGS:
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -27,10 +18,6 @@ exports.updateFromArgv = function() {
         .string('greeting')
         .describe('farewell', 'Thank you message to appear in chat at end of game (ex: -Thank you for playing-)')
         .string('farewell')
-        .describe('rejectnew', 'Reject all new challenges with the default reject message')
-        .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
-        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-        .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
@@ -51,12 +38,17 @@ exports.updateFromArgv = function() {
         .describe('persist', 'Bot process remains running between moves')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('corrqueue', 'Process correspondence games one at a time')
+        //     B) CHECK CHALLENGE ARGS
         /* note: for maxconnectedgames, correspondence games are currently included
         /  in the maxconnectedgames count if you use `--persist` )*/
         .describe('maxconnectedgames', 'Maximum number of connected games for all users')
         .default('maxconnectedgames', 20)
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
         .default('maxconnectedgamesperuser', 3)
+        .describe('rejectnew', 'Reject all new challenges with the default reject message')
+        .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
+        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
+        .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
         /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
@@ -64,12 +56,12 @@ exports.updateFromArgv = function() {
         .describe('privateonly', 'Only accept private matches')
         .describe('publiconly', 'Only accept public (non-private) matches')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
-        // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
+        // 2) CHECK CHALLENGE ARGS RANKED/UNRANKED:
         //     A) ALL/RANKED/UNRANKED FAMILIES:
         .describe('bans', 'Comma separated list of usernames or IDs for all games / ranked games only / unranked games only')
         .string('bans')
         //     B) RANKED/UNRANKED FAMILIES:
-        //         B1) ALLOWED FAMILIES RANKED/UNRANKED:
+        //         B1) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
         .describe('boardsizes', 'Board size(s) to accept for ranked / unranked games')
         .string('boardsizes')
         .default('boardsizes', '9,13,19/...')
@@ -96,7 +88,7 @@ exports.updateFromArgv = function() {
         .describe('nopause', 'Do not allow pauses during games for ranked / unranked games')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games) for ranked / unranked games')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
-        //         B3) MINMAX FAMILIES RANKED/UNRANKED:
+        //         B3) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
@@ -140,36 +132,30 @@ exports.updateFromArgv = function() {
     // B - check deprecated argv //
     //testDeprecatedArgv(argv, "komis");
 
-    /* exports arrays
-    /  A) general case:*/
-    const genericMain_r_u_Families = ["noautohandicap",
+    // ALL/RANKED/UNRANKED ARGS:
+    const comma_all_ranked_unranked = ["bans"];
+
+    // RANKED/UNRANKED ARGS:
+    // 1) booleans:
+    const booleans_ranked_unranked = ["noautohandicap",
     "proonly", "nopauseonweekends", "nopause"];
 
-    /* B) specific cases:
-    /  rank family args need parsing before exporting*/
-    const rank_r_u_Families = ["rank"];
-    // bans family is an example of All/ranked/unranked family:
-    // export general AND ranked AND unranked args
-    const genericMinMax_r_u_Families = ["handicap",
+    // 2) min max:
+    const min_max_ranked_unranked = ["rank", "handicap",
         "maintimeblitz", "maintimelive","maintimecorr",
         "periodsblitz", "periodslive", "periodscorr",
         "periodtimeblitz", "periodtimelive", "periodtimecorr"];
-    const full_min_max_r_u_Families = rank_r_u_Families
-                                      .concat(genericMinMax_r_u_Families);
-    const all_r_u_Families = ["bans"];
-    // note: allowed_r_u_Families use a different formula before
-    //       exporting, included here as well
 
-    // C) combinations of all r_u args, to export separately
-    const full_r_u_Families = genericMain_r_u_Families
-                              .concat(full_min_max_r_u_Families,
-                                      allowed_r_u_Families,
-                                      all_r_u_Families);
+    const ranked_unranked_argNames = genericMain_r_u_Families
+                                     .concat(comma_all_ranked_unranked,
+                                             booleans_ranked_unranked,
+                                             min_max_ranked_unranked,
+                                             comma_ranked_unranked);
 
     /* EXPORTS FROM argv */
-    /* 0) root exports*/
+    /* 0) root, challenge unrelated exports exports*/
     for (const k in argv) {
-        if (!full_r_u_Families.includes(k)) {
+        if (!ranked_unranked.includes(k)) {
             /* Add and Modify exports*/
             if (k === "host" && argv.beta) {
                 exports[k] = 'beta.online-go.com';
@@ -198,31 +184,44 @@ exports.updateFromArgv = function() {
         return false;
     };
 
-    // r_u exports
-    /* 1) general r_u cases:*/
-    for (const familyNameString of genericMain_r_u_Families) {
-        const argObject = argObjectRU(argv[familyNameString], familyNameString);
-        for (const r_u in argObject) {
-            exports[r_u][familyNameString] = argObject[r_u];
-        }
+    // r_u fonctionnal argv checks exports
+    // 1) booleans ranked/unranked:
+    exports.check_booleanArgs_RU = function (notif, rankedStatus, familyNameString)
+    {
+        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        return { reject: (arg && notif) };
     }
 
-    /* 2) specific r_u cases:*/
-    for (const familyNameString of full_min_max_r_u_Families) {
-        const argObject = argObjectRU(argv[familyNameString], familyNameString);
-        for (const r_u in argObject) {
-            const [minArg, maxArg] = argObject[r_u].split(':');
-            for (const [arg, minMax] of [ [minArg, "min"],
-                                          [maxArg, "max"] ]) {
-                if (genericMinMax_r_u_Families.includes(familyNameString)) {
-                    exports[r_u][`${minMax}${familyNameString}`] = Number(arg);
-                } else {
-                    exports[r_u][`${minMax}${familyNameString}`] = parseRank(arg);
-                }
+    // 2) min max, ranked/unranked:
+    exports.check_minMaxArgs_RU = function (notif, rankedStatus, familyNameString)
+    {
+        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const [min, max] = arg.split(':');
+        const minReject = notif < min;
+        const maxReject = max < notif;
+        return { reject: minReject || maxReject,
+                    minReject,
+                    maxReject };
+    };
 
-            }
+    // 3) comma families, ranked/unranked:
+
+    exports.check_comma_RU = function (notif, rankedStatus, familyNameString) {
+        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        if (arg !== true) { // skip "all", is allowed
+            
         }
+
+
+
+
+
+
+ 
+        return { reject: false };
     }
+
+
 
     for (const familyNameString of allowed_r_u_Families) {
         const argObject = argObjectRU(argv[familyNameString], familyNameString);
@@ -273,15 +272,6 @@ exports.updateFromArgv = function() {
             }
         }
     }
-
-    // r_u fonctionnal checks exports
-    exports.checkMinMaxArgs_r_u = function(notif, r_u, familyNameString) {
-        const rankedUnrankedArgsString = argv[familyNameString];
-        const arg_r_u = argObjectRU(rankedUnrankedArgsString, familyNameString)
-        const [min, max] = arg_r_u.split(':');                                  }
-        return { minReject: notif < min,
-                 maxReject: max < notif }
-    }
     
     // console messages
     // C - check exports warnings:
@@ -295,18 +285,6 @@ exports.updateFromArgv = function() {
                          + `\n-------------------------------------------------------`
                          + `\n${JSON.stringify(exportsResult)}`
                          + `\n`);
-        }
-    }
-}
-
-// before starting:
-function generateExports_r_u(allowed_r_u_Families) {
-    for (const r_u of ["ranked", "unranked"]) {
-        exports[r_u] = { banned_users: {},
-                         allow_custom_boardsizes: false };
-        for (const familyNameString of allowed_r_u_Families) {
-            exports[r_u][`allow_all_${familyNameString}`] = false;
-            exports[r_u][`allowed_${familyNameString}`] = {};
         }
     }
 }
@@ -390,22 +368,22 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
     console.log("\n");
 }*/
 
-// arg functionnal checks:
-function argObjectRU(rankedUnrankedArgsString, familyNameString) {
-    const rankedUnrankedArgs = rankedUnrankedArgsString.split('/');
-    if (rankedUnrankedArgs.length !== 2) {
-        throw new `Error in in ${familyNameString} : unexpected use of the `
-                  + `ranked/unranked separator : expected 2 parts, not `
-                  + `${rankedUnrankedArgs.length}`;
-    }
-    const [ranked, unranked] = rankedUnrankedArgs
-                               .map( str => "all" ? true : str )
-                               .map( str => "..." ? ranked : str );
-    if (ranked === "...") {
-        throw new `Error in ${familyNameString} : can't use keyword - ... - `
-                  + `for the ranked setting, only for the unranked setting.`
-    }
-    return { ranked, unranked };
+// ranked/unranked:
+function argObjectRU(argsString, rankedStatus, familyNameString) {
+        const rankedUnrankedArgs = argsString.split('/');
+        if (rankedUnrankedArgs.length !== 2) {
+            throw new `Error in in ${familyNameString} : unexpected use of the `
+                      + `ranked/unranked separator : expected 2 parts, not `
+                      + `${rankedUnrankedArgs.length}`;
+        }
+        const [ranked, unranked] = rankedUnrankedArgs
+                                   .map( str => "all" ? true : str )
+                                   .map( str => "..." ? ranked : str );
+        if (ranked === "...") {
+            throw new `Error in ${familyNameString} : can't use keyword - ... - `
+                      + `for the ranked setting, only for the unranked setting.`
+        }
+        return (rankedStatus ? ranked : unranked);
 }
 
 function parseRank(arg) {
@@ -427,7 +405,7 @@ function parseRank(arg) {
     }
 }
 
-function checkExportsWarnings(noPauseString) {
+function checkReasonableArgs(noPauseString) {
     console.log(`CHECKING WARNINGS:
                  \n-------------------------------------------------------`);
     let isWarning = false;
