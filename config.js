@@ -38,6 +38,10 @@ exports.updateFromArgv = function() {
         .describe('persist', 'Bot process remains running between moves')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('corrqueue', 'Process correspondence games one at a time')
+        /* note: - nopause allows to disable pauses DURING games, (game.js), but
+        /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
+        /          (only for correspondence games)*/
+        .describe('nopause', 'Do not allow pauses during games for ranked / unranked games')
         //     B) CHECK CHALLENGE ARGS
         /* note: for maxconnectedgames, correspondence games are currently included
         /  in the maxconnectedgames count if you use `--persist` )*/
@@ -82,10 +86,6 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian/...')
         //         B2) BOOLEANS RANKED/UNRANKED:
         .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
-        /* note: - nopause allows to disable pauses DURING games, (game.js), but
-        /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
-        /          (only for correspondence games)*/
-        .describe('nopause', 'Do not allow pauses during games for ranked / unranked games')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games) for ranked / unranked games')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
         //         B3) MINMAX RANKED/UNRANKED:
@@ -140,22 +140,26 @@ exports.updateFromArgv = function() {
     const booleans_ranked_unranked = ["noautohandicap",
     "proonly", "nopauseonweekends", "nopause"];
 
-    // 2) min max:
+    // 2) comma_ranked_unranked:
+    const comma_ranked_unranked = ["boardsizes",
+        "boardsizewidths", "boardsizeheights", "komis",
+        "rules", "challengercolors", "speeds", "timecontrols"];
+
+    // 3) min max:
     const min_max_ranked_unranked = ["rank", "handicap",
         "maintimeblitz", "maintimelive","maintimecorr",
         "periodsblitz", "periodslive", "periodscorr",
         "periodtimeblitz", "periodtimelive", "periodtimecorr"];
 
-    const ranked_unranked_argNames = genericMain_r_u_Families
-                                     .concat(comma_all_ranked_unranked,
-                                             booleans_ranked_unranked,
-                                             min_max_ranked_unranked,
-                                             comma_ranked_unranked);
+    const full_ranked_unranked_argNames = booleans_ranked_unranked
+                                          .concat(comma_ranked_unranked,
+                                                  min_max_ranked_unranked,
+                                                  comma_all_ranked_unranked);
 
     /* EXPORTS FROM argv */
     /* 0) root, challenge unrelated exports exports*/
     for (const k in argv) {
-        if (!ranked_unranked.includes(k)) {
+        if (!full_ranked_unranked_argNames.includes(k)) {
             /* Add and Modify exports*/
             if (k === "host" && argv.beta) {
                 exports[k] = 'beta.online-go.com';
@@ -177,6 +181,9 @@ exports.updateFromArgv = function() {
             }
         }
     }
+
+    // ARGV FUNCTIONNAL CHECKS EXPORTS
+    // 1) root args:
     exports.check_rejectnew = function () 
     {
         if (argv.rejectnew)  return true;
@@ -184,15 +191,13 @@ exports.updateFromArgv = function() {
         return false;
     };
 
-    // r_u fonctionnal argv checks exports
-    // 1) booleans ranked/unranked:
+    // 2)ranked/unranked args:
     exports.check_booleanArgs_RU = function (notif, rankedStatus, familyNameString)
     {
         const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
         return { reject: (arg && notif) };
     }
 
-    // 2) min max, ranked/unranked:
     exports.check_minMaxArgs_RU = function (notif, rankedStatus, familyNameString)
     {
         const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
@@ -200,11 +205,9 @@ exports.updateFromArgv = function() {
         const minReject = notif < min;
         const maxReject = max < notif;
         return { reject: minReject || maxReject,
-                    minReject,
-                    maxReject };
+                 minReject,
+                 maxReject };
     };
-
-    // 3) comma families, ranked/unranked:
 
     exports.check_comma_RU = function (notif, rankedStatus, familyNameString) {
         const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
