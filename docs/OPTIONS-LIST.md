@@ -236,6 +236,18 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
 #### boardsizes
 
+
+                    // - for --boardsizes, if --boardsizeheights is not specified,
+                    //   we check square (width === height) boardsizes using only the widths
+                    //   ex: --boardsizes 19 -> 19x19
+                    // - if bot admin wants to check non square boardsizes as well, bot admin 
+                    //   has to use --boardsizeheights
+                    //   ex: --boardsizes 19 --boardsizeheights 1:3
+                    // - if bot admin doesnt want to allow square boardsizes based on widths,
+                    //   bot admin has to use --boardsizesnonsquareonly
+                    //   ex: --boardsizes 19 --boardsizesnonsquareonly --boardsizeheights 1:3
+
+
   ```--boardsizes``` Board size(s) to accept
 
 
