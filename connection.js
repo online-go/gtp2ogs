@@ -347,9 +347,16 @@ class Connection {
                                   [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g_empty] ];
 
         const for_r_u_g_full = ` ${r_u_strings.for_r_u_games}`;
-        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are", !notification.user.professional, for_r_u_g_full],
-                                      [config_r_u.nopauseonweekends, "Pause on week-ends is", notification.pause_on_weekends, for_r_u_g_full],
-                                      [config_r_u.noautohandicap, "-Automatic- handicap is", (notification.handicap === -1), for_r_u_g_full] ];
+        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are",
+                                       !notification.user.professional, for_r_u_g_full],
+                                      [config_r_u.nopauseonweekends, "Pause on week-ends is",
+                                       notification.pause_on_weekends, for_r_u_g_full],
+                                      [config_r_u.noautohandicap, "-Automatic- handicap is",
+                                       notification.handicap === -1, for_r_u_g_full],
+                                      [config_r_u.boardsizeheightsnonsquareonly, "This bot allows non-square boardsizes (for example: 19x18 and 18x19), "
+                                                                                 + "but square boardsizes (for example: 19x19 and 18x18), ",
+                                       notification.width !== notification.height, for_r_u_g_full]
+                                    ];
 
         for (const test of [testBooleanArgs, testBooleanArgs_r_u]) {
             for (const [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
@@ -367,8 +374,7 @@ class Connection {
     //
     checkChallengeAllowedFamilies(notification, config_r_u, r_u_strings) {
 
-        const testsAllowedFamilies = [ ["boardsizes", "Board size", notification.width],
-                                       ["boardsizewidths", "Board size WIDTH", notification.width],
+        const testsAllowedFamilies = [ ["boardsizes", "Board size WIDTHS", notification.width],
                                        ["boardsizeheights", "Board size HEIGHT", notification.height],
                                        ["komis", "Komi", notification.komi],
                                        ["rules", "Rule", notification.rules],

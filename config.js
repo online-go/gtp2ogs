@@ -92,7 +92,9 @@ exports.updateFromArgv = function() {
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                        + '(specific to correspondence games) for ranked / unranked games')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
-        .describe('nonsquareboardsizesonly', 'Only accept non square boardsizes matches ex:19x13, 13x19, not 19x19, not 13x13 for ranked / unranked games')
+        .describe('boardsizeheightsnonsquareonly', 'Use this in combination with --boardsizeheights (allows non-square boardsizes '
+                                                   + '(ex: 19x18 and 18x19)) to specifically reject matches with square boardsizes '
+                                                   + 'combinations of widths and heights (ex:19x13, 13x19) for ranked / unranked games')
         //         B3) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
@@ -181,7 +183,9 @@ exports.updateFromArgv = function() {
     // 1) root args:
     exports.check_rejectnew = function () 
     {
-        return { reject: argv.rejectnew || (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) };
+        if (argv.rejectnew)  return { reject: true };
+        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return { reject: true };
+        return { reject: false };
     };
 
     exports.check_booleans_root = function (notif, familyNameString)
@@ -216,30 +220,14 @@ exports.updateFromArgv = function() {
         if (argsString !== true) {
             if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
                 // numbers families
-                if (familyNameString === "boardsizes") {
-                    const allArgsNumbers = allArgsNumbers(argsString);
-                    if (!argv.nonsquareboardsizesonly) 
-
-                    
-                } else if (familyNameString === "boardsizeheights") {
-
-                    
-
-                    if (argv.boardsizes && !argv.boardsizeheights && !argv.nonsquareboardsizesonly)
-                    if (argv.boardsizes && argv.boardsizeheights && !argv.nonsquareboardsizesonly)
-                    if (argv.boardsizes && argv.boardsizeheights && argv.nonsquareboardsizesonly)
-
-
-                    argsArray = commaArgsToArray(argsString);
-                    const reject = minMaxReject(arg, anotif);
+                if (["boardsizes", "boardsizesheights"].includes(familyNameString)) {
+                    // check widths or heights
+                    const allArgsNumbers = allArgsNumbersFromArgsString(argsString);
+                    const reject = !allArgsNumbers.includes(Number(notif));
+                    const allArgsStrings = allArgsNumbers.join(', ');
                     return { reject,
-                             argsString };
-
-
-
-
-
-
+                             allArgsStrings };
+                    }
                 } else if (String(notif) === "null") {
                     const reject = !argsString.split(',').includes("automatic");
                     return { reject,
@@ -412,7 +400,7 @@ function minMaxReject(argsString, notif) {
              maxAllowed };
 }
 
-function allArgsNumbers(argsString) {
+function allArgsNumbersFromArgsString(argsString) {
     let allArgs = [];
     for (const arg of argsString.split(',')) {
         const [minRange, maxRange] = arg.split(':')

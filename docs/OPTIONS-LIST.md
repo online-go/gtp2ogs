@@ -366,6 +366,11 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
   ```--proonly``` For all matches, only accept those from professionals
 
+  ```--boardsizeheightsnonsquareonly``` Use this in combination with 
+--boardsizeheights (allows non-square boardsizes (ex: 19x18 and 18x19)) 
+to specifically reject matches with square boardsizes combinations of 
+widths and heights (ex:19x13, 13x19) for ranked / unranked games')
+
 
 
 #### nopause
