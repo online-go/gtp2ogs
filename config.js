@@ -180,85 +180,70 @@ exports.updateFromArgv = function() {
     // 1) root args:
     exports.check_rejectnew = function () 
     {
-        if (argv.rejectnew)  return true;
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        return false;
+        return { reject: argv.rejectnew || (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) };
     };
 
     exports.check_booleans_root = function (notif, familyNameString)
     {
-        return argv[familyNameString] && notif;
+        return { reject: argv[familyNameString] && notif };
     }
 
     exports.check_max_root = function (notif, familyNameString)
     {
-        return notif > argv[familyNameString];
+        const maxAllowed = argv[familyNameString];
+        return { reject: notif > maxAllowed,
+                 maxAllowed };
     }
 
     // 2) ranked/unranked args:
     exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const arg = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        return arg && notif;
+        const allowed = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        return { reject: allowed && notif };
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
         const args = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        const [minArg, maxArg] = args.split(':')
-                                     .map( str => Number(str) );
-        const minReject = notif < minArg;
-        const maxReject = maxArg < notif;
-        // if an arg is missing, Number(undefined) returns NaN,
-        // and any math operation on NaN returns false (don't reject challenge)
-        return minReject || maxReject;
+        return minMaxReject(args, notif);
     };
 
-    exports.check_comma_RU = function (notif, rankedStatus, familyNameString)
+    // for comma-separated families, we need to check all comma-separated args:
+    // so we return only if we have a rejected value, else don't return anything
+    exports.check_comma_RU = function (notif, notifH, rankedStatus, familyNameString)
     {
         const argsXargs = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        if (argsXargs !== true) { // skip "all", is allowed
-            // for "boardsizes":
-            //   - commaArgs is widths. Heights default to widths so that bot admin 
-            //     doesnt need to input 9,13,19x9,13,19 but only 9,13,19 (square boardsizes)
-            //   - if bot admin wants to allow non square boardsizes, bot admin has to use the
-            //     "x" separator for example "(widths)x(heights)", for example 9,13,19x1,2,3,9,13,19
-            // for other comma separated families:
-            //   boardsizeHeights are ignored and only commaArgs are checked
-            const [commaArgs, boardsizeHeightsArgs] = 
-                  argsXargs.split('x')
-                           .map( str => (widthsHeightsArgs.length !== 2) ? widthsArgs
-                                                                         : str );
-            for (const arg of commaArgs.split(',')) {
-                if (["boardsizes", "komis"].includes(familyNameString)) { // numbers family
-                    const notifConverted = notif
-                                           .map( str => String(notif) === "null" ? "automatic"
-                                                                                 : Number(str) );
-                    if (commaArgs !== boardsizeHeightsArgs) {
-                        // "boardsizes", case: non square args
-                        for (const commaArgsHeightsArgs of [commaArgs, boardsizeHeightsArgs]) {
-                            
-                        }
-
+        // - for square boardsizes and all other comma-separated families,
+        //   heights are ignored and only commaArgs are checked
+        // - if bot admin wants to allow non square boardsizes, bot admin has to use the
+        //   "x" separator for example "(widths)x(heights)", for example 9,13,19x1,2,3,9,13,19
+        const [commaArgs, boardsizeHeightsArgs] = argsXargs.split('x');
+        const argsObject = (commaArgs !== boardsizeHeightsArgs ? { args: argboardsizeHeightsArgs, notif: notifH }
+                                                               : { args: commaArgs, notif });
+        // skip "all": everything allowed
+        if (argsObject.args !== true) {
+            for (const arg of argsObject.args.split(',')) {
+                if (["boardsizes", "komis"].includes(familyNameString)) {
+                    // numbers family
+                    if (notif === "null") {
+                        const notifConverted = "automatic";
+                        const reject = notifConverted !== arg;
+                        if (reject) return { reject,
+                                             arg };
+                    } else {
+                        const reject = minMaxReject(arg, notif);
+                        if (reject.reject) return reject;
                     }
-                    const [minArg, maxArg] = arg.split(':')
-                                                .map( str => Number(str) );
-                    const minReject = notifConverted < minArg;
-                    const maxReject = maxArg < notifConverted;
-                    // if no ":" min:max operator is used, we just check minArg (same as arg)
-                    // ex: "0.5" or only checks if notifConverted === "0.5"
-                    //     but "0.5:7.5" checks if notifConverted is between 0.5 and 7.5
-                    return minReject || maxReject;
-                } else { // words families
-                    return notif === arg; // ex: "byoyomi"
+                } else {
+                    // words families
+                    const reject = notif === arg;
+                    if (reject) return { reject,
+                                         arg };
                 }
             }
         }
-        return false;
-    }
-
-
-
+        return { reject: false };
+    }   
 
     for (const familyNameString of all_r_u_Families) {
         const [allGamesArg, rankedArg, unrankedArg] = argv[familyNameString].split('/');
@@ -399,11 +384,17 @@ function parseRank(arg) {
 }
 
 function minMaxReject(argsString, notif) {
-    const [minArg, maxArg] = args.split(':')
-    .map( str => Number(str) );
-    const minReject = notif < minArg;
-    const maxReject = maxArg < notif;
-    return minReject || maxReject;
+    const [minAllowed, maxAllowed] = argsString.split(':')
+                                               .map( str => Number(str) );
+    const minReject = notif < minAllowed;
+    const maxReject = maxAllowed < notif;
+    // if an arg is missing, Number(undefined) returns NaN,
+    // and any math operation on NaN returns false (don't reject challenge)
+    return { reject: minReject || maxReject,
+             minReject,
+             maxReject,
+             minAllowed,
+             maxAllowed };
 }
 
 
