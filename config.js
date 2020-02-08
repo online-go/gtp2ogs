@@ -64,11 +64,7 @@ exports.updateFromArgv = function() {
         .describe('privateonly', 'Only accept private matches')
         .describe('publiconly', 'Only accept public (non-private) matches')
         // 2) CHECK CHALLENGE ARGS RANKED/UNRANKED:
-        //     A) ALL/RANKED/UNRANKED FAMILIES:
-        .describe('bans', 'Comma separated list of usernames or IDs for all games / ranked games only / unranked games only')
-        .string('bans')
-        //     B) RANKED/UNRANKED FAMILIES:
-        //         B1) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
+        //     A) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
         .describe('boardsizes', 'Board size(s) to accept for ranked / unranked games')
         .string('boardsizes')
         .default('boardsizes', '9,13,19/...')
@@ -79,6 +75,8 @@ exports.updateFromArgv = function() {
         .describe('komis', 'Allowed komi values for ranked / unranked games')
         .string('komis')
         .default('komis', 'automatic/...')
+        .describe('bans', 'Usernames or IDs to ban from ranked / unranked games')
+        .string('bans')
         .describe('rules', 'Rule(s) to accept')
         .default('rules', 'chinese/...')
         .describe('challengercolors', 'Challenger color(s) to accept for ranked / unranked games')
@@ -87,7 +85,7 @@ exports.updateFromArgv = function() {
         .default('speeds', 'all/...')
         .describe('timecontrols', 'Time control(s) to accept for ranked / unranked games')
         .default('timecontrols', 'fischer,byoyomi,simple,canadian/...')
-        //         B2) BOOLEANS RANKED/UNRANKED:
+        //     B) BOOLEANS RANKED/UNRANKED:
         .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                        + '(specific to correspondence games) for ranked / unranked games')
@@ -95,7 +93,7 @@ exports.updateFromArgv = function() {
         .describe('boardsizeheightsnonsquareonly', 'Use this in combination with --boardsizeheights (allows non-square boardsizes '
                                                    + '(ex: 19x18 and 18x19)) to specifically reject matches with square boardsizes '
                                                    + 'combinations of widths and heights (ex:19x13, 13x19) for ranked / unranked games')
-        //         B3) MINMAX RANKED/UNRANKED:
+        //     C) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
@@ -140,11 +138,10 @@ exports.updateFromArgv = function() {
     //testDeprecatedArgv(argv, "komis");
 
     // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
-    const full_ranked_unranked_argNames = ["bans",
-        "boardsizes", "boardsizewidths", "boardsizeheights", "komis",
-        "rules", "challengercolors", "speeds", "timecontrols",
+    const full_ranked_unranked_argNames = ["boardsizes", "boardsizeheights",
+        "komis", "rules", "challengercolors", "speeds", "timecontrols",
         "proonly", "noautohandicap", "nopauseonweekends", "nopause",
-        "rank", "handicap",
+        "boardsizeheightsnonsquareonly", "rank", "handicap",
         "maintimeblitz", "maintimelive","maintimecorr",
         "periodsblitz", "periodslive", "periodscorr",
         "periodtimeblitz", "periodtimelive", "periodtimecorr"];
@@ -246,23 +243,6 @@ exports.updateFromArgv = function() {
             }
         }
         return { reject: false };
-    }   
-
-    for (const familyNameString of all_r_u_Families) {
-        const [allGamesArg, rankedArg, unrankedArg] = argv[familyNameString].split('/');
-        const arg_r_u_arrays = [ [allGamesArg, ["ranked", "unranked"]],
-                                 [rankedArg,   ["ranked"]],
-                                 [unrankedArg, ["unranked"]]
-                               ];
-        for (const [arg, r_u_arr] of arg_r_u_arrays) {
-            if (arg) {
-                for (const argExport of arg.split(',')) {
-                    for (const r_u of r_u_arr) {
-                        exports[r_u]["banned_users"][argExport] = true;
-                    }
-                }
-            }
-        }
     }
     
     // console messages
