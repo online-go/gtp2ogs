@@ -212,34 +212,34 @@ exports.updateFromArgv = function() {
     // so we return only if we have a rejected value, else don't return anything
     exports.check_comma_RU = function (notif, notifH, rankedStatus, familyNameString)
     {
-        const argsXargs = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        // - for square boardsizes and all other comma-separated families,
-        //   heights are ignored and only commaArgs are checked
-        // - if bot admin wants to allow non square boardsizes, bot admin has to use the
-        //   "x" separator for example "(widths)x(heights)", for example 9,13,19x1,2,3,9,13,19
-        const [commaArgs, boardsizeHeightsArgs] = argsXargs.split('x');
-        const argsObject = (commaArgs !== boardsizeHeightsArgs ? { args: argboardsizeHeightsArgs, notif: notifH }
-                                                               : { args: commaArgs, notif });
+        const argsString = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
         // skip "all": everything allowed
-        if (argsObject.args !== true) {
-            for (const arg of argsObject.args.split(',')) {
-                if (["boardsizes", "komis"].includes(familyNameString)) {
-                    // numbers family
-                    if (notif === "null") {
-                        const notifConverted = "automatic";
-                        const reject = notifConverted !== arg;
-                        if (reject) return { reject,
-                                             arg };
-                    } else {
-                        const reject = minMaxReject(arg, notif);
-                        if (reject.reject) return reject;
-                    }
-                } else {
-                    // words families
-                    const reject = notif === arg;
-                    if (reject) return { reject,
-                                         arg };
+        if (argsString !== true) {
+            if (["boardsizes", "komis"].includes(familyNameString)) {
+                // numbers family
+                if (String(notif) === "null") { // "automatic"
+                    const reject = !argsString.split(',').includes("automatic");
+                    return { reject,
+                             argsString };
+                } else { // numbers
+                    // - for square boardsizes and all other comma-separated families,
+                    //   heights are ignored and only commaArgs are checked
+                    // - if bot admin wants to allow non square boardsizes, bot admin has to use the
+                    //   "x" separator for example "(widths)x(heights)", for example 9,13,19x1,2,3,9,13,19
+                    const [commaArgs, boardsizeHeightsArgs] = argsString.split('x');
+                    const argsObject = (commaArgs !== boardsizeHeightsArgs ? { argsString: boardsizeHeightsArgs, notif: notifH }
+                                                                           : { argsString: commaArgs, notif });
+
+                    const argsArray = commaArgsToArray(argsString);
+                    const reject = minMaxReject(arg, anotif);
+                    return { reject,
+                             argsString };
                 }
+            } else {
+                // words families
+                const reject = !argsString.split(',').includes(notif);
+                return { reject,
+                         argsString };
             }
         }
         return { reject: false };
