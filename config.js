@@ -141,7 +141,8 @@ exports.updateFromArgv = function() {
     const full_ranked_unranked_argNames = ["boardsizes", "boardsizeheights",
         "komis", "rules", "challengercolors", "speeds", "timecontrols",
         "proonly", "noautohandicap", "nopauseonweekends", "nopause",
-        "boardsizeheightsnonsquareonly", "rank", "handicap",
+        "boardsizeheightsnonsquareonly",
+        "rank", "handicap",
         "maintimeblitz", "maintimelive","maintimecorr",
         "periodsblitz", "periodslive", "periodscorr",
         "periodtimeblitz", "periodtimelive", "periodtimecorr"];
@@ -224,7 +225,6 @@ exports.updateFromArgv = function() {
                     const allArgsStrings = allArgsNumbers.join(', ');
                     return { reject,
                              allArgsStrings };
-                    }
                 } else if (String(notif) === "null") {
                     const reject = !argsString.split(',').includes("automatic");
                     return { reject,
