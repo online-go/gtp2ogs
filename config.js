@@ -92,6 +92,7 @@ exports.updateFromArgv = function() {
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                        + '(specific to correspondence games) for ranked / unranked games')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
+        .describe('boardsizesnonsquareonly', 'Only accept non square boardsizes matches ex:19x13, 13x19, not 19x19, not 13x13 for ranked / unranked games')
         //         B3) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
@@ -208,27 +209,40 @@ exports.updateFromArgv = function() {
         return minMaxReject(args, notif);
     };
 
-    exports.check_comma_RU = function (notif, notifH, rankedStatus, familyNameString)
+    exports.check_comma_separated_RU = function (notif, notifH, rankedStatus, familyNameString)
     {
         const argsString = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
         // skip "all": everything allowed
         if (argsString !== true) {
-            if (["boardsizes", "komis"].includes(familyNameString)) {
-                // numbers family
-                if (String(notif) === "null") { // "automatic"
+            if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
+                // numbers families
+                if (String(notif) === "null") {
                     const reject = !argsString.split(',').includes("automatic");
                     return { reject,
                              argsString };
-                } else { // numbers
-                    // - for square boardsizes and all other comma-separated families,
-                    //   heights are ignored and only commaArgs are checked
-                    // - if bot admin wants to allow non square boardsizes, bot admin has to use the
-                    //   "x" separator for example "(widths)x(heights)", for example 9,13,19x1,2,3,9,13,19
+                } else if (!familyNameString.includes("boardsize")) {
+                    // numbers families except from boardsizes, boardsizeheights
+                    const [minAllowed, maxAllowed] = minMaxNumbersFromArgsString(argsString);
+                    const reject = minMaxReject(`${minAllowed}:${maxAllowed}`, notif);
+                    return { reject,
+                             argsString };
+                } else {
+                    // - for --boardsizes, if --boardsizeheights is not specified,
+                    //   we check square (width === height) boardsizes using only the widths
+                    //   ex: --boardsizes 19 -> 19x19
+                    // - if bot admin wants to check non square boardsizes as well, bot admin 
+                    //   has to use --boardsizeheights
+                    //   ex: --boardsizes 19 --boardsizeheights 1:3
+                    // - if bot admin doesnt want to allow square boardsizes based on widths,
+                    //   bot admin has to use --boardsizesnonsquareonly
+                    //   ex: --boardsizes 19 --boardsizesnonsquareonly --boardsizeheights 1:3
                     const [commaArgs, boardsizeHeightsArgs] = argsString.split('x');
                     const argsObject = (commaArgs !== boardsizeHeightsArgs ? { argsString: boardsizeHeightsArgs, notif: notifH }
                                                                            : { argsString: commaArgs, notif });
 
-                    const argsArray = commaArgsToArray(argsString);
+                    
+                    
+                    argsArray = commaArgsToArray(argsString);
                     const reject = minMaxReject(arg, anotif);
                     return { reject,
                              argsString };
@@ -393,6 +407,24 @@ function minMaxReject(argsString, notif) {
              maxReject,
              minAllowed,
              maxAllowed };
+}
+
+function minMaxNumbersFromArgsString(argsString) {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const arg of argsString.split(',')) {
+        if (arg.includes(':')) {
+            const [minRange, maxRange] = arg.split(':')
+                                            .map( str => Number(str) );
+            if (minRange < min) min = minRange;
+            if (maxRange > max) max = maxRange;
+        } else {
+            const argNumber = Number(arg);
+            if (argNumber < min) min = argNumber;
+            if (argNumber > max) max = argNumber;
+        }
+    }
+    return [min, max];
 }
 
 
