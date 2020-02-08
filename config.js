@@ -208,8 +208,6 @@ exports.updateFromArgv = function() {
         return minMaxReject(args, notif);
     };
 
-    // for comma-separated families, we need to check all comma-separated args:
-    // so we return only if we have a rejected value, else don't return anything
     exports.check_comma_RU = function (notif, notifH, rankedStatus, familyNameString)
     {
         const argsString = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
