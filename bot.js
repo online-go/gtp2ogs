@@ -370,8 +370,8 @@ class Bot {
         let handicap_moves = [];
         let moves = decodeMoves(state.moves, state.width);
         for (let i=0; i < moves.length; ++i) {
-            let move = moves[i];
-            let c = color
+            const move = moves[i];
+            const c = color
 
             // Use set_free_handicap for handicap stones, play otherwise.
             if (doing_handicap && handicap_moves.length < state.handicap) {
