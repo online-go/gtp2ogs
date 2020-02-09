@@ -54,6 +54,7 @@ exports.updateFromArgv = function() {
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
         .describe('nopause', 'Do not allow pauses during games for ranked / unranked games')
+        .default('nopause', 'false/false')
         //     B) CHECK CHALLENGE ARGS
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
