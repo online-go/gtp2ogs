@@ -107,6 +107,7 @@ exports.updateFromArgv = function() {
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
+        //     D) MINMAX BLITZ LIVE CORRESPONDENCE SETTINGS RANKED/UNRANKED
          // 15 seconds : 5 minutes _ periods _ 5 seconds : 10 seconds
         .describe('blitz', 'Blitz maintime_periods_periodtime settings for ranked / unranked games')
         .default('blitz', '15:300_3:20_5:10/...')
@@ -150,7 +151,8 @@ exports.updateFromArgv = function() {
         minMaxDeprecationsRU("handicap"),
         minMaxDeprecationsBlitzLiveCorrRU("maintime"),
         minMaxDeprecationsBlitzLiveCorrRU("periods"),
-        minMaxDeprecationsBlitzLiveCorrRU("periodtime")
+        minMaxDeprecationsBlitzLiveCorrRU("periodtime"),
+        [["nopauseranked", "nopauseunranked"], "nopause with / to separate ranked and unranked settings"]
     ];
     for (const deprecatedArgvArray of deprecatedArgvArrays) {
         const [oldNames, newNameMsg] = deprecatedArgvArray;
@@ -238,7 +240,7 @@ exports.updateFromArgv = function() {
     exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
     {
         const allowed = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        return { reject: allowed && notif };
+        return { reject: Boolean(allowed) && notif };
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
