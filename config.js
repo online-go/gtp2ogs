@@ -141,18 +141,17 @@ exports.updateFromArgv = function() {
         [["maxactivegames"], "maxconnectedgamesperuser"],
         deprecationsPluralSingularRU("boardsizes"),
         deprecationsPluralSingularRU("boardsizeheights"),
-        [["boardsizewidths"], false],
-        [["boardsizewidthsranked"], false],
-        [["boardsizewidthsunranked"], false],
+        [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked"], false],
         deprecationsPluralSingularRU("komis"),
         deprecationsPluralSingularRU("bans"),
         deprecationsPluralSingularRU("speeds"),
         deprecationsPluralSingularRU("timecontrols"),
         minMaxDeprecationsRU("rank"),
         minMaxDeprecationsRU("handicap"),
-        minMaxDeprecationsBlitzLiveCorrRU("maintime"),
-        minMaxDeprecationsBlitzLiveCorrRU("periods"),
-        minMaxDeprecationsBlitzLiveCorrRU("periodtime"),
+        [["maintime", "periods", "periodtime"], false],
+        minMaxDeprecationsBlitzLiveCorrRU("blitz"),
+        minMaxDeprecationsBlitzLiveCorrRU("live"),
+        minMaxDeprecationsBlitzLiveCorrRU("corr"),
         [["nopauseranked", "nopauseunranked"], "nopause with / to separate ranked and unranked settings"]
     ];
     for (const deprecatedArgvArray of deprecatedArgvArrays) {
@@ -343,27 +342,29 @@ function deprecationsPluralSingularRU(name) {
 
 function minMaxDeprecationsRU(name) {
     const oldRU = ["", "ranked", "unranked"];
-    const veryOldRU = ["ranked", "unranked"];
     let oldNames = [];
     for (const minMax of ["min", "max"]) {
-        oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${str}` ))
-                           .concat(veryOldRU.map( str => `${minMax}${str}${name}` ));
+        for (const ARU of ["", "ranked", "unranked"]) {
+            oldNames = oldNames.push(`${minMax}${name}${ARU}`);
+        }
     } 
     const newName = `${name} min:max/min:max syntax for ranked/unranked games`;
     return [oldNames, newName];
 }
 
-function minMaxDeprecationsBlitzLiveCorrRU(name) {
-    const oldRU = ["", "ranked", "unranked"];
+function minMaxDeprecationsBlitzLiveCorrRU(blitzLiveCorr) {
+    const blitzLiveCorrConverted = (blitzLiveCorr === "corr" ? "correspondence" : blitzLiveCorr);
     let oldNames = [];
     for (const minMax of ["min", "max"]) {
-        oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${str}` ));
-        for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-            oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${blitzLiveCorr}${str}` ));
+        for (const mpt of ["maintime", "periods", "periodtime"]) {
+            for (const ARU of ["", "ranked", "unranked"]) {
+                oldNames = oldNames.push(`${minMax}${mpt}${blitzLiveCorr}${ARU}`);
+            }
         }
     }
-    const newNamesString = `${name}blitz, --${name}live, --${name}corr, `
-                           + `with the min:max/min:max syntax for ranked/unranked games`;
+    const newNamesString = `${blitzLiveCorrConverted} with the _ to separate `
+                           + `maintime_periods_periodtime, and : to separate `
+                           + `min:max , and the / syntax for ranked/unranked games`;
     return [oldNames, newNamesString];
 }
 
