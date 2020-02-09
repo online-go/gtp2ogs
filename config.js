@@ -107,27 +107,15 @@ exports.updateFromArgv = function() {
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
-
-        .describe('maintimeblitz', 'minimum:maximum seconds of main time for blitz games ranked / unranked')
-        .default('maintimeblitz', '15:300/...') // 15 seconds : 5 minutes
-        .describe('maintimelive', 'minimum:maximum seconds of main time for live games ranked / unranked')
-        .default('maintimelive', '60:7200/...') // 1 minute : 2 hours
-        .describe('maintimecorr', 'minimum:maximum seconds of main time for correspondence games ranked / unranked')
-        .default('maintimecorr', '259200:604800') // 3 days : 7 days
-
-        .describe('periodsblitz', 'minimum:maximum number of periods for blitz games ranked / unranked')
-        .default('periodsblitz', '3:20/...')
-        .describe('periodslive', 'minimum:maximum number of periods for live games ranked / unranked')
-        .default('periodslive', '3:20/...')
-        .describe('periodscorr', 'minimum:maximum number of periods for correspondence games ranked / unranked')
-        .default('periodscorr', '3:10/...')
-
-        .describe('periodtimeblitz', 'minimum:maximum seconds of period time for blitz games ranked / unranked')
-        .default('periodtimeblitz', '5:10/...') // 5 seconds : 10 seconds
-        .describe('periodtimelive', 'minimum:maximum seconds of period time for live games ranked / unranked')
-        .default('periodtimelive', '10:120/...') // 10 seconds : 2 minutes
-        .describe('periodtimecorr', 'minimum:maximum seconds of period time for correspondence games ranked / unranked')
-        .default('periodtimecorr', '14400:259200/...') // 4 hours : 3 days
+         // 15 seconds : 5 minutes _ periods _ 5 seconds : 10 seconds
+        .describe('blitz', 'Blitz maintime_periods_periodtime settings for ranked / unranked games')
+        .default('blitz', '15:300_3:20_5:10/...')
+        // 1 minute : 2 hours _ periods _ 10 seconds : 2 minutes
+        .describe('live', 'Live maintime_periods_periodtime settings for ranked / unranked games')
+        .default('live', '60:7200_3:20_10:120/...')
+        // 3 days : 7 days _ periods _ 4 hours : 3 days
+        .describe('correspondence', 'Correspondence maintime_periods_periodtime settings for ranked / unranked games')
+        .default('correspondence', '259200:604800_3:10_14400:259200/...')
     ;
 
     const argv = optimist.argv;
