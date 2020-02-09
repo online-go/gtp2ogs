@@ -8,6 +8,7 @@ const checkArgs = ["rejectnew",
                    "max_root",
                    "boolean_args_RU",
                    "min_max_args_RU",
+                   "min_max_blitz_live_corr_args_RU",
                    "comma_separated_RU"];
 checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
 
@@ -240,7 +241,7 @@ exports.updateFromArgv = function() {
     exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
     {
         const allowed = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        return { reject: Boolean(allowed) && notif };
+        return { reject: Boolean(allowed) && notif }; // "false" -> false
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
@@ -249,10 +250,25 @@ exports.updateFromArgv = function() {
         return minMaxReject(args, notif);
     };
 
+    exports.check_min_max_blitz_live_corr_args_RU = function (notifMaintime, notifPeriods, notifPeriodtime, rankedStatus, familyNameString)
+    {
+        const args = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const timeSettings = args.split('_');
+        if (timeSettings.length !== 3) {
+            throw new `Error in ${familyNameString} time settings: unexpected use of the `
+                      + `maintime_periods_periodtime separator : expected 3 parts, not `
+                      + `${timeSettings.length}`;
+        }
+        const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
+        return { reject: [ { maintime:   minMaxReject(maintimeArgs, notifMaintime) },
+                           { periods:    minMaxReject(periodsArgs, notifPeriods) },
+                           { periodtime: minMaxReject(periodtimeArgs, notifPeriodtime) }
+                         ] };
+    };
+
     exports.check_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
         const argsString = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
-        // skip "all": everything allowed
         if (argsString !== "all") {
             if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
                 // numbers families
