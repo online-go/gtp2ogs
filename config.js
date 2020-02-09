@@ -135,7 +135,45 @@ exports.updateFromArgv = function() {
                 + `\nDebug status: ${debugStatus}`);
                 
     // B - check deprecated argv //
-    //testDeprecatedArgv(argv, "komis");
+    const deprecatedArgvArrays = [ 
+        [["bot", "id", "botid"], "username"],
+        [["maxtotalgames"], "maxconnectedgames"],
+        [["maxactivegames"], "maxconnectedgamesperuser"],
+        deprecationsPluralSingularRU("boardsizes"),
+        deprecationsPluralSingularRU("boardsizeheights"),
+        [["boardsizewidths"], false],
+        [["boardsizewidthsranked"], false],
+        [["boardsizewidthsunranked"], false],
+        deprecationsPluralSingularRU("komis"),
+        deprecationsPluralSingularRU("bans"),
+        deprecationsPluralSingularRU("speeds"),
+        deprecationsPluralSingularRU("timecontrols"),
+        minMaxDeprecationsRU("rank"),
+        minMaxDeprecationsRU("handicap"),
+        minMaxDeprecationsBlitzLiveCorrRU("maintime"),
+        minMaxDeprecationsBlitzLiveCorrRU("periods"),
+        minMaxDeprecationsBlitzLiveCorrRU("periodtime")
+    ];
+    for (const deprecatedArgvArray of deprecatedArgvArrays) {
+        const [oldNames, newNameMsg] = deprecatedArgvArray;
+        for (const oldName of oldNames) {
+            if (argv[oldName]) {
+                const beginning = `Deprecated: --${oldName} is no longer supported`;
+                const ending = `see all supported options list for details:
+                                \nhttps://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`
+                if (newNameMsg) {
+                    throw new `${beginning}, use --${newNameMsg} instead, ${ending}`;
+                } else {
+                    throw new `${beginning}, ${ending}`;
+                }
+            }
+        }
+    }
+    if (argv.komis.includes("null")) {
+        throw new `Deprecated: --${komisGRUArg} /${null}/ is 
+                    no longer supported, use --${komisGRUArg} /automatic/ instead`;
+    }
+    console.log("\n");
 
     // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
     const full_ranked_unranked_argNames = ["boardsizes", "boardsizeheights",
@@ -247,10 +285,33 @@ exports.updateFromArgv = function() {
     
     // console messages
     // C - check exports warnings:
-    checkArgvWarnings("nopause");
+    console.log(`CHECKING WARNINGS:`
+                + `\n-------------------------------------------------------`);
+    let isWarning = false;
+    for (const [rankedUnrankedArg, rankedUnranked] of args_strings_RU(argv.nopause)) {
+        // avoid infinite games
+        // TODO: if --maxpausetime gets implemented, we can remove this
+        if (!rankedUnrankedArg) {
+            isWarning = true;
+            console.log(`    Warning: Nopause setting for ${rankedUnranked} games not detected, `
+                        + `${rankedUnranked} games are likely to last forever`);
+        }
+    }
+    // warn about potentially problematic timecontrols:
+    for (const [rankedUnrankedArg, rankedUnranked] of args_strings_RU(argv.timecontrols)) {
+        for (const problematicTimecontrol of ["all", "none", "absolute"]) {
+            if (rankedUnrankedArg.includes(problematicTimecontrol)) {
+                isWarning = true;
+                console.log(`    Warning: potentially problematic time control for ${rankedUnranked} games `
+                            + `detected - ${problematicTimecontrol}: may cause unwanted time management `
+                            + `problems with users`);
+            }
+        }
+    }
+    if (!isWarning) console.log("[ SUCCESS ]\n");
 }
 
-// console messages:
+// deprecations:
 function deprecationsPluralSingularRU(name) {
     const nameSingular = name.slice(-length(name), -1);
     const oldRU = ["ranked", "unranked"];
@@ -289,53 +350,14 @@ function minMaxDeprecationsBlitzLiveCorrRU(name) {
     return [oldNames, newNamesString];
 }
 
-function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
-    const deprecatedArgvArrays = [ 
-        [["bot", "id", "botid"], "username"],
-        [["maxtotalgames"], "maxconnectedgames"],
-        [["maxactivegames"], "maxconnectedgamesperuser"],
-        deprecationsPluralSingularRU("boardsizes"),
-        deprecationsPluralSingularRU("boardsizeheights"),
-        [["boardsizewidths"], false],
-        [["boardsizewidthsranked"], false],
-        [["boardsizewidthsunranked"], false],
-        deprecationsPluralSingularRU("komis"),
-        deprecationsPluralSingularRU("bans"),
-        deprecationsPluralSingularRU("speeds"),
-        deprecationsPluralSingularRU("timecontrols"),
-        minMaxDeprecationsRU("rank"),
-        minMaxDeprecationsRU("handicap"),
-        minMaxDeprecationsBlitzLiveCorrRU("maintime"),
-        minMaxDeprecationsBlitzLiveCorrRU("periods"),
-        minMaxDeprecationsBlitzLiveCorrRU("periodtime")
-    ];
-    for (const deprecatedArgvArray of deprecatedArgvArrays) {
-        const [oldNames, newNameMsg] = deprecatedArgvArray;
-        for (const oldName of oldNames) {
-            if (optimistArgv[oldName]) {
-                const beginning = `Deprecated: --${oldName} is no longer supported`;
-                const ending = `see all supported options list for details:
-                                \nhttps://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`
-                if (newNameMsg) {
-                    throw new `${beginning}, use --${newNameMsg} instead, ${ending}`;
-                } else {
-                    throw new `${beginning}, ${ending}`;
-                }
-            }
-        }
-    }
-    for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
-        if (optimistArgv[komisGRUArg]) {
-            if (optimistArgv[komisGRUArg].split(",").includes("null")) {
-                throw new `Deprecated: --${komisGRUArg} /${null}/ is 
-                            no longer supported, use --${komisGRUArg} /automatic/ instead`;
-            }
-        }
-    }
-    console.log("\n");
+// warnings:
+function args_strings_RU(arg) {
+    const [ranked, unranked] = arg.split('/');
+    return ( [[ranked, "ranked"],
+              [unranked, "unranked"]] );
 }
 
-// ranked/unranked:
+// ranked/unranked args:
 function argObjectRU(argsString, rankedStatus, familyNameString) {
         const rankedUnrankedArgs = argsString.split('/');
         if (rankedUnrankedArgs.length !== 2) {
@@ -414,44 +436,4 @@ function minMaxNumbersFromArgsString(argsString) {
         }
     }
     return [min, max];
-}
-
-function args_strings_RU(arg) {
-    const [ranked, unranked] = arg.split('/');
-    return ( [[ranked, "ranked"],
-              [unranked, "unranked"]] );
-}
-
-function checkArgvWarnings(noPauseString) {
-    console.log(`CHECKING WARNINGS:
-                 \n-------------------------------------------------------`);
-    let isWarning = false;
-    const args_strings_RU_nopause = args_strings_RU(argv[noPauseString]);
-    for (const [rankedUnranked, r_u_string] of args_strings_RU_nopause) {
-        // avoid infinite games
-        // TODO: if --maxpausetime gets implemented, we can remove this
-        if (!rankedUnranked) {
-            isWarning = true;
-            console.log(`    Warning: Nopause setting for ${r_u_string} games, `
-                        + `${r_u_string} games are likely to last forever`);
-        }
-    }
-
-
-
-
-    // warn about potentially problematic timecontrols:
-    const pTcs = [ ["absolute", "(no period time)"],
-                   ["none", "(infinite time)"] ];
-    for (const [tc, descr] of pTcs) {
-        if (exports[r_u]["allowed_timecontrols"][tc] === true ||
-            exports[r_u]["allow_all_timecontrols"] === true) {
-            isWarning = true;
-            console.log(`    Warning: potentially problematic time control for ${r_u} games 
-                             detected -${tc}- ${descr}: may cause unwanted time management 
-                             problems with users`);
-        }
-    }
-
-    if (!isWarning) console.log("[ SUCCESS ]\n");
 }
