@@ -3,7 +3,13 @@
 const fs = require('fs')
 const console = require('console');
 
-exports.check_rejectnew = function() {};
+const checkArgs = ["rejectnew",
+                   "booleans_root",
+                   "max_root",
+                   "boolean_args_RU",
+                   "min_max_args_RU",
+                   "comma_separated_RU"];
+checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
@@ -173,8 +179,8 @@ exports.updateFromArgv = function() {
         }
     }
     if (argv.komis.includes("null")) {
-        throw new `Deprecated: --${komisGRUArg} /${null}/ is 
-                    no longer supported, use --${komisGRUArg} /automatic/ instead`;
+        throw new 'Deprecated: komis /null/ is no longer supported, '
+                  + 'use /automatic/ instead';
     }
     console.log("\n");
 
@@ -316,7 +322,7 @@ exports.updateFromArgv = function() {
 
 // deprecations:
 function deprecationsPluralSingularRU(name) {
-    const nameSingular = name.slice(-length(name), -1);
+    const nameSingular = name.slice(0, name.length - 1);
     const oldRU = ["ranked", "unranked"];
     const veryOldRU = ["", "ranked", "unranked"];
 

@@ -733,10 +733,9 @@ function UHMAEAT(arg, isMin, familyNameString, nameF, familyObject, familyNotifi
         /* 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
         /  2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
         /  3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
-        /  4) - for canadian periodtimes, don't multiply familyNotification.period_time by the number of stones
-        /       per period (already for X stones)
-        /     - But config[argNameString] is for 1 stone, so multiply it.
-        /       e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
+        /  4) - for canadian periodtimes, familyNotification.period_time is already for X stones,
+        /       so divide it by the number of stones so that we can compare it to periodtime arg (for 1 stone in all timecontrols)   
+        /       e.g. 10 minutes period time for all the 20 stones = 10*60 / 20 = 30 seconds average period time for 1 stone.*/
         let timesObject = {};
         if (familyNameString.includes("maintime")) {
             timesObject = { fischer:  [{nameF: "Initial Time", notif: familyNotification.initial_time, arg, ending},
@@ -748,8 +747,8 @@ function UHMAEAT(arg, isMin, familyNameString, nameF, familyObject, familyNotifi
             timesObject = { fischer:  [{nameF: "Increment Time", notif: familyNotification.time_increment, arg, ending}],
                             byoyomi:  [{nameF: "Period Time", notif: familyNotification.period_time, arg, ending}],
                             canadian: [{nameF: `Period Time for all the ${familyNotification.stones_per_period} stones`,
-                                        notif: familyNotification.period_time, arg: arg * familyNotification.stones_per_period,
-                                        ending: ", or change the number of stones per period"}],
+                                        notif: familyNotification.period_time / familyNotification.stones_per_period,
+                                        arg, ending: ", or change the number of stones per period"}],
                             simple:   [{nameF: "Time per move", notif: familyNotification.per_move, arg, ending}],
                             absolute: [{nameF: "Total Time", notif: familyNotification.total_time, arg, ending}] };
         }
