@@ -683,8 +683,7 @@ function isMinMaxArg(arg, minArg) {
 function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, isFakeBotRankReject, config_r_u, r_u_strings) {
     const [minArg, maxArg] = config_r_u[familyNameString].split(':');
     for (const minMaxArg of [minArg, maxArg]) {
-        const isMin = isMinMaxArg(minMaxArg, minArg);
-        const fullObject = UHMAEAT(minMaxArg, isMin, familyNameString, nameF, familyObject, familyNotification, r_u_strings);
+        const fullObject = UHMAEAT(minMaxArg, minArg, familyNameString, nameF, familyObject, familyNotification, r_u_strings);
         if (fullObject) { // exit the function if we don't reject
             if (isFakeBotRankReject) {
                 conn_log(`Automatic handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF}, but ${familyObject.MIBL.minMax} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}`);
@@ -723,11 +722,11 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function UHMAEAT(arg, isMin, familyNameString, nameF, familyObject, familyNotification, r_u_strings) {
+function UHMAEAT(arg, familyNameString, nameF, familyObject, familyNotification, r_u_strings) {
     /*// UHMAEAT: Universal Highly Modulable And Expandable Argv Tree ////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
     let ending = "";
-    const isMin = minMaxArg(arg);
+    const isMin = isMinMaxArg(arg, minArg);
     const MIBL = argMIBL(isMin);
     if ( ["maintime", "periodtime"].some(e => familyNameString.includes(e)) ) {
         /* 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
