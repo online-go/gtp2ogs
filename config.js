@@ -220,9 +220,9 @@ exports.updateFromArgv = function() {
     // 1) root args:
     exports.check_rejectnew = function () 
     {
-        if (argv.rejectnew)  return { reject: true };
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return { reject: true };
-        return { reject: false };
+        const reject = argv.rejectnew || 
+                       (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile));
+        return { reject };
     };
 
     exports.check_booleans_root = function (notif, familyNameString)

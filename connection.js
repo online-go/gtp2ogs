@@ -275,7 +275,7 @@ class Connection {
     checkChallenge(notification) {
 
         // load config.ranked or config.unranked depending on notification.ranked
-        const r_u = ranked_unranked_strings_connection(notification.ranked, notification.time_control.speed);
+        const r_u_strings = ranked_unranked_strings_connection(notification.ranked, notification.time_control.speed);
         for (let test of [this.checkChallengeMandatory,
                           //this.checkChallengeSanityChecks,
                           this.checkChallengeBooleans,
@@ -290,37 +290,54 @@ class Connection {
     }
     // Check challenge mandatory conditions
     //
-    checkChallengeMandatory(notification, r_u) {
+    checkChallengeMandatory(notification, r_u_strings) {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if (config_r_u.banned_users[notification.user[uid]]) {
+            if (config.check_comma_separated_RU(notification.user[uid], r_u_strings.r_u, "bans").reject) {
                 conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`);
-                return { reject: true, msg: `You (${uid} ${notification.user[uid]}) are banned ${r_u_strings.for_r_u_games} on this bot by bot admin, you may try changing the ranked/unranked setting` };
+                return { reject: true, msg: `You (${uid} ${notification.user[uid]}) are banned `
+                                            + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
+                                            + `you may try changing the ranked/unranked setting` };
             }
         }
+
+
+
+
         const resultMinMaxRank = genericMinMaxRejectResult("rank", "rank", notification.user.ranking, false, config_r_u, r_u_strings);
         if (resultMinMaxRank) return resultMinMaxRank;
 
+
+
+        
+
         // check bot is available, else don't mislead user:
-        if (config.check_rejectnew) {
+        if (config.check_rejectnew().reject) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
             if (config.DEBUG) console.log(`# of connected games = ${number_connected_games}`);
-            if (number_connected_games >= config.maxconnectedgames) {
+            const check_max = config.check_max_root(number_connected_games, "maxconnectedgames");
+            if (check_max.reject) {
                 conn_log(`${number_connected_games} games being played, maximum is ${config.maxconnectedgames}`);
-                return { reject: true, msg: `Currently, ${number_connected_games} games are being played by this bot, maximum is ${config.maxconnectedgames} (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played), try again later` };
+                return { reject: true, msg: `Currently, ${number_connected_games} games are being played by this `
+                                            + `bot, maximum is ${check_max.maxAllowed} (if you see this message `
+                                            + `and you dont see any game on the bot profile page, it is because `
+                                            + `private game(s) are being played), try again later` };
             }
         } else if (config.DEBUG) {
             console.log("There are no connected games");
         }
         const connected_games_per_user = this.gamesForPlayer(notification.user.id);
-        if (connected_games_per_user >= config.maxconnectedgamesperuser) {
+        const check_max_per_user = config.check_max_root(connected_games_per_user, "maxconnectedgamesperuser");
+        if (check_max_per_user.reject) {
             conn_log("Too many connected games for this user.");
-            return { reject: true, msg: `Maximum number of simultaneous games allowed per player against this bot ${config.maxconnectedgamesperuser}, please reduce your number of simultaneous games against this bot, and try again` };
+            return { reject: true, msg: `Maximum number of simultaneous games allowed per player against `
+                                        + `this bot ${check_max_per_user.maxAllowed}, please reduce your `
+                                        + `number of simultaneous games against this bot, and try again` };
         }
 
         return { reject: false }; // OK !
@@ -337,7 +354,7 @@ class Connection {
     //}
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification, r_u) {
+    checkChallengeBooleans(notification, r_u_strings) {
 
         const for_r_u_g_empty = "";
         const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g_empty],
@@ -371,7 +388,7 @@ class Connection {
     }
     // Check challenge allowed families settings are allowed
     //
-    checkChallengeAllowedFamilies(notification, r_u) {
+    checkChallengeAllowedFamilies(notification, r_u_strings) {
 
         const testsAllowedFamilies = [ ["boardsizes", "Board size WIDTHS", notification.width],
                                        ["boardsizeheights", "Board size HEIGHT", notification.height],
@@ -415,7 +432,7 @@ class Connection {
     }
     // Check challenge settings are allowed
     //
-    checkChallengeSettings(notification, r_u) {
+    checkChallengeSettings(notification, r_u_strings) {
 
         // TODO: modify or remove fakebotrank code whenever server sends us automatic handicap 
         //       notification.handicap different from -1.
