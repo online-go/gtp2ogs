@@ -262,7 +262,7 @@ exports.updateFromArgv = function() {
         const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
         return { reject: { maintime:   minMaxReject(maintimeArgs, notifMaintime),
                            periods:    minMaxReject(periodsArgs, notifPeriods),
-                           periodtime: minMaxReject(periodtimeArgs, notifPeriodtime) };
+                           periodtime: minMaxReject(periodtimeArgs, notifPeriodtime) }
                };
     };
 
