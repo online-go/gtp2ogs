@@ -275,7 +275,7 @@ class Connection {
     checkChallenge(notification) {
 
         // load config.ranked or config.unranked depending on notification.ranked
-        const r_u_strings = generate_r_u_strings_connection(notification.ranked, notification.time_control.speed);
+        const r_u_strings = generate_ranked_unranked_strings_connection(notification.ranked, notification.time_control.speed);
         const config_r_u = config[r_u_strings.r_u];
         for (let test of [this.checkChallengeMandatory,
                           //this.checkChallengeSanityChecks,
@@ -638,7 +638,7 @@ function conn_log() {
     }
 }
 
-function generate_r_u_strings_connection(rankedSetting, speedSetting) {
+function generate_ranked_unranked_strings_connection(rankedSetting, speedSetting) {
     const r_u = rankedSetting ? "unranked" : "ranked";
     return { r_u,
              for_r_u_games: `for ${r_u} games`,

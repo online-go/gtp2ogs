@@ -118,17 +118,16 @@ class Game {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            const r_u_strings = generate_r_u_strings_game(this.state.ranked);
-            const config_r_u = config[r_u_strings.r_u];
-            if (config_r_u.nopause) {
-                if (clock.pause && clock.pause.paused && clock.pause.pause_control
+            const notifPause = (clock.pause && clock.pause.paused && clock.pause.pause_control
                 && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                    if (config.DEBUG) {
-                        this.log(`Pausing not allowed ${r_u_strings.for_r_u_games}. Resuming game.`);
-                    }
-                    this.sendChat(`Pausing not allowed ${r_u_strings.for_r_u_games}. Resuming game.`); 
-                    this.resumeGame();
+                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]);
+            
+            if (config.check_boolean_args_RU(notifPause, this.state.ranked, "nopause")) {
+                const r_u = ranked_unranked_strings_game(rankedStatus);
+                const noPauseMsg = `Pausing not allowed ${r_u.for_ranked_unranked_games}. Resuming game.`;
+                if (config.DEBUG) this.log(noPauseMsg);
+                this.sendChat(noPauseMsg); 
+                this.resumeGame();
                 }
             }
 
@@ -515,9 +514,9 @@ function encodeMove(move) {
         return "..";
     return num2char(move['x']) + num2char(move['y']);
 }
-function generate_r_u_strings_game(rankedSetting) {
-    const r_u = rankedSetting ? "unranked" : "ranked";
-    return { r_u, for_r_u_games: `for ${r_u} games` };
+function ranked_unranked_strings_game(rankedStatus) {
+    const rankedUnranked = rankedStatus ? "unranked" : "ranked";
+    return { rankedUnranked, for_ranked_unranked_games: `for ${rankedUnranked} games` };
 }
 
 Game.moves_processing = 0;

@@ -240,19 +240,19 @@ exports.updateFromArgv = function() {
     // 2) ranked/unranked args:
     exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const allowed = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const allowed = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
         return { reject: Boolean(allowed) && notif }; // "false" -> false
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const args = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const args = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
         return minMaxReject(args, notif);
     };
 
     exports.check_min_max_blitz_live_corr_args_RU = function (notifMaintime, notifPeriods, notifPeriodtime, rankedStatus, familyNameString)
     {
-        const args = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const args = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
         if (timeSettings.length !== 3) {
             throw new `Error in ${familyNameString} time settings: unexpected use of the `
@@ -269,7 +269,7 @@ exports.updateFromArgv = function() {
 
     exports.check_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
-        const argsString = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
+        const argsString = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
             if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
                 // numbers families
@@ -375,7 +375,7 @@ function args_strings_RU(arg) {
 }
 
 // ranked/unranked args:
-function argObjectRU(argsString, rankedStatus, familyNameString) {
+function argStringsRU(argsString, rankedStatus, familyNameString) {
         const rankedUnrankedArgs = argsString.split('/');
         if (rankedUnrankedArgs.length !== 2) {
             throw new `Error in in ${familyNameString} : unexpected use of the `
