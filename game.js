@@ -118,9 +118,14 @@ class Game {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            const notifPause = (clock.pause && clock.pause.paused && clock.pause.pause_control
-                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]);
+            const notifPause = (clock.pause 
+                && clock.pause.paused 
+                && clock.pause.pause_control
+                && !clock.pause.pause_control["stone-removal"] 
+                && !clock.pause.pause_control.system
+                && !clock.pause.pause_control.weekend
+                && !clock.pause.pause_control["vacation-" + clock.black_player_id] 
+                && !clock.pause.pause_control["vacation-" + clock.white_player_id]);
             
             if (config.check_boolean_args_RU(notifPause, this.state.ranked, "nopause")) {
                 const r_u = ranked_unranked_strings_game(rankedStatus);
