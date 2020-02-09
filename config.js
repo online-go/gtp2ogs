@@ -251,55 +251,63 @@ exports.updateFromArgv = function() {
 }
 
 // console messages:
-/*function minMaxDeprecations(name, isBlitzLiveCorr) {
-    let oldMinMaxNames = [`min${name}`, `max${name}`];
-    let newNamesSentence = `${name} min:max`;
-    if (isBlitzLiveCorr) {
-        for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-            oldMinMaxNames.push([`min${name}${blitzLiveCorr}`, `max${name}${blitzLiveCorr}`]);
-            newNamesSentence = newNamesSentence + `, --${name}${blitzLiveCorr} min:max`;
-        }
-    }
+function deprecationsPluralSingularRU(name) {
+    const nameSingular = name.slice(-length(name), -1);
+    const oldRU = ["ranked", "unranked"];
+    const veryOldRU = ["", "ranked", "unranked"];
 
-    return [oldMinMaxNames, newNamesSentence];
+    const oldNames = oldRU.map( str => `${name}${str}` )
+                          .concat(veryOldRU.map( str => `${nameSingular}${str}` ));
+
+    const newName = `${name} min:max/min:max syntax for ranked/unranked games`;
+    return [oldNames, newName];
+}
+
+function minMaxDeprecationsRU(name) {
+    const oldRU = ["", "ranked", "unranked"];
+    const veryOldRU = ["ranked", "unranked"];
+    let oldNames = [];
+    for (const minMax of ["min", "max"]) {
+        oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${str}` ))
+                           .concat(veryOldRU.map( str => `${minMax}${str}${name}` ));
+    } 
+    const newName = `${name} min:max/min:max syntax for ranked/unranked games`;
+    return [oldNames, newName];
+}
+
+function minMaxDeprecationsBlitzLiveCorrRU(name) {
+    const oldRU = ["", "ranked", "unranked"];
+    let oldNames = [];
+    for (const minMax of ["min", "max"]) {
+        oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${str}` ));
+        for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
+            oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${blitzLiveCorr}${str}` ));
+        }
+    
+    const newNamesString = `${name}blitz, --${name}live, --${name}corr, `
+                           + `with the min:max/min:max syntax for ranked/unranked games`;
+    return [oldNames, newNamesString];
 }
 
 function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
     const deprecatedArgvArrays = [ 
         [["bot", "id", "botid"], "username"],
-        [["maxunrankedhandicap"], "maxhandicapunranked"],
         [["maxtotalgames"], "maxconnectedgames"],
         [["maxactivegames"], "maxconnectedgamesperuser"],
-        [["ban"], "bans"],
-        [["banranked"], "bansranked"],
-        [["banunranked"], "bansunranked"],
-        [["boardsize"], "boardsizes"],
-        [["boardsizeranked"], "boardsizesranked"],
-        [["boardsizeunranked"], "boardsizesunranked"],
-        [["komi"], "komis"],
-        [["komiranked"], "komisranked"],
-        [["komiunranked"], "komisunranked"],
-        [["speed"], "speeds"],
-        [["speedranked"], "speedsranked"],
-        [["speedunranked"], "speedsunranked"],
-        [["timecontrol"], "timecontrols"],
-        [["timecontrolranked"], "timecontrolsranked"],
-        [["timecontrolunranked"], "timecontrolsunranked"],
-        minMaxDeprecations("rank", false),
-        minMaxDeprecations("rankranked", false),
-        minMaxDeprecations("rankunranked", false),
-        minMaxDeprecations("handicap", false),
-        minMaxDeprecations("handicapranked", false),
-        minMaxDeprecations("handicapunranked", false),
-        minMaxDeprecations("maintime", true),
-        minMaxDeprecations("maintimeranked", true),
-        minMaxDeprecations("maintimeunranked", true),
-        minMaxDeprecations("periodtime", true),
-        minMaxDeprecations("periodtimeranked", true),
-        minMaxDeprecations("periodtimeunranked", true),
-        minMaxDeprecations("periods", true),
-        minMaxDeprecations("periodsranked", true),
-        minMaxDeprecations("periodsunranked", true),
+        deprecationsPluralSingularRU("boardsizes"),
+        deprecationsPluralSingularRU("boardsizeheights"),
+        [["boardsizewidths"], false],
+        [["boardsizewidthsranked"], false],
+        [["boardsizewidthsunranked"], false],
+        deprecationsPluralSingularRU("komis"),
+        deprecationsPluralSingularRU("bans"),
+        deprecationsPluralSingularRU("speeds"),
+        deprecationsPluralSingularRU("timecontrols"),
+        minMaxDeprecationsRU("rank"),
+        minMaxDeprecationsRU("handicap"),
+        minMaxDeprecationsBlitzLiveCorrRU("maintime"),
+        minMaxDeprecationsBlitzLiveCorrRU("periods"),
+        minMaxDeprecationsBlitzLiveCorrRU("periodtime")
     ];
     for (const deprecatedArgvArray of deprecatedArgvArrays) {
         const [oldNames, newNameMsg] = deprecatedArgvArray;
@@ -318,16 +326,14 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
     }
     for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
         if (optimistArgv[komisGRUArg]) {
-            for (const komi of ["auto","null"]) {
-                if (optimistArgv[komisGRUArg].split(",").includes(komi)) {
-                    throw new `Deprecated: --${komisGRUArg} /${komi}/ is 
-                               no longer supported, use --${komisGRUArg} /automatic/ instead`;
-                }
+            if (optimistArgv[komisGRUArg].split(",").includes("null")) {
+                throw new `Deprecated: --${komisGRUArg} /${null}/ is 
+                            no longer supported, use --${komisGRUArg} /automatic/ instead`;
             }
         }
     }
     console.log("\n");
-}*/
+}
 
 // ranked/unranked:
 function argObjectRU(argsString, rankedStatus, familyNameString) {
