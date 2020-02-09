@@ -310,7 +310,7 @@ class Connection {
 
 
 
-        
+
 
         // check bot is available, else don't mislead user:
         if (config.check_rejectnew().reject) {
@@ -369,8 +369,9 @@ class Connection {
                                        notification.pause_on_weekends, for_r_u_g_full],
                                       [config_r_u.noautohandicap, "-Automatic- handicap is",
                                        notification.handicap === -1, for_r_u_g_full],
-                                      [config_r_u.boardsizeheightsnonsquareonly, "This bot allows non-square boardsizes (for example: 19x18 and 18x19), "
-                                                                                 + "but square boardsizes (for example: 19x19 and 18x18), ",
+                                      [config_r_u.boardsizeheightsnonsquareonly,
+                                       "This bot allows non-square boardsizes (for example: 19x18 and 18x19), "
+                                       + "but square boardsizes (for example: 19x19 and 18x18), ",
                                        notification.width !== notification.height, for_r_u_g_full]
                                     ];
 

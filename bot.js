@@ -205,12 +205,16 @@ class Bot {
                 // Restarting the bot can make a time left so small the bot makes a rushed terrible move. If we have less than half a period
                 // to think and extra periods left, lets go ahead and use the period up.
                 //
-                if (state.clock.black_time.thinking_time === 0 && state.clock.black_time.periods > 1 && black_timeleft < state.time_control.period_time / 2) {
+                if (state.clock.black_time.thinking_time === 0 
+                    && state.clock.black_time.periods > 1 
+                    && black_timeleft < state.time_control.period_time / 2) {
                     black_timeleft = Math.max( Math.floor(state.time_control.period_time - black_offset) + state.time_control.period_time, 0 );
                     state.clock.black_time.periods--;
                 }
 
-                if (state.clock.white_time.thinking_time === 0 && state.clock.white_time.periods > 1 && white_timeleft < state.time_control.period_time / 2) {
+                if (state.clock.white_time.thinking_time === 0 
+                    && state.clock.white_time.periods > 1 
+                    && white_timeleft < state.time_control.period_time / 2) {
                     white_timeleft = Math.max( Math.floor(state.time_control.period_time - white_offset) + state.time_control.period_time, 0 );
                     state.clock.white_time.periods--;
                 }
@@ -350,8 +354,8 @@ class Bot {
 
         let have_initial_state = false;
         if (state.initial_state) {
-            let black = decodeMoves(state.initial_state.black, state.width);
-            let white = decodeMoves(state.initial_state.white, state.width);
+            const black = decodeMoves(state.initial_state.black, state.width);
+            const white = decodeMoves(state.initial_state.white, state.width);
             have_initial_state = (black.length || white.length);
 
             for (let i=0; i < black.length; ++i)
@@ -447,14 +451,14 @@ class Bot {
 
         this.command(cmd, (line) => {
             line = typeof(line) === "string" ? line.toLowerCase() : null;
-            let parts = line.split(/ +/);
+            const parts = line.split(/ +/);
             let moves = [];
 
             for (let i=0; i < parts.length; i++) {
-                let move = parts[i];
+                const move = parts[i];
 
                 let resign = move === 'resign';
-                let pass = move === 'pass';
+                const pass = move === 'pass';
                 let x=-1, y=-1;
                 if (!resign && !pass) {
                     if (move && move[0]) {
@@ -507,8 +511,8 @@ class Bot {
 
 function decodeMoves(move_obj, board_size) {
     let ret = [];
-    let width = board_size;
-    let height = board_size;
+    const width = board_size;
+    const height = board_size;
 
     /*
     if (DEBUG) {
@@ -516,15 +520,15 @@ function decodeMoves(move_obj, board_size) {
     }
     */
 
-    let decodeSingleMoveArray = (arr) => {
+    const decodeSingleMoveArray = (arr) => {
         let obj = {
             x         : arr[0],
             y         : arr[1],
             timedelta : arr.length > 2 ? arr[2] : -1,
             color     : arr.length > 3 ? arr[3] : 0,
         }
-        let extra = arr.length > 4 ? arr[4] : {};
-        for (let k in extra) {
+        const extra = arr.length > 4 ? arr[4] : {};
+        for (const k in extra) {
             obj[k] = extra[k];
         }
         return obj;
@@ -536,7 +540,7 @@ function decodeMoves(move_obj, board_size) {
         }
         else {
             for (let i=0; i < move_obj.length; ++i) {
-                let mv = move_obj[i];
+                const mv = move_obj[i];
                 if (mv instanceof Array) {
                     ret.push(decodeSingleMoveArray(mv));
                 }
@@ -550,9 +554,9 @@ function decodeMoves(move_obj, board_size) {
 
         if (/[a-zA-Z][0-9]/.test(move_obj)) {
             /* coordinate form, used from human input. */
-            let move_string = move_obj;
+            const move_string = move_obj;
 
-            let moves = move_string.split(/([a-zA-Z][0-9]+|[.][.])/);
+            const moves = move_string.split(/([a-zA-Z][0-9]+|[.][.])/);
             for (let i=0; i < moves.length; ++i) {
                 if (i%2) { /* even are the 'splits', which should always be blank unless there is an error */
                     let x = pretty_char2num(moves[i][0]);
@@ -568,7 +572,7 @@ function decodeMoves(move_obj, board_size) {
             }
         } else {
             /* Pure letter encoded form, used for all records */
-            let move_string = move_obj;
+            const move_string = move_obj;
 
             for (let i=0; i < move_string.length-1; i += 2) {
                 let edited = false;
