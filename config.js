@@ -260,10 +260,10 @@ exports.updateFromArgv = function() {
                       + `${timeSettings.length}`;
         }
         const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
-        return { reject: [ { maintime:   minMaxReject(maintimeArgs, notifMaintime) },
-                           { periods:    minMaxReject(periodsArgs, notifPeriods) },
-                           { periodtime: minMaxReject(periodtimeArgs, notifPeriodtime) }
-                         ] };
+        return { reject: { maintime:   minMaxReject(maintimeArgs, notifMaintime),
+                           periods:    minMaxReject(periodsArgs, notifPeriods),
+                           periodtime: minMaxReject(periodtimeArgs, notifPeriodtime) };
+               };
     };
 
     exports.check_comma_separated_RU = function (notif, rankedStatus, familyNameString)
