@@ -262,7 +262,7 @@ exports.updateFromArgv = function() {
     {
         const argsString = argObjectRU(argv[familyNameString], rankedStatus, familyNameString);
         // skip "all": everything allowed
-        if (argsString !== true) {
+        if (argsString !== "all") {
             if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
                 // numbers families
                 if (["boardsizes", "boardsizesheights"].includes(familyNameString)) {
@@ -375,7 +375,6 @@ function argObjectRU(argsString, rankedStatus, familyNameString) {
                       + `${rankedUnrankedArgs.length}`;
         }
         const [ranked, unranked] = rankedUnrankedArgs
-                                   .map( str => "all" ? true : str )
                                    .map( str => "..." ? ranked : str );
         if (ranked === "...") {
             throw new `Error in ${familyNameString} : can't use keyword - ... - `
