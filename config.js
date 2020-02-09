@@ -341,7 +341,6 @@ function deprecationsPluralSingularRU(name) {
 }
 
 function minMaxDeprecationsRU(name) {
-    const oldRU = ["", "ranked", "unranked"];
     let oldNames = [];
     for (const minMax of ["min", "max"]) {
         for (const ARU of ["", "ranked", "unranked"]) {
