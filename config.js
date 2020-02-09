@@ -65,16 +65,19 @@ exports.updateFromArgv = function() {
         .describe('publiconly', 'Only accept public (non-private) matches')
         // 2) CHECK CHALLENGE ARGS RANKED/UNRANKED:
         //     A) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
-        .describe('boardsizes', 'Board size(s) to accept for ranked / unranked games')
+        //         A1) NUMBER FAMILIES:
+        .describe('boardsizes', 'Board size(s) square (if --boardsizeheights is not specified), '
+                                + 'or board size width(s) (if it is specified), '
+                                + 'to accept for ranked / unranked games')
         .string('boardsizes')
         .default('boardsizes', '9,13,19/...')
-        .describe('boardsizewidths', 'For custom board sizes, boardsize width(s) to accept for ranked / unranked games')
-        .string('boardsizewidths')
-        .describe('boardsizeheights', 'For custom board sizes, boardsize height(s) to accept for ranked / unranked games')
+        .describe('boardsizeheights', 'Allows non square boardsizes if specified, and specifies '
+                                      + 'Board size height(s) to accept for ranked / unranked games')
         .string('boardsizeheights')
         .describe('komis', 'Allowed komi values for ranked / unranked games')
         .string('komis')
         .default('komis', 'automatic/...')
+        //         A2) WORDS FAMILIES:
         .describe('bans', 'Usernames or IDs to ban from ranked / unranked games')
         .string('bans')
         .describe('rules', 'Rule(s) to accept')
