@@ -374,8 +374,10 @@ function argObjectRU(argsString, rankedStatus, familyNameString) {
                       + `ranked/unranked separator : expected 2 parts, not `
                       + `${rankedUnrankedArgs.length}`;
         }
-        const [ranked, unranked] = rankedUnrankedArgs
-                                   .map( str => "..." ? ranked : str );
+        let [ranked, unranked] = rankedUnrankedArgs;
+        if (unranked === "...") {
+            unranked = ranked;
+        }
         if (ranked === "...") {
             throw new `Error in ${familyNameString} : can't use keyword - ... - `
                       + `for the ranked setting, only for the unranked setting.`
