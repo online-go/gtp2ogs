@@ -133,7 +133,6 @@ class Game {
                 if (config.DEBUG) this.log(noPauseMsg);
                 this.sendChat(noPauseMsg); 
                 this.resumeGame();
-                }
             }
 
             //this.log("Clock: ", JSON.stringify(clock));
