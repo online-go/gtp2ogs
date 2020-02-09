@@ -283,7 +283,7 @@ function minMaxDeprecationsBlitzLiveCorrRU(name) {
         for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
             oldNames = oldNames.concat(oldRU.map( str => `${minMax}${name}${blitzLiveCorr}${str}` ));
         }
-    
+    }
     const newNamesString = `${name}blitz, --${name}live, --${name}corr, `
                            + `with the min:max/min:max syntax for ranked/unranked games`;
     return [oldNames, newNamesString];
