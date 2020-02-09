@@ -275,14 +275,13 @@ class Connection {
     checkChallenge(notification) {
 
         // load config.ranked or config.unranked depending on notification.ranked
-        const r_u_strings = generate_ranked_unranked_strings_connection(notification.ranked, notification.time_control.speed);
-        const config_r_u = config[r_u_strings.r_u];
+        const r_u = ranked_unranked_strings_connection(notification.ranked, notification.time_control.speed);
         for (let test of [this.checkChallengeMandatory,
                           //this.checkChallengeSanityChecks,
                           this.checkChallengeBooleans,
                           this.checkChallengeAllowedFamilies,
                           this.checkChallengeSettings]) {
-            const result = test.bind(this)(notification, config_r_u, r_u_strings);
+            const result = test.bind(this)(notification, r_u);
             if (result.reject) return result;
         }
 
@@ -291,7 +290,7 @@ class Connection {
     }
     // Check challenge mandatory conditions
     //
-    checkChallengeMandatory(notification, config_r_u, r_u_strings) {
+    checkChallengeMandatory(notification, r_u) {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
@@ -329,7 +328,7 @@ class Connection {
     }
     // Check challenge sanity checks
     //
-    //checkChallengeSanityChecks(notification, config_r_u, r_u_strings) {
+    //checkChallengeSanityChecks(notification, r_u) {
 
         // TODO: add all sanity checks here of all unhandled notifications
 
@@ -338,7 +337,7 @@ class Connection {
     //}
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification, config_r_u, r_u_strings) {
+    checkChallengeBooleans(notification, r_u) {
 
         const for_r_u_g_empty = "";
         const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g_empty],
@@ -372,7 +371,7 @@ class Connection {
     }
     // Check challenge allowed families settings are allowed
     //
-    checkChallengeAllowedFamilies(notification, config_r_u, r_u_strings) {
+    checkChallengeAllowedFamilies(notification, r_u) {
 
         const testsAllowedFamilies = [ ["boardsizes", "Board size WIDTHS", notification.width],
                                        ["boardsizeheights", "Board size HEIGHT", notification.height],
@@ -416,7 +415,7 @@ class Connection {
     }
     // Check challenge settings are allowed
     //
-    checkChallengeSettings(notification, config_r_u, r_u_strings) {
+    checkChallengeSettings(notification, r_u) {
 
         // TODO: modify or remove fakebotrank code whenever server sends us automatic handicap 
         //       notification.handicap different from -1.
@@ -638,11 +637,10 @@ function conn_log() {
     }
 }
 
-function generate_ranked_unranked_strings_connection(rankedSetting, speedSetting) {
+function ranked_unranked_strings_connection(rankedStatus) {
     const r_u = rankedSetting ? "unranked" : "ranked";
     return { r_u,
              for_r_u_games: `for ${r_u} games`,
-             for_blc_r_u_games: `for ${speedSetting} ${r_u} games`,
              from_r_u_games: `from ${r_u} games` };
 }
 

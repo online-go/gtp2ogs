@@ -126,7 +126,7 @@ class Game {
                 && !clock.pause.pause_control.weekend
                 && !clock.pause.pause_control["vacation-" + clock.black_player_id] 
                 && !clock.pause.pause_control["vacation-" + clock.white_player_id]);
-            
+
             if (config.check_boolean_args_RU(notifPause, this.state.ranked, "nopause")) {
                 const r_u = ranked_unranked_strings_game(rankedStatus);
                 const noPauseMsg = `Pausing not allowed ${r_u.for_ranked_unranked_games}. Resuming game.`;
