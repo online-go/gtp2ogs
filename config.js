@@ -219,9 +219,8 @@ exports.updateFromArgv = function() {
     // 1) root args:
     exports.check_rejectnew = function () 
     {
-        const reject = argv.rejectnew || 
-                       (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile));
-        return { reject };
+        return { reject: argv.rejectnew || 
+                         (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) };
     };
 
     exports.check_booleans_root = function (notif, familyNameString)
