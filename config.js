@@ -159,8 +159,8 @@ exports.updateFromArgv = function() {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
                 const beginning = `Deprecated: --${oldName} is no longer supported`;
-                const ending = `see all supported options list for details:
-                                \nhttps://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`
+                const ending = `see all supported options list for details:`
+                                + `\nhttps://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md`
                 if (newNameMsg) {
                     throw new `${beginning}, use --${newNameMsg} instead, ${ending}`;
                 } else {
