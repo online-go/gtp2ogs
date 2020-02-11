@@ -238,19 +238,19 @@ exports.updateFromArgv = function() {
     // 2) ranked/unranked args:
     exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const allowed = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
+        const allowed = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
         return { reject: Boolean(allowed) && notif }; // "false" -> false
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const args = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
-        return minMaxReject(args, notif);
+        const args = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
+        return checkMinMaxReject(args, notif);
     };
 
     exports.check_min_max_blitz_live_corr_args_RU = function (notifMaintime, notifPeriods, notifPeriodtime, rankedStatus, familyNameString)
     {
-        const args = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
+        const args = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
         if (timeSettings.length !== 3) {
             throw new `Error in ${familyNameString} time settings: unexpected use of the `
@@ -258,22 +258,22 @@ exports.updateFromArgv = function() {
                       + `${timeSettings.length}`;
         }
         const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
-        return { reject: { maintime:   minMaxReject(maintimeArgs, notifMaintime),
-                           periods:    minMaxReject(periodsArgs, notifPeriods),
-                           periodtime: minMaxReject(periodtimeArgs, notifPeriodtime)
+        return { reject: { maintime:   checkMinMaxReject(maintimeArgs, notifMaintime),
+                           periods:    checkMinMaxReject(periodsArgs, notifPeriods),
+                           periodtime: checkMinMaxReject(periodtimeArgs, notifPeriodtime)
                          }
                };
     };
 
     exports.check_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
-        const argsString = argStringsRU(argv[familyNameString], rankedStatus, familyNameString);
+        const argsString = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
             if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
                 // numbers families
                 if (["boardsizes", "boardsizesheights"].includes(familyNameString)) {
                     // check widths or heights
-                    const allArgsNumbers = allArgsNumbersFromArgsString(argsString);
+                    const allArgsNumbers = getAllArgsNumbers(argsString);
                     const reject = !allArgsNumbers.includes(Number(notif));
                     const allArgsStrings = allArgsNumbers.join(', ');
                     return { reject,
@@ -283,8 +283,8 @@ exports.updateFromArgv = function() {
                     return { reject,
                              argsString };
                 } else {
-                    const [minAllowed, maxAllowed] = minMaxNumbersFromArgsString(argsString);
-                    const reject = minMaxReject(`${minAllowed}:${maxAllowed}`, notif);
+                    const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
+                    const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
                     return { reject,
                              argsString };
                 }
@@ -303,7 +303,7 @@ exports.updateFromArgv = function() {
     console.log(`CHECKING WARNINGS:`
                 + `\n-------------------------------------------------------`);
     let isWarning = false;
-    for (const [rankedUnrankedArg, rankedUnranked] of args_strings_RU(argv.nopause)) {
+    for (const [rankedUnrankedArg, rankedUnranked] of get_args_arrays_ranked_and_unranked(argv.nopause)) {
         // avoid infinite games
         // TODO: if --maxpausetime gets implemented, we can remove this
         if (!Boolean(rankedUnrankedArg)) {
@@ -313,7 +313,7 @@ exports.updateFromArgv = function() {
         }
     }
     // warn about potentially problematic timecontrols:
-    for (const [rankedUnrankedArg, rankedUnranked] of args_strings_RU(argv.timecontrols)) {
+    for (const [rankedUnrankedArg, rankedUnranked] of get_args_arrays_ranked_and_unranked(argv.timecontrols)) {
         for (const problematicTimecontrol of ["all", "none", "absolute"]) {
             if (rankedUnrankedArg.includes(problematicTimecontrol)) {
                 isWarning = true;
@@ -367,14 +367,14 @@ function minMaxDeprecationsBlitzLiveCorrRU(blitzLiveCorr) {
 }
 
 // warnings:
-function args_strings_RU(arg) {
+function get_args_arrays_ranked_and_unranked(arg) {
     const [ranked, unranked] = arg.split('/');
     return ( [[ranked, "ranked"],
               [unranked, "unranked"]] );
 }
 
 // ranked/unranked args:
-function argStringsRU(argsString, rankedStatus, familyNameString) {
+function create_arg_strings_ranked_or_unranked(argsString, rankedStatus, familyNameString) {
         const rankedUnrankedArgs = argsString.split('/');
         if (rankedUnrankedArgs.length !== 2) {
             throw new `Error in in ${familyNameString} : unexpected use of the `
@@ -411,7 +411,7 @@ function parseRank(arg) {
     }
 }
 
-function minMaxReject(argsString, notif) {
+function checkMinMaxReject(argsString, notif) {
     const [minAllowed, maxAllowed] = argsString.split(':')
                                                .map( str => Number(str) );
     const minReject = notif < minAllowed;
@@ -425,7 +425,7 @@ function minMaxReject(argsString, notif) {
              maxAllowed };
 }
 
-function allArgsNumbersFromArgsString(argsString) {
+function getAllArgsNumbers(argsString) {
     let allArgs = [];
     for (const arg of argsString.split(',')) {
         const [minRange, maxRange] = arg.split(':')
@@ -437,7 +437,7 @@ function allArgsNumbersFromArgsString(argsString) {
     return allArgs;
 }
 
-function minMaxNumbersFromArgsString(argsString) {
+function getMinMaxNumbers(argsString) {
     let min = Infinity;
     let max = -Infinity;
     for (const arg of argsString.split(',')) {
