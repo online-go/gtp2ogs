@@ -535,7 +535,7 @@ function checkExportsWarnings(noPauseString) {
     // avoid infinite games
     // TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
     for (let r_u of ["ranked","unranked"]) {
-        if (!exports[noPauseString] || !exports[`${noPauseString}${r_u}`]) {
+        if (!exports[noPauseString] && !exports[`${noPauseString}${r_u}`]) {
             isWarning = true;
             console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`); 
         }
