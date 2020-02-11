@@ -306,7 +306,7 @@ exports.updateFromArgv = function() {
     for (const [rankedUnrankedArg, rankedUnranked] of args_strings_RU(argv.nopause)) {
         // avoid infinite games
         // TODO: if --maxpausetime gets implemented, we can remove this
-        if (!rankedUnrankedArg) {
+        if (!Boolean(rankedUnrankedArg)) {
             isWarning = true;
             console.log(`    Warning: Nopause setting for ${rankedUnranked} games not detected, `
                         + `${rankedUnranked} games are likely to last forever`);
