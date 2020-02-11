@@ -139,19 +139,19 @@ exports.updateFromArgv = function() {
         [["bot", "id", "botid"], "username"],
         [["maxtotalgames"], "maxconnectedgames"],
         [["maxactivegames"], "maxconnectedgamesperuser"],
-        deprecationsPluralSingularRU("boardsizes"),
-        deprecationsPluralSingularRU("boardsizeheights"),
+        createDeprecationsPluralAndSingularRU("boardsizes"),
+        createDeprecationsPluralAndSingularRU("boardsizeheights"),
         [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked"], false],
-        deprecationsPluralSingularRU("komis"),
-        deprecationsPluralSingularRU("bans"),
-        deprecationsPluralSingularRU("speeds"),
-        deprecationsPluralSingularRU("timecontrols"),
-        minMaxDeprecationsRU("rank"),
-        minMaxDeprecationsRU("handicap"),
+        createDeprecationsPluralAndSingularRU("komis"),
+        createDeprecationsPluralAndSingularRU("bans"),
+        createDeprecationsPluralAndSingularRU("speeds"),
+        createDeprecationsPluralAndSingularRU("timecontrols"),
+        createMinMaxDeprecationsRU("rank"),
+        createMinMaxDeprecationsRU("handicap"),
         [["maintime", "periods", "periodtime"], false],
-        minMaxDeprecationsBlitzLiveCorrRU("blitz"),
-        minMaxDeprecationsBlitzLiveCorrRU("live"),
-        minMaxDeprecationsBlitzLiveCorrRU("corr"),
+        createMinMaxDeprecationsBlitzLiveCorrRU("blitz"),
+        createMinMaxDeprecationsBlitzLiveCorrRU("live"),
+        createMinMaxDeprecationsBlitzLiveCorrRU("corr"),
         [["nopauseranked", "nopauseunranked"], "nopause with / to separate ranked and unranked settings"]
     ];
     for (const deprecatedArgvArray of deprecatedArgvArrays) {
@@ -238,19 +238,19 @@ exports.updateFromArgv = function() {
     // 2) ranked/unranked args:
     exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const allowed = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
+        const allowed = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         return { reject: Boolean(allowed) && notif }; // "false" -> false
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
-        const args = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
+        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         return checkMinMaxReject(args, notif);
     };
 
     exports.check_min_max_blitz_live_corr_args_RU = function (notifMaintime, notifPeriods, notifPeriodtime, rankedStatus, familyNameString)
     {
-        const args = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
+        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
         if (timeSettings.length !== 3) {
             throw new `Error in ${familyNameString} time settings: unexpected use of the `
@@ -267,7 +267,7 @@ exports.updateFromArgv = function() {
 
     exports.check_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
-        const argsString = create_arg_strings_ranked_or_unranked(argv[familyNameString], rankedStatus, familyNameString);
+        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
             if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
                 // numbers families
@@ -303,7 +303,7 @@ exports.updateFromArgv = function() {
     console.log(`CHECKING WARNINGS:`
                 + `\n-------------------------------------------------------`);
     let isWarning = false;
-    for (const [rankedUnrankedArg, rankedUnranked] of get_args_arrays_ranked_and_unranked(argv.nopause)) {
+    for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.nopause)) {
         // avoid infinite games
         // TODO: if --maxpausetime gets implemented, we can remove this
         if (!Boolean(rankedUnrankedArg)) {
@@ -313,7 +313,7 @@ exports.updateFromArgv = function() {
         }
     }
     // warn about potentially problematic timecontrols:
-    for (const [rankedUnrankedArg, rankedUnranked] of get_args_arrays_ranked_and_unranked(argv.timecontrols)) {
+    for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.timecontrols)) {
         for (const problematicTimecontrol of ["all", "none", "absolute"]) {
             if (rankedUnrankedArg.includes(problematicTimecontrol)) {
                 isWarning = true;
@@ -327,7 +327,7 @@ exports.updateFromArgv = function() {
 }
 
 // deprecations:
-function deprecationsPluralSingularRU(name) {
+function createDeprecationsPluralAndSingularRU(name) {
     const nameSingular = name.slice(0, name.length - 1);
     const oldRU = ["ranked", "unranked"];
     const veryOldRU = ["", "ranked", "unranked"];
@@ -339,7 +339,7 @@ function deprecationsPluralSingularRU(name) {
     return [oldNames, newName];
 }
 
-function minMaxDeprecationsRU(name) {
+function createMinMaxDeprecationsRU(name) {
     let oldNames = [];
     for (const minMax of ["min", "max"]) {
         for (const ARU of ["", "ranked", "unranked"]) {
@@ -350,7 +350,7 @@ function minMaxDeprecationsRU(name) {
     return [oldNames, newName];
 }
 
-function minMaxDeprecationsBlitzLiveCorrRU(blitzLiveCorr) {
+function createMinMaxDeprecationsBlitzLiveCorrRU(blitzLiveCorr) {
     const blitzLiveCorrConverted = (blitzLiveCorr === "corr" ? "correspondence" : blitzLiveCorr);
     let oldNames = [];
     for (const minMax of ["min", "max"]) {
@@ -367,14 +367,14 @@ function minMaxDeprecationsBlitzLiveCorrRU(blitzLiveCorr) {
 }
 
 // warnings:
-function get_args_arrays_ranked_and_unranked(arg) {
+function getArgsArraysRankedAndUnranked(arg) {
     const [ranked, unranked] = arg.split('/');
     return ( [[ranked, "ranked"],
               [unranked, "unranked"]] );
 }
 
 // ranked/unranked args:
-function create_arg_strings_ranked_or_unranked(argsString, rankedStatus, familyNameString) {
+function createArgStringsRankedOrUnranked(argsString, rankedStatus, familyNameString) {
         const rankedUnrankedArgs = argsString.split('/');
         if (rankedUnrankedArgs.length !== 2) {
             throw new `Error in in ${familyNameString} : unexpected use of the `
