@@ -402,9 +402,13 @@ class Connection {
                 if (familyNameString === "boardsizes") {
                     notifDisplayed = `${notification.width}x${notification.height}`;
                     argsDisplayed = boardsizeSquareToDisplayString(argsDisplayed);
-                } else if (familyNameString === "komis" && notifDisplayed === "null") {
-                    // allowed_challengercolors is already "automatic" in config.js, no need to change it
-                    notifDisplayed = "automatic"; 
+                } else if (familyNameString === "komis") {
+                    if (notifDisplayed === "null") {
+                        // allowed_challengercolors is already "automatic" in config.js, no need to change it
+                        notifDisplayed = "automatic";
+                    }
+                    argsDisplayed = komisToDisplayString(argsDisplayed);
+                    //`any komi between ${check_comma_families.minAllowed} and ${check_comma_families.maxAllowed}`;
                 }
                 conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
                 return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot `
@@ -658,6 +662,13 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .map(e => e.trim())
     .map(e => `${e}x${e}`)
     .join(', ');
+}
+
+function komisToDisplayString(komisCommaSeparated) {
+    let komisDisplayed = "";
+    for (const komiCommaSeparated of komisCommaSeparated) {
+
+    }
 }
 
 function convertBlitzLiveCorr(blitzLiveCorr) {

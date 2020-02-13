@@ -97,6 +97,7 @@ exports.updateFromArgv = function() {
         .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                        + '(specific to correspondence games) for ranked / unranked games')
+        .describe('noautokomi', 'Do not allow komi to be set to -automatic- for ranked / unranked games')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
         //     C) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
@@ -163,7 +164,7 @@ exports.updateFromArgv = function() {
             }
         }
     }
-    if (argv.komis.includes("null")) {
+    if (argv.komis.includes("automatic")) {
         throw new 'Deprecated: komis /null/ is no longer supported, '
                   + 'use /automatic/ instead';
     }
@@ -172,11 +173,10 @@ exports.updateFromArgv = function() {
     // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
     const full_ranked_unranked_argNames = ["boardsizes", "komis",
         "rules", "challengercolors", "speeds", "timecontrols",
-        "proonly", "noautohandicap", "nopauseonweekends", "nopause",
+        "proonly", "noautohandicap", "noautokomi", "nopauseonweekends",
+        "nopause",
         "rank", "handicap",
-        "maintimeblitz", "maintimelive","maintimecorr",
-        "periodsblitz", "periodslive", "periodscorr",
-        "periodtimeblitz", "periodtimelive", "periodtimecorr"];
+        "blitz", "live","correspondence"];
 
     const full_check_challenge_root_argNames = ["rejectnew", "rejectnewfile",
         "maxconnectedgames", "maxconnectedgamesperuser",
@@ -277,7 +277,9 @@ exports.updateFromArgv = function() {
                     const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
                     const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
                     return { reject,
-                             argsString };
+                             argsString,
+                             minAllowed,
+                             maxAllowed };
                 }
             } else {
                 // words families
@@ -432,15 +434,17 @@ function getMinMaxNumbers(argsString) {
     let min = Infinity;
     let max = -Infinity;
     for (const arg of argsString.split(',')) {
-        if (arg.includes(':')) {
-            const [minRange, maxRange] = arg.split(':')
-                                            .map( str => Number(str) );
-            if (minRange < min) min = minRange;
-            if (maxRange > max) max = maxRange;
-        } else {
-            const argNumber = Number(arg);
-            if (argNumber < min) min = argNumber;
-            if (argNumber > max) max = argNumber;
+        if (arg !== "automatic") { // not a number, rule it out of min/max evaluation
+            if (arg.includes(':')) {
+                const [minRange, maxRange] = arg.split(':')
+                                                .map( str => Number(str) );
+                if (minRange < min) min = minRange;
+                if (maxRange > max) max = maxRange;
+            } else {
+                const argNumber = Number(arg);
+                if (argNumber < min) min = argNumber;
+                if (argNumber > max) max = argNumber;
+            }
         }
     }
     return [min, max];
