@@ -50,50 +50,9 @@ with text, for example:
 
 #### B : 
 
-note : board size format below used on gtp2ogs is 
-**width x height (25x1 is NOT THE SAME as 1x25**)
 
-note 2 : `--boardsizes all` is the exact same as 
-`--boardsizes custom --boardsizewidths all --boardiszeheights all` 
 
-examples :
 
-ex1 : `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9` 
-will allow all these boardsizes :
-
-```
-9x1,9x2,9x3,9x9
-13x1,13x2,13x3,13x9
-15x1,15x2,15x3,15x9
-19x1,19x2,19x3,19x9
-25x1,25x2,25x3,25x9
-```
-
-ex2 : `--boardsizes custom --boardsizewidths 2,19,25 --boardsizeheights all` 
-will allow all these boardsizes :
-
-```
-2x(all) : 2x1,2x2,2x3,2x4, etc. , 2x23,2x24,2x25
-19x(all) : 19x1,19x2,19x3,19x4, etc. ,19x23,19x24,19x25
-25x(all) : 25x1,25x2,25x3,25x4, etc. ,25x23,25x24,25x25
-```
-
-ex3 : `--boardsizes custom --boardsizewidths all --boardsizeheights 2,19,25` 
-will allow all these boardsizes :
-
-```
-(all)x2 : 1x2,2x2,3x2,4x2, etc. ,23x2,24x2,25x2
-(all)x19 : 1x19,2x19,3x19,4x19, etc. ,23x19,24x19,25x19
-(all)x25 : 1x25,2x25,3x25x3,4x25, etc. ,23x25,24x25,25x25
-```
-
-ex4 : you may want to be more specific using different values 
-for ranked and unranked games, for example :
-
-`--boardsizesranked 19 --boardsizesunranked custom --boardsizewidthsunranked 2,19,25 --boardsizeheightsunranked 1:3`, 
-to allow :
-- for ranked games : 19x19
-- for unranked games : all widths and heights combinations as seen above.
 
 #### C :
 

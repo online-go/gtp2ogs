@@ -235,18 +235,10 @@ example: `--speeds all`
 example 2: `--speedsranked live,correspondence --speedsunranked all`
 example 3: `--komis 0.5,5.5:7.5,automatic`
 
+
+
 #### boardsizes
 
-
-                    // - for --boardsizes, if --boardsizeheights is not specified,
-                    //   we check square (width === height) boardsizes using only the widths
-                    //   ex: --boardsizes 19 -> 19x19
-                    // - if bot admin wants to check non square boardsizes as well, bot admin 
-                    //   has to use --boardsizeheights
-                    //   ex: --boardsizes 19 --boardsizeheights 1:3
-                    // - if bot admin doesnt want to allow square boardsizes based on widths,
-                    //   bot admin has to use --boardsizesnonsquareonly
-                    //   ex: --boardsizes 19 --boardsizesnonsquareonly --boardsizeheights 1:3
 
 
   ```--boardsizes``` Board size(s) to accept
@@ -260,35 +252,6 @@ to allow combinations of boardsize widths/heights)
 - comma separated and `:` separated values, for example 
 `25` (allows 25x25), or `9,13,15:17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
-
-#### boardsize widths/heights
-
-  ```--boardsizewidths``` For custom board sizes, boardsize 
-width(s) to accept
-
-
-
-
-```--boardsizeheights``` For custom board sizes, boardsize 
-height(s) to accept
-
-
-Possible boardsize height value(s):
-- `all` (allows all board size heights)
-- comma separated values, for example `1`, or `1:3` 
-
-  For custom boardsizes, we allow all combinations of allowed 
-widths and heights, for example :
-
-- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9:19:5` 
-(is `1,2,3,9,14,19`) will allow all these boardsizes combinations:
-```
-9x1,9x2,9x3,9x9,9x14,9x19
-13x1,13x2,13x3,13x9,13x14,13x19
-15x1,15x2,15x3,15x9,15x14,15x19
-19x1,19x2,19x3,19x9,19x14,19x19
-25x1,25x2,25x3,25x3,25x14,25x19
-```
 
 see [notes B-](/docs/NOTES.md#b-) for details.
 
@@ -367,10 +330,6 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
   ```--proonly``` For all matches, only accept those from professionals
 
-  ```--boardsizeheightsnonsquareonly``` Use this in combination with 
---boardsizeheights (allows non-square boardsizes (ex: 19x18 and 18x19)) 
-to specifically reject matches with square boardsizes combinations of 
-widths and heights (ex:19x13, 13x19) for ranked / unranked games')
 
 
 

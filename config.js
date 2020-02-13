@@ -79,9 +79,6 @@ exports.updateFromArgv = function() {
                                 + 'to accept for ranked / unranked games')
         .string('boardsizes')
         .default('boardsizes', '9,13,19/...')
-        .describe('boardsizeheights', 'Allows non square boardsizes if specified, and specifies '
-                                      + 'Board size height(s) to accept for ranked / unranked games')
-        .string('boardsizeheights')
         .describe('komis', 'Allowed komi values for ranked / unranked games')
         .string('komis')
         .default('komis', 'automatic/...')
@@ -101,9 +98,6 @@ exports.updateFromArgv = function() {
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                        + '(specific to correspondence games) for ranked / unranked games')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
-        .describe('boardsizeheightsnonsquareonly', 'Use this in combination with --boardsizeheights (allows non-square boardsizes '
-                                                   + '(ex: 19x18 and 18x19)) to specifically reject matches with square boardsizes '
-                                                   + 'combinations of widths and heights (ex:19x13, 13x19) for ranked / unranked games')
         //     C) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
@@ -140,8 +134,8 @@ exports.updateFromArgv = function() {
         [["maxtotalgames"], "maxconnectedgames"],
         [["maxactivegames"], "maxconnectedgamesperuser"],
         createDeprecationsPluralAndSingularRU("boardsizes"),
-        createDeprecationsPluralAndSingularRU("boardsizeheights"),
         [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked"], false],
+        [["boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], false],
         createDeprecationsPluralAndSingularRU("komis"),
         createDeprecationsPluralAndSingularRU("bans"),
         createDeprecationsPluralAndSingularRU("speeds"),
@@ -176,10 +170,9 @@ exports.updateFromArgv = function() {
     console.log("\n");
 
     // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
-    const full_ranked_unranked_argNames = ["boardsizes", "boardsizeheights",
-        "komis", "rules", "challengercolors", "speeds", "timecontrols",
+    const full_ranked_unranked_argNames = ["boardsizes", "komis",
+        "rules", "challengercolors", "speeds", "timecontrols",
         "proonly", "noautohandicap", "nopauseonweekends", "nopause",
-        "boardsizeheightsnonsquareonly",
         "rank", "handicap",
         "maintimeblitz", "maintimelive","maintimecorr",
         "periodsblitz", "periodslive", "periodscorr",
@@ -269,10 +262,9 @@ exports.updateFromArgv = function() {
     {
         const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
-            if (["boardsizes", "boardsizeheights", "komis"].includes(familyNameString)) {
+            if (["boardsizes", "komis"].includes(familyNameString)) {
                 // numbers families
-                if (["boardsizes", "boardsizesheights"].includes(familyNameString)) {
-                    // check widths or heights
+                if (familyNameString === "boardsizes") {
                     const allArgsNumbers = getAllArgsNumbers(argsString).join(',');
                     const reject = !allArgsNumbers.includes(Number(notif));
                     return { reject,

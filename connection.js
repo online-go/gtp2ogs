@@ -369,10 +369,6 @@ class Connection {
                                        notification.pause_on_weekends, for_r_u_g_full],
                                       [config_r_u.noautohandicap, "-Automatic- handicap is",
                                        notification.handicap === -1, for_r_u_g_full],
-                                      [config_r_u.boardsizeheightsnonsquareonly,
-                                       "This bot allows non-square boardsizes (for example: 19x18 and 18x19), "
-                                       + "but square boardsizes (for example: 19x19 and 18x18), ",
-                                       notification.width !== notification.height, for_r_u_g_full]
                                     ];
 
         for (const test of [testBooleanArgs, testBooleanArgs_r_u]) {
@@ -392,38 +388,30 @@ class Connection {
     checkChallengeAllowedFamilies(notification, r_u_strings) {
 
         const testsAllowedFamilies = [ ["boardsizes", "Board sizes", notification.width],
-                                       ["boardsizeheights", "Board size HEIGHTS", notification.height],
                                        ["komis", "Komi", notification.komi],
                                        ["rules", "Rule", notification.rules],
                                        ["challengercolors", "Player Color", notification.challenger_color],
                                        ["speeds", "Speed", notification.time_control.speed],
-                                       ["timecontrols", "Time control", notification.time_control.time_control] ];
+                                       ["timecontrols", "Time control", notification.time_control.time_control]
+                                     ];
         for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
             const check_comma_families = config.check_comma_separated_RU(notif, notification.ranked, familyNameString);
-                if (!check_comma_families.reject) {
-                    let notifDisplayed = String(notif);
-                    if (familyNameString.includes("boardsize") {
-                        notifDisplayed = `${notification.width}x${notification.height}`;
-
-
-
-                        if (familyNameString === "boardsizes" && !) {                            
-                            allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-                        } else {
-                            const [widths, heights] = 
-                                  ["widths", "heights"].map( str => Object.keys(config_r_u[`allowed_boardsize${str}`]) )
-                                                       .map( arr => (arr.length === 0 ? ["(all)"] : arr) );
-                            allowedValuesString = boardsizeWidthsHeightsToDisplayString(widths, heights);
-                        }
-                    } else if (familyNameString === "komis" && notifDisplayed === "null") {
-                        notifDisplayed = "automatic"; // allowed_challengercolors is already "automatic" in config.js, no need to change it
-                    }
-                    conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
-                    return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot ${r_u_strings.for_r_u_games}, please choose among:\n-${allowedValuesString}-` };
+            if (!check_comma_families.reject) {
+                let notifDisplayed = String(notif);
+                let argsDisplayed = check_comma_families.argsString;
+                if (familyNameString === "boardsizes") {
+                    notifDisplayed = `${notification.width}x${notification.height}`;
+                    argsDisplayed = boardsizeSquareToDisplayString(argsDisplayed);
+                } else if (familyNameString === "komis" && notifDisplayed === "null") {
+                    // allowed_challengercolors is already "automatic" in config.js, no need to change it
+                    notifDisplayed = "automatic"; 
                 }
+                conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
+                return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot `
+                                            + `${r_u_strings.for_r_u_games}, please choose among:`
+                                            + `\n-${allowedValuesString}-` };
             }
         }
-        (familyNameString === "boardsizes" && notification.width !== notification.height) ) { // ex: 19x18
 
         return { reject: false }; // OK !
 
@@ -670,19 +658,6 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .map(e => e.trim())
     .map(e => `${e}x${e}`)
     .join(', ');
-}
-
-function boardsizeWidthsHeightsToDisplayString(widths, heights) {
-    let combinations = [];
-    for (let i = 0; i < widths.length; i++) {
-        for (const h of heights) {
-            combinations.push(`${widths[i]}x${h}`);
-        }
-        if (i >= 1 && i < widths.length - 1) {
-            combinations.push("\n");
-        }
-    }
-    return combinations.join(', ');
 }
 
 function convertBlitzLiveCorr(blitzLiveCorr) {
