@@ -391,27 +391,23 @@ class Connection {
     //
     checkChallengeAllowedFamilies(notification, r_u_strings) {
 
-        const testsAllowedFamilies = [ ["boardsizes", "Board size WIDTHS", notification.width],
-                                       ["boardsizeheights", "Board size HEIGHT", notification.height],
+        const testsAllowedFamilies = [ ["boardsizes", "Board sizes", notification.width],
+                                       ["boardsizeheights", "Board size HEIGHTS", notification.height],
                                        ["komis", "Komi", notification.komi],
                                        ["rules", "Rule", notification.rules],
                                        ["challengercolors", "Player Color", notification.challenger_color],
                                        ["speeds", "Speed", notification.time_control.speed],
                                        ["timecontrols", "Time control", notification.time_control.time_control] ];
-        for (const [familyNameString, nameF, familyNotification] of testsAllowedFamilies) {
-            if (!config_r_u[`allow_all_${familyNameString}`]) {
-                if (config_r_u[`allow_custom_${familyNameString}`]) {
-                    if (familyNameString === "boardsizes") continue;
-                } else {
-                    if (["boardsizewidths", "boardsizeheights"].includes(familyNameString)) continue;
-                }
-                let notifDisplayed = String(familyNotification); // ex: "19", "null". Not 19, null.
-                if ( !config_r_u[`allowed_${familyNameString}`][notifDisplayed] ||
-                     (familyNameString === "boardsizes" && notification.width !== notification.height) ) { // ex: 19x18
-                    let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
-                    if (familyNameString.includes("boardsize")) {
+        for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
+            const check_comma_families = config.check_comma_separated_RU(notif, notification.ranked, familyNameString);
+                if (!check_comma_families.reject) {
+                    let notifDisplayed = String(notif);
+                    if (familyNameString.includes("boardsize") {
                         notifDisplayed = `${notification.width}x${notification.height}`;
-                        if (familyNameString === "boardsizes") {
+
+
+
+                        if (familyNameString === "boardsizes" && !) {                            
                             allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
                         } else {
                             const [widths, heights] = 
@@ -427,6 +423,7 @@ class Connection {
                 }
             }
         }
+        (familyNameString === "boardsizes" && notification.width !== notification.height) ) { // ex: 19x18
 
         return { reject: false }; // OK !
 

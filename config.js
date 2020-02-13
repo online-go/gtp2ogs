@@ -273,11 +273,10 @@ exports.updateFromArgv = function() {
                 // numbers families
                 if (["boardsizes", "boardsizesheights"].includes(familyNameString)) {
                     // check widths or heights
-                    const allArgsNumbers = getAllArgsNumbers(argsString);
+                    const allArgsNumbers = getAllArgsNumbers(argsString).join(',');
                     const reject = !allArgsNumbers.includes(Number(notif));
-                    const allArgsStrings = allArgsNumbers.join(', ');
                     return { reject,
-                             allArgsStrings };
+                             argsString: allArgsNumbers };
                 } else if (String(notif) === "null") {
                     const reject = !argsString.split(',').includes("automatic");
                     return { reject,
