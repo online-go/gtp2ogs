@@ -322,7 +322,7 @@ class Connection {
             if (config.DEBUG) console.log(`# of connected games = ${number_connected_games}`);
             const check_max = config.check_max_root(number_connected_games, "maxconnectedgames");
             if (check_max.reject) {
-                conn_log(`${number_connected_games} games being played, maximum is ${config.maxconnectedgames}`);
+                conn_log(`${number_connected_games} games being played, maximum is ${check_max.maxAllowed}`);
                 return { reject: true, msg: `Currently, ${number_connected_games} games are being played by this `
                                             + `bot, maximum is ${check_max.maxAllowed} (if you see this message `
                                             + `and you dont see any game on the bot profile page, it is because `
@@ -334,7 +334,7 @@ class Connection {
         const connected_games_per_user = this.gamesForPlayer(notification.user.id);
         const check_max_per_user = config.check_max_root(connected_games_per_user, "maxconnectedgamesperuser");
         if (check_max_per_user.reject) {
-            conn_log("Too many connected games for this user.");
+            conn_log(`Too many connected games for this user, maximum is ${check_max_per_user.maxAllowed}`);
             return { reject: true, msg: `Maximum number of simultaneous games allowed per player against `
                                         + `this bot ${check_max_per_user.maxAllowed}, please reduce your `
                                         + `number of simultaneous games against this bot, and try again` };
