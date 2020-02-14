@@ -281,7 +281,7 @@ class Connection {
                           this.checkChallengeBooleans,
                           this.checkChallengeAllowedFamilies,
                           this.checkChallengeSettings]) {
-            const result = test.bind(this)(notification, r_u);
+            const result = test.bind(this)(notification, r_u_strings);
             if (result.reject) return result;
         }
 
@@ -363,7 +363,7 @@ class Connection {
                                 ];
         
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
-            if (config.check_booleans_aspecific(notifCondition, familyNameString)) {
+            if (config.check_booleans_aspecific(notifCondition, familyNameString).reject) {
                 conn_log(`${nameF} not allowed`);
                 return { reject: true, msg: `${nameF} not allowed on this bot.` };
             }
@@ -371,7 +371,7 @@ class Connection {
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are",
                                        !notification.user.professional],
-                                      ["squareonly", "Non-square boardsizes (width not same as height) are",
+                                      ["squareonly", `Non-square boardsizes are`,
                                        (notification.width !== notification.height)],
                                       ["nopauseonweekends", "Pause on week-ends is",
                                        notification.pause_on_weekends],
@@ -382,10 +382,16 @@ class Connection {
                                     ];
 
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
-            if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString)) {
+            if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString).reject) {
                 const for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
+                const ending = (familyNameString === "squareonly" ?
+                    `\n- non-square (not allowed): ${notification.width}x${notification.height} `
+                    + `or ${notification.height}x${notification.width}, non-square `
+                    + `(not allowed): ${notification.width}x${notification.width} or `
+                    + `${notification.height}x${notification.height}`
+                    : "");
                 conn_log(`${nameF} not allowed ${for_r_u_g}`);
-                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_g}.` };
+                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_g}.${ending}` };
             }
         }
 
@@ -412,10 +418,6 @@ class Connection {
                     notifDisplayed = `${notification.width}x${notification.height}`;
                     argsDisplayed = boardsizeSquareToDisplayString(argsDisplayed);
                 } else if (familyNameString === "komis") {
-                    if (notifDisplayed === "null") {
-                        // allowed_challengercolors is already "automatic" in config.js, no need to change it
-                        notifDisplayed = "automatic";
-                    }
                     argsDisplayed = komisToDisplayString(argsDisplayed);
                     //`any komi between ${check_comma_families.minAllowed} and ${check_comma_families.maxAllowed}`;
                 }
@@ -437,9 +439,9 @@ class Connection {
         //       notification.handicap different from -1.
         /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
         /  but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone*/
-        const handicapNotif = (notification.handicap === -1 && config.fakebotrank) ?
+        const handicapNotif = ((notification.handicap === -1 && config.fakebotrank) ?
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
-                              notification.handicap;
+                              notification.handicap);
 
         for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
             if (notification.time_control.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
@@ -654,7 +656,7 @@ function conn_log() {
 }
 
 function ranked_unranked_strings_connection(rankedStatus) {
-    const r_u = rankedSetting ? "unranked" : "ranked";
+    const r_u = (rankedSetting ? "unranked" : "ranked");
     return { r_u,
              for_r_u_games: `for ${r_u} games`,
              from_r_u_games: `from ${r_u} games` };
@@ -662,7 +664,7 @@ function ranked_unranked_strings_connection(rankedStatus) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    return (R >= 30) ? ((R-30+1) + 'd') : ((30-R) + 'k');
+    return (R >= 30 ? ((R-30+1) + 'd') : ((30-R) + 'k'));
 }
 
 function boardsizeSquareToDisplayString(boardsizeSquare) {
@@ -676,12 +678,21 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
 function komisToDisplayString(komisCommaSeparated) {
     let komisDisplayed = "";
     for (const komiCommaSeparated of komisCommaSeparated) {
-        if ()
+        if (komiCommaSeparated.includes(':')) {
+            const [min, max] = komiCommaSeparated.split(':');
+            komisDisplayed = `${komisDisplayed}from ${min} to ${max}`;
+        } else {
+            komisDisplayed = `${komisDisplayed}${komiCommaSeparated}`;
+        }
+        const splitter = (komiCommaSeparated === komisDisplayed.slice(-1)
+                          ? "." : ",");
+        komisDisplayed = `${komisDisplayed}${splitter}`;
     }
+    return komisDisplayed;
 }
 
 function convertBlitzLiveCorr(blitzLiveCorr) {
-    return (blitzLiveCorr === "corr") ? "correspondence" : blitzLiveCorr;
+    return (blitzLiveCorr === "corr" ? "correspondence" : blitzLiveCorr);
 }
 
 function isMinMaxArg(arg, minArg) {
@@ -706,7 +717,7 @@ function genericMinMaxRejectResult(familyNameString, nameF, familyNotification, 
 
 function minMaxCondition(arg, familyNotification, isMin) {
     // to reject in minimum, we need notification < arg
-    return isMin ? (familyNotification < arg) : (familyNotification > arg);
+    return (isMin ? (familyNotification < arg) : (familyNotification > arg));
 }
 
 

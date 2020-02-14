@@ -278,10 +278,6 @@ exports.updateFromArgv = function() {
                     const reject = !allArgsNumbers.includes(Number(notif));
                     return { reject,
                              argsString: allArgsNumbers };
-                } else if (String(notif) === "null") {
-                    const reject = !argsString.split(',').includes("automatic");
-                    return { reject,
-                             argsString };
                 } else {
                     const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
                     const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
