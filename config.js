@@ -218,7 +218,7 @@ exports.updateFromArgv = function() {
     }
 
     // ARGV FUNCTIONNAL CHECKS EXPORTS
-    // 1) root args:
+    // 1) aspecific args:
     exports.check_rejectnew = function () 
     {
         return { reject: argv.rejectnew || 

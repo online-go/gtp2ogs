@@ -411,20 +411,20 @@ class Connection {
                                      ];
         for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
             const check_comma_families = config.check_comma_separated_RU(notif, notification.ranked, familyNameString);
-            if (!check_comma_families.reject) {
+            if (check_comma_families.reject) {
                 let notifDisplayed = String(notif);
-                let argsDisplayed = check_comma_families.argsString;
+                let allowedArgsDisplayed = check_comma_families.argsString;
                 if (familyNameString === "boardsizes") {
                     notifDisplayed = `${notification.width}x${notification.height}`;
-                    argsDisplayed = boardsizeSquareToDisplayString(argsDisplayed);
+                    allowedArgsDisplayed = boardsizeSquareToDisplayString(allowedArgsDisplayed);
                 } else if (familyNameString === "komis") {
-                    argsDisplayed = komisToDisplayString(argsDisplayed);
+                    allowedArgsDisplayed = komisToDisplayString(allowedArgsDisplayed);
                     //`any komi between ${check_comma_families.minAllowed} and ${check_comma_families.maxAllowed}`;
                 }
-                conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedValuesString}- `);
+                conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedArgsDisplayed}- `);
                 return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot `
                                             + `${r_u_strings.for_r_u_games}, please choose among:`
-                                            + `\n-${allowedValuesString}-` };
+                                            + `\n-${allowedArgsDisplayed}-` };
             }
         }
 
