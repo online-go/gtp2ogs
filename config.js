@@ -4,9 +4,9 @@ const fs = require('fs')
 const console = require('console');
 
 const checkArgs = ["rejectnew",
-                   "booleans_root",
-                   "max_root",
-                   "boolean_args_RU",
+                   "booleans_aspecific",
+                   "max_aspecific",
+                   "booleans_RU",
                    "min_max_args_RU",
                    "min_max_blitz_live_corr_args_RU",
                    "comma_separated_RU"];
@@ -14,9 +14,8 @@ checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
-        // 1) ROOT ARGUMENTS:
-        //     A) CHALLENGE-UNRELATED ARGS:
-        //         A1) ROOT:
+        // 1) EXPORTED ARGS:
+        //        1A) ASPECIFIC
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -48,15 +47,17 @@ exports.updateFromArgv = function() {
         .describe('persist', 'Bot process remains running between moves')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('corrqueue', 'Process correspondence games one at a time')
-        .describe('fakebotrank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference'
-                                 + 'between fakebotrank and user ranking, to fix the bypass minhandicap maxhandicap issue')
-        //         A2) RANKED/UNRANKED:
+
+        // 2) CHECK GAMES ARGS:
+        //        2A) RANKED/UNRANKED:
         /* note: - nopause allows to disable pauses DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
         .describe('nopause', 'Do not allow pauses during games for ranked / unranked games')
         .default('nopause', 'false/false')
-        //     B) CHECK CHALLENGE ARGS
+
+        // 3) CHECK CHALLENGE ARGS:
+        //     3A) ASPECIFIC:
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         /* note: for maxconnectedgames, correspondence games are currently included
@@ -67,12 +68,14 @@ exports.updateFromArgv = function() {
         .default('maxconnectedgamesperuser', 3)
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
+        .describe('fakebotrank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference'
+                                 + 'between fakebotrank and user ranking, to fix the bypass minhandicap maxhandicap issue')
         /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
         /  nor their unranked args since the general argument is for unranked games too*/
         .describe('privateonly', 'Only accept private matches')
         .describe('publiconly', 'Only accept public (non-private) matches')
-        // 2) CHECK CHALLENGE ARGS RANKED/UNRANKED:
-        //     A) BOOLEANS RANKED/UNRANKED:
+        //     3B) RANKED/UNRANKED:
+        //         3B1) BOOLEANS RANKED/UNRANKED:
         .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
         .default('proonly', 'false/...')
         .describe('squareonly', 'For all matches, only accept those in which board size width is equal to height for ranked / unranked games')
@@ -84,8 +87,8 @@ exports.updateFromArgv = function() {
         .default('noautokomi', 'false/...')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
         .default('noautohandicap', 'false/...')
-        //     B) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
-        //         B1) NUMBER FAMILIES:
+        //         3B2) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
+        //             3B2-1) NUMBER FAMILIES:
         .describe('boardsizes', 'Board size(s) square (if --boardsizeheights is not specified), '
                                 + 'or board size width(s) (if it is specified), '
                                 + 'to accept for ranked / unranked games')
@@ -94,7 +97,7 @@ exports.updateFromArgv = function() {
         .describe('komis', 'Allowed komi values for ranked / unranked games')
         .string('komis')
         .default('komis', 'automatic/...')
-        //         B2) WORDS FAMILIES:
+        //             3B2-2) WORDS FAMILIES:
         .describe('bans', 'Usernames or IDs to ban from ranked / unranked games')
         .string('bans')
         .describe('rules', 'Rule(s) to accept')
@@ -105,11 +108,12 @@ exports.updateFromArgv = function() {
         .default('speeds', 'all/...')
         .describe('timecontrols', 'Time control(s) to accept for ranked / unranked games')
         .default('timecontrols', 'fischer,byoyomi,simple,canadian/...')
-        //     C) MINMAX RANKED/UNRANKED:
+        //         3C) MINMAX RANKED/UNRANKED:
+        //             3C1) MIN:MAX
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
-        //     D) MINMAX MAINTIME:PERIODTIME:PERIODS SETTINGS RANKED/UNRANKED
+        //             3C2) MIN:MAX MAINTIME_PERIODTIME_PERIODS
          // 15 seconds : 5 minutes _ periods _ 5 seconds : 10 seconds
         .describe('blitz', 'Blitz maintime_periods_periodtime settings for ranked / unranked games')
         .default('blitz', '15:300_3:20_5:10/...')
@@ -177,22 +181,21 @@ exports.updateFromArgv = function() {
     console.log("\n");
 
     // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
-    const full_ranked_unranked_argNames = ["boardsizes", "komis",
+
+    const argNamesChecks = ["rejectnew", "rejectnewfile",
+        "maxconnectedgames", "maxconnectedgamesperuser",
+        "rankedonly", "unrankedonly", "privateonly", "publiconly",
+        "boardsizes", "komis",
         "rules", "challengercolors", "speeds", "timecontrols",
         "proonly", "noautohandicap", "noautokomi", "nopauseonweekends",
         "nopause",
         "rank", "handicap",
         "blitz", "live","correspondence"];
 
-    const full_check_challenge_root_argNames = ["rejectnew", "rejectnewfile",
-        "maxconnectedgames", "maxconnectedgamesperuser",
-        "rankedonly", "unrankedonly", "privateonly", "publiconly"];
-
     // EXPORTS FROM argv //
     // 0) root, challenge unrelated exports exports
     for (const k in argv) {
-        if (!full_ranked_unranked_argNames.includes(k) &&
-            !full_check_challenge_root_argNames.includes(k)) {
+        if (!argNamesChecks.includes(k)) {
             // Add and Modify exports
             if (k === "host" && argv.beta) {
                 exports[k] = 'beta.online-go.com';
@@ -222,12 +225,12 @@ exports.updateFromArgv = function() {
                          (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) };
     };
 
-    exports.check_booleans_root = function (notif, familyNameString)
+    exports.check_booleans_aspecific = function (notif, familyNameString)
     {
         return { reject: argv[familyNameString] && notif };
     }
 
-    exports.check_max_root = function (notif, familyNameString)
+    exports.check_max_aspecific = function (notif, familyNameString)
     {
         const maxAllowed = argv[familyNameString];
         return { reject: notif > maxAllowed,
@@ -235,7 +238,7 @@ exports.updateFromArgv = function() {
     }
 
     // 2) ranked/unranked args:
-    exports.check_boolean_args_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_booleans_RU = function (notif, rankedStatus, familyNameString)
     {
         const allowed = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         return { reject: Boolean(allowed) && notif }; // "false" -> false

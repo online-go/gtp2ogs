@@ -356,31 +356,36 @@ class Connection {
     //
     checkChallengeBooleans(notification, r_u_strings) {
 
-        const for_r_u_g_empty = "";
-        const testBooleanArgs = [ //[config.publiconly, "Private games are", notification.private, for_r_u_g_empty],
-                                  //[config.privateonly, "Non-private games are", !notification.private, for_r_u_g_empty],
-                                  [config.rankedonly, "Unranked games are", !notification.ranked, for_r_u_g_empty],
-                                  [config.unrankedonly, "Ranked games are", notification.ranked, for_r_u_g_empty] ];
+        const testBooleanArgs = [ // "publiconly", "Private games are", notification.private],
+                                  // "privateonly", "Non-private games are", !notification.private],
+                                  ["rankedonly", "Unranked games are", !notification.ranked],
+                                  ["unrankedonly", "Ranked games are", notification.ranked]
+                                ];
+        
+        for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
+            if (config.check_booleans_aspecific(notifCondition, familyNameString)) {
+                conn_log(`${nameF} not allowed`);
+                return { reject: true, msg: `${nameF} not allowed on this bot.` };
+            }
+        }
 
-        const for_r_u_g_full = ` ${r_u_strings.for_r_u_games}`;
-        const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are",
-                                       !notification.user.professional, for_r_u_g_full],
-                                      [config_r_u.squareonly, "Non-square boardsizes (width not same as height) are",
-                                       (notification.width !== notification.height), for_r_u_g_full],
-                                      [config_r_u.nopauseonweekends, "Pause on week-ends is",
-                                       notification.pause_on_weekends, for_r_u_g_full],
-                                      [config_r_u.noautokomi, "-Automatic- komi is",
-                                       (String(notification.komi) === "null"), for_r_u_g_full],
-                                      [config_r_u.noautohandicap, "-Automatic- handicap is",
-                                       notification.handicap === -1, for_r_u_g_full],
+        const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are",
+                                       !notification.user.professional],
+                                      ["squareonly", "Non-square boardsizes (width not same as height) are",
+                                       (notification.width !== notification.height)],
+                                      ["nopauseonweekends", "Pause on week-ends is",
+                                       notification.pause_on_weekends],
+                                      ["noautokomi", "-Automatic- komi is",
+                                       (String(notification.komi) === "null")],
+                                      ["noautohandicap", "-Automatic- handicap is",
+                                       notification.handicap === -1],
                                     ];
 
-        for (const test of [testBooleanArgs, testBooleanArgs_r_u]) {
-            for (const [arg,nameF,notifCondition,for_r_u_games_converted] of test) {
-                if (arg && notifCondition) {
-                    conn_log(`${nameF} not allowed ${for_r_u_games_converted}`);
-                    return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_games_converted}.` };
-                }
+        for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
+            if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString)) {
+                const for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
+                conn_log(`${nameF} not allowed ${for_r_u_g}`);
+                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_g}.` };
             }
         }
 

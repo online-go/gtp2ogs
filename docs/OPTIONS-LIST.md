@@ -51,7 +51,7 @@ currently provides :
 note : command line arguments should not be separated by skipping 
 lines, it was done here only for clearer display
 
-# 1) ROOT ARGUMENTS :
+# 1) CHALLENGE-UNRELATED ARGS:
 
   Arguments in this category work the same way no matter what 
 the ranked/unranked status is.
@@ -59,6 +59,8 @@ the ranked/unranked status is.
 Note: about the "messages" arguments, some combinations of 
 characters in messages make gtp2ogs crash !!
 see for details [notes G-](/docs/NOTES.md#g-)
+
+## 1A) ASPECIFIC
 
 #### username
   ```--username``` Specify the username of the bot, for example 
@@ -176,29 +178,40 @@ connected games per user against this bot
 
   ```--publiconly```  Only accept public (non-private) matches
 
+
+
+see [notes F-](/docs/NOTES.md#f-) for details
+
+## 1B) RANKED/UNRANKED:
+
+#### nopause
+
+  note: nopause allows to disable pauses DURING games, (game.js), but 
+nopauseonweekends rejects challenges BEFORE games (connection.js) 
+(only for correspondence games).
+
+  ```--nopause```  Do not allow pauses during games for ranked / unranked 
+games
+
+# 2) CHECK CHALLENGE ARGUMENTS:
+
+  Arguments in this category allow us to accept or reject 
+a challenge based on the notification (challenge settings)
+
+        //     2A) ASPECIFIC:
+
+
+
 #### fakebotrank
   ```--fakebotrank``` Fake bot ranking to calculate automatic handicap 
 stones number in autohandicap (-1) based on rankDifference between 
 fakebotrank and user ranking, to fix the bypass minhandicap maxhandicap 
 issue
 
-see [notes F-](/docs/NOTES.md#f-) for details
 
 
 
-#### nopause
-
-  ```--nopause```  Do not allow pauses during games
-
-
-
-
-# 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
-
-  Arguments in this category allow us to accept or reject 
-a challenge based on the notification (challenge settings)
-
-##     A) BOOLEANS RANKED/UNRANKED:
+## 2B1) BOOLEANS RANKED/UNRANKED:
 
 #### only (part 2)
 
@@ -215,17 +228,18 @@ we only accept or reject a match if it comes with the setting
 "Pause on week-ends" (specific to correspondence games)
 
   ```--nopauseonweekends```  Do not accept matches that come with the 
-option -pauses on weekends- (specific to correspondence games)
+option -pauses on weekends- (specific to correspondence games) for 
+ranked / unranked games
 
 #### noautokomi
-  ```--noautokomi``` Do not allow komi to be set to -automatic-
+  ```--noautokomi``` Do not allow komi to be set to -automatic- for 
+ranked / unranked games
 
 #### noautohandicap
-  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
+  ```--noautohandicap``` Do not allow handicap to be set to -automatic- 
+for ranked / unranked games
 
-
-
-##     B) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
+## 2B) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
 
   Here you can either use :
 
@@ -238,7 +252,10 @@ and in that case, the general argument will be ignored
 and instead the ranked and unranked will be used depending 
 on whether the game is ranked or unranked.
 
-###         B1) NUMBER FAMILIES:
+### 2B1) NUMBER FAMILIES:
+
+
+
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
@@ -296,7 +313,7 @@ For extra komi explanations, see :
 
 
 
-###         B2) WORDS FAMILIES:
+###         2B2) WORDS FAMILIES:
 
 
 
@@ -359,7 +376,7 @@ are banned from ranked and unranked games
 
 
 
-##         C) MINMAX FAMILIES RANKED/UNRANKED:
+##         2C) MINMAX FAMILIES RANKED/UNRANKED:
 
 
 #### handicap
@@ -382,7 +399,6 @@ are banned from ranked and unranked games
 
 
 ##         D) MINMAX MAINTIME:PERIODTIME:PERIODS SETTINGS RANKED/UNRANKED
-
 
 
 
