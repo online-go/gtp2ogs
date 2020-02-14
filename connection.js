@@ -275,7 +275,7 @@ class Connection {
     checkChallenge(notification) {
 
         // load config.ranked or config.unranked depending on notification.ranked
-        const r_u_strings = ranked_unranked_strings_connection(notification.ranked, notification.time_control.speed);
+        const r_u_strings = ranked_unranked_strings_connection(notification.ranked);
         for (let test of [this.checkChallengeMandatory,
                           //this.checkChallengeSanityChecks,
                           this.checkChallengeBooleans,
@@ -305,8 +305,10 @@ class Connection {
 
 
 
+
         const resultMinMaxRank = genericMinMaxRejectResult("rank", "rank", notification.user.ranking, false, config_r_u, r_u_strings);
         if (resultMinMaxRank) return resultMinMaxRank;
+
 
 
 
@@ -435,6 +437,12 @@ class Connection {
     //
     checkChallengeSettings(notification, r_u_strings) {
 
+
+
+
+
+
+
         // TODO: modify or remove fakebotrank code whenever server sends us automatic handicap 
         //       notification.handicap different from -1.
         /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
@@ -462,6 +470,12 @@ class Connection {
             const resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
             if (resultMinMax) return resultMinMax;
         }
+
+
+
+
+
+
 
         return { reject: false };  // Ok !
 
@@ -663,7 +677,7 @@ function conn_log() {
 }
 
 function ranked_unranked_strings_connection(rankedStatus) {
-    const r_u = (rankedSetting ? "unranked" : "ranked");
+    const r_u = (rankedStatus ? "unranked" : "ranked");
     return { r_u,
              for_r_u_games: `for ${r_u} games`,
              from_r_u_games: `from ${r_u} games` };
