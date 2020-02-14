@@ -203,10 +203,7 @@ a challenge based on the notification (challenge settings)
 
 
 #### fakebotrank
-  ```--fakebotrank``` Fake bot ranking to calculate automatic handicap 
-stones number in autohandicap (-1) based on rankDifference between 
-fakebotrank and user ranking, to fix the bypass minhandicap maxhandicap 
-issue
+  ```--fakebotrank``` Fake bot rank provided by bot admin to calculate the estimated number of handicap automatic handicap stones if handicap is -automatic- (notification.handicap === -1)
 
 
 
