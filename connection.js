@@ -365,8 +365,12 @@ class Connection {
         const for_r_u_g_full = ` ${r_u_strings.for_r_u_games}`;
         const testBooleanArgs_r_u = [ [config_r_u.proonly, "Games against non-professionals are",
                                        !notification.user.professional, for_r_u_g_full],
+                                      [config_r_u.squareonly, "Non-square boardsizes (width not same as height) are",
+                                       (notification.width !== notification.height), for_r_u_g_full],
                                       [config_r_u.nopauseonweekends, "Pause on week-ends is",
                                        notification.pause_on_weekends, for_r_u_g_full],
+                                      [config_r_u.noautokomi, "-Automatic- komi is",
+                                       (String(notification.komi) === "null"), for_r_u_g_full],
                                       [config_r_u.noautohandicap, "-Automatic- handicap is",
                                        notification.handicap === -1, for_r_u_g_full],
                                     ];
@@ -667,7 +671,7 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
 function komisToDisplayString(komisCommaSeparated) {
     let komisDisplayed = "";
     for (const komiCommaSeparated of komisCommaSeparated) {
-
+        if ()
     }
 }
 

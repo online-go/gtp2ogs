@@ -72,8 +72,20 @@ exports.updateFromArgv = function() {
         .describe('privateonly', 'Only accept private matches')
         .describe('publiconly', 'Only accept public (non-private) matches')
         // 2) CHECK CHALLENGE ARGS RANKED/UNRANKED:
-        //     A) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
-        //         A1) NUMBER FAMILIES:
+        //     A) BOOLEANS RANKED/UNRANKED:
+        .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
+        .default('proonly', 'false/...')
+        .describe('squareonly', 'For all matches, only accept those in which board size width is equal to height for ranked / unranked games')
+        .default('squareonly', 'true/...')
+        .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
+                                        + '(specific to correspondence games) for ranked / unranked games')
+        .default('nopauseonweekends', 'false/...')
+        .describe('noautokomi', 'Do not allow komi to be set to -automatic- for ranked / unranked games')
+        .default('noautokomi', 'false/...')
+        .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
+        .default('noautohandicap', 'false/...')
+        //     B) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
+        //         B1) NUMBER FAMILIES:
         .describe('boardsizes', 'Board size(s) square (if --boardsizeheights is not specified), '
                                 + 'or board size width(s) (if it is specified), '
                                 + 'to accept for ranked / unranked games')
@@ -82,7 +94,7 @@ exports.updateFromArgv = function() {
         .describe('komis', 'Allowed komi values for ranked / unranked games')
         .string('komis')
         .default('komis', 'automatic/...')
-        //         A2) WORDS FAMILIES:
+        //         B2) WORDS FAMILIES:
         .describe('bans', 'Usernames or IDs to ban from ranked / unranked games')
         .string('bans')
         .describe('rules', 'Rule(s) to accept')
@@ -93,17 +105,11 @@ exports.updateFromArgv = function() {
         .default('speeds', 'all/...')
         .describe('timecontrols', 'Time control(s) to accept for ranked / unranked games')
         .default('timecontrols', 'fischer,byoyomi,simple,canadian/...')
-        //     B) BOOLEANS RANKED/UNRANKED:
-        .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
-        .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
-                                       + '(specific to correspondence games) for ranked / unranked games')
-        .describe('noautokomi', 'Do not allow komi to be set to -automatic- for ranked / unranked games')
-        .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
         //     C) MINMAX RANKED/UNRANKED:
         .describe('rank', 'minimum:maximum (weakest:strongest) opponent ranks to accept for ranked / unranked games (example 15k:1d/...)')
         .string('rank')
         .describe('handicap', 'minimum:maximum number of handicap stones to accept (example -1:9), -1 is automatic handicap')
-        //     D) MINMAX BLITZ LIVE CORRESPONDENCE SETTINGS RANKED/UNRANKED
+        //     D) MINMAX MAINTIME:PERIODTIME:PERIODS SETTINGS RANKED/UNRANKED
          // 15 seconds : 5 minutes _ periods _ 5 seconds : 10 seconds
         .describe('blitz', 'Blitz maintime_periods_periodtime settings for ranked / unranked games')
         .default('blitz', '15:300_3:20_5:10/...')

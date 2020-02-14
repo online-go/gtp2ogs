@@ -16,6 +16,7 @@ For easier reference, you can see below all default values gtp2ogs
 currently provides :
 
 ```
+// root
 --host online-go.com
 --port 443
 --startupbuffer 5
@@ -23,7 +24,13 @@ currently provides :
 --maxconnectedgames 20
 --maxconnectedgamesperuser 3
 --rejectnewmsg "Currently, this bot is not accepting games, try again later "
---nopause false/false
+// ranked / unranked
+--nopause false/...
+--proonly false/...
+--squareonly true/...
+--nopauseonweekends false/...
+--noautokomi false/...
+--noautohandicap false/...
 --boardsizes 9,13,19/...
 --komis automatic/...
 --rules chinese/...
@@ -160,7 +167,6 @@ and stability)
   ```--maxconnectedgamesperuser``` Maximum number of 
 connected games per user against this bot
 
-
 #### only (part 1)
   ```--rankedonly``` Only accept ranked matches
 
@@ -178,33 +184,48 @@ issue
 
 see [notes F-](/docs/NOTES.md#f-) for details
 
+
+
+#### nopause
+
+  ```--nopause```  Do not allow pauses during games
+
+
+
+
 # 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
 
   Arguments in this category allow us to accept or reject 
 a challenge based on the notification (challenge settings)
 
-##     A) ALL/RANKED/UNRANKED FAMILIES:
+##     A) BOOLEANS RANKED/UNRANKED:
 
-  Here the general argument (ex: --bans) does not confict with 
-the ranked and unranked arguments for accepting/rejecting matches.
+#### only (part 2)
 
-example: 
+  ```--proonly``` For all matches, only accept those from professionals 
+for ranked / unranked games
+
+  ```--squareonly``` For all matches, only accept those in which board size 
+width is equal to height for ranked / unranked games
+
+#### nopauseonweekends
+
+note: this setting has no effect on pausing DURING games, here 
+we only accept or reject a match if it comes with the setting 
+"Pause on week-ends" (specific to correspondence games)
+
+  ```--nopauseonweekends```  Do not accept matches that come with the 
+option -pauses on weekends- (specific to correspondence games)
+
+#### noautokomi
+  ```--noautokomi``` Do not allow komi to be set to -automatic-
+
+#### noautohandicap
+  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
 
 
-`--bans A,B --bansranked X,Y --bansunranked Z`
-result of these bans arguments :
-- banned users for ranked games : A,B,X,Y
-- banned users for unranked games : A,B,Z
 
-
-
-#### bans
-  ```--bans``` Comma separated list of user names or IDs who 
-are banned from ranked and unranked games
-
-
-
-##     B) RANKED/UNRANKED FAMILIES :
+##     B) COMMA-SEPARATED FAMILIES RANKED/UNRANKED:
 
   Here you can either use :
 
@@ -217,7 +238,7 @@ and in that case, the general argument will be ignored
 and instead the ranked and unranked will be used depending 
 on whether the game is ranked or unranked.
 
-##         B1) ALLOWED FAMILIES RANKED/UNRANKED:
+###         B1) NUMBER FAMILIES:
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
@@ -271,6 +292,14 @@ For extra komi explanations, see :
 - [notes C-](/docs/NOTES.md#c-)
 - [notes D-](/docs/NOTES.md#d-)
 
+
+
+
+
+###         B2) WORDS FAMILIES:
+
+
+
 #### rules
 
   ```--rules``` Board size(s) to accept
@@ -321,40 +350,16 @@ Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
 
 see [notes E-](/docs/NOTES.md#e-) for details
 
-##         B2) BOOLEANS RANKED/UNRANKED:
 
 
 
-
-#### only (part 2)
-
-  ```--proonly``` For all matches, only accept those from professionals
-
+#### bans
+  ```--bans``` Comma separated list of user names or IDs who 
+are banned from ranked and unranked games
 
 
 
-#### nopause
-
-  ```--nopause```  Do not allow pauses during games
-
-
-
-#### nopauseonweekends
-
-note: this setting has no effect on pausing DURING games, here 
-we only accept or reject a match if it comes with the setting 
-"Pause on week-ends" (specific to correspondence games)
-
-  ```--nopauseonweekends```  Do not accept matches that come with the 
-option -pauses on weekends- (specific to correspondence games)
-
-
-
-#### noautohandicap
-  ```--noautohandicap``` Do not allow handicap to be set to -automatic-
-
-
-##         B2) MINMAX FAMILIES RANKED/UNRANKED:
+##         C) MINMAX FAMILIES RANKED/UNRANKED:
 
 
 #### handicap
@@ -373,6 +378,10 @@ option -pauses on weekends- (specific to correspondence games)
 
   ```--minrank``` Minimum opponent rank to accept (e.g. 15k)
 
+
+
+
+##         D) MINMAX MAINTIME:PERIODTIME:PERIODS SETTINGS RANKED/UNRANKED
 
 
 
