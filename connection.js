@@ -375,6 +375,8 @@ class Connection {
                                        !notification.user.professional],
                                       ["squareonly", `Non-square boardsizes are`,
                                        (notification.width !== notification.height)],
+                                      ["nonsquareonly", `Square boardsizes are`,
+                                       (notification.width === notification.height)],
                                       ["nopauseonweekends", "Pause on week-ends is",
                                        notification.pause_on_weekends],
                                       ["noautokomi", "-Automatic- komi is",
@@ -386,10 +388,10 @@ class Connection {
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
             if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString).reject) {
                 const for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
-                const ending = (familyNameString === "squareonly" ?
-                    `\n- non-square (not allowed): ${notification.width}x${notification.height} `
-                    + `or ${notification.height}x${notification.width}, non-square `
-                    + `(not allowed): ${notification.width}x${notification.width} or `
+                const ending = (familyNameString.includes("squareonly") ?
+                    `\n- examples of:\n-non-square: ${notification.width}x${notification.height} `
+                    + `or ${notification.height}x${notification.width}\n-square: `
+                    + `${notification.width}x${notification.width} or `
                     + `${notification.height}x${notification.height}`
                     : "");
                 conn_log(`${nameF} not allowed ${for_r_u_g}`);

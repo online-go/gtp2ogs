@@ -218,6 +218,9 @@ for ranked / unranked games
   ```--squareonly``` For all matches, only accept those in which board size 
 width is equal to height for ranked / unranked games
 
+  ```--nonsquareonly``` For all matches, only accept those in which board size 
+width is not equal to height for ranked / unranked games
+
 #### nopauseonweekends
 
 note: this setting has no effect on pausing DURING games, here 

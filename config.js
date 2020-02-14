@@ -80,6 +80,8 @@ exports.updateFromArgv = function() {
         .default('proonly', 'false/...')
         .describe('squareonly', 'For all matches, only accept those in which board size width is equal to height for ranked / unranked games')
         .default('squareonly', 'true/...')
+        .describe('nonsquareonly', 'For all matches, only accept those in which board size width is not equal to height for ranked / unranked games')
+        .default('nonsquareonly', 'false/...')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                         + '(specific to correspondence games) for ranked / unranked games')
         .default('nopauseonweekends', 'false/...')
