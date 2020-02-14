@@ -373,7 +373,7 @@ class Connection {
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are",
                                        !notification.user.professional],
-                                      ["squareonly", `Non-square boardsizes are`,
+                                      ["squareonly", `Rectangle boardsizes are`,
                                        (notification.width !== notification.height)],
                                       ["nonsquareonly", `Square boardsizes are`,
                                        (notification.width === notification.height)],
@@ -388,8 +388,8 @@ class Connection {
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
             if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString).reject) {
                 const for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
-                const ending = (familyNameString.includes("squareonly") ?
-                    `\n- examples of:\n-non-square: ${notification.width}x${notification.height} `
+                const ending = (["squareonly", "rectangleonly"].includes(familyNameString) ?
+                    `\n- examples of:\n-rectangle: ${notification.width}x${notification.height} `
                     + `or ${notification.height}x${notification.width}\n-square: `
                     + `${notification.width}x${notification.width} or `
                     + `${notification.height}x${notification.height}`
@@ -407,6 +407,7 @@ class Connection {
     checkChallengeAllowedFamilies(notification, r_u_strings) {
 
         const testsAllowedFamilies = [ ["boardsizes", "Board sizes", notification.width],
+                                        //add boardsizeheights
                                        ["komis", "Komi", notification.komi],
                                        ["rules", "Rule", notification.rules],
                                        ["challengercolors", "Player Color", notification.challenger_color],
