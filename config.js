@@ -241,7 +241,7 @@ exports.updateFromArgv = function() {
     exports.check_booleans_RU = function (notif, rankedStatus, familyNameString)
     {
         const allowed = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        return { reject: Boolean(allowed) && notif }; // "false" -> false
+        return { reject: (allowed === "true") && notif };
     }
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
@@ -304,7 +304,7 @@ exports.updateFromArgv = function() {
     for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.nopause)) {
         // avoid infinite games
         // TODO: if --maxpausetime gets implemented, we can remove this
-        if (!Boolean(rankedUnrankedArg)) {
+        if (rankedUnrankedArg !== "true") {
             isWarning = true;
             console.log(`    Warning: Nopause setting for ${rankedUnranked} games not detected, `
                         + `${rankedUnranked} games are likely to last forever`);
