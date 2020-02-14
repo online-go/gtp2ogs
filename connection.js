@@ -443,17 +443,24 @@ class Connection {
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
                               notification.handicap);
 
-        for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-            if (notification.time_control.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
-                const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakebotrank || false],
-                                      [`maintime${blitzLiveCorr}`, "main time", notification.time_control, false],
-                                      [`periods${blitzLiveCorr}`, "number of periods", notification.time_control.periods, false],
-                                      [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
-                for (const [f,n,notif,isFakeHandicap] of testsMinMax) {
-                    const resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
-                    if (resultMinMax) return resultMinMax;
-                }
-            }
+        const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakebotrank || false]
+                            ];
+        
+        return { reject: false };  // Ok !
+
+    }
+    // Check challenge blitz_live_correspondence time settings are allowed
+    //
+    checkChallengeBlitzLiveCorrespondence(notification, r_u_strings) {
+
+
+        const testsBLC = [ ["blitz", "blitz time settings", notification.time_control, false],
+                           ["live", "live time settings", notification.time_control, false],
+                           ["correspondence", "correspondence time settings", notification.time_control, false]
+                         ];
+        for (const [f,n,notif,isFakeHandicap] of testsMinMax) {
+            const resultMinMax = genericMinMaxRejectResult(f,n,notif,isFakeHandicap, config_r_u, r_u_strings);
+            if (resultMinMax) return resultMinMax;
         }
 
         return { reject: false };  // Ok !
@@ -689,10 +696,6 @@ function komisToDisplayString(komisCommaSeparated) {
         komisDisplayed = `${komisDisplayed}${splitter}`;
     }
     return komisDisplayed;
-}
-
-function convertBlitzLiveCorr(blitzLiveCorr) {
-    return (blitzLiveCorr === "corr" ? "correspondence" : blitzLiveCorr);
 }
 
 function isMinMaxArg(arg, minArg) {
