@@ -396,11 +396,11 @@ class Connection {
     //
     checkChallengeAllowedFamilies(notification, r_u_strings) {
 
-        const testsAllowedFamilies = [ ["boardsizes", "Board sizes", notification.width],
-                                       ["komis", "Komi", notification.komi],
+        const testsAllowedFamilies = [ ["boardsizes", "Board sizes", String(notification.width)],
+                                       ["komis", "Komi", String(notification.komi)],
 
 
-                                       
+
                                        ["rules", "Rule", notification.rules],
                                        ["challengercolors", "Player Color", notification.challenger_color],
                                        ["speeds", "Speed", notification.time_control.speed],
@@ -681,14 +681,6 @@ function ranked_unranked_strings_connection(rankedStatus) {
 function rankToString(r) {
     const R = Math.floor(r);
     return (R >= 30 ? ((R-30+1) + 'd') : ((30-R) + 'k'));
-}
-
-function boardsizeSquareToDisplayString(boardsizeSquare) {
-    return boardsizeSquare
-    .split(',')
-    .map(e => e.trim())
-    .map(e => `${e}x${e}`)
-    .join(', ');
 }
 
 function komisToDisplayString(komisCommaSeparated) {
