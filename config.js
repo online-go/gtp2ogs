@@ -278,7 +278,7 @@ exports.updateFromArgv = function() {
                     const rangeY = getAllNumbersInRange(argY);
                     for (const x of rangeX) {
                         matrix[x] = {};
-                        if (argY) {
+                        if (argY !== undefined) {
                             for (const y of rangeY) {
                                 matrix[x][y] = true;
                                 allowedString = `${allowedString}${x}x${y}, `;
@@ -287,7 +287,7 @@ exports.updateFromArgv = function() {
                             matrix[x][x] = true;
                             allowedString = `${allowedString}${x}x${x}, `;
                             if (isSymetric) {
-                                if (argY) {
+                                if (argY !== undefined) {
                                     for (const y of rangeY) {
                                         matrix[y] = {};
                                         matrix[y][x] = true;
