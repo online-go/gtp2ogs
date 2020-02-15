@@ -266,49 +266,44 @@ exports.updateFromArgv = function() {
                };
     };
 
-    exports.check_numbers_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString, isSymetric)
+    exports.check_numbers_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString, allowSymetric)
     {
         const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
             let matrix = {};
             let allowedString = "";
-            if (familyNameString === "boardsizes") {
-                for (const arg of argsString.split(',')) {
-                    const [argX, argY] = arg.split('x');
-                    const rangeX = getAllNumbersInRange(argX);
-                    const rangeY = getAllNumbersInRange(argY);
-                    for (const x of rangeX) {
-                        matrix[x] = {};
-                        if (argY !== undefined) {
+            for (const arg of argsString.split(',')) {
+                const [argX, argY] = arg.split('x');
+                const rangeX = getAllNumbersInRange(argX);
+                const rangeY = getAllNumbersInRange(argY);
+                for (const x of rangeX) {
+                    matrix[x] = {};
+                    if (argY !== undefined) {
+                        for (const y of rangeY) {
+                            matrix[x][y] = true;
+                            allowedString = `${allowedString}${x}x${y}, `;
+                        }
+                    } else {
+                        matrix[x][x] = true;
+                        allowedString = `${allowedString}${x}x${x}, `;
+                        if (allowSymetric && argY !== undefined) {
                             for (const y of rangeY) {
-                                matrix[x][y] = true;
-                                allowedString = `${allowedString}${x}x${y}, `;
-                            }
-                        } else {
-                            matrix[x][x] = true;
-                            allowedString = `${allowedString}${x}x${x}, `;
-                            if (isSymetric && argY !== undefined) {
-                                for (const y of rangeY) {
+                                if (matrix[y] === undefined) {
                                     matrix[y] = {};
-                                    for (const x of rangeX) {
-                                        matrix[y][x] = true;
-                                        allowedString = `${allowedString}${y}x${x}, `;
-                                    }
+                                } 
+                                for (const x of rangeX) {
+                                    matrix[y][x] = true;
+                                    allowedString = `${allowedString}${y}x${x}, `;
                                 }
                             }
                         }
-                        allowedString = `${allowedString}\n`;
                     }
+                    allowedString = `${allowedString}\n`;
                 }
-                const rejectMain = (matrix[notifW][notifH] === undefined);
-                const rejectSymetric = (matrix[notifH][notifW] === undefined);
-                const reject = (!isSymetric && rejectMain) || rejectSymetric;
-                return { reject,
-                         rejectMain,
-                         rejectSymetric,
-                         argsString: allowedString };
-            
             }
+            const reject = (matrix[notifW][notifH] === undefined);
+            return { reject,
+                     argsString: allowedString };
         }
         return { reject: false };
     }
