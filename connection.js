@@ -373,10 +373,6 @@ class Connection {
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are",
                                        !notification.user.professional],
-                                      ["squareonly", `Rectangle boardsizes are`,
-                                       (notification.width !== notification.height)],
-                                      ["nonsquareonly", `Square boardsizes are`,
-                                       (notification.width === notification.height)],
                                       ["nopauseonweekends", "Pause on week-ends is",
                                        notification.pause_on_weekends],
                                       ["noautokomi", "-Automatic- komi is",
@@ -388,14 +384,8 @@ class Connection {
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
             if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString).reject) {
                 const for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
-                const ending = (["squareonly", "rectangleonly"].includes(familyNameString) ?
-                    `\n- examples of:\n-rectangle: ${notification.width}x${notification.height} `
-                    + `or ${notification.height}x${notification.width}\n-square: `
-                    + `${notification.width}x${notification.width} or `
-                    + `${notification.height}x${notification.height}`
-                    : "");
                 conn_log(`${nameF} not allowed ${for_r_u_g}`);
-                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_g}.${ending}` };
+                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_g}.` };
             }
         }
 
@@ -407,8 +397,10 @@ class Connection {
     checkChallengeAllowedFamilies(notification, r_u_strings) {
 
         const testsAllowedFamilies = [ ["boardsizes", "Board sizes", notification.width],
-                                        //add boardsizeheights
                                        ["komis", "Komi", notification.komi],
+
+
+                                       
                                        ["rules", "Rule", notification.rules],
                                        ["challengercolors", "Player Color", notification.challenger_color],
                                        ["speeds", "Speed", notification.time_control.speed],
@@ -419,13 +411,13 @@ class Connection {
             if (check_comma_families.reject) {
                 let notifDisplayed = String(notif);
                 let allowedArgsDisplayed = check_comma_families.argsString;
-                if (familyNameString === "boardsizes") {
+                /*if (familyNameString === "boardsizes") {
                     notifDisplayed = `${notification.width}x${notification.height}`;
                     allowedArgsDisplayed = boardsizeSquareToDisplayString(allowedArgsDisplayed);
                 } else if (familyNameString === "komis") {
                     allowedArgsDisplayed = komisToDisplayString(allowedArgsDisplayed);
                     //`any komi between ${check_comma_families.minAllowed} and ${check_comma_families.maxAllowed}`;
-                }
+                }*/
                 conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedArgsDisplayed}- `);
                 return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot `
                                             + `${r_u_strings.for_r_u_games}, please choose among:`

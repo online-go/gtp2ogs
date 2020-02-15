@@ -9,7 +9,8 @@ const checkArgs = ["rejectnew",
                    "booleans_RU",
                    "min_max_args_RU",
                    "min_max_blitz_live_corr_args_RU",
-                   "comma_separated_RU"];
+                   "numbers_comma_separated_RU",
+                   "words_comma_separated_RU"];
 checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
 
 exports.updateFromArgv = function() {
@@ -66,10 +67,10 @@ exports.updateFromArgv = function() {
         .default('maxconnectedgames', 20)
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
         .default('maxconnectedgamesperuser', 3)
-        .describe('rankedonly', 'Only accept ranked matches')
-        .describe('unrankedonly', 'Only accept unranked matches')
         .describe('fakebotrank', 'Fake bot rank provided by bot admin to calculate the estimated number of handicap'
                                  + 'automatic handicap stones if handicap is -automatic- (notification.handicap === -1)')
+        .describe('rankedonly', 'Only accept ranked matches')
+        .describe('unrankedonly', 'Only accept unranked matches')
         /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
         /  nor their unranked args since the general argument is for unranked games too*/
         .describe('privateonly', 'Only accept private matches')
@@ -78,10 +79,6 @@ exports.updateFromArgv = function() {
         //         3B1) BOOLEANS RANKED/UNRANKED:
         .describe('proonly', 'For all matches, only accept those from professionals for ranked / unranked games')
         .default('proonly', 'false/...')
-        .describe('squareonly', 'For all matches, only accept those in which board size width is equal to height for ranked / unranked games')
-        .default('squareonly', 'true/...')
-        .describe('rectangleonly', 'For all matches, only accept those in which board size width is not equal to height for ranked / unranked games')
-        .default('rectangleonly', 'false/...')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                         + '(specific to correspondence games) for ranked / unranked games')
         .default('nopauseonweekends', 'false/...')
@@ -188,8 +185,7 @@ exports.updateFromArgv = function() {
         "rankedonly", "unrankedonly", "privateonly", "publiconly",
         "boardsizes", "komis",
         "rules", "challengercolors", "speeds", "timecontrols",
-        "proonly", "squareonly", "rectangleonly",
-        "noautohandicap", "noautokomi", "nopauseonweekends",
+        "proonly", "noautohandicap", "noautokomi", "nopauseonweekends",
         "nopause",
         "rank", "handicap",
         "blitz", "live","correspondence"];
@@ -269,31 +265,72 @@ exports.updateFromArgv = function() {
                };
     };
 
-    exports.check_comma_separated_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_numbers_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString)
+    {
+        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString, isSymetric);
+        if (argsString !== "all") {
+            let matrix = {};
+            let allowedString = "";
+            if (familyNameString === "boardsizes") {
+                for (const arg of argsString.split(',')) {
+                    const [argX, argY] = arg.split('x');
+                    const rangeX = getAllNumbersInRange(argX);
+                    const rangeY = getAllNumbersInRange(argY);
+                    for (const x of rangeX) {
+                        matrix[x] = {};
+                        if (argY) {
+                            for (const y of rangeY) {
+                                matrix[x][y] = true;
+                                allowedString = `${allowedString}${x}x${y}, `;
+                            }
+                        } else {
+                            matrix[x][x] = true;
+                            allowedString = `${allowedString}${x}x${x}, `;
+                            if (isSymetric) {
+                                if (argY) {
+                                    for (const y of rangeY) {
+                                        matrix[y] = {};
+                                        matrix[y][x] = true;
+                                        allowedString = `${allowedString}${y}x${x}, `;
+                                    }
+                                }
+                                
+                            }
+                        }
+                        allowedString = `${allowedString}\n`;
+                    }
+                }
+                const rejectMain = (matrix[notifW][notifH] === undefined);
+                const rejectSymetric = (matrix[notifH][notifW] === undefined);
+                const reject = (!isSymetric && rejectMain) || rejectSymetric;
+                return { reject,
+                         rejectMain,
+                         rejectSymetric,
+                         argsString: allowedString };
+            }
+
+
+
+
+            } else {
+                const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
+                const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
+                return { reject,
+                         argsString,
+                         minAllowed,
+                         maxAllowed };
+            }
+        }
+        return { reject: false };
+    }
+
+    exports.check_words_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
         const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
-            if (["boardsizes", "komis"].includes(familyNameString)) {
-                // numbers families
-                if (familyNameString === "boardsizes") {
-                    const allArgsNumbers = getAllArgsNumbers(argsString).join(',');
-                    const reject = !allArgsNumbers.includes(Number(notif));
-                    return { reject,
-                             argsString: allArgsNumbers };
-                } else {
-                    const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
-                    const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
-                    return { reject,
-                             argsString,
-                             minAllowed,
-                             maxAllowed };
-                }
-            } else {
-                // words families
-                const reject = !argsString.split(',').includes(notif);
-                return { reject,
-                         argsString };
-            }
+            const reject = !argsString.split(',').includes(notif);
+            return { reject,
+                     argsString };
         }
         return { reject: false };
     }
@@ -425,16 +462,19 @@ function checkMinMaxReject(argsString, notif) {
              maxAllowed };
 }
 
-function getAllArgsNumbers(argsString) {
-    let allArgs = [];
-    for (const arg of argsString.split(',')) {
-        const [minRange, maxRange] = arg.split(':')
-                                        .map( str => Number(str) );
-        for (let i = minRange; i < maxRange; ++i) {
-            allArgs.push(i)
+function getAllNumbersInRange(range) {
+    if (range !== undefined) {
+        let allNumbersInRange = [];
+        if (range.includes(':')) {
+            const [minRange, maxRange] = range.split(':')
+                                              .map(str => Number(str));
+            for (let i = minRange; i <= maxRange; ++i) {
+                allNumbersInRange.push(i)
+            }
+            return allNumbersInRange;
         }
+        return range;
     }
-    return allArgs;
 }
 
 function getMinMaxNumbers(argsString) {
