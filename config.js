@@ -290,7 +290,7 @@ exports.updateFromArgv = function() {
                             for (const y of rangeY) {
                                 if (matrix[y] === undefined) {
                                     matrix[y] = {};
-                                } 
+                                }
                                 for (const x of rangeX) {
                                     matrix[y][x] = true;
                                     allowedString = `${allowedString}${y}x${x}, `;
