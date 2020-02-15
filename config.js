@@ -9,6 +9,7 @@ const checkArgs = ["rejectnew",
                    "booleans_RU",
                    "min_max_args_RU",
                    "min_max_blitz_live_corr_args_RU",
+                   "numbers_boardsizes_comma_separated_RU",
                    "numbers_comma_separated_RU",
                    "words_comma_separated_RU"];
 checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
@@ -265,9 +266,9 @@ exports.updateFromArgv = function() {
                };
     };
 
-    exports.check_numbers_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString)
+    exports.check_numbers_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString, isSymetric)
     {
-        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString, isSymetric);
+        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
             let matrix = {};
             let allowedString = "";
@@ -307,19 +308,22 @@ exports.updateFromArgv = function() {
                          rejectMain,
                          rejectSymetric,
                          argsString: allowedString };
+            
             }
+        }
+        return { reject: false };
+    }
 
-
-
-
-            } else {
-                const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
-                const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
-                return { reject,
-                         argsString,
-                         minAllowed,
-                         maxAllowed };
-            }
+    exports.check_numbers_comma_separated_RU = function (notif, rankedStatus, familyNameString)
+    {
+        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        if (argsString !== "all") {
+            const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
+            const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
+            return { reject,
+                     argsString,
+                     minAllowed,
+                     maxAllowed };
         }
         return { reject: false };
     }
