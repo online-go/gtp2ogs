@@ -284,16 +284,18 @@ exports.updateFromArgv = function() {
                                 matrix[x][y] = true;
                                 allowedString = `${allowedString}${x}x${y}, `;
                             }
-                            if (isSymetric) {
-                                for (const y of rangeY) {
-                                    matrix[y] = {};
-                                    matrix[y][x] = true;
-                                    allowedString = `${allowedString}${y}x${x}, `;
-                                }
-                            }
                         } else {
                             matrix[x][x] = true;
                             allowedString = `${allowedString}${x}x${x}, `;
+                            if (isSymetric && argY !== undefined) {
+                                for (const y of rangeY) {
+                                    matrix[y] = {};
+                                    for (const x of rangeX) {
+                                        matrix[y][x] = true;
+                                        allowedString = `${allowedString}${y}x${x}, `;
+                                    }
+                                }
+                            }
                         }
                         allowedString = `${allowedString}\n`;
                     }
