@@ -52,7 +52,9 @@ class Connection {
         if (config.timeout) {
             this.idle_timeout_interval = setInterval(this.disconnectIdleGames.bind(this), 10000);
         }
-        if (config.DEBUG) setInterval(this.dumpStatus.bind(this), 15*60*1000);
+        if (config.DEBUG) {
+            setInterval(this.dumpStatus.bind(this), 15*60*1000);
+        }
 
         this.clock_drift = 0;
         this.network_latency = 0;
@@ -138,7 +140,9 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (config.DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
+            if (config.DEBUG) {
+                conn_log("active_game:", JSON.stringify(gamedata));
+            }
 
             /* OGS auto scores bot games now, no removal processing is needed by the bot.
             
@@ -158,14 +162,18 @@ class Connection {
                     /  longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
                     /  Note: active_game and gamedata events can arrive in either order.*/
 
-                    if (config.DEBUG) conn_log(gamedata.id, "active_game phase === finished");
+                    if (config.DEBUG) {
+                        conn_log(gamedata.id, "active_game phase === finished");
+                    }
 
                     /* XXX We want to disconnect right away here, but there's a game over race condition
                     /      on server side: sometimes /gamedata event with game outcome is sent after
                     /      active_game, so it's lost since there's no game to handle it anymore...
                     /      Work around it with a timeout for now.*/
                     if (!this.connected_games[gamedata.id].disconnect_timeout) {
-                        if (config.DEBUG) console.log("Starting disconnect Timeout in Connection active_game for " + gamedata.id);
+                        if (config.DEBUG) {
+                            console.log("Starting disconnect Timeout in Connection active_game for " + gamedata.id);
+                        }
                         this.connected_games[gamedata.id].disconnect_timeout =
                             setTimeout(() => {  this.disconnectFromGame(gamedata.id);  }, 1000);
                     }
@@ -175,8 +183,9 @@ class Connection {
             }
 
             // Don't connect if it is not our turn.
-            if (gamedata.player_to_move !== this.bot_id)
+            if (gamedata.player_to_move !== this.bot_id) {
                 return;
+            }
 
             // Set up the game so it can listen for events.
             this.connectToGame(gamedata.id);
@@ -193,30 +202,40 @@ class Connection {
     }
     connectToGame(game_id) {
         if (game_id in this.connected_games) {
-            if (config.DEBUG) conn_log("Connected to game", game_id, "already");
+            if (config.DEBUG) {
+                conn_log("Connected to game", game_id, "already");
+            }
             return this.connected_games[game_id];
         }
 
         return this.connected_games[game_id] = new Game(this, game_id);
     }
     disconnectFromGame(game_id) {
-        if (config.DEBUG) conn_log("disconnectFromGame", game_id);
+        if (config.DEBUG) {
+            conn_log("disconnectFromGame", game_id);
+        }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
             delete this.connected_games[game_id];
         }
     }
     disconnectIdleGames() {
-        if (config.DEBUG) conn_log("Looking for idle games to disconnect");
+        if (config.DEBUG) {
+            conn_log("Looking for idle games to disconnect");
+        }
         for (const game_id in this.connected_games) {
             const state = this.connected_games[game_id].state;
             if (state === null) {
-                if (config.DEBUG) conn_log("No game state, not checking idle status for", game_id);
+                if (config.DEBUG) {
+                    conn_log("No game state, not checking idle status for", game_id);
+                }
                 continue;
             }
             const idle_time = Date.now() - state.clock.last_move;
             if ((state.clock.current_player !== this.bot_id) && (idle_time > config.timeout)) {
-                if (config.DEBUG) conn_log("Found idle game", game_id, ", other player has been idling for", idle_time, ">", config.timeout);
+                if (config.DEBUG) {
+                    conn_log("Found idle game", game_id, ", other player has been idling for", idle_time, ">", config.timeout);
+                }
                 this.disconnectFromGame(game_id);
             }
         }
@@ -258,9 +277,10 @@ class Connection {
         for (const game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
-        if (this.socket) this.socket.emit('notification/connect', this.auth({}), (x) => {
-            conn_log(x);
-        });
+        if (this.socket) {
+            this.socket.emit('notification/connect', this.auth({}), (x) => {
+            conn_log(x); });
+        }
     }
     on_friendRequest(notification) {
         console.log("Friend request from ", notification.user.username);
@@ -321,7 +341,9 @@ class Connection {
         }
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
-            if (config.DEBUG) console.log(`# of connected games = ${number_connected_games}`);
+            if (config.DEBUG) {
+                console.log(`# of connected games = ${number_connected_games}`);
+            }
             const check_max = config.check_max_root(number_connected_games, "maxconnectedgames");
             if (check_max.reject) {
                 conn_log(`${number_connected_games} games being played, maximum is ${check_max.maxAllowed}`);
@@ -525,8 +547,9 @@ class Connection {
             this.games_by_player[player] = [ game_id ];
             return;
         }
-        if (this.games_by_player[player].indexOf(game_id) !== -1)  // Already have it ?
+        if (this.games_by_player[player].indexOf(game_id) !== -1) { // Already have it ?
             return;
+        }
         this.games_by_player[player].push(game_id);
     }
     removeGameForPlayer(game_id) {
@@ -535,8 +558,9 @@ class Connection {
             if (idx === -1)  continue;
 
             this.games_by_player[player].splice(idx, 1);  // Remove element
-            if (this.games_by_player[player].length === 0)
+            if (this.games_by_player[player].length === 0) {
                 delete this.games_by_player[player];
+            }
             return;
         }
     }
@@ -783,7 +807,7 @@ function UHMAEAT(arg, familyNameString, nameF, familyObject, familyNotification,
                          MIBL };
             }
         }
-    } else if (minMaxCondition(familyObject.arg, familyNotification, familyObject.isMin)) { // "periods", "rank", "handicap"
+    } else if (minMaxCondition(familyObject.arg, familyNotification, familyObject.isMin)) {
         const notif = familyNotification;
         if (familyNameString.includes("periods")) {
             return { nameF,
