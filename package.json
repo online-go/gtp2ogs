@@ -14,6 +14,9 @@
   "bin": {
     "gtp2ogs": "gtp2ogs.js"
   },
+  "engines": {
+    "node": ">=0.15"
+  },
   "dependencies": {
     "optimist": "=0.6.1",
     "socket.io-client": "=1.5.1",
