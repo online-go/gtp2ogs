@@ -83,6 +83,8 @@ exports.updateFromArgv = function() {
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends-'
                                         + '(specific to correspondence games) for ranked / unranked games')
         .default('nopauseonweekends', 'false/...')
+        .describe('allowsymetricboardsizes', 'Allow symetric X/Y Y/X boardsizes, for example 25x1 also allows 1x25')
+        .default('allowsymetricboardsizes', 'true/...')
         .describe('noautokomi', 'Do not allow komi to be set to -automatic- for ranked / unranked games')
         .default('noautokomi', 'false/...')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic- for ranked / unranked games')
@@ -186,7 +188,8 @@ exports.updateFromArgv = function() {
         "rankedonly", "unrankedonly", "privateonly", "publiconly",
         "boardsizes", "komis",
         "rules", "challengercolors", "speeds", "timecontrols",
-        "proonly", "noautohandicap", "noautokomi", "nopauseonweekends",
+        "proonly", "allowsymetricboardsizes",
+        "noautohandicap", "noautokomi", "nopauseonweekends",
         "nopause",
         "rank", "handicap",
         "blitz", "live","correspondence"];
@@ -311,7 +314,9 @@ exports.updateFromArgv = function() {
     exports.check_numbers_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
         const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        if (argsString !== "all") {
+        if (argsString !== "all" &&
+            String(notif) !== "null") {
+            // "automatic" komi is dealt with separately with --noautokomi
             const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
             const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
             return { reject,

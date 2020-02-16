@@ -398,8 +398,7 @@ class Connection {
 
         const testsAllowedFamilies = [ ["boardsizes", "Board sizes", String(notification.width)],
                                        ["komis", "Komi", String(notification.komi)],
-
-
+                                       // allowsymetricboardsizes
 
                                        ["rules", "Rule", notification.rules],
                                        ["challengercolors", "Player Color", notification.challenger_color],
