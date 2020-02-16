@@ -331,15 +331,23 @@ exports.updateFromArgv = function() {
     exports.check_numbers_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
         const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        if (argsString !== "all" &&
-            String(notif) !== "null") {
+        if (argsString !== "all" && String(notif) !== "null") {
             // "automatic" komi is dealt with separately with --noautokomi
-            const [minAllowed, maxAllowed] = getMinMaxNumbers(argsString);
-            const reject = checkMinMaxReject(`${minAllowed}:${maxAllowed}`, notif);
-            return { reject,
-                     argsString,
-                     minAllowed,
-                     maxAllowed };
+            for (const arg of argsString.split(',')) {
+                if (arg.includes(':')) {
+                    const reject = checkMinMaxReject(argsString, notif);
+                    if (reject) {
+                        return { reject,
+                                 argsString };
+                    }
+                } else {
+                    const reject = (arg !== notif);
+                    if (reject) {
+                        return { reject,
+                                 argsString };
+                    }
+                }
+            }
         }
         return { reject: false };
     }
@@ -468,24 +476,4 @@ function getAllNumbersInRange(range) {
         }
         return range;
     }
-}
-
-function getMinMaxNumbers(argsString) {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const arg of argsString.split(',')) {
-        if (arg !== "automatic") { // not a number, rule it out of min/max evaluation
-            if (arg.includes(':')) {
-                const [minRange, maxRange] = arg.split(':')
-                                                .map( str => Number(str) );
-                if (minRange < min) min = minRange;
-                if (maxRange > max) max = maxRange;
-            } else {
-                const argNumber = Number(arg);
-                if (argNumber < min) min = argNumber;
-                if (argNumber > max) max = argNumber;
-            }
-        }
-    }
-    return [min, max];
 }
