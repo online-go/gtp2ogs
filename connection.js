@@ -322,7 +322,8 @@ class Connection {
             }
         }
 
-        const resultMinMaxRank = minMaxRejectResult("rank", "rank", notification.user.ranking, false, r_u_strings);
+        const resultMinMaxRank = minMaxRejectResult("rank", "rank", notification.user.ranking, notification.ranked,
+                                                    false, r_u_strings.for_r_u_games);
         if (resultMinMaxRank) return resultMinMaxRank;
 
         // check bot is available, else don't mislead user:
@@ -437,6 +438,11 @@ class Connection {
             }
         }
 
+
+
+
+
+
         return { reject: false }; // OK !
 
     }
@@ -452,7 +458,8 @@ class Connection {
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
                               notification.handicap);
 
-        const resultMinMaxHandicap = minMaxRejectResult("handicap", "handicap stones", handicapNotif, config.fakebotrank, notification.ranked);
+        const resultMinMaxHandicap = minMaxRejectResult("handicap", "handicap stones", handicapNotif, notification.ranked,
+                                                        config.fakebotrank, r_u_strings.for_r_u_games);
         if (resultMinMaxHandicap) return resultMinMaxHandicap;
         
 
@@ -467,7 +474,7 @@ class Connection {
                            ["correspondence", notification.time_control]
                          ];
         for (const [familyNameString, notif] of testsMinMax) {
-            const resultMinMax = minMaxRejectResult(familyNameString, notif, false, notification.ranked, r_u_strings);
+            const resultMinMax = minMaxBlitzLiveCorrRejectResult(familyNameString, notif, false, notification.ranked, r_u_strings);
             if (resultMinMax) return resultMinMax;
         }
 
@@ -715,35 +722,34 @@ function argMIBL(isMin) {
     }
 }
 
-function createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, r_u_strings) {
+function createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, for_r_u_games) {
     const fakeBotRankMsg = (fakebotRank ? `(fakeBotRank: ${fakeBotRank})`
                                         : "");
-    return (`${MIBL.miniMaxi} ${name} ${r_u_strings.for_r_u_games} ${notif} `
+    return (`${MIBL.miniMaxi} ${name} ${for_r_u_games} ${notif} `
             + `is ${MIBL.belAbo} ${arg} ${fakeBotRankMsg}.`);
 }
 
-function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, isMin, r_u_strings) {
+function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, isMin, for_r_u_games) {
     if (familyNameString === "handicap") {
         if (!isMin && arg === 0 && notif > 0) return "Even games only (no handicap on this bot).";
         if (isMin && arg > 0 && notif === 0) return "Handicap games only (no even games on this bot).";
     }
-    return (`${MIBL.miniMaxi} ${name} ${r_u_strings.for_r_u_games} is `
-            + `${arg}, ${endingSentence}.`);
+    return (`${MIBL.miniMaxi} ${name} ${for_r_u_games} is ${arg}, ${endingSentence}.`);
 }
 
-function minMaxRejectResult(familyNameString, name, notif, notificationRanked, fakeBotRank, r_u_strings) {
+function minMaxRejectResult(familyNameString, name, notif, notificationRanked, fakeBotRank, for_r_u_games) {
     const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, familyNameString);
     if (check_min_max.reject) {
         for (const minMax of ["min", "max"]) {
-            if (check_min_max[`${minMax}Reject`]) {
+            if (check_min_max[minMax].reject) {
                 const isMin = (minMax === "min");
                 const MIBL = argMIBL(isMin);
-                const allowed = check_min_max[`${minMax}Allowed`];
+                const allowed = check_min_max[minMax].allowed;
                 const allowedConverted = (familyNameString === "rank" ? rankToString(allowed)
                                                                        : allowed);
 
-                const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, r_u_strings);                      
-                const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, r_u_strings);
+                const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, allowedConverted, fakeBotRank, for_r_u_games);                      
+                const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, for_r_u_games);
                 conn_log(connLogMsg);
                 return { reject: true, msg: rejectMsg };
             }

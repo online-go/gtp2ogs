@@ -279,10 +279,11 @@ exports.updateFromArgv = function() {
                       + `${timeSettings.length}`;
         }
         const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
-        return { reject: { maintime:   checkMinMaxReject(maintimeArgs, notifMaintime),
-                           periods:    checkMinMaxReject(periodsArgs, notifPeriods),
-                           periodtime: checkMinMaxReject(periodtimeArgs, notifPeriodtime)
-                         }
+        const reject = maintimeArgs.reject || periodsArgs.reject || periodtimeArgs.reject;
+        return { reject,
+                 maintime:   checkMinMaxReject(maintimeArgs, notifMaintime),
+                 periods:    checkMinMaxReject(periodsArgs, notifPeriods),
+                 periodtime: checkMinMaxReject(periodtimeArgs, notifPeriodtime)
                };
     };
 
@@ -457,10 +458,11 @@ function checkMinMaxReject(argsString, notif) {
     // if an arg is missing, Number(undefined) returns NaN,
     // and any math operation on NaN returns false (don't reject challenge)
     return { reject: minReject || maxReject,
-             minReject,
-             maxReject,
-             minAllowed,
-             maxAllowed };
+             min: { reject: minReject,
+                    allowed: minAllowed },
+             max: { reject: minReject,
+                    allowed: minAllowed }
+           };
 }
 
 function getAllNumbersInRange(range) {
