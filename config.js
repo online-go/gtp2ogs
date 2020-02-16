@@ -17,7 +17,6 @@ checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
         // 1) EXPORTED ARGS:
-        //        1A) ASPECIFIC
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -133,15 +132,12 @@ exports.updateFromArgv = function() {
         process.exit();
     }
 
-    // console messages
-    // A- greeting and debug status //
     const debugStatus = argv.debug ? "ON" : "OFF";
     console.log(`\ngtp2ogs version 6.0`
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}`);
                 
-    // B - check deprecated argv //
     const deprecatedArgvArrays = [ 
         [["bot", "id", "botid"], "username"],
         [["maxtotalgames"], "maxconnectedgames"],
@@ -182,7 +178,31 @@ exports.updateFromArgv = function() {
     }
     console.log("\n");
 
-    // include "nopause" here to be able to do a functionnal check on argv ranked/unranked
+    console.log(`CHECKING WARNINGS:`
+                + `\n-------------------------------------------------------`);
+    let isWarning = false;
+    for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.nopause)) {
+        // avoid infinite games
+        // TODO: if --maxpausetime gets implemented, we can remove this
+        if (rankedUnrankedArg !== "true") {
+            isWarning = true;
+            console.log(`    Warning: Nopause setting for ${rankedUnranked} games not detected, `
+                        + `${rankedUnranked} games are likely to last forever`);
+        }
+    }
+    for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.timecontrols)) {
+        for (const problematicTimecontrol of ["all", "none", "absolute"]) {
+            if (rankedUnrankedArg.includes(problematicTimecontrol)) {
+                isWarning = true;
+                console.log(`    Warning: potentially problematic time control for ${rankedUnranked} games `
+                            + `detected - ${problematicTimecontrol}: may cause unwanted time management `
+                            + `problems with users`);
+            }
+        }
+    }
+    if (!isWarning) console.log("[ SUCCESS ]\n");
+
+    // included "nopause" here to be able to do a functionnal check on argv ranked/unranked
     const argNamesChecks = ["rejectnew", "rejectnewfile",
         "maxconnectedgames", "maxconnectedgamesperuser",
         "rankedonly", "unrankedonly", "privateonly", "publiconly",
@@ -194,11 +214,8 @@ exports.updateFromArgv = function() {
         "rank", "handicap",
         "blitz", "live","correspondence"];
 
-    // EXPORTS FROM argv //
-    // 0) root, challenge unrelated exports exports
     for (const k in argv) {
         if (!argNamesChecks.includes(k)) {
-            // Add and Modify exports
             if (k === "host" && argv.beta) {
                 exports[k] = 'beta.online-go.com';
             } else if (["timeout","startupbuffer"].includes(k)) {
@@ -337,33 +354,6 @@ exports.updateFromArgv = function() {
         }
         return { reject: false };
     }
-    
-    // console messages
-    // C - check exports warnings:
-    console.log(`CHECKING WARNINGS:`
-                + `\n-------------------------------------------------------`);
-    let isWarning = false;
-    for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.nopause)) {
-        // avoid infinite games
-        // TODO: if --maxpausetime gets implemented, we can remove this
-        if (rankedUnrankedArg !== "true") {
-            isWarning = true;
-            console.log(`    Warning: Nopause setting for ${rankedUnranked} games not detected, `
-                        + `${rankedUnranked} games are likely to last forever`);
-        }
-    }
-    // warn about potentially problematic timecontrols:
-    for (const [rankedUnrankedArg, rankedUnranked] of getArgsArraysRankedAndUnranked(argv.timecontrols)) {
-        for (const problematicTimecontrol of ["all", "none", "absolute"]) {
-            if (rankedUnrankedArg.includes(problematicTimecontrol)) {
-                isWarning = true;
-                console.log(`    Warning: potentially problematic time control for ${rankedUnranked} games `
-                            + `detected - ${problematicTimecontrol}: may cause unwanted time management `
-                            + `problems with users`);
-            }
-        }
-    }
-    if (!isWarning) console.log("[ SUCCESS ]\n");
 }
 
 // deprecations:
