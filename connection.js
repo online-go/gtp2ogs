@@ -322,17 +322,8 @@ class Connection {
             }
         }
 
-
-
-
-
-        const resultMinMaxRank = genericMinMaxRejectResult("rank", "rank", notification.user.ranking, false, config_r_u, r_u_strings);
+        const resultMinMaxRank = minMaxRejectResult("rank", "rank", notification.user.ranking, false, r_u_strings);
         if (resultMinMaxRank) return resultMinMaxRank;
-
-
-
-
-
 
         // check bot is available, else don't mislead user:
         if (config.check_rejectnew().reject) {
@@ -453,12 +444,6 @@ class Connection {
     //
     checkChallengeSettings(notification, r_u_strings) {
 
-
-
-
-
-
-
         // TODO: modify or remove fakebotrank code whenever server sends us automatic handicap 
         //       notification.handicap different from -1.
         /* adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
@@ -467,8 +452,8 @@ class Connection {
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
                               notification.handicap);
 
-        const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, config.fakebotrank || false, notification.ranked]
-                            ];
+        const resultMinMaxHandicap = minMaxRejectResult("handicap", "handicap stones", handicapNotif, config.fakebotrank, notification.ranked);
+        if (resultMinMaxHandicap) return resultMinMaxHandicap;
         
 
 
@@ -482,7 +467,7 @@ class Connection {
                            ["correspondence", notification.time_control]
                          ];
         for (const [familyNameString, notif] of testsMinMax) {
-            const resultMinMax = genericMinMaxRejectResult(familyNameString, notif, false, notification.ranked, r_u_strings);
+            const resultMinMax = minMaxRejectResult(familyNameString, notif, false, notification.ranked, r_u_strings);
             if (resultMinMax) return resultMinMax;
         }
 
@@ -702,7 +687,8 @@ function ranked_unranked_strings_connection(rankedStatus) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    return (R >= 30 ? ((R-30+1) + 'd') : ((30-R) + 'k'));
+    return (R >= 30 ? `${R - 30 + 1}d`
+                    : `${30 - R}k`);
 }
 
 function komisToDisplayString(komisCommaSeparated) {
@@ -721,17 +707,54 @@ function komisToDisplayString(komisCommaSeparated) {
     return komisDisplayed;
 }
 
-function isMinMaxArg(arg, minArg) {
-    return (arg === minArg ? true : false);
-}
-
-function argMIBL(minMax) {
-    if (minMax === "min") {
-        return { MIBL: { minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" } };
+function argMIBL(isMin) {
+    if (isMin) {
+        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" };
     } else {
-        return { MIBL: { minMax: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high" } };
+        return { miniMaxi: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high" };
     }
 }
+
+function createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, r_u_strings) {
+    const fakeBotRankMsg = (fakebotRank ? `(fakeBotRank: ${fakeBotRank})`
+                                        : "");
+    return (`${MIBL.miniMaxi} ${name} ${r_u_strings.for_r_u_games} ${notif} `
+            + `is ${MIBL.belAbo} ${arg} ${fakeBotRankMsg}.`);
+}
+
+function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, isMin, r_u_strings) {
+    if (familyNameString === "handicap") {
+        if (!isMin && arg === 0 && notif > 0) return "Even games only (no handicap on this bot).";
+        if (isMin && arg > 0 && notif === 0) return "Handicap games only (no even games on this bot).";
+    }
+    return (`${MIBL.miniMaxi} ${name} ${r_u_strings.for_r_u_games} is `
+            + `${arg}, ${endingSentence}.`);
+}
+
+function minMaxRejectResult(familyNameString, name, notif, notificationRanked, fakeBotRank, r_u_strings) {
+    const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, familyNameString);
+    if (check_min_max.reject) {
+        for (const minMax of ["min", "max"]) {
+            if (check_min_max[`${minMax}Reject`]) {
+                const isMin = (minMax === "min");
+                const MIBL = argMIBL(isMin);
+                const allowed = check_min_max[`${minMax}Allowed`];
+                const allowedConverted = (familyNameString === "rank" ? rankToString(allowed)
+                                                                       : allowed);
+                const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, r_u_strings);                      
+                const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, r_u_strings);
+
+                conn_log(connLogMsg);
+                return { reject: true, msg: rejectMsg };
+            }
+        }
+    }
+}
+
+
+
+
+
 
 function timespanToDisplayString(timespan) {
     const ss = timespan % 60;
@@ -743,36 +766,6 @@ function timespanToDisplayString(timespan) {
     .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
     .filter(e => e !== "")
     .join(" ");
-}
-
-
-
-
-
-
-
-function genericMinMaxRejectResult(familyNameString, familyNotification, notificationRanked, isFakeBotRankReject, r_u_strings) {
-    const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, familyNameString);
-    if (check_min_max.reject) {
-        const MIBL = (check_min_max.minReject ? argMIBL("min") : argMIBL("max"));
-
-        
-    }
-
-
-    const [minArg, maxArg] = config_r_u[familyNameString].split(':');
-    for (const minMaxArg of [minArg, maxArg]) {
-        const fullObject = UHMAEAT(minMaxArg, minArg, familyNameString, nameF, familyObject, familyNotification, r_u_strings);
-        if (fullObject) { // exit the function if we don't reject
-            if (isFakeBotRankReject) {
-                conn_log(`Automatic handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF}, but ${familyObject.MIBL.minMax} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}`);
-                return { reject: true, msg: `-Automatic- handicap ${fullObject.for_r_u_g} was set to ${fullObject.notif} ${fullObject.nameF} based on rank difference between you and this bot,\nBut ${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} is ${fullObject.arg} ${fullObject.nameF}:\nPlease ${familyObject.MIBL.incDec} the number of ${fullObject.nameF} in -custom- handicap.` };
-            } else {
-                conn_log(`${fullObject.notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} ${fullObject.arg}`);
-                return { reject: true, msg: `${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} is ${fullObject.arg}, ${fullObject.ending}.` };
-            }
-        }
-    }
 }
 
 function UHMAEAT(arg, familyNameString, nameF, familyObject, familyNotification, r_u_strings) {
@@ -813,30 +806,6 @@ function UHMAEAT(arg, familyNameString, nameF, familyObject, familyNotification,
                          notif: timespanToDisplayString(timecontrolObject.notif),
                          MIBL };
             }
-        }
-    } else if (minMaxCondition(familyObject.arg, familyNotification, familyObject.isMin)) {
-        const notif = familyNotification;
-        if (familyNameString === "rank") {
-            return { nameF,
-                     ending: `your rank is too ${familyObject.MIBL.lowHig}`,
-                     for_r_u_g: r_u_strings.for_r_u_games,
-                     arg: rankToString(arg),
-                     notif: rankToString(notif),
-                     MIBL };
-        } else { //"handicap"
-            if (!familyObject.isMin && (arg === 0) && notif > 0) {
-                ending = " (even games only)";
-            } else if (familyObject.isMin && (arg > 0) && notif === 0) {
-                ending = " (handicap games only)";
-            } else {
-                ending = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
-            }
-            return { nameF,
-                     ending,
-                     for_r_u_g: r_u_strings.for_r_u_games,
-                     arg,
-                     notif,
-                     MIBL };
         }
     }
 }
