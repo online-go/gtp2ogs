@@ -741,9 +741,9 @@ function minMaxRejectResult(familyNameString, name, notif, notificationRanked, f
                 const allowed = check_min_max[`${minMax}Allowed`];
                 const allowedConverted = (familyNameString === "rank" ? rankToString(allowed)
                                                                        : allowed);
+
                 const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, r_u_strings);                      
                 const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, r_u_strings);
-
                 conn_log(connLogMsg);
                 return { reject: true, msg: rejectMsg };
             }
