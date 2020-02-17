@@ -269,7 +269,7 @@ exports.updateFromArgv = function() {
         return checkMinMaxReject(args, notif);
     };
 
-    exports.check_min_max_blitz_live_corr_args_RU = function (notifMaintime, notifPeriods, notifPeriodtime, rankedStatus, familyNameString)
+    exports.check_min_max_blitz_live_corr_args_RU = function (notif, rankedStatus, familyNameString)
     {
         const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
@@ -281,9 +281,9 @@ exports.updateFromArgv = function() {
         const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
         const reject = maintimeArgs.reject || periodsArgs.reject || periodtimeArgs.reject;
         return { reject,
-                 maintime:   checkMinMaxReject(maintimeArgs, notifMaintime),
-                 periods:    checkMinMaxReject(periodsArgs, notifPeriods),
-                 periodtime: checkMinMaxReject(periodtimeArgs, notifPeriodtime)
+                 maintime:   checkMinMaxReject(notif, notifMaintime),
+                 periods:    checkMinMaxReject(notif.periods, notifPeriods),
+                 periodtime: checkMinMaxReject(notif, notifPeriodtime)
                };
     };
 
