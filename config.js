@@ -266,7 +266,7 @@ exports.updateFromArgv = function() {
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
     {
         const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        return checkMinMaxReject(args, notif);
+        return checkAndCreateMinMaxReject(args, notif, false);
     };
 
     exports.check_min_max_blitz_live_corr_args_RU = function (familyNameString, notif, rankedStatus)
@@ -278,23 +278,16 @@ exports.updateFromArgv = function() {
                       + `maintime_periods_periodtime separator : expected 3 parts, not `
                       + `${timeSettings.length}`;
         }
-        const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
+        const [maintimeInputs, periodsInputs, periodtimeInputs] = timeSettings;
         const timecontrol = notif.time_control.time_control;
-
-
-
-
-
-
-
         
+        const maintimeOutputs = getMainTimeNameNotif(timecontrol);
+        const periodsOutputs = { name: "the number of periods", notif: notif.periods };
+        const periodtimeOutputs = getPeriodTimeNameNotif(timecontrol);
 
-
-        const reject = maintimeArgs.reject || periodsArgs.reject || periodtimeArgs.reject;
-        return { reject,
-                 maintime:   checkMinMaxReject(notif, notifMaintime),
-                 periods:    checkMinMaxReject(notif.periods, notifPeriods),
-                 periodtime: checkMinMaxReject(notif, notifPeriodtime)
+        return { maintime:   checkAndCreateMinMaxReject(maintimeInputs, maintimeOutputs.notif, maintimeOutputs.name),
+                 periods:    checkAndCreateMinMaxReject(periodsInputs, periodsOutputs.notif, periodsOutputs.name),
+                 periodtime: checkAndCreateMinMaxReject(periodtimeInputs, periodtimeOutputs.notif, periodtimeOutputs.name)
                };
     };
 
@@ -347,7 +340,7 @@ exports.updateFromArgv = function() {
             // "automatic" komi is dealt with separately with --noautokomi
             for (const arg of argsString.split(',')) {
                 if (arg.includes(':')) {
-                    const reject = checkMinMaxReject(argsString, notif);
+                    const reject = checkAndCreateMinMaxReject(argsString, notif, false);
                     if (reject) {
                         return { reject,
                                  argsString };
@@ -461,52 +454,60 @@ function parseRank(arg) {
     }
 }
 
-function getMainTimePeriodTimeNameNotif(timecontrol) {
+function getMainTimeNameNotif(timecontrol) {
+    // add arrays for fischer maintimes: 2 time settings in 1 timecontrol
+    if (timecontrol === "fischer") {
+        return [ { name: "Initial Time", notif: notif.initial_time },
+                 { name: "Max Time", notif: notif.max_time } ];
+    }
+    if (["byoyomi", "canadian"].includes(timecontrol)) {
+        return [ { name: "Main Time", notif: notif.main_time } ];
+    }
+    if (timecontrol === "absolute") {
+        return [ { name: "Total Time", notif: notif.total_time } ];
+    }
+    if (["simple", "none"].includes(timecontrol)) {
+        return;
+    }
+    throw new `Error: unknown time control ${timecontrol}, can't check challenge.`;
+}
+
+function getPeriodTimeNameNotif(timecontrol) {
     /*  note: - for canadian periodtimes, notif.period_time is already for X stones,
     /           so divide it by the number of stones so that we can compare it to periodtime 
     /           arg (for 1 stone in all timecontrols)   
     /           e.g. 10 minutes period time for all the 20 stones = 10*60 / 20 
     /                = 30 seconds average period time for 1 stone.*/
-    let timesObject = {};
-    // add arrays for fischer maintimes: 2 time settings in 1 timecontrol
     if (timecontrol === "fischer") {
-        return { maintime:   [{ name: "Initial Time", notif: notif.initial_time },
-                              { name: "Max Time", notif: notif.max_time }],
-                 periodtime: [{ name: "Increment Time", notif: notif.time_increment }] };
+        return [ { name: "Increment Time", notif: notif.time_increment } ];
     }
     if (timecontrol === "byoyomi") {
-        return { maintime:   [{ name: "Main Time", notif: notif.main_time }],
-                 periodtime: [{ name: "Period Time", notif: notif.period_time }] };
+        return [ { name: "Period Time", notif: notif.period_time } ];
     }
     if (timecontrol === "canadian") {
-        return { maintime:   [{ name: "Main Time", notif: notif.main_time }],
-                 periodtime: [{ name: `Period Time for all the ${notif.stones_per_period} stones`,
-                                notif: notif.period_time / notif.stones_per_period }] };
+        return [ { name: `Period Time for all the ${notif.stones_per_period} stones`,
+                   notif: notif.period_time / notif.stones_per_period } ];
     }
     if (timecontrol === "simple") {
-        return { periodtime: [{name: "Time per move", notif: notif.per_move }] };
+        return [ { name: "Time per move", notif: notif.per_move } ];
     }
-    if (timecontrol === "absolute") {
-        return { maintime: [{name: "Total Time", notif: notif.total_time }] };
+    if (["absolute", "none"].includes(timecontrol)) {
+        return;
     }
-    if (timecontrol === "none") {
-        return {};
-    }
-    throw new `Error: unknown time control ${timecontrol}, can't check challenge.`;
 }
 
-function checkMinMaxReject(argsString, notif) {
+function checkAndCreateMinMaxReject(argsString, notif, name) {
     const [minAllowed, maxAllowed] = argsString.split(':')
                                                .map( str => Number(str) );
     const minReject = notif < minAllowed;
     const maxReject = maxAllowed < notif;
     // if an arg is missing, Number(undefined) returns NaN,
     // and any math operation on NaN returns false (don't reject challenge)
-    return { reject: minReject || maxReject,
-             min: { reject: minReject,
+    return { min: { reject: minReject,
                     allowed: minAllowed },
-             max: { reject: minReject,
-                    allowed: minAllowed }
+             max: { reject: maxReject,
+                    allowed: maxAllowed },
+             name
            };
 }
 
