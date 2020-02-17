@@ -269,7 +269,7 @@ exports.updateFromArgv = function() {
         return checkMinMaxReject(args, notif);
     };
 
-    exports.check_min_max_blitz_live_corr_args_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_min_max_blitz_live_corr_args_RU = function (familyNameString, notif, rankedStatus)
     {
         const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
@@ -279,6 +279,17 @@ exports.updateFromArgv = function() {
                       + `${timeSettings.length}`;
         }
         const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
+        const timecontrol = notif.time_control.time_control;
+
+
+
+
+
+
+
+        
+
+
         const reject = maintimeArgs.reject || periodsArgs.reject || periodtimeArgs.reject;
         return { reject,
                  maintime:   checkMinMaxReject(notif, notifMaintime),
@@ -448,6 +459,40 @@ function parseRank(arg) {
             throw new `error: could not parse rank -${arg}-`;
         }
     }
+}
+
+function getMainTimePeriodTimeNameNotif(timecontrol) {
+    /*  note: - for canadian periodtimes, notif.period_time is already for X stones,
+    /           so divide it by the number of stones so that we can compare it to periodtime 
+    /           arg (for 1 stone in all timecontrols)   
+    /           e.g. 10 minutes period time for all the 20 stones = 10*60 / 20 
+    /                = 30 seconds average period time for 1 stone.*/
+    let timesObject = {};
+    // add arrays for fischer maintimes: 2 time settings in 1 timecontrol
+    if (timecontrol === "fischer") {
+        return { maintime:   [{ name: "Initial Time", notif: notif.initial_time },
+                              { name: "Max Time", notif: notif.max_time }],
+                 periodtime: [{ name: "Increment Time", notif: notif.time_increment }] };
+    }
+    if (timecontrol === "byoyomi") {
+        return { maintime:   [{ name: "Main Time", notif: notif.main_time }],
+                 periodtime: [{ name: "Period Time", notif: notif.period_time }] };
+    }
+    if (timecontrol === "canadian") {
+        return { maintime:   [{ name: "Main Time", notif: notif.main_time }],
+                 periodtime: [{ name: `Period Time for all the ${notif.stones_per_period} stones`,
+                                notif: notif.period_time / notif.stones_per_period }] };
+    }
+    if (timecontrol === "simple") {
+        return { periodtime: [{name: "Time per move", notif: notif.per_move }] };
+    }
+    if (timecontrol === "absolute") {
+        return { maintime: [{name: "Total Time", notif: notif.total_time }] };
+    }
+    if (timecontrol === "none") {
+        return {};
+    }
+    throw new `Error: unknown time control ${timecontrol}, can't check challenge.`;
 }
 
 function checkMinMaxReject(argsString, notif) {

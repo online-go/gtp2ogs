@@ -462,27 +462,8 @@ class Connection {
                                                         config.fakebotrank, r_u_strings.for_r_u_games);
         if (resultMinMaxHandicap) return resultMinMaxHandicap;
         
-
-
-
-
-
-
-
-        const testsBLC = [ ["blitz", notification.time_control],
-                           ["live", notification.time_control],
-                           ["correspondence", notification.time_control]
-                         ];
-        for (const [familyNameString, notif] of testsMinMax) {
-            const resultMinMax = minMaxBlitzLiveCorrRejectResult(familyNameString, notif, false, notification.ranked, r_u_strings);
-            if (resultMinMax) return resultMinMax;
-        }
-
-
-
-
-
-
+        const resultMinMaxBlitzLiveCorr = minMaxBlitzLiveCorrRejectResult(notif, notification.ranked, r_u_strings.for_r_u_games);
+        if (resultMinMaxBlitzLiveCorr) return resultMinMaxBlitzLiveCorr;
 
         return { reject: false };  // Ok !
 
@@ -687,8 +668,7 @@ function conn_log() {
 
 function ranked_unranked_strings_connection(rankedStatus) {
     const r_u = (rankedStatus ? "unranked" : "ranked");
-    return { r_u,
-             for_r_u_games: `for ${r_u} games`,
+    return { for_r_u_games: `for ${r_u} games`,
              from_r_u_games: `from ${r_u} games` };
 }
 
@@ -739,56 +719,20 @@ function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, is
 
 function minMaxRejectResult(familyNameString, name, notif, notificationRanked, fakeBotRank, for_r_u_games) {
     const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, familyNameString);
-    if (check_min_max.reject) {
-        for (const minMax of ["min", "max"]) {
-            if (check_min_max[minMax].reject) {
-                const isMin = (minMax === "min");
-                const MIBL = argMIBL(isMin);
-                const allowed = check_min_max[minMax].allowed;
-                const allowedConverted = (familyNameString === "rank" ? rankToString(allowed)
-                                                                       : allowed);
+    for (const minMax of ["min", "max"]) {
+        if (check_min_max[minMax].reject) {
+            const isMin = (minMax === "min");
+            const MIBL = argMIBL(isMin);
+            const allowed = check_min_max[minMax].allowed;
+            const allowedConverted = (familyNameString === "rank" ? rankToString(allowed)
+                                                                    : allowed);
 
-                const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, allowedConverted, fakeBotRank, for_r_u_games);                      
-                const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, for_r_u_games);
-                conn_log(connLogMsg);
-                return { reject: true, msg: rejectMsg };
-            }
+            const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, allowedConverted, fakeBotRank, for_r_u_games);                      
+            const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, for_r_u_games);
+            conn_log(connLogMsg);
+            return { reject: true, msg: rejectMsg };
         }
     }
-}
-
-function getMainTimePeriodTimeNameNotif(timecontrol) {
-    /*  note: - for canadian periodtimes, notif.period_time is already for X stones,
-    /           so divide it by the number of stones so that we can compare it to periodtime 
-    /           arg (for 1 stone in all timecontrols)   
-    /           e.g. 10 minutes period time for all the 20 stones = 10*60 / 20 
-    /                = 30 seconds average period time for 1 stone.*/
-    let timesObject = {};
-    // add arrays for fischer maintimes: 2 time settings in 1 timecontrol
-    if (timecontrol === "fischer") {
-        return { maintime:   [{ name: "Initial Time", notif: notif.initial_time },
-                                { name: "Max Time", notif: notif.max_time }],
-                 periodtime: [{ name: "Increment Time", notif: notif.time_increment }] };
-    }
-    if (timecontrol === "byoyomi") {
-        return { maintime:   [{ name: "Main Time", notif: notif.main_time }],
-                 periodtime: [{ name: "Period Time", notif: notif.period_time }] };
-    }
-    if (timecontrol === "canadian") {
-        return { maintime:   [{ name: "Main Time", notif: notif.main_time }],
-                 periodtime: [{ name: `Period Time for all the ${notif.stones_per_period} stones`,
-                                notif: notif.period_time / notif.stones_per_period }] };
-    }
-    if (timecontrol === "simple") {
-        return { periodtime: [{name: "Time per move", notif: notif.per_move }] };
-    }
-    if (timecontrol === "absolute") {
-        return { maintime: [{name: "Total Time", notif: notif.total_time }] };
-    }
-    if (timecontrol === "none") {
-        return {};
-    }
-    throw new `Error: unknown time control ${timecontrol}, can't check challenge.`;
 }
 
 function timespanToDisplayString(timespan) {
@@ -807,8 +751,17 @@ function timespanToDisplayString(timespan) {
 
 
 
-function minMaxBlitzLiveCorrRejectResult(familyNameString, notif, for_r_u_games) {
-    const check_min_max_BLC = config.check_min_max_blitz_live_corr_args_RU()
+
+function minMaxBlitzLiveCorrRejectResult(notif, notifRanked, for_r_u_games) {
+    const blitzLiveCorrespondence = notif.time_control.speed; 
+    const check_min_max_BLC = config.check_min_max_blitz_live_corr_args_RU(blitzLiveCorrespondence, notif, notifRanked);
+    for (const mpp of ["maintime", "periods", "periodtime"]) {
+        if (check_min_max_BLC[mpp].reject) {
+            const check_min_max = minMaxRejectResult(blitzLiveCorrespondence, `${blitzLiveCorrespondence} time settings`, 
+                                                     /* notif........ */notif, notificationRanked, false, for_r_u_games);
+            /////
+        }
+    }
 
 
 
