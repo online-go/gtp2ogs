@@ -299,8 +299,8 @@ class Connection {
         for (const test of [this.checkChallengeMandatory,
                             //this.checkChallengeSanityChecks,
                             this.checkChallengeBooleans,
-                            this.checkChallengeAllowedFamilies,
-                            this.checkChallengeSettings]) {
+                            this.checkChallengeCommaSeparatedPartTwo,
+                            this.checkChallengeMinMaxPartTwo]) {
             const result = test.bind(this)(notification, r_u_strings);
             if (result.reject) return result;
         }
@@ -409,18 +409,18 @@ class Connection {
     }
     // Check challenge allowed families settings are allowed
     //
-    checkChallengeAllowedFamilies(notification, r_u_strings) {
+    checkChallengeCommaSeparatedPartTwo(notification, r_u_strings) {
 
-        const testsAllowedFamilies = [ ["boardsizes", "Board sizes", String(notification.width)],
-                                       ["komis", "Komi", String(notification.komi)],
+        const testsCommaSeparated = [ ["boardsizes", "Board sizes", String(notification.width)],
+                                      ["komis", "Komi", String(notification.komi)],
                                        // allowsymetricboardsizes
 
-                                       ["rules", "Rule", notification.rules],
-                                       ["challengercolors", "Player Color", notification.challenger_color],
-                                       ["speeds", "Speed", notification.time_control.speed],
-                                       ["timecontrols", "Time control", notification.time_control.time_control]
-                                     ];
-        for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
+                                      ["rules", "Rule", notification.rules],
+                                      ["challengercolors", "Player Color", notification.challenger_color],
+                                      ["speeds", "Speed", notification.time_control.speed],
+                                      ["timecontrols", "Time control", notification.time_control.time_control]
+                                    ];
+        for (const [familyNameString, nameF, notif] of testsCommaSeparated) {
             const check_comma_families = config.check_comma_separated_RU(notif, notification.ranked, familyNameString);
             if (check_comma_families.reject) {
                 let notifDisplayed = String(notif);
@@ -449,7 +449,7 @@ class Connection {
     }
     // Check challenge settings are allowed
     //
-    checkChallengeSettings(notification, r_u_strings) {
+    checkChallengeMinMaxPartTwo(notification, r_u_strings) {
 
         // TODO: modify or remove fakebotrank code whenever server sends us automatic handicap 
         //       notification.handicap different from -1.
