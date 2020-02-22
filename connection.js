@@ -25,13 +25,13 @@ const ignorable_notifications = {
 
 class Connection {
     constructor(io_client) {{{
-        let prefix = (config.insecure ? 'http://' : 'https://') + config.host + ':' + config.port;
+        const prefix = (config.insecure ? 'http://' : 'https://') + config.host + ':' + config.port;
 
         conn_log(`Connecting to ${prefix}`);
         if (!io_client) {
           io_client = io;
         }
-        let socket = this.socket = io_client(prefix, {
+        const socket = this.socket = io_client(prefix, {
             reconection: true,
             reconnectionDelay: 500,
             reconnectionDelayMax: 60000,
@@ -296,11 +296,11 @@ class Connection {
 
         // load config.ranked or config.unranked depending on notification.ranked
         const r_u_strings = ranked_unranked_strings_connection(notification.ranked);
-        for (let test of [this.checkChallengeMandatory,
-                          //this.checkChallengeSanityChecks,
-                          this.checkChallengeBooleans,
-                          this.checkChallengeAllowedFamilies,
-                          this.checkChallengeSettings]) {
+        for (const test of [this.checkChallengeMandatory,
+                            //this.checkChallengeSanityChecks,
+                            this.checkChallengeBooleans,
+                            this.checkChallengeAllowedFamilies,
+                            this.checkChallengeSettings]) {
             const result = test.bind(this)(notification, r_u_strings);
             if (result.reject) return result;
         }
@@ -576,7 +576,7 @@ function request(method, host, port, path, data) {
     return new Promise((resolve, reject) => {
         if (config.DEBUG) {
             /* Keeping a backup of old deep copy syntax just in case.
-            /  let noapidata = JSON.parse(JSON.stringify(data));
+            /  const noapidata = JSON.parse(JSON.stringify(data));
             /  noapidata.apikey = "hidden";*/
 
             // Modern NodeJS offers shallow copy syntax:
@@ -605,7 +605,7 @@ function request(method, host, port, path, data) {
             enc_data = querystring.stringify(data);
         }
 
-        let options = {
+        const options = {
             host: host,
             port: port,
             path: path,
