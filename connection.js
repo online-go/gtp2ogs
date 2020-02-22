@@ -322,8 +322,9 @@ class Connection {
             }
         }
 
-        const resultMinMaxRank = minMaxRejectResult("rank", "rank", notification.user.ranking, notification.ranked,
-                                                    false, r_u_strings.for_r_u_games);
+        const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, "rank", "rank");
+        const resultMinMaxRank = getMinMaxRejectResult(check_min_max, familyNameString, notification.user.ranking,
+                                                       notification.ranked, false, "", r_u_strings.for_r_u_games);
         if (resultMinMaxRank) return resultMinMaxRank;
 
         // check bot is available, else don't mislead user:
@@ -458,12 +459,20 @@ class Connection {
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
                               notification.handicap);
 
-        const resultMinMaxHandicap = minMaxRejectResult("handicap", "handicap stones", handicapNotif, notification.ranked,
-                                                        config.fakebotrank, r_u_strings.for_r_u_games);
+        const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, "handicap", "handicap stones");
+        const resultMinMaxHandicap = getMinMaxRejectResult(check_min_max, familyNameString, handicapNotif,
+                                                           notification.ranked, config.fakebotrank, "",
+                                                           r_u_strings.for_r_u_games);
         if (resultMinMaxHandicap) return resultMinMaxHandicap;
         
-        const resultMinMaxBlitzLiveCorr = minMaxBlitzLiveCorrRejectResult(notif, notification.ranked, r_u_strings.for_r_u_games);
-        if (resultMinMaxBlitzLiveCorr) return resultMinMaxBlitzLiveCorr;
+        const blitzLiveCorr = notif.time_control.speed; 
+        const check_min_max_MPP = config.check_min_max_maintime_periods_periodtime_args_BLC_RU(notif, notifRanked, blitzLiveCorr);
+        for (const mpp in check_min_max_MPP) {
+            const resultMPP = getMinMaxRejectResult(check_min_max_MPP[mpp], mpp, notification.time_control,
+                                                    notification.ranked, false, `in ${blitzLiveCorr} `,
+                                                    r_u_strings.for_r_u_games);
+            if (resultMPP.reject) return resultMPP;
+        }
 
         return { reject: false };  // Ok !
 
@@ -702,37 +711,20 @@ function argMIBL(isMin) {
     }
 }
 
-function createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, for_r_u_games) {
+function createMinMaxConnLogSentence(name, MIBL, notif, arg, fakeBotRank, blc_sentence, for_r_u_games) {
     const fakeBotRankMsg = (fakebotRank ? `(fakeBotRank: ${fakeBotRank})`
                                         : "");
-    return (`${MIBL.miniMaxi} ${name} ${for_r_u_games} ${notif} `
+    return (`${MIBL.miniMaxi} ${name} ${blc_sentence}${for_r_u_games} ${notif} `
             + `is ${MIBL.belAbo} ${arg} ${fakeBotRankMsg}.`);
 }
 
-function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, isMin, for_r_u_games) {
+function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, isMin, blc_sentence, for_r_u_games) {
     if (familyNameString === "handicap") {
         if (!isMin && arg === 0 && notif > 0) return "Even games only (no handicap on this bot).";
         if (isMin && arg > 0 && notif === 0) return "Handicap games only (no even games on this bot).";
     }
-    return (`${MIBL.miniMaxi} ${name} ${for_r_u_games} is ${arg}, ${endingSentence}.`);
-}
-
-function minMaxRejectResult(familyNameString, name, notif, notificationRanked, fakeBotRank, for_r_u_games) {
-    const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, familyNameString);
-    for (const minMax of ["min", "max"]) {
-        if (check_min_max[minMax].reject) {
-            const isMin = (minMax === "min");
-            const MIBL = argMIBL(isMin);
-            const allowed = check_min_max[minMax].allowed;
-            const allowedConverted = (familyNameString === "rank" ? rankToString(allowed)
-                                                                    : allowed);
-
-            const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notif, allowedConverted, fakeBotRank, for_r_u_games);                      
-            const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notif, allowedConverted, isMin, for_r_u_games);
-            conn_log(connLogMsg);
-            return { reject: true, msg: rejectMsg };
-        }
-    }
+    const endingSentence = `please ${MIBL.incDec} ${name}`;
+    return (`${MIBL.miniMaxi} ${name} ${blc_sentence}${for_r_u_games} is ${arg}, ${endingSentence}.`);
 }
 
 function timespanToDisplayString(timespan) {
@@ -745,26 +737,31 @@ function timespanToDisplayString(timespan) {
     .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
     .filter(e => e !== "")
     .join(" ");
+} 
+
+function minMaxNumberToDisplayString(familyNameString, number) {
+    if (familyNameString === "rank") {
+        return rankToString(number);
+    }
+    if (["maintime", "periodtime"].includes(familyNameString)) {
+        return timespanToDisplayString(number)
+    }
+    return number;
 }
 
-
-
-
-
-
-function minMaxBlitzLiveCorrRejectResult(notif, notifRanked, for_r_u_games) {
-    const blitzLiveCorrespondence = notif.time_control.speed; 
-    const check_min_max_BLC = config.check_min_max_blitz_live_corr_args_RU(blitzLiveCorrespondence, notif, notifRanked);
-    for (const mpp of ["maintime", "periods", "periodtime"]) {
-        if (check_min_max_BLC[mpp].reject) {
-            const check_min_max = minMaxRejectResult(blitzLiveCorrespondence, `${blitzLiveCorrespondence} time settings`, 
-                                                     /* notif........ */notif, notificationRanked, false, for_r_u_games);
-            /////
+function getMinMaxRejectResult(check_min_max, familyNameString, notif, fakeBotRank, blc_sentence, for_r_u_games) {1
+    for (const minMax in check_min_max) {
+        if (check_min_max[minMax].reject) {
+            const isMin = (minMax === "min");
+            const MIBL = argMIBL(isMin);
+            const allowed = minMaxNumberToDisplayString(familyNameString, check_min_max[minMax].minMaxArg);
+            const notifDisplayed = minMaxNumberToDisplayString(familyNameString, notif);
+            const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notifDisplayed, allowed, fakeBotRank, blc_sentence, for_r_u_games);                      
+            const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notifDisplayed, allowed, isMin, blc_sentence, for_r_u_games);
+            conn_log(connLogMsg);
+            return { reject: true, msg: rejectMsg };
         }
     }
-
-
-
 }
 
 exports.Connection = Connection;

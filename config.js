@@ -263,34 +263,6 @@ exports.updateFromArgv = function() {
         return { reject: (allowed === "true") && notif };
     }
 
-    exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString)
-    {
-        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        return checkAndCreateMinMaxReject(args, notif, false);
-    };
-
-    exports.check_min_max_blitz_live_corr_args_RU = function (familyNameString, notif, rankedStatus)
-    {
-        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        const timeSettings = args.split('_');
-        if (timeSettings.length !== 3) {
-            throw new `Error in ${familyNameString} time settings: unexpected use of the `
-                      + `maintime_periods_periodtime separator : expected 3 parts, not `
-                      + `${timeSettings.length}`;
-        }
-        const [maintimeInputs, periodsInputs, periodtimeInputs] = timeSettings;
-        const timecontrol = notif.time_control.time_control;
-        
-        const maintimeOutputs = getMainTimeNameNotif(timecontrol);
-        const periodsOutputs = { name: "the number of periods", notif: notif.periods };
-        const periodtimeOutputs = getPeriodTimeNameNotif(timecontrol);
-
-        return { maintime:   checkAndCreateMinMaxReject(maintimeInputs, maintimeOutputs.notif, maintimeOutputs.name),
-                 periods:    checkAndCreateMinMaxReject(periodsInputs, periodsOutputs.notif, periodsOutputs.name),
-                 periodtime: checkAndCreateMinMaxReject(periodtimeInputs, periodtimeOutputs.notif, periodtimeOutputs.name)
-               };
-    };
-
     exports.check_numbers_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString, allowSymetric)
     {
         const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
@@ -367,6 +339,35 @@ exports.updateFromArgv = function() {
         }
         return { reject: false };
     }
+
+    exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString, name)
+    {
+        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        return checkAndCreateMinMaxReject(args, notif, name);
+    };
+
+    exports.check_min_max_maintime_periods_periodtime_args_BLC_RU = function (notif, rankedStatus, familyNameString)
+    {
+        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const timeSettings = args.split('_');
+        if (timeSettings.length !== 3) {
+            throw new `Error in ${familyNameString} time settings: unexpected use of the `
+                      + `maintime_periods_periodtime separator : expected 3 parts, not `
+                      + `${timeSettings.length}`;
+        }
+        const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
+        const timecontrol = notif.time_control.time_control;
+        
+        const maintimeOutputs = getMainTimeNameNotif(timecontrol);
+        const periodsOutputs = { name: "the number of periods", notif: notif.periods };
+        const periodtimeOutputs = getPeriodTimeNameNotif(timecontrol);
+
+        return { maintime:   checkAndCreateMinMaxReject(maintimeArgs, maintimeOutputs.notif, maintimeOutputs.name),
+                 periods:    checkAndCreateMinMaxReject(periodsArgs, periodsOutputs.notif, periodsOutputs.name),
+                 periodtime: checkAndCreateMinMaxReject(periodtimeArgs, periodtimeOutputs.notif, periodtimeOutputs.name)
+               };
+    };
+
 }
 
 // deprecations:
@@ -497,18 +498,24 @@ function getPeriodTimeNameNotif(timecontrol) {
 }
 
 function checkAndCreateMinMaxReject(argsString, notif, name) {
-    const [minAllowed, maxAllowed] = argsString.split(':')
-                                               .map( str => Number(str) );
+    const [minArg, maxArg] = argsString.split(':')
+                                       .map( str => Number(str) );
     const minReject = notif < minAllowed;
     const maxReject = maxAllowed < notif;
     // if an arg is missing, Number(undefined) returns NaN,
     // and any math operation on NaN returns false (don't reject challenge)
-    return { min: { reject: minReject,
-                    allowed: minAllowed },
-             max: { reject: maxReject,
-                    allowed: maxAllowed },
-             name
-           };
+    for (const [reject, minMax, minMaxArg] of [ [minReject, "min", minArg],
+                                                [maxReject, "max", maxArg] ]) {
+        if (reject) {
+            return ({ [minMax]: { reject,
+                                  name,
+                                  minMaxArg
+                                }
+                    });
+        }
+    }
+    return ({ min: { reject: false },
+              max: { reject: false } });
 }
 
 function getAllNumbersInRange(range) {
