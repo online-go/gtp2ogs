@@ -471,7 +471,7 @@ class Connection {
             const resultMPP = getMinMaxRejectResult(check_min_max_MPP[mpp], mpp, notification.time_control,
                                                     notification.ranked, false, `in ${blitzLiveCorr} `,
                                                     r_u_strings.for_r_u_games);
-            if (resultMPP.reject) return resultMPP;
+            if (resultMPP) return resultMPP;
         }
 
         return { reject: false };  // Ok !
