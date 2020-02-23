@@ -288,7 +288,6 @@ class Connection {
         .then((obj)=> conn_log(obj.body))
         .catch(conn_log);
 
-
     }
     // Check challenge mandatory conditions
     //
@@ -297,10 +296,11 @@ class Connection {
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
             if (config.check_comma_separated_RU(notification.user[uid], r_u_strings.r_u, "bans").reject) {
-                conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`);
-                return { reject: true, msg: `You (${uid} ${notification.user[uid]}) are banned `
-                                            + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
-                                            + `you may try changing the ranked/unranked setting` };
+                const connLog = `${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`;
+                const reject = `You (${uid} ${notification.user[uid]}) are banned `
+                               + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
+                               + `you may try changing the ranked/unranked setting`; 
+                return { connLog, reject };
             }
         }
 
@@ -312,21 +312,20 @@ class Connection {
 
         // check bot is available, else don't mislead user:
         if (config.check_rejectnew().reject) {
-            conn_log("Not accepting new games (rejectnew).");
-            return { reject: true, msg: config.rejectnewmsg };
+            const connLog = "Not accepting new games (rejectnew).";
+            const reject = config.rejectnewmsg;
+            return { connLog, reject };
         }
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
-            if (config.DEBUG) {
-                console.log(`# of connected games = ${number_connected_games}`);
-            }
             const check_max = config.check_max_root(number_connected_games, "maxconnectedgames");
             if (check_max.reject) {
-                conn_log(`${number_connected_games} games being played, maximum is ${check_max.maxAllowed}`);
-                return { reject: true, msg: `Currently, ${number_connected_games} games are being played by this `
-                                            + `bot, maximum is ${check_max.maxAllowed} (if you see this message `
-                                            + `and you dont see any game on the bot profile page, it is because `
-                                            + `private game(s) are being played), try again later` };
+                const connLog = `${number_connected_games} games being played, maximum is ${check_max.maxAllowed}`;
+                const reject = `Currently, ${number_connected_games} games are being played by this `
+                               + `bot, maximum is ${check_max.maxAllowed} (if you see this message `
+                               + `and you dont see any game on the bot profile page, it is because `
+                               + `private game(s) are being played), try again later`;
+                return { connLog, reject };
             }
         } else if (config.DEBUG) {
             console.log("There are no connected games");
@@ -334,22 +333,20 @@ class Connection {
         const connected_games_per_user = this.gamesForPlayer(notification.user.id);
         const check_max_per_user = config.check_max_root(connected_games_per_user, "maxconnectedgamesperuser");
         if (check_max_per_user.reject) {
-            conn_log(`Too many connected games for this user, maximum is ${check_max_per_user.maxAllowed}`);
-            return { reject: true, msg: `Maximum number of simultaneous games allowed per player against `
-                                        + `this bot ${check_max_per_user.maxAllowed}, please reduce your `
-                                        + `number of simultaneous games against this bot, and try again` };
+            const connLog = `Too many connected games for this user, maximum is ${check_max_per_user.maxAllowed}`;
+            const reject = `Maximum number of simultaneous games allowed per player against `
+                           + `this bot ${check_max_per_user.maxAllowed}, please reduce your `
+                           + `number of simultaneous games against this bot, and try again`;
+            return { connLog, reject };
         }
-
-        return { reject: false }; // OK !
-
     }
     // Check challenge sanity checks
     //
-    //checkChallengeSanityChecks(notification, r_u) {
+    //checkChallengeSanityChecks(notification, r_u_strings) {
 
         // TODO: add all sanity checks here of all unhandled notifications
-
-        //return { reject: false }; // OK !
+        //
+        //
 
     //}
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
@@ -364,8 +361,9 @@ class Connection {
         
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
             if (config.check_booleans_aspecific(notifCondition, familyNameString).reject) {
-                conn_log(`${nameF} not allowed`);
-                return { reject: true, msg: `${nameF} not allowed on this bot.` };
+                const connLog = `${nameF} not allowed`;
+                const reject = `${nameF} not allowed on this bot.`;
+                return { connLog, reject };
             }
         }
 
@@ -381,14 +379,11 @@ class Connection {
 
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
             if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString).reject) {
-                const for_r_u_g = ` ${r_u_strings.for_r_u_games}`;
-                conn_log(`${nameF} not allowed ${for_r_u_g}`);
-                return { reject: true, msg: `${nameF} not allowed on this bot ${for_r_u_g}.` };
+                const connLog = `${nameF} not allowed ${r_u_strings.for_r_u_games}`;
+                const reject = `${nameF} not allowed on this bot ${r_u_strings.for_r_u_games}.`;
+                return { connLog, reject };
             }
         }
-
-        return { reject: false }; // OK !
-
     }
     // Check challenge allowed families settings are allowed
     //
@@ -424,20 +419,14 @@ class Connection {
                     allowedArgsDisplayed = komisToDisplayString(allowedArgsDisplayed);
                     //`any komi between ${check_comma_families.minAllowed} and ${check_comma_families.maxAllowed}`;
                 }*/
-                conn_log(`${name} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedArgsDisplayed}- `);
-                return { reject: true, msg: `${name} -${notifDisplayed}- is not allowed on this bot `
-                                            + `${r_u_strings.for_r_u_games}, please choose among:`
-                                            + `\n-${allowedArgsDisplayed}-` };
+                const connLog = `${name} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, `
+                                + `not in:\n${allowedArgsDisplayed} `;
+                const reject = `${name} -${notifDisplayed}- is not allowed on this bot `
+                               + `${r_u_strings.for_r_u_games}, please choose among:`
+                               + `\n-${allowedArgsDisplayed}-`;
+                return { connLog, reject };
             }
         }
-
-
-
-
-
-
-        return { reject: false }; // OK !
-
     }
     // Check challenge settings are allowed
     //
@@ -465,7 +454,6 @@ class Connection {
                                            notification.ranked, false, `in ${blitzLiveCorr} `,
                                            r_u_strings.for_r_u_games);
         }
-
     }
     on_challenge(notification) {
         // load strings
