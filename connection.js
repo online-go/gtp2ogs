@@ -349,7 +349,7 @@ class Connection {
         //
 
     //}
-    // Check challenge booleans allow a game ("nopause" is in game.js, not here)
+    // Check challenge booleans ("nopause" is in game.js, not here)
     //
     checkChallengeBooleans(notification, r_u_strings) {
 
@@ -385,7 +385,7 @@ class Connection {
             }
         }
     }
-    // Check challenge allowed families settings are allowed
+    // Check challenge comma-separated families
     //
     checkChallengeCommaSeparatedPartTwo(notification, r_u_strings) {
 
@@ -428,7 +428,7 @@ class Connection {
             }
         }
     }
-    // Check challenge settings are allowed
+    // Check challenge minMax families
     //
     checkChallengeMinMaxPartTwo(notification, r_u_strings) {
 
