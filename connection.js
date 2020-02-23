@@ -696,6 +696,8 @@ function rankToString(r) {
                     : `${30 - R}k`);
 }
 
+/* add for boardsizes display*/
+
 function CommaSeparatedNumbersToDisplayString(argsString) {
     let commaSeparated = "";
     for (const arg of argsString.split(',')) {
