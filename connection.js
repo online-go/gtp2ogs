@@ -295,7 +295,7 @@ class Connection {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if (config.check_comma_separated_RU(notification.user[uid], r_u_strings.r_u, "bans").reject) {
+            if (!ObjectIsEmpty(config.check_comma_separated_RU(notification.user[uid], r_u_strings.r_u, "bans"))) {
                 const connLog = `${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`;
                 const reject = `You (${uid} ${notification.user[uid]}) are banned `
                                + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
@@ -311,7 +311,7 @@ class Connection {
         }
 
         // check bot is available, else don't mislead user:
-        if (config.check_rejectnew().reject) {
+        if (!ObjectIsEmpty(config.check_rejectnew())) {
             const connLog = "Not accepting new games (rejectnew).";
             const reject = config.rejectnewmsg;
             return { connLog, reject };
@@ -319,7 +319,7 @@ class Connection {
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
             const check_max = config.check_max_root(number_connected_games, "maxconnectedgames");
-            if (check_max.reject) {
+            if (!ObjectIsEmpty(check_max)) {
                 const connLog = `${number_connected_games} games being played, maximum is ${check_max.maxAllowed}`;
                 const reject = `Currently, ${number_connected_games} games are being played by this `
                                + `bot, maximum is ${check_max.maxAllowed} (if you see this message `
@@ -332,7 +332,7 @@ class Connection {
         }
         const connected_games_per_user = this.gamesForPlayer(notification.user.id);
         const check_max_per_user = config.check_max_root(connected_games_per_user, "maxconnectedgamesperuser");
-        if (check_max_per_user.reject) {
+        if (!ObjectIsEmpty(check_max_per_user)) {
             const connLog = `Too many connected games for this user, maximum is ${check_max_per_user.maxAllowed}`;
             const reject = `Maximum number of simultaneous games allowed per player against `
                            + `this bot ${check_max_per_user.maxAllowed}, please reduce your `
@@ -360,7 +360,7 @@ class Connection {
                                 ];
         
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
-            if (config.check_booleans_aspecific(notifCondition, familyNameString).reject) {
+            if (!ObjectIsEmpty(config.check_booleans_aspecific(notifCondition, familyNameString))) {
                 const connLog = `${nameF} not allowed`;
                 const reject = `${nameF} not allowed on this bot.`;
                 return { connLog, reject };
@@ -378,7 +378,7 @@ class Connection {
                                     ];
 
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
-            if (config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString).reject) {
+            if (!ObjectIsEmpty(config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString))) {
                 const connLog = `${nameF} not allowed ${r_u_strings.for_r_u_games}`;
                 const reject = `${nameF} not allowed on this bot ${r_u_strings.for_r_u_games}.`;
                 return { connLog, reject };
@@ -409,7 +409,7 @@ class Connection {
 
 
 
-            if (check_comma_families.reject) {
+            if (!ObjectIsEmpty(check_comma_families)) {
                 let notifDisplayed = String(notif);
                 let allowedArgsDisplayed = check_comma_families.argsString;
                 /*if (familyNameString === "boardsizes") {
