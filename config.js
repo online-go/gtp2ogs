@@ -336,17 +336,20 @@ exports.updateFromArgv = function() {
                       + `${timeSettings.length}`;
         }
 
-        const timecontrol = notif.time_control;
-        const maintimeOutputs = getMainTimeNameNotif(timecontrol);
-        const periodtimeOutputs = getPeriodTimeNameNotif(timecontrol);
+        const maintimeOutputs = getMainTimeNameNotifsNames(notif.time_control);
+        const periodtimeOutputs = getPeriodTimeNameNotifsNames(notif.time_control);
 
-        const mppTests = [ ["maintime", timeSettings[0], maintimeOutputs.notif, maintimeOutputs.name],
-                           ["periods", timeSettings[1], notif.periods, "the number of periods"],
-                           ["periodtime", timeSettings[2], periodtimeOutputs.notif, periodtimeOutputs.name]
+        const mppTests = [ ["maintime", timeSettings[0], maintimeOutputs],
+                           ["periods", timeSettings[1], [notif.periods, "the number of periods"]],
+                           ["periodtime", timeSettings[2], periodtimeOutputs]
                          ];
-        for (const [mpp, arg, notifMPP, notifName] of mppTests) {
-            const rejectResult = checkAndCreateMinMaxReject(arg, notifMPP, notifName, mpp);
-            if (rejectResult) return rejectResult;
+        for (const [mpp, arg, outputs] of mppTests) {
+            if (outputs) {
+                for (const [notifMPP, notifNameMPP] of outputs) {
+                    const rejectResult = checkAndCreateMinMaxReject(arg, notifMPP, notifNameMPP, mpp);
+                    if (rejectResult) return rejectResult;
+                }
+            }
         }
     };
 
@@ -437,17 +440,17 @@ function parseRank(arg) {
     }
 }
 
-function getMainTimeNameNotif(timecontrol) {
+function getMainTimeNameNotifsNames(timecontrol) {
     // add arrays for fischer maintimes: 2 time settings in 1 timecontrol
     if (timecontrol === "fischer") {
-        return [ { name: "Initial Time", notif: notif.initial_time },
-                 { name: "Max Time", notif: notif.max_time } ];
+        return [ ["Initial Time", notif.initial_time],
+                 ["Max Time", notif.max_time] ];
     }
     if (["byoyomi", "canadian"].includes(timecontrol)) {
-        return [ { name: "Main Time", notif: notif.main_time } ];
+        return [ ["Main Time", notif.main_time] ];
     }
     if (timecontrol === "absolute") {
-        return [ { name: "Total Time", notif: notif.total_time } ];
+        return [ ["Total Time", notif.total_time] ];
     }
     if (["simple", "none"].includes(timecontrol)) {
         return;
@@ -455,24 +458,24 @@ function getMainTimeNameNotif(timecontrol) {
     throw new `Error: unknown time control ${timecontrol}, can't check challenge.`;
 }
 
-function getPeriodTimeNameNotif(timecontrol) {
+function getPeriodTimeNameNotifsNames(timecontrol) {
     /*  note: - for canadian periodtimes, notif.period_time is already for X stones,
     /           so divide it by the number of stones so that we can compare it to periodtime 
     /           arg (for 1 stone in all timecontrols)   
     /           e.g. 10 minutes period time for all the 20 stones = 10*60 / 20 
     /                = 30 seconds average period time for 1 stone.*/
     if (timecontrol === "fischer") {
-        return [ { name: "Increment Time", notif: notif.time_increment } ];
+        return [ ["Increment Time", notif.time_increment] ];
     }
     if (timecontrol === "byoyomi") {
-        return [ { name: "Period Time", notif: notif.period_time } ];
+        return [ ["Period Time", notif.period_time] ];
     }
     if (timecontrol === "canadian") {
-        return [ { name: `Period Time for all the ${notif.stones_per_period} stones`,
-                   notif: notif.period_time / notif.stones_per_period } ];
+        return [ [`Period Time for all the ${notif.stones_per_period} stones`,
+                  (notif.period_time / notif.stones_per_period)] ];
     }
     if (timecontrol === "simple") {
-        return [ { name: "Time per move", notif: notif.per_move } ];
+        return [ ["Time per move", notif.per_move] ];
     }
     if (["absolute", "none"].includes(timecontrol)) {
         return;
