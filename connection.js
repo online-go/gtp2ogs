@@ -468,19 +468,20 @@ class Connection {
 
     }
     on_challenge(notification) {
-        // load config.ranked or config.unranked depending on notification.ranked
+        // load strings
         const r_u_strings = ranked_unranked_strings_connection(notification.ranked);
+        const acceptingRejectingSentence = createAcceptingRejectingSentence(messages, 
+                                           notification.handicap, notification.user.username,
+                                           notification.user.ranking, notification.width, 
+                                           notification.height, notification.game_id);
 
+        // check challenge entirely
         for (const test of [this.checkChallengeMandatory,
                             //this.checkChallengeSanityChecks,
                             this.checkChallengeBooleans,
                             this.checkChallengeCommaSeparatedPartTwo,
                             this.checkChallengeMinMaxPartTwo]) {
             const messages = test.bind(this)(notification, r_u_strings);
-            const acceptingRejectingSentence = createAcceptingRejectingSentence(messages, 
-                                               notification.handicap, notification.user.username,
-                                               notification.user.ranking, notification.width, 
-                                               notification.height, notification.game_id);
 
             if (!ObjectIsEmpty(messages)) {
                 conn_log(messages.connLog);
@@ -494,7 +495,7 @@ class Connection {
                 .catch(conn_log)
             }
         }
-        /* All good */
+        /* All good: accepting challenge */
         conn_log(acceptingRejectingSentence);
     }
     processMove(gamedata) {
