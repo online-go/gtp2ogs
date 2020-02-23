@@ -422,8 +422,8 @@ class Connection {
                 const connLog = `${name} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, `
                                 + `not in:\n${allowedArgsDisplayed} `;
                 const rejectMsg = `${name} -${notifDisplayed}- is not allowed on this bot `
-                               + `${r_u_strings.for_r_u_games}, please choose among:`
-                               + `\n-${allowedArgsDisplayed}-`;
+                                  + `${r_u_strings.for_r_u_games}, please choose among:`
+                                  + `\n-${allowedArgsDisplayed}-`;
                 return { connLog, rejectMsg };
             }
         }
@@ -477,7 +477,7 @@ class Connection {
 
                 post(api1('me/challenges/' + notification.challenge_id), this.auth({
                     'delete': true,
-                    'message': messages.reject || "The AI you've challenged has rejected this game.",
+                    'message': messages.rejectMsg || "The AI you've challenged has rejected this game.",
                 }))
                 .then(ignore)
                 .catch(conn_log)
