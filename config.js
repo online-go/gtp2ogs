@@ -172,9 +172,11 @@ exports.updateFromArgv = function() {
             }
         }
     }
-    if (argv.komis.includes("automatic")) {
-        throw new 'Deprecated: komis /null/ is no longer supported, '
-                  + 'use /automatic/ instead';
+    for (const arg of ["auto", "null"]) {
+        if (argv.komis.replace("/",",").split(',').includes(arg) {
+            throw new `Deprecated: komis /${arg}/ is no longer supported, `
+                      + `use /automatic/ instead`;
+        }
     }
     console.log("\n");
 
@@ -301,7 +303,7 @@ exports.updateFromArgv = function() {
         if (argsString !== "all" && String(notif) !== "null") {
             // "automatic" komi is dealt with separately with --noautokomi
             for (const arg of argsString.split(',')) {
-                const reject = (arg.includes(':') ? checkAndCreateMinMaxReject(argsString, notif, false)
+                const reject = (arg.includes(':') ? checkAndCreateMinMaxReject(argsString, notif, false, false)
                                                   : (arg !== notif));
                 if (reject) {
                     return { reject,
@@ -326,7 +328,7 @@ exports.updateFromArgv = function() {
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString, name)
     {
         const args = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        return checkAndCreateMinMaxReject(args, notif, name);
+        return checkAndCreateMinMaxReject(args, notif, name, false);
     };
 
     exports.check_min_max_maintime_periods_periodtime_args_BLC_RU = function (notif, rankedStatus, familyNameString)
@@ -338,17 +340,21 @@ exports.updateFromArgv = function() {
                       + `maintime_periods_periodtime separator : expected 3 parts, not `
                       + `${timeSettings.length}`;
         }
-        const [maintimeArgs, periodsArgs, periodtimeArgs] = timeSettings;
-        const timecontrol = notif.time_control.time_control;
-        
+
+        const timecontrol = notif.time_control;
         const maintimeOutputs = getMainTimeNameNotif(timecontrol);
-        const periodsOutputs = { name: "the number of periods", notif: notif.periods };
         const periodtimeOutputs = getPeriodTimeNameNotif(timecontrol);
 
-        return { maintime:   checkAndCreateMinMaxReject(maintimeArgs, maintimeOutputs.notif, maintimeOutputs.name),
-                 periods:    checkAndCreateMinMaxReject(periodsArgs, periodsOutputs.notif, periodsOutputs.name),
-                 periodtime: checkAndCreateMinMaxReject(periodtimeArgs, periodtimeOutputs.notif, periodtimeOutputs.name)
-               };
+        const mppTests = [ ["maintime", timeSettings[0], maintimeOutputs.notif, maintimeOutputs.name],
+                           ["periods", timeSettings[1], notif.periods, "the number of periods"],
+                           ["periodtime", timeSettings[2], periodtimeOutputs.notif, periodtimeOutputs.name]
+                         ];
+        for (const [mpp, arg, notifMPP, notifName] of mppTests) {
+            const rejectResult = checkAndCreateMinMaxReject(arg, notifMPP, notifName, mpp);
+            for (minMax in rejectResult) {
+                return rejectResult;
+            }
+        }
     };
 
 }
@@ -480,7 +486,7 @@ function getPeriodTimeNameNotif(timecontrol) {
     }
 }
 
-function checkAndCreateMinMaxReject(argsString, notif, name) {
+function checkAndCreateMinMaxReject(argsString, notif, name, mpp) {
     const [minArg, maxArg] = argsString.split(':')
                                        .map( str => Number(str) );
     const minReject = notif < minAllowed;
@@ -491,14 +497,14 @@ function checkAndCreateMinMaxReject(argsString, notif, name) {
                                                 [maxReject, "max", maxArg] ]) {
         if (reject) {
             return ({ [minMax]: { reject,
+                                  minMaxArg,
                                   name,
-                                  minMaxArg
+                                  mpp
                                 }
                     });
         }
     }
-    return ({ min: { reject: false },
-              max: { reject: false } });
+    return {};
 }
 
 function getAllNumbersInRange(range) {
