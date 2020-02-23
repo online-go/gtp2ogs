@@ -290,24 +290,6 @@ class Connection {
 
 
     }
-    // Check challenge entirely, and return reject status + optional error msg.
-    //
-    checkChallenge(notification) {
-
-        // load config.ranked or config.unranked depending on notification.ranked
-        const r_u_strings = ranked_unranked_strings_connection(notification.ranked);
-        for (const test of [this.checkChallengeMandatory,
-                            //this.checkChallengeSanityChecks,
-                            this.checkChallengeBooleans,
-                            this.checkChallengeCommaSeparatedPartTwo,
-                            this.checkChallengeMinMaxPartTwo]) {
-            const result = test.bind(this)(notification, r_u_strings);
-            if (result.reject) return result;
-        }
-
-        return { reject: false };  /* All good. */
-
-    }
     // Check challenge mandatory conditions
     //
     checkChallengeMandatory(notification, r_u_strings) {
@@ -323,9 +305,9 @@ class Connection {
         }
 
         const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, "rank", "rank");
-        for (minMax in check_min_max) {
-            return getMinMaxReject(check_min_max[minMax], minMax, familyNameString, notification.user.ranking,
-                                   notification.ranked, false, "", r_u_strings.for_r_u_games);
+        if (!ObjectIsEmpty(check_min_max)) {
+            return getMinMaxRejectMessages(check_min_max, familyNameString, notification.user.ranking,
+                                           notification.ranked, false, "", r_u_strings.for_r_u_games);
         }
 
         // check bot is available, else don't mislead user:
@@ -470,58 +452,53 @@ class Connection {
                               notification.handicap);
 
         const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, "handicap", "handicap stones");
-        for (minMax in check_min_max) {
-            return getMinMaxReject(check_min_max[minMax], minMax, familyNameString, handicapNotif,
-                                   notification.ranked, config.fakebotrank, "",
-                                   r_u_strings.for_r_u_games);
+        if (!ObjectIsEmpty(check_min_max)) {
+            return getMinMaxRejectMessages(check_min_max, familyNameString, handicapNotif,
+                                           notification.ranked, config.fakebotrank, "",
+                                           r_u_strings.for_r_u_games);
         }
         
         const blitzLiveCorr = notif.time_control.speed; 
         const check_min_max_MPP = config.check_min_max_maintime_periods_periodtime_args_BLC_RU(notif, notifRanked, blitzLiveCorr);
-        for (const minMax in check_min_max_MPP) {
-            return getMinMaxReject(check_min_max_MPP, minMax, mpp, notification.time_control,
-                            notification.ranked, false, `in ${blitzLiveCorr} `,
-                            r_u_strings.for_r_u_games);
+        if (!ObjectIsEmpty(check_min_max_MPP)) {
+            return getMinMaxRejectMessages(check_min_max_MPP, notification.time_control,
+                                           notification.ranked, false, `in ${blitzLiveCorr} `,
+                                           r_u_strings.for_r_u_games);
         }
-
-        return { reject: false };  // Ok !
 
     }
     on_challenge(notification) {
-        const c0 = this.checkChallenge(notification);
-        const rejectmsg = (c0.msg ? c0.msg : "");
+        // load config.ranked or config.unranked depending on notification.ranked
+        const r_u_strings = ranked_unranked_strings_connection(notification.ranked);
 
-        const handi = (notification.handicap > 0 ? "H" + notification.handicap : "");
-        const accepting = (c0.reject ? "Rejecting" : "Accepting");
-        conn_log(sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
-                         accepting, notification.user.username, rankToString(notification.user.ranking),
-                         notification.width, notification.height,
-                         handi, notification.game_id));
+        for (const test of [this.checkChallengeMandatory,
+                            //this.checkChallengeSanityChecks,
+                            this.checkChallengeBooleans,
+                            this.checkChallengeCommaSeparatedPartTwo,
+                            this.checkChallengeMinMaxPartTwo]) {
+            const messages = test.bind(this)(notification, r_u_strings);
+            const acceptingRejectingSentence = createAcceptingRejectingSentence(messages, 
+                                               notification.handicap, notification.user.username,
+                                               notification.user.ranking, notification.width, 
+                                               notification.height, notification.game_id);
 
-        if (!c0.reject) {
-            post(api1('me/challenges/' + notification.challenge_id+'/accept'), this.auth({ }))
-            .then(ignore)
-            .catch(() => {
-                conn_log("Error accepting challenge, declining it");
-                post(api1('me/challenges/' + notification.challenge_id), this.auth({ 
+            if (!ObjectIsEmpty(messages)) {
+                conn_log(messages.connLog);
+                conn_log(acceptingRejectingSentence);
+
+                post(api1('me/challenges/' + notification.challenge_id), this.auth({
                     'delete': true,
-                    'message': 'Error accepting game challenge, challenge has been removed.',
+                    'message': messages.reject || "The AI you've challenged has rejected this game.",
                 }))
                 .then(ignore)
                 .catch(conn_log)
-                this.deleteNotification(notification);
-            })
-        } else {
-            post(api1('me/challenges/' + notification.challenge_id), this.auth({
-                'delete': true,
-                'message': rejectmsg || "The AI you've challenged has rejected this game.",
-            }))
-            .then(ignore)
-            .catch(conn_log)
+            }
         }
+        /* All good */
+        conn_log(acceptingRejectingSentence);
     }
     processMove(gamedata) {
-        const game = this.connectToGame(gamedata.id)
+        const game = this.connectToGame(gamedata.id);
         game.makeMove(gamedata.move_number);
     }
     processStoneRemoval(gamedata) {
@@ -685,6 +662,10 @@ function conn_log() {
     }
 }
 
+function objectIsEmpty(obj) {
+    return Boolean(String(Object.keys(obj)));
+}
+
 function ranked_unranked_strings_connection(rankedStatus) {
     const r_u = (rankedStatus ? "unranked" : "ranked");
     return { for_r_u_games: `for ${r_u} games`,
@@ -760,15 +741,23 @@ function minMaxNumberToDisplayString(familyNameString, number) {
     return number;
 }
 
-function getMinMaxReject(check_min_max_MinMax, minMax, familyNameString, notif, fakeBotRank, blc_sentence, for_r_u_games) {
-    const isMin = (minMax === "min");
-    const MIBL = argMIBL(isMin);
-    const allowed = minMaxNumberToDisplayString(familyNameString, check_min_max_MinMax.minMaxArg);
+function getMinMaxRejectMessages(check_min_max, familyNameString, notif, fakeBotRank, blc_sentence, for_r_u_games) {
+    const MIBL = argMIBL(check_min_max.isMin);
+    const allowed = minMaxNumberToDisplayString(familyNameString, check_min_max.minMaxArg);
     const notifDisplayed = minMaxNumberToDisplayString(familyNameString, notif);
     const connLogMsg = createMinMaxConnLogSentence(name, MIBL, notifDisplayed, allowed, fakeBotRank, blc_sentence, for_r_u_games);                      
-    const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notifDisplayed, allowed, isMin, blc_sentence, for_r_u_games);
-    conn_log(connLogMsg);
-    return { reject: true, msg: rejectMsg };
+    const rejectMsg = createMinMaxRejectSentence(familyNameString, name, MIBL, notifDisplayed,
+                                                 allowed, check_min_max.isMin, blc_sentence, for_r_u_games);
+    return { connLogMsg, rejectMsg };
+}
+
+function createAcceptingRejectingSentence(messages, handicap, username, ranking, width, height, game_id) {
+    const accepting = (messages ? "Rejecting" : "Accepting");
+    const handi = (handicap > 0 ? `H${handicap}` : "");
+
+    return sprintf("%s challenge from %s (%s)  [%ix%i] %s id = %i",
+                   accepting, username, rankToString(ranking),
+                   width, height, handi, game_id);
 }
 
 exports.Connection = Connection;

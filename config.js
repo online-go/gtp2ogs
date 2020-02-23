@@ -173,7 +173,7 @@ exports.updateFromArgv = function() {
         }
     }
     for (const arg of ["auto", "null"]) {
-        if (argv.komis.replace("/",",").split(',').includes(arg) {
+        if (argv.komis.replace("/",",").split(',').includes(arg)) {
             throw new `Deprecated: komis /${arg}/ is no longer supported, `
                       + `use /automatic/ instead`;
         }
@@ -496,12 +496,12 @@ function checkAndCreateMinMaxReject(argsString, notif, name, mpp) {
     for (const [reject, minMax, minMaxArg] of [ [minReject, "min", minArg],
                                                 [maxReject, "max", maxArg] ]) {
         if (reject) {
-            return ({ [minMax]: { reject,
-                                  minMaxArg,
-                                  name,
-                                  mpp
-                                }
-                    });
+            return { minMax,
+                     isMin: (minMax === "min"),
+                     minMaxArg,
+                     name,
+                     mpp
+                   };
         }
     }
     return {};
