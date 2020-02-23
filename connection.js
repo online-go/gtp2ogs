@@ -479,7 +479,7 @@ class Connection {
         const blitzLiveCorr = notif.time_control.speed; 
         const check_min_max_MPP = config.check_min_max_maintime_periods_periodtime_args_BLC_RU(notif, notifRanked, blitzLiveCorr);
         for (const minMax in check_min_max_MPP) {
-            getMinMaxReject(check_min_max_MPP, minMax, mpp, notification.time_control,
+            return getMinMaxReject(check_min_max_MPP, minMax, mpp, notification.time_control,
                             notification.ranked, false, `in ${blitzLiveCorr} `,
                             r_u_strings.for_r_u_games);
         }
