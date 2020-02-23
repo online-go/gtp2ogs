@@ -259,70 +259,53 @@ exports.updateFromArgv = function() {
     // 2) ranked/unranked args:
     exports.check_booleans_RU = function (notif, rankedStatus, familyNameString)
     {
-        const allowed = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const allowed = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         return { reject: (allowed === "true") && notif };
     }
 
-    exports.check_numbers_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus, familyNameString, allowSymetric)
+    exports.check_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus)
     {
-        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const familyNameString = "boardsizes";
+        const argsString = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
-            let matrix = {};
-            let allowedString = "";
             for (const arg of argsString.split(',')) {
                 const [argX, argY] = arg.split('x');
                 const rangeX = getAllNumbersInRange(argX);
                 const rangeY = getAllNumbersInRange(argY);
+                const allowSymetricRU = getArgsStringRankedOrUnranked(argv.allowsymetricboardsizes, rankedStatus, "allowsymetricboardsizes");
                 for (const x of rangeX) {
-                    matrix[x] = {};
-                    if (argY !== undefined) {
-                        for (const y of rangeY) {
-                            matrix[x][y] = true;
-                            allowedString = `${allowedString}${x}x${y}, `;
-                        }
-                    } else {
-                        matrix[x][x] = true;
-                        allowedString = `${allowedString}${x}x${x}, `;
-                        if (allowSymetric && argY !== undefined) {
+                    if (x === notifW || (allowSymetricRU && x === notifH)) {
+                        // check custom
+                        if (argY !== undefined) {
                             for (const y of rangeY) {
-                                if (matrix[y] === undefined) {
-                                    matrix[y] = {};
-                                }
-                                for (const x of rangeX) {
-                                    matrix[y][x] = true;
-                                    allowedString = `${allowedString}${y}x${x}, `;
+                                if (y === notifH || (allowSymetricRU && y === notifW)) {
+                                    return { reject: false };
                                 }
                             }
                         }
+                        // check square
+                        if (x === notifH || (allowSymetricRU && x === notifW)) {
+                            return { reject: false };
+                        }
                     }
-                    allowedString = `${allowedString}\n`;
                 }
             }
-            const reject = (matrix[notifW][notifH] === undefined);
-            return { reject,
-                     argsString: allowedString };
+            return { reject: true,
+                     argsString };
         }
-        return { reject: false };
     }
 
     exports.check_numbers_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
-        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const argsString = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all" && String(notif) !== "null") {
             // "automatic" komi is dealt with separately with --noautokomi
             for (const arg of argsString.split(',')) {
-                if (arg.includes(':')) {
-                    const reject = checkAndCreateMinMaxReject(argsString, notif, false);
-                    if (reject) {
-                        return { reject,
-                                 argsString };
-                    }
-                } else {
-                    const reject = (arg !== notif);
-                    if (reject) {
-                        return { reject,
-                                 argsString };
-                    }
+                const reject = (arg.includes(':') ? checkAndCreateMinMaxReject(argsString, notif, false)
+                                                  : (arg !== notif));
+                if (reject) {
+                    return { reject,
+                             argsString };
                 }
             }
         }
@@ -331,7 +314,7 @@ exports.updateFromArgv = function() {
 
     exports.check_words_comma_separated_RU = function (notif, rankedStatus, familyNameString)
     {
-        const argsString = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const argsString = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
             const reject = !argsString.split(',').includes(notif);
             return { reject,
@@ -342,13 +325,13 @@ exports.updateFromArgv = function() {
 
     exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString, name)
     {
-        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const args = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         return checkAndCreateMinMaxReject(args, notif, name);
     };
 
     exports.check_min_max_maintime_periods_periodtime_args_BLC_RU = function (notif, rankedStatus, familyNameString)
     {
-        const args = createArgStringsRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
+        const args = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
         if (timeSettings.length !== 3) {
             throw new `Error in ${familyNameString} time settings: unexpected use of the `
@@ -418,7 +401,7 @@ function getArgsArraysRankedAndUnranked(arg) {
 }
 
 // ranked/unranked args:
-function createArgStringsRankedOrUnranked(argsString, rankedStatus, familyNameString) {
+function getArgsStringRankedOrUnranked(argsString, rankedStatus, familyNameString) {
         const rankedUnrankedArgs = argsString.split('/');
         if (rankedUnrankedArgs.length !== 2) {
             throw new `Error in in ${familyNameString} : unexpected use of the `

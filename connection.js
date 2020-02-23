@@ -411,17 +411,26 @@ class Connection {
     //
     checkChallengeCommaSeparatedPartTwo(notification, r_u_strings) {
 
-        const testsCommaSeparated = [ ["boardsizes", "Board sizes", String(notification.width)],
-                                      ["komis", "Komi", String(notification.komi)],
-                                       // allowsymetricboardsizes
+        config.check_boardsizes_comma_separated_RU(notifW, notifH, rankedStatus);
 
+
+        const testsCommaSeparated = [ ["komis", "Komi", String(notification.komi)],
                                       ["rules", "Rule", notification.rules],
                                       ["challengercolors", "Player Color", notification.challenger_color],
                                       ["speeds", "Speed", notification.time_control.speed],
                                       ["timecontrols", "Time control", notification.time_control.time_control]
                                     ];
-        for (const [familyNameString, nameF, notif] of testsCommaSeparated) {
+        for (const [familyNameString, name, notif, notifTwo] of testsCommaSeparated) {
+            
+
+
+
             const check_comma_families = config.check_comma_separated_RU(notif, notification.ranked, familyNameString);
+
+
+
+
+
             if (check_comma_families.reject) {
                 let notifDisplayed = String(notif);
                 let allowedArgsDisplayed = check_comma_families.argsString;
@@ -432,8 +441,8 @@ class Connection {
                     allowedArgsDisplayed = komisToDisplayString(allowedArgsDisplayed);
                     //`any komi between ${check_comma_families.minAllowed} and ${check_comma_families.maxAllowed}`;
                 }*/
-                conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedArgsDisplayed}- `);
-                return { reject: true, msg: `${nameF} -${notifDisplayed}- is not allowed on this bot `
+                conn_log(`${name} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, not in -${allowedArgsDisplayed}- `);
+                return { reject: true, msg: `${name} -${notifDisplayed}- is not allowed on this bot `
                                             + `${r_u_strings.for_r_u_games}, please choose among:`
                                             + `\n-${allowedArgsDisplayed}-` };
             }
@@ -687,20 +696,31 @@ function rankToString(r) {
                     : `${30 - R}k`);
 }
 
-function komisToDisplayString(komisCommaSeparated) {
-    let komisDisplayed = "";
-    for (const komi of komisCommaSeparated.split(',')) {
-        if (komi.includes(':')) {
-            const [min, max] = komi.split(':');
-            komisDisplayed = `${komisDisplayed}from ${min} to ${max}`;
+function CommaSeparatedNumbersToDisplayString(argsString) {
+    let commaSeparated = "";
+    for (const arg of argsString.split(',')) {
+        if (arg.includes(':')) {
+            const [min, max] = arg.split(':');
+            commaSeparated = `${commaSeparated}from ${min} to ${max}`;
         } else {
-            komisDisplayed = `${komisDisplayed}${komi}`;
+            commaSeparated = `${commaSeparated}${arg}`;
         }
-        const splitter = (komi === komisDisplayed.slice(-1)
-                          ? "." : ", ");
-        komisDisplayed = `${komisDisplayed}${splitter}`;
+        const splitter = (arg === commaSeparated.slice(-1) ? "." : ", ");
+        commaSeparated = `${commaSeparated}${splitter}`;
     }
-    return komisDisplayed;
+    return commaSeparated;
+}
+
+function timespanToDisplayString(timespan) {
+    const ss = timespan % 60;
+    const mm = Math.floor(timespan / 60 % 60);
+    const hh = Math.floor(timespan / (60*60) % 24);
+    const dd = Math.floor(timespan / (60*60*24));
+    const text = ["days", "hours", "minutes", "seconds"];
+    return [dd, hh, mm, ss]
+    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
+    .filter(e => e !== "")
+    .join(" ");
 }
 
 function argMIBL(isMin) {
@@ -726,18 +746,6 @@ function createMinMaxRejectSentence(familyNameString, name, MIBL, notif, arg, is
     const endingSentence = `please ${MIBL.incDec} ${name}`;
     return (`${MIBL.miniMaxi} ${name} ${blc_sentence}${for_r_u_games} is ${arg}, ${endingSentence}.`);
 }
-
-function timespanToDisplayString(timespan) {
-    const ss = timespan % 60;
-    const mm = Math.floor(timespan / 60 % 60);
-    const hh = Math.floor(timespan / (60*60) % 24);
-    const dd = Math.floor(timespan / (60*60*24));
-    const text = ["days", "hours", "minutes", "seconds"];
-    return [dd, hh, mm, ss]
-    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
-    .filter(e => e !== "")
-    .join(" ");
-} 
 
 function minMaxNumberToDisplayString(familyNameString, number) {
     if (familyNameString === "rank") {
