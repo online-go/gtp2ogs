@@ -295,49 +295,49 @@ class Connection {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if (!ObjectIsEmpty(config.check_comma_separated_RU(notification.user[uid], r_u_strings.r_u, "bans"))) {
+            if (config.check_and_get_reject_words_comma_RU(notification.user[uid], r_u_strings.r_u, "bans")) {
                 const connLog = `${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`;
-                const reject = `You (${uid} ${notification.user[uid]}) are banned `
+                const rejectMsg = `You (${uid} ${notification.user[uid]}) are banned `
                                + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
                                + `you may try changing the ranked/unranked setting`; 
-                return { connLog, reject };
+                return { connLog, rejectMsg };
             }
         }
 
-        const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, "rank", "rank");
-        if (!ObjectIsEmpty(check_min_max)) {
+        const reject_object_min_max = config.check_and_get_reject_min_max_RU(notif, notificationRanked, "rank", "rank");
+        if (reject_object_min_max) {
             return getMinMaxRejectMessages(check_min_max, familyNameString, notification.user.ranking,
                                            notification.ranked, false, "", r_u_strings.for_r_u_games);
         }
 
         // check bot is available, else don't mislead user:
-        if (!ObjectIsEmpty(config.check_rejectnew())) {
+        if (config.check_and_get_reject_rejectnew()) {
             const connLog = "Not accepting new games (rejectnew).";
-            const reject = config.rejectnewmsg;
-            return { connLog, reject };
+            const rejectMsg = config.rejectnewmsg;
+            return { connLog, rejectMsg };
         }
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
-            const check_max = config.check_max_root(number_connected_games, "maxconnectedgames");
-            if (!ObjectIsEmpty(check_max)) {
+            const reject_object_max = config.check_and_get_reject_max_root(number_connected_games, "maxconnectedgames");
+            if (reject_object_max) {
                 const connLog = `${number_connected_games} games being played, maximum is ${check_max.maxAllowed}`;
-                const reject = `Currently, ${number_connected_games} games are being played by this `
+                const rejectMsg = `Currently, ${number_connected_games} games are being played by this `
                                + `bot, maximum is ${check_max.maxAllowed} (if you see this message `
                                + `and you dont see any game on the bot profile page, it is because `
                                + `private game(s) are being played), try again later`;
-                return { connLog, reject };
+                return { connLog, rejectMsg };
             }
         } else if (config.DEBUG) {
             console.log("There are no connected games");
         }
         const connected_games_per_user = this.gamesForPlayer(notification.user.id);
-        const check_max_per_user = config.check_max_root(connected_games_per_user, "maxconnectedgamesperuser");
-        if (!ObjectIsEmpty(check_max_per_user)) {
+        const reject_object_max_per_user = config.check_and_get_reject_max_root(connected_games_per_user, "maxconnectedgamesperuser");
+        if (reject_object_max_per_user) {
             const connLog = `Too many connected games for this user, maximum is ${check_max_per_user.maxAllowed}`;
-            const reject = `Maximum number of simultaneous games allowed per player against `
+            const rejectMsg = `Maximum number of simultaneous games allowed per player against `
                            + `this bot ${check_max_per_user.maxAllowed}, please reduce your `
                            + `number of simultaneous games against this bot, and try again`;
-            return { connLog, reject };
+            return { connLog, rejectMsg };
         }
     }
     // Check challenge sanity checks
@@ -360,10 +360,10 @@ class Connection {
                                 ];
         
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
-            if (!ObjectIsEmpty(config.check_booleans_aspecific(notifCondition, familyNameString))) {
+            if (config.check_and_get_reject_booleans_aspecific(notifCondition, familyNameString)) {
                 const connLog = `${nameF} not allowed`;
-                const reject = `${nameF} not allowed on this bot.`;
-                return { connLog, reject };
+                const rejectMsg = `${nameF} not allowed on this bot.`;
+                return { connLog, rejectMsg };
             }
         }
 
@@ -378,10 +378,10 @@ class Connection {
                                     ];
 
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
-            if (!ObjectIsEmpty(config.check_boolean_args_RU(notifCondition, notification.ranked, familyNameString))) {
+            if (config.check_and_get_reject_booleans_RU(notifCondition, notification.ranked, familyNameString)) {
                 const connLog = `${nameF} not allowed ${r_u_strings.for_r_u_games}`;
-                const reject = `${nameF} not allowed on this bot ${r_u_strings.for_r_u_games}.`;
-                return { connLog, reject };
+                const rejectMsg = `${nameF} not allowed on this bot ${r_u_strings.for_r_u_games}.`;
+                return { connLog, rejectMsg };
             }
         }
     }
@@ -403,13 +403,13 @@ class Connection {
 
 
 
-            const check_comma_families = config.check_comma_separated_RU(notif, notification.ranked, familyNameString);
+            const reject_object_comma_families = config.check_and_get_reject_comma_separated_RU(notif, notification.ranked, familyNameString);
 
 
 
 
 
-            if (!ObjectIsEmpty(check_comma_families)) {
+            if (reject_object_comma_families) {
                 let notifDisplayed = String(notif);
                 let allowedArgsDisplayed = check_comma_families.argsString;
                 /*if (familyNameString === "boardsizes") {
@@ -421,10 +421,10 @@ class Connection {
                 }*/
                 const connLog = `${name} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, `
                                 + `not in:\n${allowedArgsDisplayed} `;
-                const reject = `${name} -${notifDisplayed}- is not allowed on this bot `
+                const rejectMsg = `${name} -${notifDisplayed}- is not allowed on this bot `
                                + `${r_u_strings.for_r_u_games}, please choose among:`
                                + `\n-${allowedArgsDisplayed}-`;
-                return { connLog, reject };
+                return { connLog, rejectMsg };
             }
         }
     }
@@ -440,16 +440,16 @@ class Connection {
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakebotrank)) :
                               notification.handicap);
 
-        const check_min_max = config.check_min_max_args_RU(notif, notificationRanked, "handicap", "handicap stones");
-        if (!ObjectIsEmpty(check_min_max)) {
+        const reject_object_min_max = config.check_and_get_reject_min_max_RU(notif, notificationRanked, "handicap", "handicap stones");
+        if (reject_object_min_max) {
             return getMinMaxRejectMessages(check_min_max, familyNameString, handicapNotif,
                                            notification.ranked, config.fakebotrank, "",
                                            r_u_strings.for_r_u_games);
         }
         
         const blitzLiveCorr = notif.time_control.speed; 
-        const check_min_max_MPP = config.check_min_max_maintime_periods_periodtime_args_BLC_RU(notif, notifRanked, blitzLiveCorr);
-        if (!ObjectIsEmpty(check_min_max_MPP)) {
+        const reject_object_min_max_MPP = config.check_and_get_reject_min_max_maintime_periods_periodtime_BLC_RU(notif, notifRanked, blitzLiveCorr);
+        if (reject_object_min_max_MPP) {
             return getMinMaxRejectMessages(check_min_max_MPP, notification.time_control,
                                            notification.ranked, false, `in ${blitzLiveCorr} `,
                                            r_u_strings.for_r_u_games);
@@ -471,7 +471,7 @@ class Connection {
                             this.checkChallengeMinMaxPartTwo]) {
             const messages = test.bind(this)(notification, r_u_strings);
 
-            if (!ObjectIsEmpty(messages)) {
+            if (messages) {
                 conn_log(messages.connLog);
                 conn_log(acceptingRejectingSentence);
 
@@ -649,10 +649,6 @@ function conn_log() {
     } else {
         console.log.apply(null, arr);
     }
-}
-
-function objectIsEmpty(obj) {
-    return Boolean(String(Object.keys(obj)));
 }
 
 function ranked_unranked_strings_connection(rankedStatus) {

@@ -3,16 +3,16 @@
 const fs = require('fs')
 const console = require('console');
 
-const checkArgs = ["rejectnew",
-                   "booleans_aspecific",
-                   "max_aspecific",
-                   "booleans_RU",
-                   "min_max_args_RU",
-                   "min_max_blitz_live_corr_args_RU",
-                   "numbers_boardsizes_comma_separated_RU",
-                   "numbers_comma_separated_RU",
-                   "words_comma_separated_RU"];
-checkArgs.forEach( str => exports[`check_${str}`] = function() {} );
+const checkGetArgs = ["rejectnew",
+                      "booleans_aspecific",
+                      "max_aspecific",
+                      "booleans_RU",
+                      "min_max_RU",
+                      "min_max_maintime_periods_periodtime_BLC_RU",
+                      "numbers_boardsizes_comma_RU",
+                      "numbers_comma_RU",
+                      "words_comma_RU"];
+checkGetArgs.forEach( str => exports[`check_and_get_reject_${str}`] = function() {} );
 
 exports.updateFromArgv = function() {
     const optimist = require("optimist")
@@ -240,32 +240,34 @@ exports.updateFromArgv = function() {
 
     // ARGV FUNCTIONNAL CHECKS EXPORTS
     // 1) aspecific args:
-    exports.check_rejectnew = function () 
+    exports.check_and_get_reject_rejectnew = function () 
     {
-        return { reject: argv.rejectnew || 
-                         (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) };
+        const isReject = (argv.rejectnew || 
+                        (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)));
+        if (isReject) return true;
     };
 
-    exports.check_booleans_aspecific = function (notif, familyNameString)
+    exports.check_and_get_reject_booleans_aspecific = function (notif, familyNameString)
     {
-        return { reject: argv[familyNameString] && notif };
+        const isReject = argv[familyNameString] && notif;
+        if (isReject) return true;
     }
 
-    exports.check_max_aspecific = function (notif, familyNameString)
+    exports.check_and_get_reject_max_aspecific = function (notif, familyNameString)
     {
         const maxAllowed = argv[familyNameString];
-        return { reject: notif > maxAllowed,
-                 maxAllowed };
+        const isReject = notif > maxAllowed;
+        if (isReject) return { maxAllowed };
     }
 
     // 2) ranked/unranked args:
-    exports.check_booleans_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_and_get_reject_booleans_RU = function (notif, rankedStatus, familyNameString)
     {
-        const allowed = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
-        return { reject: (allowed === "true") && notif };
+        const isReject = (getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString) === "true");
+        if (isReject) return true;
     }
 
-    exports.check_boardsizes_comma_separated_RU = function (notifW, notifH, rankedStatus)
+    exports.check_and_get_reject_boardsizes_comma_RU = function (notifW, notifH, rankedStatus)
     {
         const familyNameString = "boardsizes";
         const argsString = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
@@ -281,57 +283,50 @@ exports.updateFromArgv = function() {
                         if (argY !== undefined) {
                             for (const y of rangeY) {
                                 if (y === notifH || (allowSymetricRU && y === notifW)) {
-                                    return { reject: false };
+                                    return;
                                 }
                             }
                         }
                         // check square
                         if (x === notifH || (allowSymetricRU && x === notifW)) {
-                            return { reject: false };
+                            return;
                         }
                     }
                 }
             }
-            return { reject: true,
-                     argsString };
+            return { argsString };
         }
     }
 
-    exports.check_numbers_comma_separated_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_and_get_reject_numbers_comma_RU = function (notif, rankedStatus, familyNameString)
     {
         const argsString = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all" && String(notif) !== "null") {
             // "automatic" komi is dealt with separately with --noautokomi
             for (const arg of argsString.split(',')) {
-                const reject = (arg.includes(':') ? checkAndCreateMinMaxReject(argsString, notif, false, false)
+                const isReject = (arg.includes(':') ? checkAndCreateMinMaxReject(argsString, notif, false, false)
                                                   : (arg !== notif));
-                if (reject) {
-                    return { reject,
-                             argsString };
-                }
+                if (isReject) return { argsString };
             }
         }
-        return { reject: false };
     }
 
-    exports.check_words_comma_separated_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_and_get_reject_words_comma_RU = function (notif, rankedStatus, familyNameString)
     {
         const argsString = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         if (argsString !== "all") {
-            const reject = !argsString.split(',').includes(notif);
-            return { reject,
-                     argsString };
+            const isReject = !argsString.split(',').includes(notif);
+            if (isReject) return { argsString };
         }
-        return { reject: false };
     }
 
-    exports.check_min_max_args_RU = function (notif, rankedStatus, familyNameString, name)
+    exports.check_and_get_reject_min_max_RU = function (notif, rankedStatus, familyNameString, name)
     {
         const args = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         return checkAndCreateMinMaxReject(args, notif, name, false);
     };
 
-    exports.check_min_max_maintime_periods_periodtime_args_BLC_RU = function (notif, rankedStatus, familyNameString)
+    exports.check_and_get_reject_min_max_maintime_periods_periodtime_BLC_RU = function (notif, rankedStatus, familyNameString)
     {
         const args = getArgsStringRankedOrUnranked(argv[familyNameString], rankedStatus, familyNameString);
         const timeSettings = args.split('_');
@@ -351,9 +346,7 @@ exports.updateFromArgv = function() {
                          ];
         for (const [mpp, arg, notifMPP, notifName] of mppTests) {
             const rejectResult = checkAndCreateMinMaxReject(arg, notifMPP, notifName, mpp);
-            for (minMax in rejectResult) {
-                return rejectResult;
-            }
+            if (rejectResult) return rejectResult;
         }
     };
 
@@ -495,7 +488,7 @@ function checkAndCreateMinMaxReject(argsString, notif, name, mpp) {
     // and any math operation on NaN returns false (don't reject challenge)
     for (const [reject, minMax, minMaxArg] of [ [minReject, "min", minArg],
                                                 [maxReject, "max", maxArg] ]) {
-        if (reject) {
+        if (isReject) {
             return { minMax,
                      isMin: (minMax === "min"),
                      minMaxArg,
@@ -504,7 +497,6 @@ function checkAndCreateMinMaxReject(argsString, notif, name, mpp) {
                    };
         }
     }
-    return {};
 }
 
 function getAllNumbersInRange(range) {
