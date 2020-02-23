@@ -669,7 +669,7 @@ function rankToString(r) {
 
 /* add for boardsizes display*/
 
-function CommaSeparatedNumbersToDisplayString(argsString) {
+function commaSeparatedNumbersToDisplayString(argsString) {
     let commaSeparated = "";
     for (const arg of argsString.split(',')) {
         if (arg.includes(':')) {
