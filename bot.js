@@ -182,7 +182,7 @@ class Bot {
                            timeleft: 0
                          };
 
-        const offset = ((this.firstmove === true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
+        const offset = ((this.firstmove ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         const currentPlayerObj = getCurrentPlayerObj(blackObj, whiteObj, state.clock);
         currentPlayerObj.offset = offset;
 
