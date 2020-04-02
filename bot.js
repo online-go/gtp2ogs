@@ -213,8 +213,7 @@ class Bot {
 
                 const currentPlayerObj = getCurrentPlayerObj(blackObj, whiteObj, state.clock);
                 const periodTimeInfo = Math.floor(state.time_control.period_time - currentPlayerObj.offset);
-                this.command(`kgs-time_settings byoyomi ${state.time_control.main_time} `
-                             + `${periodTimeInfo} ${state.time_control.periods}`);
+                this.command(`kgs-time_settings byoyomi ${state.time_control.main_time} ${periodTimeInfo} ${state.time_control.periods}`);
 
                 /* Turns out in Japanese byoyomi mode, for Leela and pacci,
                    they expect time left in the current byoyomi period on time_left.
