@@ -32,7 +32,8 @@ class Pv {
             "type": "analysis",
             "name": name,
             "from": this.game.state.moves.length,
-            "moves": pv
+            "moves": pv,
+            "marks": { "circle": pv.substring(0, 2) }
         };
     }
     clearPv() {
