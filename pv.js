@@ -5,6 +5,7 @@ const { gtpchar2num } = require("./utils/gtpchar2num");
 class Pv {
     constructor(setting, game) {
         this.game = game;
+        this.lookingForPv = false;
 
         this.pvLine =  null;
         this.getPvChat = { 'LZ':  this.getPvChatLZ,
@@ -27,6 +28,20 @@ class Pv {
                          }[setting];
         this.CLPV =      { 'PG':  (/\([^()]*\)/g) }[setting];
     }
+    postPvToChat(errline) {
+        if (!(this.game.processing || this.lookingForPv)) return;
+        this.lookingForPv = true; // If we are processing, we keep looking for pv till we find it, even after processing stops.
+        this.updatePvLine(errline);
+        const stop = this.STOPRE.exec(errline);
+        
+        if (stop && this.pvLine) {
+            this.lookingForPv = false; // we found the pv. We can stop looking.
+            const body = this.getPvChat(stop);
+            const move = this.game.state.moves.length + 1;
+            this.game.sendChat(body, move, "malkovich");
+            this.pvLine = null;
+        }
+    }
     updatePvLine(errline) {
         if (!this.pvLine) {
             const myPv = this.PVRE.exec(errline);
@@ -41,9 +56,6 @@ class Pv {
             "moves": pv,
             "marks": { "circle": pv.substring(0, 2) }
         };
-    }
-    clearPv() {
-        this.pvLine = null;
     }
     getPvChatLZ(stop) {
         const winrate  = this.pvLine[3],
@@ -101,6 +113,7 @@ class Pv {
 
     PvToGtp(str) { 
         return str
+            .trim()
             .split(" ")
             .map(s => s === 'pass' ? '..' : num2char(gtpchar2num(s[0].toLowerCase())) + num2char(this.game.state.width - s.slice(1)))
             .join('');

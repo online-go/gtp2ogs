@@ -295,7 +295,7 @@ class Game {
             ++Game.corr_moves_processing;
 
         let doneProcessing = () => {
-            this.procesing = false;
+            this.processing = false;
             --Game.moves_processing;
             if (config.corrqueue && this.state.time_control.speed === "correspondence") {
                 this.corr_move_pending = false;
