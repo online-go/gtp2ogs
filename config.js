@@ -507,7 +507,7 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
 }
 
 function checkUnsupportedArgv(optimistArgv) {
-    const supportedOptions = ['LZ', 'SAI', 'PG', 'KG'];
+    const supportedOptions = ['LZ', 'SAI', 'PG', 'KATA', 'LEELA'];
     if (optimistArgv.ogspv && !supportedOptions.includes(optimistArgv.ogspv)) {
         throw new `Unsupported --ogspv option ${optimistArgv.ogspv}.`
                   + `supported options are ${supportedOptions.join(' ')}`;

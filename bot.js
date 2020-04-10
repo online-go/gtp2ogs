@@ -13,7 +13,7 @@ const { Pv } = require('./pv');
 /** Bot **/
 /*********/
 class Bot {
-    constructor(conn, game, cmd) {{{
+    constructor(conn, game, cmd) {
         this.conn = conn;
         this.game = game;
         this.commands_sent = 0;
@@ -40,19 +40,13 @@ class Bot {
 
         if (config.DEBUG) this.log("Starting ", cmd.join(' '));
 
-        /*  old ogs code (no pv)
-        this.proc.stderr.on('data', (data) => {
-            if (this.ignore)  return;
-            this.error("stderr: " + data);
-        });
-        */
         this.proc.stderr.pipe(split2()).on('data', (data) => {
             if (this.ignore)  return;
             const errline = data.toString().trim();
             if (errline === "") return;
             this.error(`stderr: ${errline}`);
 
-            if (config.ogspv) this.postPvToChat(errline);
+            if (config.ogspv) this.pv.postPvToChat(errline);
         });
 
         let stdout_buffer = "";
@@ -132,17 +126,6 @@ class Bot {
             let eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
         });
-    }}}
-    postPvToChat(errline) {
-        this.pv.updatePvLine(errline);
-        const stop = this.pv.STOPRE.exec(errline);
-        
-        if (stop && this.pv.pvLine) {
-            const body = this.pv.getPvChat(stop);
-            const move = this.game.state.moves.length + 1;
-            this.game.sendChat(body, move, "malkovich");
-            this.pv.clearPv();
-        }
     }
     pid() {
         if (this.proc) {
