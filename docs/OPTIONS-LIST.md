@@ -57,7 +57,7 @@ the ranked/unranked status is.
 
 Note: about the "messages" arguments, some combinations of 
 characters in messages make gtp2ogs crash !!
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### username
   ```--username``` Specify the username of the bot, for example 
@@ -75,14 +75,14 @@ security reasons
 Greeting message to appear in chat at first move 
 (ex: "Hello, have a nice game")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### farewell
   ```--farewell "Thank you for playing"``` 
 Thank you message to appear in chat at end of game 
 (ex: "Thank you for playing")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### rejectnew arguments :
   ```--rejectnew``` Reject all new challenges with the default 
@@ -92,13 +92,36 @@ reject message
 if you add the rejectnewmsg argument, Reject all new challenges with a 
 customized message instead of the default message.
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
   ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
 
 #### debug
 ```--debug```  Output GTP command and responses from your Go engine
+
+#### ogspv
+``` --ogspv ``` Send winrate and variations for supported AIs with 
+supported settings, in OGS games.
+
+Example of output (Leela Zero):
+```
+Variation: Winrate: 57.93%, Visits: 19821, Playouts: 19820
+```
+
+see a live example in: https://online-go.com/game/23008077
+
+Supported AIs:
+
+- `LeelaZero` (https://zero.sjeng.org/)
+- `Sai` (http://sai.unich.it/)
+- `KataGo` (https://github.com/lightvector/KataGo)
+- `PhoenixGo` (https://github.com/Tencent/PhoenixGo)
+- `Leela` (https://sjeng.org/leela.html)
+
+for example `--ogspv LeelaZero`
+
+**IMPORTANT: see [notes H-](/docs/NOTES.md#h-) for details**
 
 #### logfile
 ```--logfile``` In addition to logging to the console, also log gtp2ogs 
@@ -188,7 +211,7 @@ stones number in autohandicap (-1) based on rankDifference between
 fakerank and user ranking, to fix the bypass minhandicap maxhandicap 
 issue if handicap is -automatic
 
-see [notes F-](/docs/docs/NOTES.md#f-) for details
+see [notes F-](/docs/NOTES.md#f-) for details
 
 # 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
 
@@ -302,7 +325,7 @@ will allow all these boardsizes combinations:
 25x1,25x2,25x3,25x3,25x19
 ```
 
-see [notes B-](/docs/docs/NOTES.md#b-) for details:
+see [notes B-](/docs/NOTES.md#b-) for details:
 
 #### komis
   ```--komis``` Allowed komi values
@@ -318,8 +341,8 @@ for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis
 5.5, 6.5, 7.5, 0.5, automatic.
 
 For extra komi explanations, see :
-- [notes C-](/docs/docs/NOTES.md#c-)
-- [notes D-](/docs/docs/NOTES.md#d-)
+- [notes C-](/docs/NOTES.md#c-)
+- [notes D-](/docs/NOTES.md#d-)
 
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
@@ -352,7 +375,7 @@ Possible timecontrol value(s) :
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
 `simple`, `absolute`, `none`.
 
-see [notes E-](/docs/docs/NOTES.md#e-) for details
+see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
 

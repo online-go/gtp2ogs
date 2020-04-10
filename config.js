@@ -36,6 +36,8 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
+    const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
+
     const optimist = require("optimist")
         // 1) ROOT ARGUMENTS :
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
@@ -52,6 +54,8 @@ exports.updateFromArgv = function() {
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
+        .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings, in OGS games`)
+        .string('ogspv')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
@@ -275,6 +279,11 @@ exports.updateFromArgv = function() {
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
         return false;
     };
+    if (argv.ogspv) {
+        const ogsPv = argv.ogspv.toUpperCase();  // being case sensitive tolerant
+        checkUnsupportedOgspvAI(ogsPv, ogsPvAIs);
+        exports.ogspv = ogsPv;
+    }
 
     /* 2) specifc r_u cases :*/
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
@@ -503,6 +512,14 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
     console.log("\n");
 }
 
+function checkUnsupportedOgspvAI(ogspv, ogsPvAIs) {
+    const upperCaseAIs = ogsPvAIs.map(e => e.toUpperCase());
+
+    if (!upperCaseAIs.includes(ogspv)) {
+        throw `Unsupported --ogspv option ${ogspv}.`
+              + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+    }
+}
 
 // optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
 function familyArrayNamesGRU(familyNameString) {

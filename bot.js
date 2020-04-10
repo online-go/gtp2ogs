@@ -1,14 +1,19 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
+const split2 = require('split2');
+const { char2num } = require("./utils/char2num");
+const { gtpchar2num } = require("./utils/gtpchar2num");
+
 let child_process = require('child_process');
 let console = require('./console').console;
 let config = require('./config');
+const { Pv } = require('./pv');
 
 /*********/
 /** Bot **/
 /*********/
 class Bot {
-    constructor(conn, game, cmd) {{{
+    constructor(conn, game, cmd) {
         this.conn = conn;
         this.game = game;
         this.commands_sent = 0;
@@ -21,6 +26,7 @@ class Bot {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
+        if (config.ogspv) this.pv = new Pv(config.ogspv, game);
 
         try {
             this.proc = child_process.spawn(cmd[0], cmd.slice(1));
@@ -34,10 +40,15 @@ class Bot {
 
         if (config.DEBUG) this.log("Starting ", cmd.join(' '));
 
-        this.proc.stderr.on('data', (data) => {
+        this.proc.stderr.pipe(split2()).on('data', (data) => {
             if (this.ignore)  return;
-            this.error("stderr: " + data);
+            const errline = data.toString().trim();
+            if (errline === "") return;
+            this.error(`stderr: ${errline}`);
+
+            if (config.ogspv) this.pv.postPvToChat(errline);
         });
+
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
             if (this.ignore)  return;
@@ -115,8 +126,7 @@ class Bot {
             let eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
         });
-    }}}
-
+    }
     pid() {
         if (this.proc) {
             return this.proc.pid;
@@ -591,11 +601,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
 
     return ret;
-} /* }}} */
-function char2num(ch) { /* {{{ */
-    if (ch === ".") return -1;
-    return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
-} /* }}} */
+}
 function pretty_char2num(ch) { /* {{{ */
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
@@ -605,12 +611,7 @@ function move2gtpvertex(move, board_size) { /* {{{ */
         return "pass";
     }
     return num2gtpchar(move['x']) + (board_size-move['y'])
-} /* }}} */
-function gtpchar2num(ch) { /* {{{ */
-    if (ch === "." || !ch)
-        return -1;
-    return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-} /* }}} */
+}
 function num2gtpchar(num) { /* {{{ */
     if (num === -1) 
         return ".";
