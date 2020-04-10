@@ -54,7 +54,7 @@ exports.updateFromArgv = function() {
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', 'Send winrate and variations for supported AIs in ogs games (Pondering is not supported)'
                            + 'Supported parameters are LZ (leela zero engine with any weight), '
-                           + 'PG (PhoenixGo), SAI (sai), KATA (KataGo)')
+                           + 'PG (PhoenixGo), SAI (sai), KATA (KataGo) or LEELA (Old Leela)')
         .string('ogspv')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
@@ -509,9 +509,9 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
 }
 
 function checkUnsupportedArgv(optimistArgv) {
-    if (optimistArgv.ogspv && !['LZ', 'SAI', 'PG', 'KATA'].includes(optimistArgv.ogspv)) {
+    if (optimistArgv.ogspv && !['LZ', 'SAI', 'PG', 'KATA', 'LEELA'].includes(optimistArgv.ogspv)) {
         throw new `Unsupported --ogspv option ${optimistArgv.ogspv}. `
-                  + `Supported options are LZ (Leela Zero) or SAI (sai) or PG (PhoenixGo) or KATA (KataGo).`;
+                  + `Supported options are LZ (Leela Zero) or SAI (sai) or PG (PhoenixGo) or KATA (KataGo) or LEELA (Old Leela).`;
     }
 }
 

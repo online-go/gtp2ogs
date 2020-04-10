@@ -10,17 +10,20 @@ class Pv {
         this.getPvChat = { 'LZ':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'PG':  this.getPvChatPG,
-                           'KATA': this.getPvChatKata
+                           'KATA': this.getPvChatKata,
+                           'LEELA': this.getPvChatLeela
                          }[setting];
         this.PVRE =      { 'LZ':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) \(A: +(-?\d+.\d)\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'PG':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/),
-                           'KATA': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/)
+                           'KATA': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
+                           'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
                          }[setting];
         this.STOPRE =    { 'LZ':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'SAI': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'PG':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
-                           'KATA': this.PVRE
+                           'KATA': this.PVRE,
+                           'LEELA': this.PVRE
                          }[setting];
         this.CLPV =      { 'PG':  (/\([^()]*\)/g) }[setting];
     }
@@ -84,6 +87,14 @@ class Pv {
               PDA = stop[6] ? ` PDA: ${stop[6]}` : "",
               pv = this.PvToGtp(stop[7]),
               name = `Visits: ${visits}, Winrate: ${winrate}, Score: ${scoreLead}${PDA}`;
+
+        return this.createMessage(name, pv);
+    }
+    getPvChatLeela(stop) {
+        const visits = stop[1],
+              score = stop[2],
+              pv = this.PvToGtp(stop[3]),
+              name = `Visits: ${visits}, Score: ${score}`;
 
         return this.createMessage(name, pv);
     }
