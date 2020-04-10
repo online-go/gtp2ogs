@@ -101,27 +101,21 @@ file exists (checked each time, can use for load-balancing)
 ```--debug```  Output GTP command and responses from your Go engine
 
 #### ogspv
-``` --ogspv ``` Send winrate and variations for supported AIs in ogs games 
-(Pondering is not supported, so you need to disable pondering if you want 
-to use `--ogspv`, else the result will be unaccurate).
+``` --ogspv ``` Send winrate and variations for supported AIs with 
+supported settings, in OGS games.
 
 Supported AIs are :
 - `LZ` (leela zero engine with any weight)
-- `PG` (PhoenixGo)
 - `SAI`(Sai)
+- `PG` (PhoenixGo)
+- `KG` (KataGo)
 
-For example if you're using leela zero and you want to display the winrate 
-and variations at every move, you need to add the gtp2ogs option `--ogspv LZ`.
+See specific AI settings for `--ogspv` in [notes H-](/docs/docs/NOTES.md#h-)
 
-this is an example of output ingame (clickable to show variations ingame):
-
+Example of output (Leela Zero):
 ```
 Variation: Winrate: 57.93%, Visits: 19821, Playouts: 19820
 ```
-
-Also, this winrate and variations support may become buggy in the future 
-if these AI get breaking updates, in that case you'd have to ask gtp2ogs 
-maintainers to update the old pv code so we can support new output
 
 #### logfile
 ```--logfile``` In addition to logging to the console, also log gtp2ogs 

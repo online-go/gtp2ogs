@@ -132,3 +132,26 @@ special characters in your messages with caution
 these special characters have been tested to work on messages, 
 among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , 
 `:` , `;` 
+
+#### H :
+
+**Supported settings** include, for example, 
+
+for PhoenixGo:
+- the requirement to disable pondering, you need to set `enable_background_search` 
+to `0` in config file.
+- show pv in stderr with `--logtostderr` and `--v=1` in command-line options.
+
+for KataGo:
+- the requirement to set `ogsChatToStderr=true` in the config.
+
+**Example of usage**:
+- for example if you're using leela zero and you want to display the winrate 
+and variations at every move, you need to add the gtp2ogs option `--ogspv LZ`, 
+and for PhoenixGo `--ogspv PG`, etc.
+
+Also, this winrate and variations support may become buggy in the future 
+if these AI get breaking updates, in that case you'd have to ask gtp2ogs 
+maintainers to update the old pv code so we can support new output.
+
+You can always disable the option if it makes your AI crash or fail.
