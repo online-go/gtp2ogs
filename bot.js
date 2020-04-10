@@ -40,12 +40,6 @@ class Bot {
 
         if (config.DEBUG) this.log("Starting ", cmd.join(' '));
 
-        /*  old ogs code (no pv)
-        this.proc.stderr.on('data', (data) => {
-            if (this.ignore)  return;
-            this.error("stderr: " + data);
-        });
-        */
         this.proc.stderr.pipe(split2()).on('data', (data) => {
             if (this.ignore)  return;
             const errline = data.toString().trim();
