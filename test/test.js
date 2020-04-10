@@ -10,6 +10,8 @@ let console = require('../console').console;
 let child_process = require('child_process');
 let https = require('https');
 
+const stream = new require('stream');
+
 config.DEBUG = true;
 config.apikey = 'deadbeef';
 config.host = 'test';
@@ -102,9 +104,9 @@ class FakeGTP {
         this.pid = 100;
         this.callbacks = {};
         this.cmd_callbacks = {};
-        this.stderr = { on: (_, cb) => {
-            this.callbacks.stderr = cb;
-        }};
+        this.stderr = new stream.Readable({ read: () => {}});
+        this.callbacks.stderr = (data) => this.stderr.emit('data', data);
+
         this.stdout = { on: (_, cb) => {
             this.callbacks.stdout = cb;
         }};
