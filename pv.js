@@ -74,7 +74,6 @@ class Pv {
 
         const pv = this.pvLine[1]
                    .replace(this.CLPV, '') 
-                   // .replace(this.CLPV, '') // duplicate, safe to remove ?
                    .split(",")
                    .map(s => s === '..' ? '..' : s[0] + num2char(this.game.state.width - char2num(s[1]) - 1))
                    .join('');
