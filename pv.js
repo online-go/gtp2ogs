@@ -8,29 +8,29 @@ class Pv {
         this.lookingForPv = false;
 
         this.pvLine =  null;
-        this.getPvChat = { 'LZ':  this.getPvChatLZ,
+        this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
-                           'PG':  this.getPvChatPG,
-                           'KATA': this.getPvChatKata,
-                           'LEELA': this.getPvChatLeela
-                         }[setting];
-        this.PVRE =      { 'LZ':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
+                           'KATAGO': this.getPvChatKata,
+                           'PHOENIXGO':  this.getPvChatPG,
+                           'LEELA': this.getPvChatLeela,
+                         }[setting.toUpperCase()];
+        this.PVRE =      { 'LEELAZERO':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) \(A: +(-?\d+.\d)\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
-                           'PG':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/),
-                           'KATA': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
+                           'KATAGO': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
+                           'PHOENIXGO':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/),
                            'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
-                         }[setting];
-        this.STOPRE =    { 'LZ':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
+                         }[setting.toUpperCase()];
+        this.STOPRE =    { 'LEELAZERO':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'SAI': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
-                           'PG':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
-                           'KATA': this.PVRE,
+                           'KATAGO': this.PVRE,
+                           'PHOENIXGO':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
                            'LEELA': this.PVRE
-                         }[setting];
-        this.CLPV =      { 'PG':  (/\([^()]*\)/g) }[setting];
+                         }[setting.toUpperCase()];
+        this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting.toUpperCase()];
     }
     postPvToChat(errline) {
         if (!(this.game.processing || this.lookingForPv)) return;
-        this.lookingForPv = true; // If we are processing, we keep looking for pv till we find it, even after processing stops.
+        this.lookingForPv = true; // Once we are processing, we continue to look for pv even after processing stops.
         this.updatePvLine(errline);
         const stop = this.STOPRE.exec(errline);
         

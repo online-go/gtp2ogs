@@ -104,18 +104,55 @@ file exists (checked each time, can use for load-balancing)
 ``` --ogspv ``` Send winrate and variations for supported AIs with 
 supported settings, in OGS games.
 
-Supported AIs are :
-- `LZ` (leela zero engine with any weight)
-- `SAI`(Sai)
-- `PG` (PhoenixGo)
-- `KG` (KataGo)
-
-See specific AI settings for `--ogspv` in [notes H-](/docs/docs/NOTES.md#h-)
-
 Example of output (Leela Zero):
 ```
 Variation: Winrate: 57.93%, Visits: 19821, Playouts: 19820
 ```
+
+see a live example in: https://online-go.com/game/23008077
+
+note: in the future your AI may have updates that are incompatible 
+with the current implementation of pv (variations ingame) of gtp2ogs.
+
+If your AI stops working because of `--ogspv`, you can temporarily stop using 
+this option and report the issue on github issues or on the leela zero discord 
+until the issue is fixed again.
+
+##### ogspv supported AIs:
+
+- `LeelaZero` (https://zero.sjeng.org/)
+- `Sai` (http://sai.unich.it/)
+- `KataGo` (https://github.com/lightvector/KataGo)
+- `PhoenixGo` (https://github.com/Tencent/PhoenixGo)
+- `Leela` (https://sjeng.org/leela.html)
+
+for example `--ogspv LeelaZero`
+
+##### ogspv pondering support:
+
+Working with ponder on and off:
+- Leela Zero
+- Sai
+- KataGo
+
+Not working with ponder at all:
+- Leela
+- PhoenixGo
+
+##### ogspv alternative weights support:
+
+You can run your AI engine **with any weight it supports**, for example 
+leela zero engine with 40b, 15b, elf-v0, elf-v1, elf-v2, minigo, etc.
+
+##### ogspv AI-specific requirements and tips:
+
+for KataGo:
+- the requirement to set `ogsChatToStderr=true` in the config.
+
+for PhoenixGo:
+- the requirement to disable pondering, you need to set `enable_background_search` 
+to `0` in config file.
+- show pv in stderr with `--logtostderr` and `--v=1` in command-line options.
 
 #### logfile
 ```--logfile``` In addition to logging to the console, also log gtp2ogs 
