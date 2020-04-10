@@ -158,9 +158,10 @@ Working with ponder on and off:
 - Leela Zero
 - Sai
 - KataGo
+- Leela (on linux)
 
 Not working with ponder at all:
-- Leela
+- Leela (on windows)
 - PhoenixGo
 
 ##### ogspv AI-specific requirements and tips:
