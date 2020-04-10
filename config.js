@@ -52,6 +52,10 @@ exports.updateFromArgv = function() {
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
+        .describe('ogspv', 'Send winrate and variations for supported AIs in ogs games (Pondering is not supported)'
+                           + 'Supported parameters are LZ (leela zero engine with any weight), '
+                           + 'PG (PhoenixGo), SAI (sai)')
+        .string('ogspv')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
@@ -244,6 +248,7 @@ exports.updateFromArgv = function() {
     console.log(`\ngtp2ogs version 6.0\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}`);
     // B - check deprecated argv //
     testDeprecatedArgv(optimist.argv, "komis");
+    checkUnsupportedArgv(optimist.argv);
 
     /* EXPORTS FROM OPTIMIST.ARGV */
     /* 0) root exports*/
@@ -503,6 +508,12 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
     console.log("\n");
 }
 
+function checkUnsupportedArgv(optimistArgv) {
+    if (optimistArgv.ogspv && !['LZ', 'SAI', 'PG'].includes(optimistArgv.ogspv)) {
+        throw new `Unsupported --ogspv option ${optimistArgv.ogspv}. `
+                  + `Supported options are LZ (Leela Zero) or SAI (sai) or PG (PhoenixGo).`;
+    }
+}
 
 // optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
 function familyArrayNamesGRU(familyNameString) {
