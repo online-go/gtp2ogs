@@ -5,7 +5,7 @@ const split2 = require('split2');
 let child_process = require('child_process');
 let console = require('./console').console;
 let config = require('./config');
-const pv = require('./pv');
+const Pv = require('./pv').Pv;
 
 /*********/
 /** Bot **/
@@ -24,7 +24,7 @@ class Bot {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
-        if (config.ogspv) this.pv = new pv(config.ogspv);
+        if (config.ogspv) this.pv = new Pv(config.ogspv);
 
         try {
             this.proc = child_process.spawn(cmd[0], cmd.slice(1));
