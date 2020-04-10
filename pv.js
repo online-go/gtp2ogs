@@ -13,20 +13,20 @@ class Pv {
                            'KATAGO': this.getPvChatKata,
                            'PHOENIXGO':  this.getPvChatPG,
                            'LEELA': this.getPvChatLeela,
-                         }[setting.toUpperCase()];
+                         }[setting];
         this.PVRE =      { 'LEELAZERO':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) \(A: +(-?\d+.\d)\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'KATAGO': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
                            'PHOENIXGO':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/),
                            'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
-                         }[setting.toUpperCase()];
+                         }[setting];
         this.STOPRE =    { 'LEELAZERO':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'SAI': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'KATAGO': this.PVRE,
                            'PHOENIXGO':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
                            'LEELA': this.PVRE
-                         }[setting.toUpperCase()];
-        this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting.toUpperCase()];
+                         }[setting];
+        this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting];
     }
     postPvToChat(errline) {
         if (!(this.game.processing || this.lookingForPv)) return;

@@ -132,3 +132,45 @@ special characters in your messages with caution
 these special characters have been tested to work on messages, 
 among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , 
 `:` , `;` 
+
+#### H :
+
+##### ogspv extra notes:
+
+note: in the future your AI may have updates that are incompatible 
+with the current implementation of pv (variations ingame) of gtp2ogs.
+
+If your AI stops working because of `--ogspv`, you can temporarily stop using 
+this option and report the issue on github issues or on the leela zero discord 
+until the issue is fixed again.
+
+If you get the error split2 is missing, you can install it locally from your 
+gtp2ogs folder with `npm install`, or globally (easier) with `npm install -g split2`.
+
+##### ogspv alternative weights support:
+
+You can run your AI engine **with any weight it supports**, for example 
+leela zero engine with 40b, 15b, elf-v0, elf-v1, elf-v2, minigo, etc.
+
+##### ogspv pondering support:
+
+Working with ponder on and off:
+- Leela Zero
+- Sai
+- KataGo
+
+Not working with ponder at all:
+- Leela
+- PhoenixGo
+
+##### ogspv AI-specific requirements and tips:
+
+to support pv with gtp2ogs `--ogspv`, you need to do these AI specific changes:
+
+for KataGo:
+- the requirement to set `ogsChatToStderr=true` in the config.
+
+for PhoenixGo:
+- the requirement to disable pondering, you need to set `enable_background_search` 
+to `0` in config file.
+- show pv in stderr with `--logtostderr` and `--v=1` in command-line options.

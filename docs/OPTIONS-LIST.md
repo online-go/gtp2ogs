@@ -57,7 +57,7 @@ the ranked/unranked status is.
 
 Note: about the "messages" arguments, some combinations of 
 characters in messages make gtp2ogs crash !!
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### username
   ```--username``` Specify the username of the bot, for example 
@@ -75,14 +75,14 @@ security reasons
 Greeting message to appear in chat at first move 
 (ex: "Hello, have a nice game")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### farewell
   ```--farewell "Thank you for playing"``` 
 Thank you message to appear in chat at end of game 
 (ex: "Thank you for playing")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### rejectnew arguments :
   ```--rejectnew``` Reject all new challenges with the default 
@@ -92,7 +92,7 @@ reject message
 if you add the rejectnewmsg argument, Reject all new challenges with a 
 customized message instead of the default message.
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
   ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
@@ -111,14 +111,7 @@ Variation: Winrate: 57.93%, Visits: 19821, Playouts: 19820
 
 see a live example in: https://online-go.com/game/23008077
 
-note: in the future your AI may have updates that are incompatible 
-with the current implementation of pv (variations ingame) of gtp2ogs.
-
-If your AI stops working because of `--ogspv`, you can temporarily stop using 
-this option and report the issue on github issues or on the leela zero discord 
-until the issue is fixed again.
-
-##### ogspv supported AIs:
+Supported AIs:
 
 - `LeelaZero` (https://zero.sjeng.org/)
 - `Sai` (http://sai.unich.it/)
@@ -128,31 +121,7 @@ until the issue is fixed again.
 
 for example `--ogspv LeelaZero`
 
-##### ogspv pondering support:
-
-Working with ponder on and off:
-- Leela Zero
-- Sai
-- KataGo
-
-Not working with ponder at all:
-- Leela
-- PhoenixGo
-
-##### ogspv alternative weights support:
-
-You can run your AI engine **with any weight it supports**, for example 
-leela zero engine with 40b, 15b, elf-v0, elf-v1, elf-v2, minigo, etc.
-
-##### ogspv AI-specific requirements and tips:
-
-for KataGo:
-- the requirement to set `ogsChatToStderr=true` in the config.
-
-for PhoenixGo:
-- the requirement to disable pondering, you need to set `enable_background_search` 
-to `0` in config file.
-- show pv in stderr with `--logtostderr` and `--v=1` in command-line options.
+**IMPORTANT: see [notes H-](/docs/NOTES.md#h-) for details**
 
 #### logfile
 ```--logfile``` In addition to logging to the console, also log gtp2ogs 
@@ -242,7 +211,7 @@ stones number in autohandicap (-1) based on rankDifference between
 fakerank and user ranking, to fix the bypass minhandicap maxhandicap 
 issue if handicap is -automatic
 
-see [notes F-](/docs/docs/NOTES.md#f-) for details
+see [notes F-](/docs/NOTES.md#f-) for details
 
 # 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
 
@@ -356,7 +325,7 @@ will allow all these boardsizes combinations:
 25x1,25x2,25x3,25x3,25x19
 ```
 
-see [notes B-](/docs/docs/NOTES.md#b-) for details:
+see [notes B-](/docs/NOTES.md#b-) for details:
 
 #### komis
   ```--komis``` Allowed komi values
@@ -372,8 +341,8 @@ for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis
 5.5, 6.5, 7.5, 0.5, automatic.
 
 For extra komi explanations, see :
-- [notes C-](/docs/docs/NOTES.md#c-)
-- [notes D-](/docs/docs/NOTES.md#d-)
+- [notes C-](/docs/NOTES.md#c-)
+- [notes D-](/docs/NOTES.md#d-)
 
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
@@ -406,7 +375,7 @@ Possible timecontrol value(s) :
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
 `simple`, `absolute`, `none`.
 
-see [notes E-](/docs/docs/NOTES.md#e-) for details
+see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
 

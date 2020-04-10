@@ -36,7 +36,7 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
-    const ogspvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
+    const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
     const optimist = require("optimist")
         // 1) ROOT ARGUMENTS :
@@ -54,7 +54,7 @@ exports.updateFromArgv = function() {
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
-        .describe('ogspv', `Send winrate and variations for supported AIs (${ogspvAIs.join(', ')})with supported settings, in OGS games`)
+        .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings, in OGS games`)
         .string('ogspv')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
@@ -248,7 +248,6 @@ exports.updateFromArgv = function() {
     console.log(`\ngtp2ogs version 6.0\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}`);
     // B - check deprecated argv //
     testDeprecatedArgv(optimist.argv, "komis");
-    checkUnsupportedArgv(optimist.argv, ogspvAIs);
 
     /* EXPORTS FROM OPTIMIST.ARGV */
     /* 0) root exports*/
@@ -280,6 +279,11 @@ exports.updateFromArgv = function() {
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
         return false;
     };
+    if (argv.ogspv) {
+        const ogsPv = argv.ogspv.toUpperCase();  // being case sensitive tolerant
+        checkUnsupportedOgspvAI(ogsPv, ogsPvAIs);
+        exports.ogspv = ogsPv;
+    }
 
     /* 2) specifc r_u cases :*/
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
@@ -508,11 +512,12 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
     console.log("\n");
 }
 
-function checkUnsupportedArgv(optimistArgv, ogspvAIs) {
-    const anyCaseOgspvAIs = ogspvAIs.map(e => e.toUpperCase()); // allow non case sensitive inputs
-    if (optimistArgv.ogspv && !anyCaseOgspvAIs.includes(optimistArgv.ogspv.toUpperCase())) {
-        throw new `Unsupported --ogspv option ${optimistArgv.ogspv}.`
-                  + `supported options are ${ogspvAIs.join(', ')}`;
+function checkUnsupportedOgspvAI(ogspv, ogsPvAIs) {
+    const upperCaseAIs = ogsPvAIs.map(e => e.toUpperCase());
+
+    if (!upperCaseAIs.includes(ogspv)) {
+        throw new `Unsupported --ogspv option ${ogspv}.`
+                  + `\nSupported options are ${ogsPvAIs.join(', ')}`;
     }
 }
 
