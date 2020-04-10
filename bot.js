@@ -1,11 +1,13 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const split2 = require('split2');
+const { char2num } = require("./utils/char2num");
+const { gtpchar2num } = require("./utils/gtpchar2num");
 
 let child_process = require('child_process');
 let console = require('./console').console;
 let config = require('./config');
-const Pv = require('./pv').Pv;
+const { Pv } = require('./pv');
 
 /*********/
 /** Bot **/
@@ -24,7 +26,7 @@ class Bot {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
-        if (config.ogspv) this.pv = new Pv(config.ogspv);
+        if (config.ogspv) this.pv = new Pv(config.ogspv, game);
 
         try {
             this.proc = child_process.spawn(cmd[0], cmd.slice(1));
@@ -616,11 +618,7 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
 
     return ret;
-} /* }}} */
-function char2num(ch) { /* {{{ */
-    if (ch === ".") return -1;
-    return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
-} /* }}} */
+}
 function pretty_char2num(ch) { /* {{{ */
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
@@ -630,12 +628,7 @@ function move2gtpvertex(move, board_size) { /* {{{ */
         return "pass";
     }
     return num2gtpchar(move['x']) + (board_size-move['y'])
-} /* }}} */
-function gtpchar2num(ch) { /* {{{ */
-    if (ch === "." || !ch)
-        return -1;
-    return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-} /* }}} */
+}
 function num2gtpchar(num) { /* {{{ */
     if (num === -1) 
         return ".";

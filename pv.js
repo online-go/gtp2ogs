@@ -1,7 +1,12 @@
+const { num2char } = require("./utils/num2char");
+const { char2num } = require("./utils/char2num");
+const { gtpchar2num } = require("./utils/gtpchar2num");
+
 class Pv {
-    constructor(setting) {
+    constructor(setting, game) {
+        this.game = game;
+
         this.pvLine =  null;
-        
         this.getPvChat = { 'LZ':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'PG':  this.getPvChatPG
@@ -76,20 +81,6 @@ class Pv {
 
         return this.createMessage(name, pv);
     }
-}
-
-function num2char(num) {
-    if (num === -1) return ".";
-    return "abcdefghijklmnopqrstuvwxyz"[num];
-}
-function char2num(ch) {
-    if (ch === ".") return -1;
-    return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
-}
-function gtpchar2num(ch) {
-    if (ch === "." || !ch)
-        return -1;
-    return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 }
 
 exports.Pv = Pv;
