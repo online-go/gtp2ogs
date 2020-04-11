@@ -153,6 +153,13 @@ but it works the same way on other platforms and AI :
 
 ```sudo node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --beta --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username testbot --debug --startupbuffer 2 --bans 454,someplayer,489,512 --noclock --unrankedonly --maxconnectedgames 10 --maxconnectedgamesperuser 1 --minrank 5d --noautohandicapranked --maxhandicap 0 --fakerank 8d --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2019/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2019/PhoenixGo/etc/mcts_1gpu_beta.conf --v=1```
 
+# Submit Move Button
+
+To avoid accidental misclicks while spectating a game from 
+your bot account, 
+
+see: [Submit-Move Button](https://github.com/wonderingabout/gtp2ogs-tutorial#important-submit-move-button)
+
 # Show winrate and variations ingame
 
 **gtp2ogs has default support for showing ingame winrate and variations for some AI.**
@@ -168,6 +175,7 @@ knowledge.
 
 However, some contributors freely provide their custom branches, see 
 [Custom Branches](/docs/CUSTOM-BRANCHES.md) for details.
+
 # Community Involvment
 
 - You may be interested in [Contributing](/docs/CONTRIBUTING.md)

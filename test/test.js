@@ -1,14 +1,14 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let assert = require('assert');
-let sinon = require('sinon');
+const assert = require('assert');
+const sinon = require('sinon');
 
-let connection = require('../connection');
-let config = require('../config');
-let console = require('../console').console;
+const connection = require('../connection');
+const config = require('../config');
+const console = require('../console').console;
 
-let child_process = require('child_process');
-let https = require('https');
+const child_process = require('child_process');
+const https = require('https');
 
 const stream = new require('stream');
 
