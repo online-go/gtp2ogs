@@ -6,6 +6,7 @@ class Pv {
     constructor(setting, game) {
         this.game = game;
         this.lookingForPv = false;
+        this.saiScore = false;
 
         this.saiScore = false;
         this.pvLine =  null;
@@ -33,6 +34,7 @@ class Pv {
     postPvToChat(errline) {
         if (!(this.game.processing || this.lookingForPv)) return;
         this.lookingForPv = true; // Once we are processing, we continue to look for pv even after processing stops.
+      
         this.updateSaiScore(errline, setting);
         this.updatePvLine(errline);
         const stop = this.STOPRE.exec(errline);
