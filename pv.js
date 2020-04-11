@@ -4,10 +4,14 @@ const { gtpchar2num } = require("./utils/gtpchar2num");
 
 class Pv {
     constructor(setting, game) {
+        this.setting = setting;
         this.game = game;
         this.lookingForPv = false;
 
+        if (setting === 'SAI') this.saiScore = false;
+
         this.pvLine =  null;
+
         this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'KATAGO': this.getPvChatKata,
@@ -27,10 +31,12 @@ class Pv {
                            'LEELA': this.PVRE
                          }[setting];
         this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting];
+        this.CHECK =     { 'SAI': (/^Alpha head: /) }[setting];
     }
     postPvToChat(errline) {
         if (!(this.game.processing || this.lookingForPv)) return;
         this.lookingForPv = true; // Once we are processing, we continue to look for pv even after processing stops.
+        if (this.setting === 'SAI') this.updateSaiScore(errline);
         this.updatePvLine(errline);
         const stop = this.STOPRE.exec(errline);
         
@@ -41,6 +47,9 @@ class Pv {
             this.game.sendChat(body, move, "malkovich");
             this.pvLine = null;
         }
+    }
+    updateSaiScore(errline) {
+        if ((/^Alpha head: /).exec(errline)) this.saiScore = true
     }
     updatePvLine(errline) {
         if (!this.pvLine) {
@@ -69,12 +78,13 @@ class Pv {
         return this.createMessage(name, pv);
     }
     getPvChatSAI(stop) {
-        const winrate  = this.pvLine[3],
-              score    = this.pvLine[7],
-              visits   = stop[1],
-              playouts = stop[3],
-              // nps   = stop[4]; // unused
-              name = `Winrate: ${winrate}%, Score: ${score}, Visits: ${visits}, Playouts: ${playouts}`;
+        const winrate   = this.pvLine[3],
+              score     = this.game.my_color === "black" ? this.pvLine[7] : -parseFloat(this.pvLine[7]),
+              scoreLine = this.saiScore ? `, Score: ${score}` : "",
+              visits    = stop[1],
+              playouts  = stop[3],
+              // nps    = stop[4]; // unused
+              name      = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
 
         const pv = this.PvToGtp(this.pvLine[8]);
 
