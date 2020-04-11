@@ -7,12 +7,10 @@ class Pv {
         this.setting = setting;
         this.game = game;
         this.lookingForPv = false;
-        this.saiScore = false;
 
         if (setting === 'SAI') this.saiScore = false;
 
         this.pvLine =  null;
-
         this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'KATAGO': this.getPvChatKata,
