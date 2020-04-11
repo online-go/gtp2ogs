@@ -31,7 +31,6 @@ class Pv {
                            'LEELA': this.PVRE
                          }[setting];
         this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting];
-        this.CHECK =     { 'SAI': (/^Alpha head: /) }[setting];
     }
     postPvToChat(errline) {
         if (!(this.game.processing || this.lookingForPv)) return;
