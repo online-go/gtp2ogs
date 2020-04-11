@@ -7,6 +7,7 @@ class Pv {
         this.setting = setting;
         this.game = game;
         this.lookingForPv = false;
+        this.saiScore = false;
 
         if (setting === 'SAI') this.saiScore = false;
 
