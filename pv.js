@@ -9,9 +9,7 @@ class Pv {
         this.saiScore = false;
 
         this.pvLine =  null;
-        this.checkSaiScore = setting === 'SAI' ? (line) => {
-            if ((/^Alpha head: /).exec(line)) this.saiScore = true;
-        } : () => {}
+        this.checkNetworkSupport = setting === 'SAI' ? this.checkSaiScore : () => {}
         this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'KATAGO': this.getPvChatKata,
@@ -32,10 +30,13 @@ class Pv {
                          }[setting];
         this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting];
     }
+    checkSaiScore(line) {
+        if ((/^Alpha head: /).exec(line)) this.saiScore = true;
+    }
     postPvToChat(errline) {
         if (!(this.game.processing || this.lookingForPv)) return;
         this.lookingForPv = true; // Once we are processing, we continue to look for pv even after processing stops.
-        this.checkSaiScore(errline);
+        this.checkNetworkSupport(errline);
         this.updatePvLine(errline);
         const stop = this.STOPRE.exec(errline);
         
