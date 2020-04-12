@@ -6,39 +6,55 @@ class Pv {
     constructor(setting, game) {
         this.game = game;
         this.lookingForPv = false;
-        this.saiScore = false;
+        if (setting === 'SAI') { 
+            this.saiScore = false;
+        } else {
+            this.startupCheckSai = () => {}; // disable sai check for other bots.
+        }
 
         this.pvLine =  null;
-        this.checkSaiScore = setting === 'SAI' ? (line) => {
-            if ((/^Alpha head: /).exec(line)) this.saiScore = true;
-        } : () => {}
+        this.postPvToChat = { 'LEELAZERO':  this.postPvToChatDualLine,
+                              'SAI': this.postPvToChatDualLine,
+                              'KATAGO': this.postPvToChatSingleLine,
+                              'PHOENIXGO':  this.postPvToChatDualLine,
+                              'LEELA': this.postPvToChatSingleLine
+                            }[setting];
         this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'KATAGO': this.getPvChatKata,
                            'PHOENIXGO':  this.getPvChatPG,
-                           'LEELA': this.getPvChatLeela,
+                           'LEELA': this.getPvChatLeela
                          }[setting];
         this.PVRE =      { 'LEELAZERO':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) \(A: +(-?\d+.\d)\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
-                           'KATAGO': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
-                           'PHOENIXGO':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/),
-                           'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
+                           'PHOENIXGO':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/)
                          }[setting];
         this.STOPRE =    { 'LEELAZERO':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'SAI': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
-                           'KATAGO': this.PVRE,
+                           'KATAGO': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
                            'PHOENIXGO':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
-                           'LEELA': this.PVRE
+                           'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
                          }[setting];
         this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting];
     }
-    postPvToChat(errline) {
-        if (!(this.game.processing || this.lookingForPv)) return;
+    checkPondering() {
+        if (!(this.game.processing || this.lookingForPv)) return true;
         this.lookingForPv = true; // Once we are processing, we continue to look for pv even after processing stops.
-        this.checkSaiScore(errline);
+        return false;
+    }
+    postPvToChatDualLine(errline) {
+        if (this.checkPondering()) return;
+        this.startupCheckSai(errline);
         this.updatePvLine(errline);
+        this.postPvToChatLastLine(errline);
+    }
+    postPvToChatSingleLine(errline) {
+        if (this.checkPondering()) return;
+        this.pvLine = "1";
+        this.postPvToChatLastLine(errline);
+    }
+    postPvToChatLastLine(errline) {
         const stop = this.STOPRE.exec(errline);
-        
         if (stop && this.pvLine) {
             this.lookingForPv = false; // we found the pv. We can stop looking.
             const body = this.getPvChat(stop);
@@ -46,6 +62,10 @@ class Pv {
             this.game.sendChat(body, move, "malkovich");
             this.pvLine = null;
         }
+    }
+
+    startupCheckSai(line) {
+        if ((/^Alpha head: /).exec(line)) this.saiScore = true;
     }
     updatePvLine(errline) {
         if (!this.pvLine) {
@@ -65,11 +85,10 @@ class Pv {
     getPvChatLZ(stop) {
         const winrate  = this.pvLine[3],
               visits   = stop[1],
-              playouts = stop[3];
+              playouts = stop[3],
               // nps   = stop[4]; // unused.
-        const name = `Winrate: ${winrate}%, Visits: ${visits}, Playouts: ${playouts}`;
-              
-        const pv = this.PvToGtp(this.pvLine[7]);
+              name = `Winrate: ${winrate}%, Visits: ${visits}, Playouts: ${playouts}`,
+              pv = this.PvToGtp(this.pvLine[7]);
 
         return this.createMessage(name, pv);
     }
@@ -80,16 +99,14 @@ class Pv {
               visits    = stop[1],
               playouts  = stop[3],
               // nps    = stop[4]; // unused
-              name      = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
-
-        const pv = this.PvToGtp(this.pvLine[8]);
+              name      = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`,
+              pv = this.PvToGtp(this.pvLine[8]);
 
         return this.createMessage(name, pv);
     }
     getPvChatPG(stop) {
-        const name = stop[1];
-
-        const pv = this.pvLine[1]
+        const name = stop[1],
+              pv = this.pvLine[1]
                    .replace(this.CLPV, '') 
                    .split(",")
                    .map(s => s === '..' ? '..' : s[0] + num2char(this.game.state.width - char2num(s[1]) - 1))
@@ -116,7 +133,6 @@ class Pv {
 
         return this.createMessage(name, pv);
     }
-
     PvToGtp(str) { 
         return str
             .trim()
