@@ -1,18 +1,16 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let sprintf = require('sprintf-js').sprintf;
-
-let Bot = require('./bot').Bot;
-let decodeMoves = require('./bot').decodeMoves;
-let move2gtpvertex = require('./bot').move2gtpvertex;
-let console = require('./console').console;
-let config = require('./config');
+const Bot = require('./bot').Bot;
+const decodeMoves = require('./bot').decodeMoves;
+const move2gtpvertex = require('./bot').move2gtpvertex;
+const console = require('./console').console;
+const config = require('./config');
 
 /**********/
 /** Game **/
 /**********/
 class Game {
-    constructor(conn, game_id) { /* {{{ */
+    constructor(conn, game_id) {
         this.conn = conn;
         this.game_id = game_id;
         this.socket = conn.socket;
@@ -34,19 +32,19 @@ class Game {
 
         // TODO: Command line options to allow undo?
         //
-        this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
+        this.socket.on(`game/${game_id}/undo_requested`, (undodata) => {
             this.log("Undo requested", JSON.stringify(undodata, null, 4));
         });
 
-        this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
+        this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
 
-            let prev_phase = (this.state ? this.state.phase : null);
+            const prev_phase = (this.state ? this.state.phase : null);
             this.state = gamedata;
             this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
-            this.log("gamedata     " + this.header());
+            this.log(`gamedata     ${this.header()}`);
 
             this.conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
 
@@ -82,7 +80,7 @@ class Game {
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
-            let gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
+            const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
 
             if (this.bot && gamedataChanged) {
                 this.log("Killing bot because of gamedata change after bot was started");
@@ -114,37 +112,32 @@ class Game {
             }
         });
 
-        this.socket.on('game/' + game_id + '/clock', (clock) => {
+        this.socket.on(`game/${game_id}/clock`, (clock) => {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            if (config.nopause && !config.nopauseranked && !config.nopauseunranked 
-                && clock.pause && clock.pause.paused && clock.pause.pause_control
-                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                if (config.DEBUG) this.log("Pausing not allowed. Resuming game.");
-                this.resumeGame();
-            }
+            if ((config.nopause && !config.nopauseranked && !config.nopauseunranked)
+                || (config.nopauseranked && this.state.ranked)
+                || (config.nopauseunranked && !this.state.ranked)) {
+                if (clock.pause && clock.pause.paused && clock.pause.pause_control
+                    && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system
+                    && !clock.pause.pause_control.weekend
+                    && !clock.pause.pause_control[`vacation-${clock.black_player_id}`]
+                    && !clock.pause.pause_control[`vacation-${clock.white_player_id}`]) {
 
-            if (config.nopauseranked && this.state.ranked && clock.pause && clock.pause.paused && clock.pause.pause_control
-                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                if (config.DEBUG) this.log("Pausing not allowed for ranked games. Resuming game.");
-                this.resumeGame();
-            }
-
-            if (config.nopauseunranked && (this.state.ranked === false) && clock.pause && clock.pause.paused && clock.pause.pause_control
-                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system && !clock.pause.pause_control.weekend
-                && !clock.pause.pause_control["vacation-" + clock.black_player_id] && !clock.pause.pause_control["vacation-" + clock.white_player_id]) {
-                if (config.DEBUG) this.log("Pausing not allowed for unranked games. Resuming game.");
-                this.resumeGame();
-            }
+                    const forRankedUnranked = getForRankedUnranked(this.state.ranked);
+                    const noPauseMg = `Pausing not allowed ${forRankedUnranked}. Resuming game.`;
+                    this.sendChat(noPauseMg);
+                    if (config.DEBUG) this.log(noPauseMg);
+                    this.resumeGame();
+                }
+            } 
 
             //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
                 this.state.clock = clock;
             } else {
-                if (config.DEBUG) console.error("Received clock for " + this.game_id + " but no state exists");
+                if (config.DEBUG) console.error(`Received clock for ${this.game_id} but no state exists`);
             }
 
             // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
@@ -152,7 +145,7 @@ class Game {
             //    this.bot.loadClock(this.state);
             //}
         });
-        this.socket.on('game/' + game_id + '/phase', (phase) => {
+        this.socket.on(`game/${game_id}/phase`, (phase) => {
             if (!this.connected) return;
             this.log("phase", phase)
 
@@ -160,18 +153,18 @@ class Game {
             if (this.state) {
                 this.state.phase = phase;
             } else {
-                if (config.DEBUG) console.error("Received phase for " + this.game_id + "but no state exists");
+                if (config.DEBUG) console.error(`Received phase for ${this.game_id} but no state exists`);
             }
 
             if (phase === 'play') {
                 this.scheduleRetry();
             }
         });
-        this.socket.on('game/' + game_id + '/move', (move) => {
+        this.socket.on(`game/${game_id}/move`, (move) => {
             if (!this.connected) return;
-            if (config.DEBUG) this.log("game/" + game_id + "/move:", move);
+            if (config.DEBUG) this.log(`game/${game_id}/move:`, move);
             if (!this.state) {
-                console.error("Received move for " + this.game_id + "but no state exists");
+                console.error(`Received move for ${this.game_id} but no state exists`);
                 // Try to connect again, to get the server to send the gamedata over.
                 this.socket.emit('game/connect', this.auth({
                     'game_id': game_id
@@ -182,10 +175,10 @@ class Game {
                 this.state.moves.push(move.move);
 
                 // Log opponent moves
-                let m = decodeMoves(move.move, this.state.width)[0];
+                const m = decodeMoves(move.move, this.state.width)[0];
                 if ((this.my_color === "white" && (this.state.handicap) >= this.state.moves.length) ||
                     move.move_number % 2 === this.opponent_evenodd)
-                    this.log("Got     " + move2gtpvertex(m, this.state.width));
+                    this.log(`Got     ${move2gtpvertex(m, this.state.width)}`);
             } catch (e) {
                 console.error(e)
             }
@@ -241,7 +234,7 @@ class Game {
                 this.scheduleRetry();
             }
         }, 1000);
-    } /* }}} */
+    }
 
     // Kill the bot, if it is currently running.
     ensureBotKilled() {
@@ -249,7 +242,7 @@ class Game {
             if (this.bot.failed) {
                 this.bot_failures++;
                 if (config.DEBUG) {
-                    this.log("Observed " + this.bot_failures + " bot failures");
+                    this.log(`Observed ${this.bot_failures} bot failures`);
                 }
             }
             this.bot.kill();
@@ -257,7 +250,7 @@ class Game {
         }
     }
     // Start the bot.
-    ensureBotStarted(eb) { /* {{{ */
+    ensureBotStarted(eb) {
         if (this.bot && this.bot.dead) {
             this.ensureBotKilled();
         }
@@ -276,7 +269,7 @@ class Game {
         }
 
         this.bot = new Bot(this.conn, this, config.bot_command);
-        this.log("Starting new bot process [" + this.bot.pid() + "]");
+        this.log(`Starting new bot process [${this.bot.pid()}]`);
 
         this.log("State loading for new bot");
         return this.bot.loadState(this.state, () => {
@@ -284,17 +277,17 @@ class Game {
                 this.log("State loaded for new bot");
             }
         }, eb);
-    } /* }}} */
+    }
 
     // Send @cmd to bot and call @cb with returned moves.
     //
-    getBotMoves(cmd, cb, eb) { /* {{{ */
+    getBotMoves(cmd, cb, eb) {
         ++Game.moves_processing;
         this.processing = true;
         if (config.corrqueue && this.state.time_control.speed === "correspondence")
             ++Game.corr_moves_processing;
 
-        let doneProcessing = () => {
+        const doneProcessing = () => {
             this.processing = false;
             --Game.moves_processing;
             if (config.corrqueue && this.state.time_control.speed === "correspondence") {
@@ -304,7 +297,7 @@ class Game {
         };
 
         let failed = false;
-        let botError = (e) => {
+        const botError = (e) => {
             if (failed)  return;
 
             failed = true;
@@ -331,7 +324,7 @@ class Game {
                 this.ensureBotKilled();
             }
         }, botError);
-    } /* }}} */
+    }
 
     scheduleRetry() {
         if (config.DEBUG) {
@@ -346,7 +339,7 @@ class Game {
     }
     // Send move to server.
     // 
-    uploadMove(move) { /* {{{ */
+    uploadMove(move) {
         if (move.resign) {
             this.log("Resigning");
             this.socket.emit('game/resign', this.auth({
@@ -355,20 +348,20 @@ class Game {
             return;
         }
 
-        if (config.DEBUG) this.log("Playing " + move.text, move);
-        else this.log("Playing " + move.text);
+        if (config.DEBUG) this.log(`Playing ${move.text}`, move);
+        else this.log(`Playing ${move.text}`);
         this.socket.emit('game/move', this.auth({
             'game_id': this.game_id,
             'move': encodeMove(move)
         }));
-        //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
-    } /* }}} */
+        //this.sendChat(`Test chat message, my move #${move_number}  is: ${move.text}`, move_number, "malkovich");
+    }
 
     // Get move from bot and upload to server.
     // Handle handicap stones with bot as black transparently
     // (we get all of them at once with place_free_handicap).
     //
-    makeMove(move_number) { /* {{{ */
+    makeMove(move_number) {
         if (config.DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!==", move_number, "?"); }
         if (!this.state || this.state.moves.length !== move_number)
             return;
@@ -379,12 +372,12 @@ class Game {
             this.greeted = true;
         }
 
-        let doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
+        const doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
             this.state.moves.length < this.state.handicap);
 
         if (!doing_handicap) {  // Regular genmove ...
-            let sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
-            this.getBotMoves("genmove " + this.my_color, sendTheMove, this.scheduleRetry);
+            const sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+            this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
             return;
         }
 
@@ -394,35 +387,35 @@ class Game {
             return;
         }
 
-        let warnAndResign = (msg) => {
+        const warnAndResign = (msg) => {
             this.log(msg);
             this.ensureBotKilled();
             this.uploadMove({'resign': true});
         }
 
         // Get handicap stones from bot and return first one.
-        let storeMoves = (moves) => {
+        const storeMoves = (moves) => {
             if (moves.length !== this.state.handicap) {  // Sanity check
                 warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
                 return;
             }
-            for (let i in moves)                     // Sanity check
+            for (const i in moves) {                     // Sanity check
                 if (moves[i].pass || moves[i].x < 0) {
                     warnAndResign("place_free_handicap returned a pass, resigning.");
                     return;
                 }
-
+            }
             this.handicap_moves = moves;
             this.uploadMove(this.handicap_moves.shift());
         };
 
-        this.getBotMoves("place_free_handicap " + this.state.handicap, storeMoves, this.scheduleRetry);
-    } /* }}} */
+        this.getBotMoves(`place_free_handicap ${this.state.handicap}`, storeMoves, this.scheduleRetry);
+    }
 
-    auth(obj) { /* {{{ */
+    auth(obj) {
         return this.conn.auth(obj);
-    } /* }}} */
-    disconnect() { /* {{{ */
+    }
+    disconnect() {
         this.conn.removeGameForPlayer(this.game_id);
 
         if (this.processing) {
@@ -440,23 +433,26 @@ class Game {
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
         }));
-    } /* }}} */
-    gameOver() /* {{{ */
+    }
+    getRes(result) {
+        const m = this.state.outcome.match(/(.*) points/);
+        if (m)  return m[1];
+
+        if (result === 'Resignation')  return 'R';
+        if (result === 'Cancellation') return 'Can';
+        if (result === 'Timeout')      return 'Time';
+    }
+    gameOver()
     {
         if (config.farewell && this.state)
             this.sendChat(config.farewell, "discussion");
 
         // Display result
-        let s = this.state;
-        let col = (s.winner === s.players.black.id ? 'B' : 'W' );
-        let res = s.outcome;   res = res[0].toUpperCase() + res.substr(1);
-        let m = s.outcome.match(/(.*) points/);
-        if (m)  res = m[1];
-        if (res === 'Resignation')  res = 'R';
-        if (res === 'Cancellation') res = 'Can';
-        if (res === 'Timeout')      res = 'Time';
-        let winloss = (s.winner === this.conn.bot_id ? "W" : "   L");
-        this.log(sprintf("Game over.   Result: %s+%-5s  %s", col, res, winloss));
+        const col = (this.state.winner === this.state.players.black.id ? 'B' : 'W' );
+        const result = `${this.state.outcome[0].toUpperCase()}${this.state.outcome.substr(1)}`;
+        const res = this.getRes(result);
+        const winloss = (this.state.winner === this.conn.bot_id ? "W" : "L");
+        this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         if (this.bot) {
             this.bot.gameOver();
@@ -464,35 +460,31 @@ class Game {
         }
 
         if (!this.disconnect_timeout) {
-            if (config.DEBUG) console.log("Starting disconnect Timeout in Game " + this.game_id + " gameOver()");
+            if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
             this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
         }
-    } /* }}} */
-    header() { /* {{{ */
+    }
+    header() {
         if (!this.state)  return;
-        let color = 'W  ';  // Playing white against ...
-        let player = this.state.players.black;
-        if (player.username === config.username) {
-            player = this.state.players.white;
-            color = '  B';
-        }
-        let name = player.username;
-        let handi = (this.state && this.state.handicap ? "H" + this.state.handicap : "  ");
-        return sprintf("%s %s  [%ix%i]  %s", color, name, this.state.width, this.state.width, handi);
+        const botIsBlack = this.state.players.black.username === config.username;
+        const color = botIsBlack ? '  B' : 'W  ';  // Playing black / white against ...
+        const player = botIsBlack ? this.state.players.white : this.state.players.black;
+        const handi = (this.state && this.state.handicap ? `H${this.state.handicap}` : "  ");
+        return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handi}`;
 
         // XXX doesn't work, getting garbage ranks here ...
-        // let rank = rankToString(player.rank);
-    } /* }}} */
-    log() { /* {{{ */
-        let moves = (this.state && this.state.moves ? this.state.moves.length : 0);
-        let movestr = (moves ? sprintf("Move %-3i", moves) : "        ");
-        let arr = [ sprintf("[Game %i]  %s ", this.game_id, movestr) ];
+        // const rank = rankToString(player.rank);
+    }
+    log() {
+        const moves = (this.state && this.state.moves ? this.state.moves.length : 0);
+        const movestr = (moves ? `Move ${moves}`: "        ");
+        const arr = [ `[Game ${this.game_id}]  ${movestr} ` ];
 
-        for (let i=0; i < arguments.length; ++i)
+        for (let i = 0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
-
+        }
         console.log.apply(null, arr);
-    } /* }}} */
+    }
     sendChat(str, move_number, type = "discussion") {
         if (!this.connected) return;
 
@@ -512,22 +504,25 @@ class Game {
         }));
     }    
     getOpponent() {
-        let player = this.state.players.white;
-        if (player.id === this.conn.bot_id)
-            player = this.state.players.black;
+        const player = (this.state.players.white.id === this.conn.bot_id ? 
+                        this.state.players.black : this.state.players.white);
         return player;
     }
 }
 
-function num2char(num) { /* {{{ */
+function num2char(num) {
     if (num === -1) return ".";
     return "abcdefghijklmnopqrstuvwxyz"[num];
-} /* }}} */
-function encodeMove(move) { /* {{{ */
+}
+function encodeMove(move) {
     if (move['x'] === -1) 
         return "..";
     return num2char(move['x']) + num2char(move['y']);
-} /* }}} */
+}
+function getForRankedUnranked(rankedStatus) {
+    if (rankedStatus) return "for ranked games";
+    return "for unranked games";
+}
 
 Game.moves_processing = 0;
 Game.corr_moves_processing = 0;

@@ -7,17 +7,17 @@
 process.title = 'gtp2ogs';
 
 // Do this before importing anything else in case the other modules use config.
-let config = require('./config');
+const config = require('./config');
 config.updateFromArgv();
 
-process.title = 'gtp2ogs ' + config.bot_command.join(' ');
+process.title = `gtp2ogs ${config.bot_command.join(' ')}`;
 
-let console = require('./console').console;
-let Connection = require('./connection').Connection;
+const console = require('./console').console;
+const Connection = require('./connection').Connection;
 
 process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
-  console.error("ERROR: " + er.stack);
+  console.error(`ERROR: ${er.stack}`);
   if (!conn || !conn.socket) {
     conn = new Connection();
   } else {

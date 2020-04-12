@@ -1,7 +1,7 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let fs = require('fs')
-let console = require('console');
+const fs = require('fs')
+const console = require('console');
 
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
@@ -241,17 +241,18 @@ exports.updateFromArgv = function() {
 
     // console messages
     // A- greeting and debug status //
-    let debugStatusMessage = "OFF";
-    if (argv.debug) {
-        debugStatusMessage = "ON\n-Will show detailed debug booting data\n-Will show all console notifications";
-    }
-    console.log(`\ngtp2ogs version 6.0\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\nDebug status: ${debugStatusMessage}`);
+    const debugStatus = argv.debug ? "ON" : "OFF";
+    console.log(`\ngtp2ogs version 6.0`
+                + `\n--------------------`
+                + `\n- For changelog or latest devel updates, `
+                + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
+                + `\nDebug status: ${debugStatus}`);
     // B - check deprecated argv //
     testDeprecatedArgv(optimist.argv, "komis");
 
     /* EXPORTS FROM OPTIMIST.ARGV */
     /* 0) root exports*/
-    for (let k in argv) {
+    for (const k in argv) {
         exports[k] = argv[k];
     }
 
@@ -259,7 +260,7 @@ exports.updateFromArgv = function() {
     if (argv.debug) {
         exports.DEBUG = true;
     }
-    for (let k of ["timeout", "startupbuffer"]) {
+    for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
             // Convert some times to microseconds once here so
             // we don't need to do it each time it is used later.
@@ -306,31 +307,31 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.bans) {
-        for (let user of argv.bans.split(',')) {
+        for (const user of argv.bans.split(',')) {
             exports.banned_users[user] = true;
         }
     }
     if (argv.bansranked) {
-        for (let user of argv.bansranked.split(',')) {
+        for (const user of argv.bansranked.split(',')) {
             exports.banned_users_ranked[user] = true;
         }
     }
     if (argv.bansunranked) {
-        for (let user of argv.bansunranked.split(',')) {
+        for (const user of argv.bansunranked.split(',')) {
             exports.banned_users_unranked[user] = true;
         }
     }
 
     if (argv.boardsizes) {
-        for (let boardsize of argv.boardsizes.split(',')) {
+        for (const boardsize of argv.boardsizes.split(',')) {
             if (boardsize === "all") {
                 exports.allow_all_boardsizes = true;
             } else if (boardsize === "custom") {
                 exports.allow_custom_boardsizes = true;
-                for (let boardsizewidth of argv.boardsizewidths.split(',')) {
+                for (const boardsizewidth of argv.boardsizewidths.split(',')) {
                     exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
                 }
-                for (let boardsizeheight of argv.boardsizeheights.split(',')) {
+                for (const boardsizeheight of argv.boardsizeheights.split(',')) {
                     exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
                 }
             } else {
@@ -339,15 +340,15 @@ exports.updateFromArgv = function() {
         }
     }
     if (argv.boardsizesranked) {
-        for (let boardsizeranked of argv.boardsizesranked.split(',')) {
+        for (const boardsizeranked of argv.boardsizesranked.split(',')) {
             if (boardsizeranked === "all") {
                 exports.allow_all_boardsizes_ranked = true;
             } else if (boardsizeranked === "custom") {
                 exports.allow_custom_boardsizes_ranked = true;
-                for (let boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
+                for (const boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
                     exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
                 }
-                for (let boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
+                for (const boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
                     exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
                 }
             } else {
@@ -356,15 +357,15 @@ exports.updateFromArgv = function() {
         }
     }
     if (argv.boardsizesunranked) {
-        for (let boardsizeunranked of argv.boardsizesunranked.split(',')) {
+        for (const boardsizeunranked of argv.boardsizesunranked.split(',')) {
             if (boardsizeunranked === "all") {
                 exports.allow_all_boardsizes_unranked = true;
             } else if (boardsizeunranked === "custom") {
                 exports.allow_custom_boardsizes_unranked = true;
-                for (let boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
+                for (const boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
                     exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
                 }
-                for (let boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
+                for (const boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
                     exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
                 }
             } else {
@@ -374,7 +375,7 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.komis) {
-        for (let komi of argv.komis.split(',')) {
+        for (const komi of argv.komis.split(',')) {
             if (komi === "all") {
                 exports.allow_all_komis = true;
             } else if (komi === "automatic") {
@@ -385,7 +386,7 @@ exports.updateFromArgv = function() {
         }
     }
     if (argv.komisranked) {
-        for (let komiranked of argv.komisranked.split(',')) {
+        for (const komiranked of argv.komisranked.split(',')) {
             if (komiranked === "all") {
                 exports.allow_all_komis_ranked = true;
             } else if (komiranked === "automatic") {
@@ -396,7 +397,7 @@ exports.updateFromArgv = function() {
         }
     }
     if (argv.komisunranked) {
-        for (let komiunranked of argv.komisunranked.split(',')) {
+        for (const komiunranked of argv.komisunranked.split(',')) {
             if (komiunranked === "all") {
                 exports.allow_all_komis_unranked = true;
             } else if (komiunranked === "automatic") {
@@ -408,33 +409,33 @@ exports.updateFromArgv = function() {
     }
 
     if (argv.speeds) {
-        for (let e of argv.speeds.split(',')) {
+        for (const e of argv.speeds.split(',')) {
             exports.allowed_speeds[e] = true;
         }
     }
     if (argv.speedsranked) {
-        for (let e of argv.speedsranked.split(',')) {
+        for (const e of argv.speedsranked.split(',')) {
             exports.allowed_speeds_ranked[e] = true;
         }
     }
     if (argv.speedsunranked) {
-        for (let e of argv.speedsunranked.split(',')) {
+        for (const e of argv.speedsunranked.split(',')) {
             exports.allowed_speeds_unranked[e] = true;
         }
     }
 
     if (argv.timecontrols) {
-        for (let e of argv.timecontrols.split(',')) {
+        for (const e of argv.timecontrols.split(',')) {
             exports.allowed_timecontrols[e] = true;
         }
     }
     if (argv.timecontrolsranked) {
-        for (let e of argv.timecontrolsranked.split(',')) {
+        for (const e of argv.timecontrolsranked.split(',')) {
             exports.allowed_timecontrols_ranked[e] = true;
         }
     }
     if (argv.timecontrolsunranked) {
-        for (let e of argv.timecontrolsunranked.split(',')) {
+        for (const e of argv.timecontrolsunranked.split(',')) {
             exports.allowed_timecontrols_unranked[e] = true;
         }
     }
@@ -445,8 +446,10 @@ exports.updateFromArgv = function() {
 
     // Show in debug all the ranked/unranked exports results
     if (exports.DEBUG) {
-        let result = { ...exports };
-        console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):\n-------------------------------------------------------\n${JSON.stringify(result)}\n`);
+        const result = JSON.stringify({ ...exports, apikey: "hidden"});
+        console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):`
+                    + `\n-------------------------------------------------------`
+                    + `\n${result}\n`);
     }
 }
 
@@ -495,16 +498,19 @@ function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
         ["timecontrolranked", "timecontrolsranked"],
         ["timecontrolunranked", "timecontrolsunranked"]
         ];
-    for (let [oldName, newName] of deprecatedArgv) {
+    for (const [oldName, newName] of deprecatedArgv) {
         if (optimistArgv[oldName]) {
-            console.log(`Deprecated: --${oldName} is no longer supported, use --${newName} instead.`);
+            console.log(`Deprecated: --${oldName} is no longer `
+                        + `supported, use --${newName} instead.`);
         }
     }
-    for (let komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
+    for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
         if (optimistArgv[komisGRUArg]) {
-            for (let komi of ["auto","null"]) {
+            for (const komi of ["auto","null"]) {
                 if (optimistArgv[komisGRUArg].split(",").includes(komi)) {
-                    console.log(`Deprecated: --${komisGRUArg} /${komi}/ is no longer supported, use --${komisGRUArg} /automatic/ instead`);
+                    console.log(`Deprecated: --${komisGRUArg} /${komi}/ is `
+                                + `no longer supported, use --${komisGRUArg} `
+                                + `/automatic/ instead`);
                 }
             }
         }
@@ -540,8 +546,8 @@ function parseRank(arg) {
                 return (36 + parseInt(results[1]));
             }
         } else {
-                console.error(`error: could not parse rank -${arg}-`);
-                process.exit();
+            console.error(`error: could not parse rank -${arg}-`);
+            process.exit();
         }
     }
 }
@@ -551,7 +557,7 @@ function checkExportsWarnings(noPauseString) {
     let isWarning = false;
     // avoid infinite games
     // TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
-    for (let r_u of ["ranked","unranked"]) {
+    for (const r_u of ["ranked", "unranked"]) {
         if (!exports[noPauseString] && !exports[`${noPauseString}${r_u}`]) {
             isWarning = true;
             console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`); 
