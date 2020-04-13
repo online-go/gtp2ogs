@@ -116,6 +116,7 @@ class Game {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
+            const r_u_strings = generate_r_u_strings_game(this.state.ranked);
             if ((config.nopause && !config.nopauseranked && !config.nopauseunranked)
                 || (config.nopauseranked && this.state.ranked)
                 || (config.nopauseunranked && !this.state.ranked)) {
@@ -125,13 +126,12 @@ class Game {
                     && !clock.pause.pause_control[`vacation-${clock.black_player_id}`]
                     && !clock.pause.pause_control[`vacation-${clock.white_player_id}`]) {
 
-                    const forRankedUnranked = getForRankedUnranked(this.state.ranked);
-                    const noPauseMg = `Pausing not allowed ${forRankedUnranked}. Resuming game.`;
-                    this.sendChat(noPauseMg);
-                    if (config.DEBUG) this.log(noPauseMg);
+                    const noPauseMsg = `Pausing not allowed ${r_u_strings.for_r_u_games}. Resuming game.`;
+                    if (config.DEBUG) this.log(noPauseMsg);
+                    this.sendChat(noPauseMsg);
                     this.resumeGame();
                 }
-            } 
+            }
 
             //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
@@ -519,9 +519,9 @@ function encodeMove(move) {
         return "..";
     return num2char(move['x']) + num2char(move['y']);
 }
-function getForRankedUnranked(rankedStatus) {
-    if (rankedStatus) return "for ranked games";
-    return "for unranked games";
+function generate_r_u_strings_game(rankedSetting) {
+    const r_u = rankedSetting ? "ranked" : "unranked";
+    return { r_u, for_r_u_games: `for ${r_u} games` };
 }
 
 Game.moves_processing = 0;

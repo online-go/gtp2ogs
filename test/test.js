@@ -17,13 +17,18 @@ config.apikey = 'deadbeef';
 config.host = 'test';
 config.port = 80;
 config.username = 'testbot';
-config.allowed_boardsizes[19] = true;
-config.allow_all_komis = true;
-config.allowed_speeds['live'] = true;
-config.allowed_timecontrols['fischer'] = true;
 config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
+
+const allowed_r_u_Families = ["boardsizes",
+                              "komis",
+                              "rules",
+                              "challengercolors",
+                              "speeds",
+                              "timecontrols"
+                             ];
+generateAllowedFamiliesRankedUnranked(allowed_r_u_Families);
 
 // Fake a socket.io-client
 class FakeSocket {
@@ -727,3 +732,24 @@ describe("Retrying bot failures", () => {
         ensureRetry(fakes);
     });
 });
+
+function generateAllowedFamiliesRankedUnranked(allowed_r_u_Families) {
+    for (const r_u of ["", "_ranked", "_unranked"]) {
+        config[`banned_users${r_u}`] = {};
+
+        for (const familyNameString of allowed_r_u_Families) {
+            config[`allow_all_${familyNameString}${r_u}`] = false;
+            config[`allowed_${familyNameString}${r_u}`] = {};
+        }
+
+        ["komis",
+         "challengercolors"
+        ].forEach( familyNameString => config[`allow_all_${familyNameString}${r_u}`] = true );
+
+        [ ["boardsizes", "19"],
+          ["rules", "chinese"],
+          ["speeds", "live"],
+          ["timecontrols", "fischer"]
+        ].forEach( ([familyNameString, allowedArg]) => config[`allowed_${familyNameString}${r_u}`][allowedArg] = true );
+    }
+}
