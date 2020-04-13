@@ -271,48 +271,37 @@ exports.updateFromArgv = function() {
     // r_u exports
     /* 2) specific r_u cases:*/
     for (const familyNameString of ["minrank", "maxrank"]) {
-        for (const [general, ranked, unranked] of getArgNameStringsGRU(familyNameString)) {
-            if (argv[general] && !argv[ranked] && !argv[unranked]) {
-                exports[general] = parseRank(argv[general]);
-            }
-            if (argv[ranked]) exports[ranked] = parseRank(argv[ranked]);
-            if (argv[unranked]) exports[unranked] = parseRank(argv[unranked]);
+        const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
+        if (argv[general] && !argv[ranked] && !argv[unranked]) {
+            exports[general] = parseRank(argv[general]);
         }
+        if (argv[ranked]) exports[ranked] = parseRank(argv[ranked]);
+        if (argv[unranked]) exports[unranked] = parseRank(argv[unranked]);
     }
 
-    for (const [argNameString, descr] of get_r_u_arr_allowed("boardsizes")) {
-        if (argv[argNameString]) {
-            for (const boardsize of argv[argNameString].split(',')) {
-                if (boardsize === "all") {
-                    exports[`allow_all_boardsizes${descr}`] = true;
-                } else if (boardsize.includes(":")) {
-                    const [numberA, numberB, incr] = boardsize.split(":").map( n => Number(n) );
-                    const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
-                    const increment = Math.abs(incr) || 1; // default is 1, this also removes boardsize 0 (infinite loop)
-                    // if too much incrementations, sanity check
-                    const threshold = 1000;
-                    if ( (Math.abs(max - min) / increment) > threshold) {
-                        throw new `please reduce list length in ${argNameString}, max is ${threshold} elements per range.`;
+    for (const familyNameString of ["boardsizes", "komis"]) {
+        for (const [argNameString, descr] of get_r_u_arr_allowed(familyNameString)) {
+            if (argv[argNameString]) {
+                for (const arg of argv[argNameString].split(',')) {
+                    if (arg === "all") {
+                        exports[`allow_all_${familyNameString}${descr}`] = true;
+                    } else if (familyNameString === "komis" && arg === "automatic") {
+                        exports[`allowed_${familyNameString}${descr}`][null] = true;
+                    } else if (arg.includes(":")) {
+                        const [numberA, numberB, incr] = arg.split(":").map( n => Number(n) );
+                        const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
+                        const increment = Math.abs(incr) || 1; // default is 1, this also removes arg number 0 (infinite loop)
+                        // if too much incrementations, sanity check
+                        const threshold = 1000;
+                        if ( (Math.abs(max - min) / increment) > threshold) {
+                            throw new `please reduce list length in ${argNameString}, max is ${threshold} elements per range.`;
+                        }
+                        for (let i = min; i <= max; i = i + increment) {
+                            exports[`allowed_${familyNameString}${descr}`][String(i)] = true;
+                        }
+                    } else {
+                        exports[`allowed_${familyNameString}${descr}`][arg] = true;
                     }
-                    for (let i = min; i <= max; i = i + increment) {
-                        exports[`allowed_boardsizes${descr}`][String(i)] = true;
-                    }
-                } else {
-                    exports[`allowed_boardsizes${descr}`][boardsize] = true;
-                }
-            }
-        }
-    }
-
-    for (const [argNameString, descr] of get_r_u_arr_allowed("komis")) {
-        if (argv[argNameString]) {
-            for (const komi of argv[argNameString].split(',')) {
-                if (komi === "all") {
-                    exports[`allow_all_komis${descr}`] = true;
-                } else if (komi === "automatic") {
-                    exports[`allowed_komis${descr}`][null] = true;
-                } else {
-                    exports[`allowed_komis${descr}`][komi] = true;
                 }
             }
         }
@@ -420,13 +409,12 @@ function testDeprecatedArgv(argv) {
                         + `supported, use --${newName} instead.`);
         }
     }
-    for (const komisGRUArg of getArgNameStringsGRU("komis")) {
-        if (argv[komisGRUArg]) {
+    for (const argNameString of getArgNameStringsGRU("komis")) {
+        if (argv[argNameString]) {
             for (const komi of ["auto","null"]) {
-                if (argv[komisGRUArg].split(",").includes(komi)) {
-                    console.log(`Deprecated: --${komisGRUArg} /${komi}/ is `
-                                + `no longer supported, use --${komisGRUArg} `
-                                + `/automatic/ instead`);
+                if (argv[argNameString].split(",").includes(komi)) {
+                    console.log(`Deprecated: --${argNameString} ${komi} is no longer `
+                                + `supported, use --${argNameString} automatic instead`);
                 }
             }
         }
@@ -513,7 +501,7 @@ function checkExportsWarnings(noPauseString) {
             if (exports[`allowed_timecontrols${descr}`][timeControl] === true ||
                 exports[`allow_all_timecontrols${descr}`] === true) {
                 isWarning = true;
-                console.log(`    Warning: potentially problematic ${argNameString} `
+                console.log(`    Warning: potentially problematic --${argNameString} `
                             + `detected (${timeControl} ${detail}): may cause unwanted `
                             + `time management problems with users`);
             }

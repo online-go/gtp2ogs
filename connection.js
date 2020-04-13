@@ -278,9 +278,9 @@ class Connection {
             if ((config.banned_users[notification.user[uid]])
                 || (notification.ranked && config.banned_users_ranked[notification.user[uid]])
                 || (!notification.ranked && config.banned_users_unranked[notification.user[uid]])) {
-                    conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.for_r_u_games}`);
+                    conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.from_r_u_games}`);
                     const msg = `You (${uid} ${notification.user[uid]}) are banned `
-                                + `${r_u_strings.for_r_u_games} on this bot by bot admin, `
+                                + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
                                 + `you may try changing the ranked/unranked setting.`;
                     return { reject: true, msg };
             }
@@ -333,9 +333,8 @@ class Connection {
         // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
         if (!notification.rules === "chinese") {
             conn_log(`Unhandled rules: ${notification.rules}`);
-            const msg = `The ${notification.rules} rules are not allowed for `
-                        + `this bot, please choose allowed rules, for example `
-                        + `chinese rules.`;
+            const msg = `The ${notification.rules} rules are not allowed on this bot, `
+                        + `please choose allowed rules, for example chinese rules.`;
             return { reject: true, msg };
         }
 
@@ -386,7 +385,7 @@ class Connection {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
-            for (const [descr, , rankedCondition] of get_r_u_arr_allowed("boardsizes", notification.ranked)) {
+            for (const [, descr, rankedCondition] of get_r_u_arr_allowed("boardsizes", notification.ranked)) {
                 if (!config[`allow_all_boardsizes${descr}` && rankedCondition]) {
                     return getBoardsizeNotSquareReject(notification.width, notification.height, r_u_strings.for_r_u_games);
                 }
@@ -403,11 +402,11 @@ class Connection {
 
         for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
             for (const [argNameString, descr, rankedCondition] of get_r_u_arr_allowed(familyNameString, notification.ranked)) {
-                if (!config[`allow_all_${descr}`]) {
+                if (!config[`allow_all_${familyNameString}${descr}`]) {
                     // ex: obj["19"], obj["null"]. Not obj[19], obj[null].
-                    if (config[argNameString] && rankedCondition && !config[`allowed_${descr}`][String(notif)]) {
+                    if (config[argNameString] && rankedCondition && !config[`allowed_${familyNameString}${descr}`][String(notif)]) {
                         let notifDisplayed = notif;
-                        let allowedValuesString = Object.keys(config[`allowed_${descr}`]).join(',');
+                        let allowedValuesString = Object.keys(config[`allowed_${familyNameString}${descr}`]).join(',');
                         if (familyNameString ===("boardsizes")) {
                             notifDisplayed = `${notification.width}x${notification.height}`;
                             allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
@@ -905,8 +904,8 @@ function minMaxPeriodsRejectResult(periodsBLC, nameF, notif, notificationRanked,
     const minFamilyObject = familyObjectMIBL(`min${periodsBLC}`);
     const maxFamilyObject = familyObjectMIBL(`max${periodsBLC}`);
     /* example: {argNameStrings {all: "minperiodsblitz", ranked: "minperiodsblitzranked", unranked: "minperiodsblitzunranked"},
-                            MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
-                            isMM {isMin: true, isMax: false}};*/
+                           MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
+                           isMM {isMin: true, isMax: false}};*/
     for (const familyObject of [minFamilyObject, maxFamilyObject]) {
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
         if (minMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
