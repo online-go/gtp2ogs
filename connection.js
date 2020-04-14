@@ -738,7 +738,7 @@ function get_r_u_arg_minmax(familyNameString, notificationRanked) {
     if (config[unranked] !== undefined && !notificationRanked)                  return config[unranked];
 }
 
-function getFamilyObjectMIBL(minMax, arg) {
+function getFamilyObjectMIBL(minMax) {
     if (minMax === "min") {
         return { isMin: true, isMax: false,
                  MIBL: { minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" }
@@ -754,7 +754,7 @@ function getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif, isFakeHandi
     for (const minMax of ["min", "max"]) {
         const arg = get_r_u_arg_minmax(`${minMax}${minMaxFamilyNameString}`, notificationRanked);
         if (arg !== undefined) { // exit if no arg, and make sure value 0 is not tested false (0 == false, but 0 !== false)
-            const familyObject = getFamilyObjectMIBL(minMax, arg);
+            const familyObject = getFamilyObjectMIBL(minMax);
             const fullObject = getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, r_u_strings);
             if (fullObject) { // exit the function if we don't reject 
                 const endingSentence = (isFakeHandicap ? "(change manually in -custom handicap-)" : "");
@@ -828,7 +828,7 @@ function getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObje
                          arg: timespanToDisplayString(timecontrolObject.arg), notif: timespanToDisplayString(timecontrolObject.notif) };
             }
         }
-    } else if (checkMinMaxCondition(familyObject.arg, notif, familyObject.isMin)) { // "periods", "rank", "handicap"
+    } else if (checkMinMaxCondition(arg, notif, familyObject.isMin)) { // "periods", "rank", "handicap"
         const notif = notif;
         if (minMaxFamilyNameString.includes("periods")) {
             return {nameF, ending, for_r_u_g: r_u_strings.for_blc_r_u_games, arg, notif};
