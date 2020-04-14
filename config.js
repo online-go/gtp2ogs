@@ -354,59 +354,56 @@ function generateExports_r_u(allowed_r_u_Families) {
 
 // console messages:
 function testDeprecatedArgv(argv) {
-    const deprecatedArgv = [["botid", "username"],
-        ["bot", "username"],
-        ["id", "username"],
-        ["minrankedhandicap", "minhandicapranked"],
-        ["minunrankedhandicap", "minhandicapunranked"],
-        ["maxrankedhandicap", "maxhandicapranked"],
-        ["maxunrankedhandicap", "maxhandicapunranked"],
-        ["maxtotalgames", "maxconnectedgames"],
-        ["maxactivegames", "maxconnectedgamesperuser"],
-        ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
-        ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
-        ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
-        ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
-        ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
-        ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
-        ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
-        ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
-        ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
-        ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
-        ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
-        ["maxperiods",  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
-        ["maxperiodsranked", "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
-        ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
-        ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
-        ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
-        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
-        ["ban", "bans"],
-        ["banranked", "bansranked"],
-        ["banunranked", "bansunranked"],
-        ["boardsize", "boardsizes"],
-        ["boardsizeranked", "boardsizesranked"],
-        ["boardsizeunranked", "boardsizesunranked"],
-        ["boardsizeswidth", "boardsizes"],
-        ["boardsizeswidthranked", "boardsizes"],
-        ["boardsizeswidthunranked", "boardsizes"],
-        ["boardsizesheight", "boardsizes"],
-        ["boardsizesheight", "boardsizes"],
-        ["boardsizesheightunranked", "boardsizes"],
-        ["komi", "komis"],
-        ["komiranked", "komisranked"],
-        ["komiunranked", "komisunranked"],
-        ["speed", "speeds"],
-        ["speedranked", "speedsranked"],
-        ["speedunranked", "speedsunranked"],
-        ["timecontrol", "timecontrols"],
-        ["timecontrolranked", "timecontrolsranked"],
-        ["timecontrolunranked", "timecontrolsunranked"]
+    const deprecatedArgv = [
+         [["botid", "bot", "id"], "username"],
+         [["minrankedhandicap"], "minhandicapranked"],
+         [["minunrankedhandicap"], "minhandicapunranked"],
+         [["maxrankedhandicap"], "maxhandicapranked"],
+         [["maxunrankedhandicap"], "maxhandicapunranked"],
+         [["maxtotalgames"], "maxconnectedgames"],
+         [["maxactivegames"], "maxconnectedgamesperuser"],
+         [["maxmaintime"],  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
+         [["maxmaintimeranked"], "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
+         [["maxmaintimeunranked"], "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
+         [["minmaintime"], "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
+         [["minmaintimeranked"], "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
+         [["minmaintimeunranked"], "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
+         [["maxperiodtime"], "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
+         [["maxperiodtimeranked"], "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
+         [["maxperiodtimeunranked"], "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
+         [["minperiodtime"], "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
+         [["minperiodtimeranked"], "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
+         [["minperiodtimeunranked"], "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
+         [["maxperiods"],  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
+         [["maxperiodsranked"], "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
+         [["maxperiodsunranked"], "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
+         [["minperiods"], "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
+         [["minperiodsranked"], "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
+         [["minperiodsunranked"], "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
+         [["ban"], "bans"],
+         [["banranked"], "bansranked"],
+         [["banunranked"], "bansunranked"],
+         [["boardsize"], "boardsizes"],
+         [["boardsizeranked"], "boardsizesranked"],
+         [["boardsizeunranked"], "boardsizesunranked"],
+         [["boardsizeswidth", "boardsizeswidthranked", "boardsizeswidthunranked", "boardsizesheight", 
+           "boardsizesheightranked", "boardsizesheightunranked"], "boardsizes"],
+         [["komi"], "komis"],
+         [["komiranked"], "komisranked"],
+         [["komiunranked"], "komisunranked"],
+         [["speed"], "speeds"],
+         [["speedranked"], "speedsranked"],
+         [["speedunranked"], "speedsunranked"],
+         [["timecontrol"], "timecontrols"],
+         [["timecontrolranked"], "timecontrolsranked"],
+         [["timecontrolunranked"], "timecontrolsunranked"]
         ];
-    for (const [oldName, newName] of deprecatedArgv) {
-        if (argv[oldName]) {
-            console.log(`Deprecated: --${oldName} is no longer `
-                        + `supported, use --${newName} instead.`);
+    for (const [oldNames, newName] of deprecatedArgv) {
+        for (const oldName of oldNames) {
+            if (argv[oldName]) {
+                console.log(`Deprecated: --${oldName} is no longer `
+                            + `supported, use --${newName} instead.`);
+            }
         }
     }
     for (const argNameString of getArgNameStringsGRU("komis")) {
