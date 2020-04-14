@@ -755,13 +755,12 @@ function getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif, isFakeHandi
         const arg = get_r_u_arg_minmax(`${minMax}${minMaxFamilyNameString}`, notificationRanked);
         if (arg !== undefined) { // exit if no arg, and make sure value 0 is not tested false (0 == false, but 0 !== false)
             const familyObject = getFamilyObjectMIBL(minMax);
-            const fullObject = getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, r_u_strings);
+            const fullObject = getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, isFakeHandicap, r_u_strings);
             if (fullObject) { // exit the function if we don't reject 
-                const endingSentence = (isFakeHandicap ? "(change manually in -custom handicap-)" : "");
                 conn_log(`${fullObject.notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${fullObject.nameF} `
                             + `${fullObject.for_r_u_g} ${fullObject.arg}`);
                 const msg = `${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} `
-                            + `is ${fullObject.arg}, ${fullObject.ending} ${endingSentence}.`
+                            + `is ${fullObject.arg}, ${fullObject.ending}.`
                 return { reject: true, msg };
             }
         }
@@ -796,9 +795,7 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, r_u_strings) {
-    let ending = "";
-    if ( ["maintime", "periodtime"].some(e => minMaxFamilyNameString.includes(e)) ) {
+function getTimesObject(arg, minMaxFamilyNameString, notif) {
         /* 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
         /  2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
         /  3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
@@ -806,45 +803,54 @@ function getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObje
         /       per period (already for X stones)
         /     - But config[argNameString] is for 1 stone, so multiply it.
         /       e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
-        let timesObject = {};
+        const ending = "";
         if (minMaxFamilyNameString.includes("maintime")) {
-            timesObject = { fischer:  [{nameF: "Initial Time", notif: notif.initial_time, arg, ending},
-                                       {nameF: "Max Time", notif: notif.max_time, arg, ending}],
-                            byoyomi:  [{nameF: "Main Time", notif: notif.main_time, arg, ending}],
-                            canadian: [{nameF: "Main Time", notif: notif.main_time, arg, ending}],
-                            absolute: [{nameF: "Total Time", notif: notif.total_time, arg, ending}] };
+            return { fischer:  [{ nameF: "Initial Time", notif: notif.initial_time, arg, ending },
+                                { nameF: "Max Time", notif: notif.max_time, arg, ending               }],
+                     byoyomi:  [{ nameF: "Main Time", notif: notif.main_time, arg, ending             }],
+                     canadian: [{ nameF: "Main Time", notif: notif.main_time, arg, ending             }],
+                     absolute: [{ nameF: "Total Time", notif: notif.total_time, arg, ending           }]
+                   };
         } else {
-            timesObject = { fischer:  [{nameF: "Increment Time", notif: notif.time_increment, arg, ending}],
-                            byoyomi:  [{nameF: "Period Time", notif: notif.period_time, arg, ending}],
-                            canadian: [{nameF: `Period Time for all the ${notif.stones_per_period} stones`,
-                                        notif: notif.period_time, arg: arg * notif.stones_per_period,
-                                        ending: ", or change the number of stones per period"}],
-                            simple:   [{nameF: "Time per move", notif: notif.per_move, arg, ending}],
-                            absolute: [{nameF: "Total Time", notif: notif.total_time, arg, ending}] };
+            return { fischer:  [{ nameF: "Increment Time", notif: notif.time_increment, arg, ending   }],
+                     byoyomi:  [{ nameF: "Period Time", notif: notif.period_time, arg, ending         }],
+                     canadian: [{ nameF: `Period Time for all the ${notif.stones_per_period} stones`, 
+                                  notif: notif.period_time, arg: arg * notif.stones_per_period,
+                                  ending: ", or change the number of stones per period"               }],
+                     simple:   [{ nameF: "Time per move", notif: notif.per_move, arg, ending          }],
+                     absolute: [{ nameF: "Total Time", notif: notif.total_time, arg, ending           }]
+                   };
         }
+}
+
+function getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, isFakeHandicap, r_u_strings) {
+    if ( ["maintime", "periodtime"].some(e => minMaxFamilyNameString.includes(e)) ) {
+        const timesObject = getTimesObject(arg, minMaxFamilyNameString, notif);
         for (const timecontrolObject of timesObject[notif.time_control]) {
             if (checkMinMaxCondition(timecontrolObject.arg, timecontrolObject.notif, familyObject.isMin)) {
-                return { nameF: `${timecontrolObject.nameF} (${notif.time_control})`, ending, for_r_u_g: r_u_strings.for_blc_r_u_games,
-                         arg: timespanToDisplayString(timecontrolObject.arg), notif: timespanToDisplayString(timecontrolObject.notif) };
+                return { nameF: `${timecontrolObject.nameF} (${notif.time_control})`, ending: timesObject.ending,
+                         for_r_u_g: r_u_strings.for_blc_r_u_games, arg: timespanToDisplayString(timecontrolObject.arg),
+                         notif: timespanToDisplayString(timecontrolObject.notif)
+                       };
             }
         }
     } else if (checkMinMaxCondition(arg, notif, familyObject.isMin)) { // "periods", "rank", "handicap"
-        const notif = notif;
         if (minMaxFamilyNameString.includes("periods")) {
-            return {nameF, ending, for_r_u_g: r_u_strings.for_blc_r_u_games, arg, notif};
+            return { nameF, ending: "", for_r_u_g: r_u_strings.for_blc_r_u_games, arg, notif };
         } else if (minMaxFamilyNameString === "rank") {
-            return {nameF, ending: `your rank is too ${familyObject.MIBL.lowHig}`,
-                    for_r_u_g: r_u_strings.for_r_u_games, arg: rankToString(arg),
-                    notif: rankToString(notif)};
+            return { nameF, ending: `your rank is too ${familyObject.MIBL.lowHig}`,
+                     for_r_u_g: r_u_strings.for_r_u_games, arg: rankToString(arg),
+                     notif: rankToString(notif)
+                   };
         } else { //"handicap"
+            let ending = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
+            const extraEnding = (isFakeHandicap ? " (change manually in -custom handicap-)" : "");
             if (familyObject.isMax && (arg === 0) && notif > 0) {
                 ending = " (even games only)";
             } else if (familyObject.isMin && (arg > 0) && notif === 0) {
                 ending = " (handicap games only)";
-            } else {
-                ending = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
             }
-            return {nameF, ending, for_r_u_g: r_u_strings.for_r_u_games, arg, notif};
+            return { nameF, ending: `${ending}${extraEnding}`, for_r_u_g: r_u_strings.for_r_u_games, arg, notif };
         }
     }
 }
