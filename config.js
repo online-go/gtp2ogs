@@ -272,11 +272,9 @@ exports.updateFromArgv = function() {
     /* 2) specific r_u cases:*/
     for (const familyNameString of ["minrank", "maxrank"]) {
         const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
-        if (argv[general] && !argv[ranked] && !argv[unranked]) {
-            exports[general] = parseRank(argv[general]);
-        }
-        if (argv[ranked]) exports[ranked] = parseRank(argv[ranked]);
-        if (argv[unranked]) exports[unranked] = parseRank(argv[unranked]);
+        if (argv[general] && !argv[ranked] && !argv[unranked]) exports[general] = parseRank(argv[general]);
+        if (argv[ranked])                                      exports[ranked] = parseRank(argv[ranked]);
+        if (argv[unranked])                                    exports[unranked] = parseRank(argv[unranked]);
     }
 
     for (const familyNameString of ["boardsizes", "komis"]) {

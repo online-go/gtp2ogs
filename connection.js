@@ -285,8 +285,8 @@ class Connection {
                     return { reject: true, msg };
             }
         }
-        const resultMinMaxRank = minMaxHandicapRankRejectResult("rank", "rank", notification.user.ranking,
-                                                                false, notification.ranked, r_u_strings);
+        const resultMinMaxRank = getMinMaxRejectResult("rank", "rank", notification.user.ranking,
+                                                       false, notification.ranked, r_u_strings);
         if (resultMinMaxRank) return resultMinMaxRank;
 
         // check bot is available, else don't mislead user:
@@ -439,22 +439,17 @@ class Connection {
                               Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank)) :
                               notification.handicap;
 
-        const resultHandicap = minMaxHandicapRankRejectResult("handicap", "handicap stones", handicapNotif, 
-                                                              Boolean(config.fakerank), notification.ranked,
-                                                              r_u_strings.for_r_u_games);
-        if (resultHandicap) return resultHandicap;
-
         for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
             if (notification.time_control.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
-                for (const mainPeriodTime of ["maintime", "periodtime"]) {
-                    const resultMainPeriodTime = UHMAEATRejectResult(`${mainPeriodTime}${blitzLiveCorr}`, notification.time_control,
-                                                                     notification.ranked, r_u_strings.for_blc_r_u_games);
-                    if (resultMainPeriodTime) return resultMainPeriodTime;
+                const testsMinMax = [ ["handicap", "handicap stones", handicapNotif, Boolean(config.fakerank)],
+                                      [`maintime${blitzLiveCorr}`, "main time", notification.time_control, false],
+                                      [`periods${blitzLiveCorr}`, "number of periods", notification.time_control.periods, false],
+                                      [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
+                for (const [minMaxFamilyNameString, nameF, notif, isFakeHandicap] of testsMinMax) {
+                    const resultMinMax = getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif,
+                                                               isFakeHandicap, notification.ranked, r_u_strings);
+                    if (resultMinMax) return resultMinMax;
                 }
-                const resultPeriods = minMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, "the number of periods",
-                                                                notification.time_control.periods, notification.ranked,
-                                                                r_u_strings.for_blc_r_u_games);
-                if (resultPeriods) return resultPeriods;
             }
         }
 
@@ -467,7 +462,7 @@ class Connection {
     checkChallenge(notification) {
 
         // load settings depending on notification.ranked
-        const r_u_strings = generate_r_u_strings_connection(notification.ranked, notification.time_control.speed);
+        const r_u_strings = get_r_u_strings_connection(notification.ranked, notification.time_control.speed);
         for (const test of [this.checkChallengeMandatory,
                            this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
@@ -678,7 +673,7 @@ function conn_log() {
     }
 }
 
-function generate_r_u_strings_connection(rankedSetting, speedSetting) {
+function get_r_u_strings_connection(rankedSetting, speedSetting) {
     const r_u = rankedSetting ? "ranked" : "unranked";
     return { r_u,
              for_r_u_games: `for ${r_u} games`,
@@ -735,34 +730,41 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function familyObjectMIBL(familyNameString) {
-    let minMax = "Minimum";
-    let incDec = "increase";
-    let belAbo = "below";
-    let lowHig = "low";
-    const isMin = familyNameString.slice(0, 3) === "min";
-    const isMax = familyNameString.slice(0, 3) === "max";
-    if (isMax) {
-        minMax = "Maximum";
-        incDec = "reduce";
-        belAbo = "above";
-        lowHig = "high";
-    }
-    const familyArray = getArgNameStringsGRU(familyNameString);
-    return { argNameStrings: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
-             MIBL: { minMax, incDec, belAbo, lowHig },
-             isMM: { isMin, isMax }
-           };
+function get_r_u_arg_minmax(familyNameString, notificationRanked) {
+    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
+
+    if (config[general]  !== undefined && !config[ranked] && !config[unranked]) return config[general];
+    if (config[ranked]   !== undefined && notificationRanked)                   return config[ranked];
+    if (config[unranked] !== undefined && !notificationRanked)                  return config[unranked];
 }
 
-function checkObjectArgsToArgNameString(familyObjectArgNameStrings, notificationRanked) {
-    if (config[familyObjectArgNameStrings.unranked] !== undefined && !notificationRanked) {
-        return familyObjectArgNameStrings.unranked;
-    } else if (config[familyObjectArgNameStrings.ranked] !== undefined && notificationRanked) {
-        return familyObjectArgNameStrings.ranked;
-    } else { /* beware: since we don't always provide defaults for the general arg, we would 
-             /  need to check it if we use this function in other functions than the minMax ones (ex: minrank, minhandicap) */ 
-        return familyObjectArgNameStrings.all;
+function getFamilyObjectMIBL(minMax, arg) {
+    if (minMax === "min") {
+        return { isMin: true, isMax: false,
+                 MIBL: { minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" }
+               };
+    } else {
+        return { isMin: false, isMax: true,
+                 MIBL: { minMax: "Maximum", incDec: "reduce", belAbo: "above", lowHig: "high" }
+               };
+    }
+}
+
+function getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif, isFakeHandicap, notificationRanked, r_u_strings) {
+    for (const minMax of ["min", "max"]) {
+        const arg = get_r_u_arg_minmax(`${minMax}${minMaxFamilyNameString}`, notificationRanked);
+        if (arg !== undefined) { // exit if no arg, and make sure value 0 is not tested false (0 == false, but 0 !== false)
+            const familyObject = getFamilyObjectMIBL(minMax, arg);
+            const fullObject = getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, r_u_strings);
+            if (fullObject) { // exit the function if we don't reject 
+                const endingSentence = (isFakeHandicap ? "(change manually in -custom handicap-)" : "");
+                conn_log(`${fullObject.notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${fullObject.nameF} `
+                            + `${fullObject.for_r_u_g} ${fullObject.arg}`);
+                const msg = `${familyObject.MIBL.minMax} ${fullObject.nameF} ${fullObject.for_r_u_g} `
+                            + `is ${fullObject.arg}, ${fullObject.ending} ${endingSentence}.`
+                return { reject: true, msg };
+            }
+        }
     }
 }
 
@@ -774,63 +776,11 @@ function convertBlitzLiveCorr(blitzLiveCorr) {
     }
 }
 
-function minMaxCondition(arg, notif, isMin) {
+function checkMinMaxCondition(arg, notif, isMin) {
     if (isMin) {
         return notif < arg; // to reject in minimum, we need notification < arg
     } else {
         return notif > arg;
-    }
-}
-
-function minMaxHandicapRankRejectResult(handicapRank, nameF, notif, isFakeHandicap, notificationRanked, for_r_u_games) {
-    const minFamilyObject = familyObjectMIBL(`min${handicapRank}`);
-    const maxFamilyObject = familyObjectMIBL(`max${handicapRank}`);
-    for (const familyObject of [minFamilyObject, maxFamilyObject]) {
-        const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        // add an if arg check, because we dont provide defaults for all arg families
-        // add an undefined check for numbers: 0 == false/undefined, but 0 !== false/undefined
-        if (config[argNameString] !== undefined && minMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) {
-            let argToString = config[argNameString];
-            let notifConverted = notif;
-            let endingSentence = "";
-            if (handicapRank === "handicap") {
-                endingSentence = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
-                if (familyObject.isMM.isMin && notifConverted === 0 && config[argNameString] > 0) {
-                    conn_log(`Handicap games only ${for_r_u_games}`);
-                    const msg = `This bot does not play without handicap ${for_r_u_games}, `
-                                + `please manually select the number of ${nameF} in `
-                                + `-custom handicap-: minimum is ${argToString} ${nameF}, `
-                                + `or try changing the ranked/unranked setting.`;
-                    return { reject: true, msg };
-                } else if (familyObject.isMM.isMax && notifConverted > 0 && config[argNameString] === 0) {
-                    conn_log(`Even games only ${for_r_u_games}`);
-                    const msg = `This bot does not play handicap ${for_r_u_games}, `
-                                + `please choose handicap -none- (0 ${nameF}, or `
-                                + `try changing the ranked/unranked setting.`;
-                    return { reject: true, msg };
-                } else if (isFakeHandicap) { // fakerank specific reject
-                    conn_log(`Automatic handicap ${for_r_u_games} was set to ${notifConverted} `
-                             + `stones, but ${familyObject.MIBL.minMax} handicap ${for_r_u_games} `
-                             + `is ${argToString} stones`);
-                    const msg = `Your automatic handicap ${for_r_u_games} was automatically set to `
-                                + `${notifConverted} ${nameF} based on rank difference between you and `
-                                + `this bot.\nBut ${familyObject.MIBL.minMax} handicap ${for_r_u_games} `
-                                + `is ${argToString} ${nameF}.\nPlease ${familyObject.MIBL.incDec} the `
-                                + `number of ${nameF} in -custom handicap- instead of -automatic handicap-`;
-                    return { reject: true, msg };
-                }
-            } else if (handicapRank === "rank") {
-                argToString = rankToString(config[argNameString]);
-                notifConverted = rankToString(notifConverted);
-                endingSentence = `your rank is too ${familyObject.MIBL.lowHig}`;
-            }
-            // if we are not in any "handicap" specific reject case, we return the generic return below instead:
-            conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} `
-                     + `${nameF} ${for_r_u_games} ${argToString}`);
-            const msg = `${familyObject.MIBL.minMax} ${nameF} ${for_r_u_games} `
-                        + `is ${argToString}, ${endingSentence}.`;
-            return { reject: true, msg };
-        }
     }
 }
 
@@ -846,74 +796,55 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function UHMAEATRejectResult(mainPeriodTimeBLC, notificationT, notificationRanked, for_blc_r_u_games) {
-    /*// UHMAEAT: Universal Highly Modulable And Expandable Argv Tree *** (version 4.0) ///////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    / 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
-    / 2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
-    / 3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
-    / 4) - for canadian periodtimes, don't multiply notificationT.period_time by the number of stones
-    /      per period (already for X stones)
-    /    - But config[argNameString] is for 1 stone, so multiply it.
-    /      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
-
-    const minFamilyObject = familyObjectMIBL(`min${mainPeriodTimeBLC}`);
-    const maxFamilyObject = familyObjectMIBL(`max${mainPeriodTimeBLC}`);
-    const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
-    for (const familyObject of [minFamilyObject, maxFamilyObject]) {
-        for (const setting of timecontrolsSettings) {
-            if (notificationT.time_control === setting[0]) {
-                const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-                const canadianPtCondition = (setting[0] === "canadian" && mainPeriodTimeBLC.includes("periodtime"));
-                const argNumberConverted = (canadianPtCondition ? (config[argNameString] * notificationT.stones_per_period)
-                                                                : config[argNameString]);
-                if (minMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // early exit if no reject
-                    const argToString = timespanToDisplayString(argNumberConverted);
-                    const endingSentence = (canadianPtCondition ? ", or change the number of stones per period" : "");
-                    conn_log(`${timespanToDisplayString(setting[2])} is ${familyObject.MIBL.belAbo} `
-                             + `${familyObject.MIBL.minMax} ${setting[1]} ${for_blc_r_u_games} `
-                             + `in ${notificationT.time_control} ${argToString}`);
-                    const msg = `${familyObject.MIBL.minMax} ${setting[1]} ${for_blc_r_u_games} `
-                                + `in ${notificationT.time_control} is ${argToString}, please `
-                                + `${familyObject.MIBL.incDec} ${setting[1]}${endingSentence}.`;
-                    return { reject : true, msg };
-                }
+function getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, r_u_strings) {
+    let ending = "";
+    if ( ["maintime", "periodtime"].some(e => minMaxFamilyNameString.includes(e)) ) {
+        /* 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
+        /  2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
+        /  3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
+        /  4) - for canadian periodtimes, don't multiply notif.period_time by the number of stones
+        /       per period (already for X stones)
+        /     - But config[argNameString] is for 1 stone, so multiply it.
+        /       e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
+        let timesObject = {};
+        if (minMaxFamilyNameString.includes("maintime")) {
+            timesObject = { fischer:  [{nameF: "Initial Time", notif: notif.initial_time, arg, ending},
+                                       {nameF: "Max Time", notif: notif.max_time, arg, ending}],
+                            byoyomi:  [{nameF: "Main Time", notif: notif.main_time, arg, ending}],
+                            canadian: [{nameF: "Main Time", notif: notif.main_time, arg, ending}],
+                            absolute: [{nameF: "Total Time", notif: notif.total_time, arg, ending}] };
+        } else {
+            timesObject = { fischer:  [{nameF: "Increment Time", notif: notif.time_increment, arg, ending}],
+                            byoyomi:  [{nameF: "Period Time", notif: notif.period_time, arg, ending}],
+                            canadian: [{nameF: `Period Time for all the ${notif.stones_per_period} stones`,
+                                        notif: notif.period_time, arg: arg * notif.stones_per_period,
+                                        ending: ", or change the number of stones per period"}],
+                            simple:   [{nameF: "Time per move", notif: notif.per_move, arg, ending}],
+                            absolute: [{nameF: "Total Time", notif: notif.total_time, arg, ending}] };
+        }
+        for (const timecontrolObject of timesObject[notif.time_control]) {
+            if (checkMinMaxCondition(timecontrolObject.arg, timecontrolObject.notif, familyObject.isMin)) {
+                return { nameF: `${timecontrolObject.nameF} (${notif.time_control})`, ending, for_r_u_g: r_u_strings.for_blc_r_u_games,
+                         arg: timespanToDisplayString(timecontrolObject.arg), notif: timespanToDisplayString(timecontrolObject.notif) };
             }
         }
-    }
-}
-
-function getTimecontrolsMainPeriodTime(familyNameString, notificationT) {
-    if (familyNameString.includes("maintime")) {
-        return [["fischer", "Initial Time", notificationT.initial_time],
-                ["fischer", "Max Time", notificationT.max_time],
-                ["byoyomi", "Main Time", notificationT.main_time],
-                ["canadian", "Main Time", notificationT.main_time],
-                ["absolute", "Total Time", notificationT.total_time]];
-    } else {
-        return [["fischer", "Increment Time", notificationT.time_increment],
-                ["byoyomi", "Period Time", notificationT.period_time],
-                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones, ${notificationT.period_time}`],
-                ["simple", "Time per move", notificationT.per_move]];
-    }
-}
-
-function minMaxPeriodsRejectResult(periodsBLC, nameF, notif, notificationRanked, for_blc_r_u_games) {
-    /* "fischer", "simple", "absolute", "none", don't have a periods number,
-    /  so this function only applies to "byoyomi" and "canadian"*/
-    const minFamilyObject = familyObjectMIBL(`min${periodsBLC}`);
-    const maxFamilyObject = familyObjectMIBL(`max${periodsBLC}`);
-    /* example: {argNameStrings {all: "minperiodsblitz", ranked: "minperiodsblitzranked", unranked: "minperiodsblitzunranked"},
-                           MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
-                           isMM {isMin: true, isMax: false}};*/
-    for (const familyObject of [minFamilyObject, maxFamilyObject]) {
-        const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (minMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-            conn_log(`${notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} `
-                     + `${nameF} ${for_blc_r_u_games} ${config[argNameString]}`);
-            const msg = `${familyObject.MIBL.minMax} ${nameF} ${for_blc_r_u_games} `
-                        + `${config[argNameString]}, please ${familyObject.MIBL.incDec} ${nameF}`;
-            return { reject: true, msg };
+    } else if (checkMinMaxCondition(familyObject.arg, notif, familyObject.isMin)) { // "periods", "rank", "handicap"
+        const notif = notif;
+        if (minMaxFamilyNameString.includes("periods")) {
+            return {nameF, ending, for_r_u_g: r_u_strings.for_blc_r_u_games, arg, notif};
+        } else if (minMaxFamilyNameString === "rank") {
+            return {nameF, ending: `your rank is too ${familyObject.MIBL.lowHig}`,
+                    for_r_u_g: r_u_strings.for_r_u_games, arg: rankToString(arg),
+                    notif: rankToString(notif)};
+        } else { //"handicap"
+            if (familyObject.isMax && (arg === 0) && notif > 0) {
+                ending = " (even games only)";
+            } else if (familyObject.isMin && (arg > 0) && notif === 0) {
+                ending = " (handicap games only)";
+            } else {
+                ending = `please ${familyObject.MIBL.incDec} the number of ${nameF}`;
+            }
+            return {nameF, ending, for_r_u_g: r_u_strings.for_r_u_games, arg, notif};
         }
     }
 }

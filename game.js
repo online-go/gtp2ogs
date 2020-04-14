@@ -116,7 +116,7 @@ class Game {
             if (!this.connected) return;
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
-            const r_u_strings = generate_r_u_strings_game(this.state.ranked);
+            const r_u_strings = get_r_u_strings_game(this.state.ranked);
             if ((config.nopause && !config.nopauseranked && !config.nopauseunranked)
                 || (config.nopauseranked && this.state.ranked)
                 || (config.nopauseunranked && !this.state.ranked)) {
@@ -519,7 +519,7 @@ function encodeMove(move) {
         return "..";
     return num2char(move['x']) + num2char(move['y']);
 }
-function generate_r_u_strings_game(rankedSetting) {
+function get_r_u_strings_game(rankedSetting) {
     const r_u = rankedSetting ? "ranked" : "unranked";
     return { r_u, for_r_u_games: `for ${r_u} games` };
 }
