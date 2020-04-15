@@ -272,7 +272,9 @@ exports.updateFromArgv = function() {
     /* 2) specific r_u cases:*/
     for (const familyNameString of ["minrank", "maxrank"]) {
         for (const argNameString of getArgNameStringsGRU(familyNameString)) {
-            if (argv[argNameString]) exports[argNameString] = argv[argNameString];
+            if (argv[argNameString]) {
+                exports[argNameString] = parseRank(argv[argNameString]);
+            }
         }
     }
 
