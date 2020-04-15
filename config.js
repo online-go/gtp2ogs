@@ -281,7 +281,7 @@ exports.updateFromArgv = function() {
         }
     }
 
-    for (const familyNameString of ["boardsizes", "komis"]) {
+    for (const familyNameString of allowed_r_u_Families_numbers) {
         for (const [argNameString, descr] of get_r_u_arr_allowed(familyNameString)) {
             if (argv[argNameString]) {
                 for (const arg of argv[argNameString].split(',')) {
@@ -309,7 +309,7 @@ exports.updateFromArgv = function() {
         }
     }
 
-    for (const familyNameString of ("rules", "challengercolors", "speeds", "timecontrols")) {
+    for (const familyNameString of (allowed_r_u_Families_strings)) {
         for (const [argNameString, descr] of get_r_u_arr_allowed(familyNameString)) {
             for (const e of argv[argNameString].split(',')) {
                 if (e === "all") {
