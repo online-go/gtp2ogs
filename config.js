@@ -4,13 +4,16 @@ const fs = require('fs')
 const console = require('console');
 
 exports.check_rejectnew = function() {};
-const allowed_r_u_Families = ["boardsizes",
-                              "komis",
-                              "rules",
-                              "challengercolors",
-                              "speeds",
-                              "timecontrols"
-                             ];
+
+const allowed_r_u_Families_numbers = ["boardsizes",
+                                      "komis"
+                                     ];
+const allowed_r_u_Families_strings = ["rules",
+                                      "challengercolors",
+                                      "speeds",
+                                      "timecontrols"
+                                     ];
+const allowed_r_u_Families = allowed_r_u_Families_numbers.concat(allowed_r_u_Families_strings);
 generateExports_r_u(allowed_r_u_Families);
 
 exports.updateFromArgv = function() {
@@ -292,7 +295,7 @@ exports.updateFromArgv = function() {
                         const increment = Math.abs(incr) || 1; // default is 1, this also removes arg number 0 (infinite loop)
                         // if too much incrementations, sanity check
                         const threshold = 1000;
-                        if ( (Math.abs(max - min) / increment) > threshold) {
+                        if ( (Math.abs(max - min) / increment) > threshold ) {
                             throw new `please reduce list length in ${argNameString}, max is ${threshold} elements per range.`;
                         }
                         for (let i = min; i <= max; i = i + increment) {
@@ -328,7 +331,7 @@ exports.updateFromArgv = function() {
 
     // console messages
     // C - check exports warnings:
-    checkExportsWarnings("nopause");
+    checkExportsWarnings();
 
     // Show in debug all the ranked/unranked exports results
     if (exports.DEBUG) {
@@ -476,10 +479,11 @@ function parseRank(arg) {
     }
 }
 
-function checkExportsWarnings(noPauseString) {
+function checkExportsWarnings() {
     console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
 
+    const noPauseString = "nopause";
     for (const r_u of ["ranked", "unranked"]) {
         // avoid infinite games
         // TODO: whenever --maxpausetime gets implemented, remove this
