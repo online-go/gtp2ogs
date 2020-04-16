@@ -275,10 +275,10 @@ class Connection {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if (config_r_u.blacklist && config_r_u.blacklist_users[notification.user[uid]]) {
+            if (config_r_u.blacklist_is_used && config_r_u.blacklist_users[notification.user[uid]]) {
                 return getBlackWhitelistReject("blacklist", notification.user, r_u_strings.for_r_u_games);
             }
-            if (config_r_u.whitelist && !config_r_u.whitelist_users[notification.user[uid]]) {
+            if (config_r_u.whitelist_is_used && !config_r_u.whitelist_users[notification.user[uid]]) {
                 return getBlackWhitelistReject("whitelist", notification.user, r_u_strings.for_r_u_games);
             }
         }

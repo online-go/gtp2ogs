@@ -377,9 +377,9 @@ exports.updateFromArgv = function() {
                     // so the arg is not always used, so we need to check if the arg is
                     // used before checking if user is the list.
                     // For example, we don't reject if user is not in the whitelist
-                    exports[r_u][familyNameString] = true;
+                    exports[r_u][`${familyNameString}_is_used`] = true;
                     for (const arg of argv[argNameString].split(',')) {
-                        exports[r_u][`${familyNameString}ed_users`][arg] = true;
+                        exports[r_u][`${familyNameString}_users`][arg] = true;
                     }
                 }
             }
@@ -407,7 +407,7 @@ function generateExports_r_u(all_r_u_Families, allowed_r_u_Families) {
         exports[r_u] = {};
 
         for (const familyNameString of all_r_u_Families) {
-            exports[r_u][`${familyNameString}ed_users`] = {};
+            exports[r_u][`${familyNameString}_users`] = {};
         }
         for (const familyNameString of allowed_r_u_Families) {
             exports[r_u][`allow_all_${familyNameString}`] = false;
