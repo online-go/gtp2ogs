@@ -5,7 +5,7 @@ const console = require('console');
 
 exports.check_rejectnew = function() {};
 
-const all_r_u_Families =             ["blacklist",
+const g_r_u_Families =               ["blacklist",
                                       "whitelist"
                                      ];
 const allowed_r_u_Families_numbers = ["boardsizes",
@@ -17,7 +17,7 @@ const allowed_r_u_Families_strings = ["rules",
                                       "timecontrols"
                                      ];
 const allowed_r_u_Families = allowed_r_u_Families_numbers.concat(allowed_r_u_Families_strings);
-generateExports_r_u(all_r_u_Families, allowed_r_u_Families);
+generateExports_r_u(g_r_u_Families, allowed_r_u_Families);
 
 exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
@@ -259,15 +259,13 @@ exports.updateFromArgv = function() {
     /* B) specific cases:*/
     //  rank family args need parsing before exporting
     const rank_r_u_Families = ["minrank", "maxrank"];
-    // note:   allowed_r_u_Families use a different formula before
-    //         exporting, included here as well
-    // note 2: blacklist family is an example of All/ranked/unranked family:
-    //         export general AND ranked AND unranked args
+    // allowed_r_u_Families and g_r_u_Families also use specific
+    // modifications before exporting, so we add them here too
 
     // C) combinations of all r_u args, to export separately
     const full_r_u_Families = genericMain_r_u_Families
                               .concat(rank_r_u_Families,
-                                      all_r_u_Families,
+                                      g_r_u_Families,
                                       allowed_r_u_Families);
     const full_r_u_Args = full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families);
 
@@ -368,15 +366,22 @@ exports.updateFromArgv = function() {
         }
     }
 
-    for (const familyNameString of all_r_u_Families) {
+    // note 2: g_r_u_Families family is an example of All/ranked/unranked family:
+    //         export general AND ranked AND unranked args
+
+
+    for (const familyNameString of g_r_u_Families) {
         const r_u_arr_ARU = get_r_u_arr_ARU(familyNameString);
         for (const [argNameString, r_us] of r_u_arr_ARU) {
+            // unlike allowed_r_u_Families, g_r_u_Families don't use defaults,
+            // so the arg is not always used, so we need to check if the arg is
+            // used before checking if user is the list.
+            // For example, we don't reject if user is not in the whitelist
             if (argv[argNameString]) {
                 for (const r_u of r_us) {
-                    // unlike allowed_r_u_Families, all_r_u_Families don't use defaults,
-                    // so the arg is not always used, so we need to check if the arg is
-                    // used before checking if user is the list.
-                    // For example, we don't reject if user is not in the whitelist
+                    // for g_r_u_Families, we allow :
+                    // - for ranked games:   both general arg AND ranked arg
+                    // - for unranked games: both general arg AND unranked arg
                     exports[r_u][`${familyNameString}_is_used`] = true;
                     for (const arg of argv[argNameString].split(',')) {
                         exports[r_u][`${familyNameString}_users`][arg] = true;
@@ -402,11 +407,11 @@ exports.updateFromArgv = function() {
 }
 
 // before starting:
-function generateExports_r_u(all_r_u_Families, allowed_r_u_Families) {
+function generateExports_r_u(g_r_u_Families, allowed_r_u_Families) {
     for (const r_u of ["ranked", "unranked"]) {
         exports[r_u] = {};
 
-        for (const familyNameString of all_r_u_Families) {
+        for (const familyNameString of g_r_u_Families) {
             exports[r_u][`${familyNameString}_users`] = {};
         }
         for (const familyNameString of allowed_r_u_Families) {

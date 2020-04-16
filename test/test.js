@@ -21,7 +21,7 @@ config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
 
-const all_r_u_Families =     ["blacklist",
+const g_r_u_Families =       ["blacklist",
                               "whitelist"
                              ];
 const allowed_r_u_Families = ["boardsizes",
@@ -31,7 +31,7 @@ const allowed_r_u_Families = ["boardsizes",
                               "speeds",
                               "timecontrols"
                              ];
-generateConfig_r_u(all_r_u_Families, allowed_r_u_Families);
+generateConfig_r_u(g_r_u_Families, allowed_r_u_Families);
 
 // Fake a socket.io-client
 class FakeSocket {
@@ -736,11 +736,11 @@ describe("Retrying bot failures", () => {
     });
 });
 
-function generateConfig_r_u(all_r_u_Families, allowed_r_u_Families) {
+function generateConfig_r_u(g_r_u_Families, allowed_r_u_Families) {
     for (const r_u of ["ranked", "unranked"]) {
         config[r_u] = {};
 
-        for (const familyNameString of all_r_u_Families) {
+        for (const familyNameString of g_r_u_Families) {
             config[r_u][`${familyNameString}_users`] = {};
         }
         for (const familyNameString of allowed_r_u_Families) {
