@@ -738,10 +738,10 @@ describe("Retrying bot failures", () => {
 
 function generateConfig_r_u(all_r_u_Families, allowed_r_u_Families) {
     for (const r_u of ["ranked", "unranked"]) {
-        //config[r_u] = {};
+        config[r_u] = {};
 
         for (const familyNameString of all_r_u_Families) {
-            config[r_u][`${familyNameString}ed_users`] = {};
+            config[r_u][`${familyNameString}_users`] = {};
         }
         for (const familyNameString of allowed_r_u_Families) {
             config[r_u][`allow_all_${familyNameString}`] = false;

@@ -372,8 +372,13 @@ exports.updateFromArgv = function() {
         const r_u_arr_ARU = get_r_u_arr_ARU(familyNameString);
         for (const [argNameString, r_us] of r_u_arr_ARU) {
             if (argv[argNameString]) {
-                for (const arg of argv[argNameString].split(',')) {
-                    for (const r_u of r_us) {
+                for (const r_u of r_us) {
+                    // unlike allowed_r_u_Families, all_r_u_Families don't use defaults,
+                    // so the arg is not always used, so we need to check if the arg is
+                    // used before checking if user is the list.
+                    // For example, we don't reject if user is not in the whitelist
+                    exports[r_u][familyNameString] = true;
+                    for (const arg of argv[argNameString].split(',')) {
                         exports[r_u][`${familyNameString}ed_users`][arg] = true;
                     }
                 }
@@ -532,7 +537,7 @@ function getArgNameStringsGRU(familyNameString) {
 
 function argObjectRU(argv, familyNameString) {
     const [generalArg, rankedArg, unrankedArg] = getArgNameStringsGRU(familyNameString)
-                                                 .map( argNameString => argv[argNameString] || undefined );
+                                                 .map( argNameString => argv[argNameString] );
     // a var declared 0 == undefined, but !== undefined
     if (generalArg !== undefined
         && rankedArg === undefined
