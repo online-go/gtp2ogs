@@ -271,13 +271,11 @@ class Connection {
 
     // Check challenge mandatory conditions
     //
-    checkChallengeMandatory(notification, r_u_strings) {
+    checkChallengeMandatory(notification, config_r_u, r_u_strings) {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if ((config.banned_users[notification.user[uid]])
-                || (notification.ranked && config.banned_users_ranked[notification.user[uid]])
-                || (!notification.ranked && config.banned_users_unranked[notification.user[uid]])) {
+            if (config_r_u.banned_users[notification.user[uid]]) {
                     conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.from_r_u_games}`);
                     const msg = `You (${uid} ${notification.user[uid]}) are banned `
                                 + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
@@ -286,7 +284,7 @@ class Connection {
             }
         }
         const resultMinMaxRank = getMinMaxRejectResult("rank", "rank", notification.user.ranking,
-                                                       false, notification.ranked, r_u_strings);
+                                                       false, config_r_u, r_u_strings);
         if (resultMinMaxRank) return resultMinMaxRank;
 
         // check bot is available, else don't mislead user:
@@ -343,7 +341,7 @@ class Connection {
     }
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification, r_u_strings) {
+    checkChallengeBooleans(notification, config_r_u, r_u_strings) {
 
         const testBooleanArgs     = [ //not yet supported ["publiconly", "Private games are", notification.private],
                                       //not yet supported ["privateonly", "Non-private games are", !notification.private],
@@ -365,14 +363,10 @@ class Connection {
                                     ];
 
         for (const [familyNameString, nameF, notifCondition] of testBooleanArgs_r_u) {
-            if (notifCondition) {
-                for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
-                    if (config[argNameString] && rankedCondition) {
-                        const msg = `${nameF} not allowed on this bot ${r_u_strings.for_r_u_games}.`;
-                        conn_log(msg);
-                        return { reject: true, msg };
-                    }
-                }
+            if (config_r_u[familyNameString] && notifCondition) {
+                const msg = `${nameF} not allowed on this bot ${r_u_strings.for_r_u_games}.`;
+                conn_log(msg);
+                return { reject: true, msg };
             }
         }
 
@@ -381,15 +375,11 @@ class Connection {
     }
     // Check challenge allowed families settings are allowed
     //
-    checkChallengeAllowedFamilies(notification, r_u_strings) {
+    checkChallengeAllowedFamilies(notification, config_r_u, r_u_strings) {
 
         // only square boardsizes, except if all is allowed
-        if (notification.width !== notification.height) {
-            for (const [, descr, rankedCondition] of get_r_u_arr_allowed("boardsizes", notification.ranked)) {
-                if (!config[`allow_all_boardsizes${descr}` && rankedCondition]) {
-                    return getBoardsizeNotSquareReject(notification.width, notification.height, r_u_strings.for_r_u_games);
-                }
-            }
+        if (notification.width !== notification.height && !config_r_u["allow_all_boardsizes"]) {
+            return getBoardsizeNotSquareReject(notification.width, notification.height, r_u_strings.for_r_u_games);
         }
 
         const testsAllowedFamilies = [ ["boardsizes", "Board size", notification.width],
@@ -401,25 +391,23 @@ class Connection {
                                      ];
 
         for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
-            for (const [argNameString, descr, rankedCondition] of get_r_u_arr_allowed(familyNameString, notification.ranked)) {
-                if (!config[`allow_all_${familyNameString}${descr}`]) {
-                    // ex: obj["19"], obj["null"]. Not obj[19], obj[null].
-                    if (config[argNameString] && rankedCondition && !config[`allowed_${familyNameString}${descr}`][String(notif)]) {
-                        let notifDisplayed = notif;
-                        let allowedValuesString = Object.keys(config[`allowed_${familyNameString}${descr}`]).join(',');
-                        if (familyNameString ===("boardsizes")) {
-                            notifDisplayed = `${notification.width}x${notification.height}`;
-                            allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
-                        } else if (familyNameString === "komis" && notifDisplayed === "null") {
-                            notifDisplayed = "automatic";
-                        }
-                        conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, `
-                                 + `not in -${allowedValuesString}- `);
-                        const msg = `${nameF} -${notifDisplayed}- is not allowed on this bot `
-                                    + `${r_u_strings.for_r_u_games}, please choose among:`
-                                    + `\n-${allowedValuesString}-`;
-                        return { reject: true, msg };
+            if (!config_r_u[`allow_all_${familyNameString}`]) {
+                // ex: obj["19"], obj["null"]. Not obj[19], obj[null].
+                if (!config_r_u[`allowed_${familyNameString}`][String(notif)]) {
+                    let notifDisplayed = notif;
+                    let allowedValuesString = Object.keys(config_r_u[`allowed_${familyNameString}`]).join(',');
+                    if (familyNameString ===("boardsizes")) {
+                        notifDisplayed = `${notification.width}x${notification.height}`;
+                        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+                    } else if (familyNameString === "komis" && notifDisplayed === "null") {
+                        notifDisplayed = "automatic";
                     }
+                    conn_log(`${nameF} -${notifDisplayed}- ${r_u_strings.for_r_u_games}, `
+                                + `not in -${allowedValuesString}- `);
+                    const msg = `${nameF} -${notifDisplayed}- is not allowed on this bot `
+                                + `${r_u_strings.for_r_u_games}, please choose among:`
+                                + `\n-${allowedValuesString}-`;
+                    return { reject: true, msg };
                 }
             }
         }
@@ -429,7 +417,7 @@ class Connection {
     }
     // Check challenge settings are allowed
     //
-    checkChallengeSettings(notification, r_u_strings) {
+    checkChallengeSettings(notification, config_r_u, r_u_strings) {
 
         // TODO: modify or remove fakerank code whenever server sends us automatic handicap
         //       notification.handicap different from -1.
@@ -447,7 +435,7 @@ class Connection {
                                       [`periodtime${blitzLiveCorr}`, "period time", notification.time_control, false] ];
                 for (const [minMaxFamilyNameString, nameF, notif, isFakeHandicap] of testsMinMax) {
                     const resultMinMax = getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif,
-                                                               isFakeHandicap, notification.ranked, r_u_strings);
+                                                               isFakeHandicap, config_r_u, r_u_strings);
                     if (resultMinMax) return resultMinMax;
                 }
             }
@@ -463,12 +451,14 @@ class Connection {
 
         // load settings depending on notification.ranked
         const r_u_strings = get_r_u_strings_connection(notification.ranked, notification.time_control.speed);
+        const config_r_u = config[r_u_strings.r_u];
+
         for (const test of [this.checkChallengeMandatory,
                            this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
                            this.checkChallengeAllowedFamilies,
                            this.checkChallengeSettings]) {
-            const result = test.bind(this)(notification, r_u_strings);
+            const result = test.bind(this)(notification, config_r_u, r_u_strings);
             if (result.reject) return result;
         }
 
@@ -681,34 +671,10 @@ function get_r_u_strings_connection(rankedSetting, speedSetting) {
              from_r_u_games: `from ${r_u} games` };
 }
 
-function getArgNameStringsGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
-}
-
 function rankToString(r) {
     const R = Math.floor(r);
     if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
-}
-
-function get_r_u_arr_booleans(familyNameString, notificationRanked) {
-    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
-    // for the booleans "only" checks, we are trying to find any reason to reject
-    // the challenge, so the general and ranked/unranked args dont conflict.
-    // (unlike --minmaintimeranked 50 --minmaintime 300)
-    return [ [general,  true],
-             [ranked,   notificationRanked],
-             [unranked, !notificationRanked]
-           ];
-}
-
-function get_r_u_arr_allowed(familyNameString, notificationRanked) {
-    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
-
-    return [ [general,  "",          true],
-             [ranked,   "_ranked",   notificationRanked],
-             [unranked, "_unranked", !notificationRanked]
-           ];
 }
 
 function getBoardsizeNotSquareReject(notificationWidth, notificationHeight, for_r_u_games) {
@@ -730,14 +696,6 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function get_r_u_arg_minmax(familyNameString, notificationRanked) {
-    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
-
-    if (config[general]  !== undefined && !config[ranked] && !config[unranked]) return config[general];
-    if (config[ranked]   !== undefined && notificationRanked)                   return config[ranked];
-    if (config[unranked] !== undefined && !notificationRanked)                  return config[unranked];
-}
-
 function getFamilyObjectMIBL(minMax) {
     if (minMax === "min") {
         return { isMin: true, isMax: false,
@@ -750,9 +708,9 @@ function getFamilyObjectMIBL(minMax) {
     }
 }
 
-function getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif, isFakeHandicap, notificationRanked, r_u_strings) {
+function getMinMaxRejectResult(minMaxFamilyNameString, nameF, notif, isFakeHandicap, config_r_u, r_u_strings) {
     for (const minMax of ["min", "max"]) {
-        const arg = get_r_u_arg_minmax(`${minMax}${minMaxFamilyNameString}`, notificationRanked);
+        const arg = config_r_u[`${minMax}${minMaxFamilyNameString}`];
         if (arg !== undefined) { // exit if no arg, and make sure value 0 is not tested false (0 == false, but 0 !== false)
             const familyObject = getFamilyObjectMIBL(minMax);
             const fullObject = getMinMaxConditionResult(arg, minMaxFamilyNameString, nameF, familyObject, notif, isFakeHandicap, r_u_strings);

@@ -117,20 +117,18 @@ class Game {
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
             const r_u_strings = get_r_u_strings_game(this.state.ranked);
-            if ((config.nopause && !config.nopauseranked && !config.nopauseunranked)
-                || (config.nopauseranked && this.state.ranked)
-                || (config.nopauseunranked && !this.state.ranked)) {
-                if (clock.pause && clock.pause.paused && clock.pause.pause_control
-                    && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system
-                    && !clock.pause.pause_control.weekend
-                    && !clock.pause.pause_control[`vacation-${clock.black_player_id}`]
-                    && !clock.pause.pause_control[`vacation-${clock.white_player_id}`]) {
+            const config_r_u = config[r_u_strings.r_u];
+            if (config_r_u.nopause
+                && clock.pause && clock.pause.paused && clock.pause.pause_control
+                && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system
+                && !clock.pause.pause_control.weekend
+                && !clock.pause.pause_control[`vacation-${clock.black_player_id}`]
+                && !clock.pause.pause_control[`vacation-${clock.white_player_id}`]) {
 
-                    const noPauseMsg = `Pausing not allowed ${r_u_strings.for_r_u_games}. Resuming game.`;
-                    if (config.DEBUG) this.log(noPauseMsg);
-                    this.sendChat(noPauseMsg);
-                    this.resumeGame();
-                }
+                const noPauseMsg = `Pausing not allowed ${r_u_strings.for_r_u_games}. Resuming game.`;
+                if (config.DEBUG) this.log(noPauseMsg);
+                this.sendChat(noPauseMsg);
+                this.resumeGame();
             }
 
             //this.log("Clock: ", JSON.stringify(clock));

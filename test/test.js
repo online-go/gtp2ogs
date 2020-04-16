@@ -734,22 +734,22 @@ describe("Retrying bot failures", () => {
 });
 
 function generateAllowedFamiliesRankedUnranked(allowed_r_u_Families) {
-    for (const r_u of ["", "_ranked", "_unranked"]) {
-        config[`banned_users${r_u}`] = {};
+    for (const r_u of ["ranked", "unranked"]) {
+        config[r_u] = { banned_users: {} };
 
         for (const familyNameString of allowed_r_u_Families) {
-            config[`allow_all_${familyNameString}${r_u}`] = false;
-            config[`allowed_${familyNameString}${r_u}`] = {};
+            config[r_u][`allow_all_${familyNameString}`] = false;
+            config[r_u][`allowed_${familyNameString}`] = {};
         }
 
         ["komis",
          "challengercolors"
-        ].forEach( familyNameString => config[`allow_all_${familyNameString}${r_u}`] = true );
+        ].forEach( familyNameString => config[r_u][`allow_all_${familyNameString}`] = true );
 
         [ ["boardsizes", "19"],
           ["rules", "chinese"],
           ["speeds", "live"],
           ["timecontrols", "fischer"]
-        ].forEach( ([familyNameString, allowedArg]) => config[`allowed_${familyNameString}${r_u}`][allowedArg] = true );
+        ].forEach( ([familyNameString, allowedArg]) => config[r_u][`allowed_${familyNameString}`][allowedArg] = true );
     }
 }

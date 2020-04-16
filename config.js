@@ -236,34 +236,59 @@ exports.updateFromArgv = function() {
     checkUnsupportedOgspvAI(argv.ogspv, ogsPvAIs);
     checkNotYetReleasedArgv(argv);
 
+    /* exports arrays
+    /  A) general case:*/
+    const genericMain_r_u_Families = ["minmaintimeblitz", "minmaintimelive",
+        "minmaintimecorr", "maxmaintimeblitz", "maxmaintimelive", "maxmaintimecorr",
+        "minperiodsblitz", "minperiodslive", "minperiodscorr", "maxperiodsblitz",
+        "maxperiodslive", "maxperiodscorr", "minperiodtimeblitz", "minperiodtimelive",
+        "minperiodtimecorr", "maxperiodtimeblitz", "maxperiodtimelive", 
+        "maxperiodtimecorr", "minhandicap", "maxhandicap", "noautohandicap",
+        "proonly", "nopauseonweekends", "nopause"];
+
+    /* B) specific cases:*/
+    //  rank family args need parsing before exporting
+    const rank_r_u_Families = ["minrank", "maxrank"];
+    // note:   allowed_r_u_Families use a different formula before
+    //         exporting, included here as well
+    // note 2: bans family is an example of All/ranked/unranked family:
+    //         export general AND ranked AND unranked args
+    const all_r_u_Families = ["bans"];
+
+    // C) combinations of all r_u args, to export separately
+    const full_r_u_Families = genericMain_r_u_Families
+                              .concat(rank_r_u_Families,
+                                      all_r_u_Families,
+                                      allowed_r_u_Families);
+    const full_r_u_Args = full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families);
+
     /* EXPORTS FROM argv */
     /* 0) root exports*/
     for (const k in argv) {
-        // export everything first, then modify/adjust later
-        exports[k] = argv[k];
-    }
-
-    /* Add and Modify exports*/
-    if (argv.debug) {
-        exports.DEBUG = true;
-    }
-    if (argv.ogspv) {
-        exports.ogspv = argv.ogspv.toUpperCase();
-    }
-    for (const k of ["timeout", "startupbuffer"]) {
-        if (argv[k]) {
-            // Convert some times to microseconds once here so
-            // we don't need to do it each time it is used later.
-            exports[k] = argv[k] * 1000;
+        // export everything, except r_u args (treated individually later)
+        if (!full_r_u_Args.includes(k)) {
+            if (k === "host" && argv.beta) {
+                exports[k] = 'beta.online-go.com';
+            } else if (["timeout","startupbuffer"].includes(k)) {
+                // Convert some times to microseconds once here so
+                // we don't need to do it each time it is used later.
+                exports[k] = argv[k]*1000;
+            } else if (k === "apikey") {
+                exports[k] = argv[k];
+            } else if (k === "debug") {
+                exports.DEBUG = argv[k];
+                exports[k] = argv[k]; //TODO: remove either of these DEBUG or debug
+            } else if (k === "ogspv") {
+                exports[k] = argv.ogspv.toUpperCase();
+            } else if (k === "_") {
+                exports.bot_command = argv[k];
+            } else if (k === "fakerank") {
+                exports[k] = parseRank(argv[k]);
+            } else { // ex: "persist", "maxconnectedgames", etc.
+                exports[k] = argv[k];
+            }
         }
     }
-    if (argv.beta) {
-        exports.host = 'beta.online-go.com';
-    }
-    if (argv.fakerank) {
-        exports.fakerank = parseRank(argv.fakerank);
-    }
-    exports.bot_command = argv._;
     exports.check_rejectnew = function()
     {
         if (argv.rejectnew)  return true;
@@ -272,59 +297,77 @@ exports.updateFromArgv = function() {
     };
 
     // r_u exports
+    /* 1) general r_u cases:*/
+    for (const familyNameString of genericMain_r_u_Families) {
+        const argObject = argObjectRU(argv, familyNameString);
+        for (const r_u in argObject) {
+            exports[r_u][familyNameString] = argObject[r_u];
+        }
+    }
+
     /* 2) specific r_u cases:*/
-    for (const familyNameString of ["minrank", "maxrank"]) {
-        for (const argNameString of getArgNameStringsGRU(familyNameString)) {
-            if (argv[argNameString]) {
-                exports[argNameString] = parseRank(argv[argNameString]);
-            }
+    for (const familyNameString of rank_r_u_Families) {
+        const argObject = argObjectRU(argv, familyNameString);
+        for (const r_u in argObject) {
+            exports[r_u][familyNameString] = parseRank(argObject[r_u]);
         }
     }
 
     for (const familyNameString of allowed_r_u_Families_numbers) {
-        for (const [argNameString, descr] of get_r_u_arr_allowed(familyNameString)) {
-            if (argv[argNameString]) {
-                for (const arg of argv[argNameString].split(',')) {
-                    if (arg === "all") {
-                        exports[`allow_all_${familyNameString}${descr}`] = true;
-                    } else if (familyNameString === "komis" && arg === "automatic") {
-                        exports[`allowed_${familyNameString}${descr}`][null] = true;
-                    } else if (arg.includes(":")) {
-                        const [numberA, numberB, incr] = arg.split(":").map( n => Number(n) );
-                        const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
-                        const increment = Math.abs(incr) || 1; // default is 1, this also removes arg number 0 (infinite loop)
-                        // if too much incrementations, sanity check
-                        const threshold = 1000;
-                        if ( (Math.abs(max - min) / increment) > threshold ) {
-                            throw new `please reduce list length in ${argNameString}, max is ${threshold} elements per range.`;
+        const argObject = argObjectRU(argv, familyNameString);
+        for (const r_u in argObject) {
+            if (argObject[r_u]) {
+                if (argObject[r_u] === "all") {
+                    exports[r_u][`allow_all_${familyNameString}`] = true;
+                } else {
+                    for (const arg of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
+                        if (familyNameString === "komis" && arg === "automatic") {
+                            exports[r_u][`allowed_${familyNameString}`]["null"] = true;
+                        } else if (arg.includes(":")) {
+                            const [numberA, numberB, incr] = arg.split(":").map( n => Number(n) );
+                            const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
+                            const increment = Math.abs(incr) || 1; // default is 1, this also removes arg 0 (infinite loop)
+                            // if too much incrementations, sanity check
+                            const threshold = 1000;
+                            if ( (Math.abs(max - min) / increment) > threshold ) {
+                                throw new `please reduce list length in ${familyNameString}, max is ${threshold} elements per range.`;
+                            }
+                            for (let i = min; i <= max; i = i + increment) {
+                                exports[r_u][`allowed_${familyNameString}`][String(i)] = true;
+                            }
+                        } else {
+                            exports[r_u][`allowed_${familyNameString}`][arg] = true;
                         }
-                        for (let i = min; i <= max; i = i + increment) {
-                            exports[`allowed_${familyNameString}${descr}`][String(i)] = true;
-                        }
-                    } else {
-                        exports[`allowed_${familyNameString}${descr}`][arg] = true;
                     }
                 }
             }
         }
     }
 
-    for (const familyNameString of (allowed_r_u_Families_strings)) {
-        for (const [argNameString, descr] of get_r_u_arr_allowed(familyNameString)) {
-            for (const e of argv[argNameString].split(',')) {
-                if (e === "all") {
-                    exports[`allow_all_${familyNameString}${descr}`] = true;
+    for (const familyNameString of allowed_r_u_Families_strings) {
+        const argObject = argObjectRU(argv, familyNameString);
+        for (const r_u in argObject) {
+            if (argObject[r_u]) {
+                if (argObject[r_u] === "all") {
+                    exports[r_u][`allow_all_${familyNameString}`] = true;
                 } else {
-                    exports[`allowed_${familyNameString}${descr}`][e] = true;
+                    for (const arg of argObject[r_u].split(',')) { // ex: ["9", "13", "15:17", "19:25:2"]
+                        exports[r_u][`allowed_${familyNameString}`][arg] = true;
+                    }
                 }
             }
         }
     }
 
-    for (const [argNameString, descr] of get_r_u_arr_allowed("bans")) {
-        if (argv[argNameString]) {
-            for (const user of argv[argNameString].split(',')) {
-                exports[`banned_users${descr}`][user] = true;
+    for (const familyNameString of all_r_u_Families) {
+        const r_u_arr_ARU = get_r_u_arr_ARU(familyNameString);
+        for (const [argNameString, r_us] of r_u_arr_ARU) {
+            if (argv[argNameString]) {
+                for (const arg of argv[argNameString].split(',')) {
+                    for (const r_u of r_us) {
+                        exports[r_u]["banned_users"][arg] = true;
+                    }
+                }
             }
         }
     }
@@ -336,20 +379,21 @@ exports.updateFromArgv = function() {
     // Show in debug all the ranked/unranked exports results
     if (exports.DEBUG) {
         const result = JSON.stringify({ ...exports, apikey: "hidden"});
-        console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):`
-                    + `\n-------------------------------------------------------`
-                    + `\n${result}\n`);
+        for (const r_u of ["ranked", "unranked"]) {
+            console.log(`${r_u.toUpperCase()} EXPORTS RESULT (apikey hidden):`
+                        + `\n-------------------------------------------------------`
+                        + `\n${result}\n`);
+        }
     }
 }
 
 // before starting:
 function generateExports_r_u(allowed_r_u_Families) {
-    for (const r_u of ["", "_ranked", "_unranked"]) {
-        exports[`banned_users${r_u}`] = {};
-
+    for (const r_u of ["ranked", "unranked"]) {
+        exports[r_u] = { banned_users: {} };
         for (const familyNameString of allowed_r_u_Families) {
-            exports[`allow_all_${familyNameString}${r_u}`] = false;
-            exports[`allowed_${familyNameString}${r_u}`] = {};
+            exports[r_u][`allow_all_${familyNameString}`] = false;
+            exports[r_u][`allowed_${familyNameString}`] = {};
         }
     }
 }
@@ -449,15 +493,37 @@ function checkNotYetReleasedArgv(argv) {
     }
 }
 
+// exports arrays:
+function full_r_u_ArgsFromFamilyNameStrings(full_r_u_Families) {
+    const finalArray = [];
+    for (const familyNameString of full_r_u_Families) {
+        getArgNameStringsGRU(familyNameString).forEach(argNameString => finalArray.push(argNameString));
+    }
+    return finalArray;
+}
+
 // argv.arg(general/ranked/unranked) to exports.(r_u).arg:
 function getArgNameStringsGRU(familyNameString) {
     return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
 
-function get_r_u_arr_allowed(familyNameString) {
-    return [ [familyNameString, ""],
-             [`${familyNameString}ranked`, "_ranked"],
-             [`${familyNameString}unranked`, "_unranked"]
+function argObjectRU(argv, familyNameString) {
+    const [generalArg, rankedArg, unrankedArg] = getArgNameStringsGRU(familyNameString)
+                                                 .map( argNameString => argv[argNameString] || undefined );
+    // a var declared 0 == undefined, but !== undefined
+    if (generalArg !== undefined
+        && rankedArg === undefined
+        && unrankedArg === undefined) {
+        return { ranked: generalArg, unranked: generalArg };
+    } else {
+        return { ranked: rankedArg, unranked: unrankedArg };
+    }
+}
+
+function get_r_u_arr_ARU(familyNameString) {
+    return [ [familyNameString,              ["ranked", "unranked"]],
+             [`${familyNameString}ranked`,   ["ranked"]],
+             [`${familyNameString}unranked`, ["unranked"]]
            ];
 }
 function parseRank(arg) {
@@ -492,22 +558,22 @@ function checkExportsWarnings() {
             console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, `
                         + `${r_u} games are likely to last forever`); 
         }
-    }
 
-    // warn about potentially problematic timecontrols:
-    for (const [argNameString, descr] of get_r_u_arr_allowed("timecontrols")) {
-        for (const [timeControl, detail] of [ ["absolute", "(no period time)"],
-                                              ["none", "(infinite time)"] ]) {
-            if (exports[`allowed_timecontrols${descr}`][timeControl] === true ||
-                exports[`allow_all_timecontrols${descr}`] === true) {
+        // warn about potentially problematic timecontrols:
+        const pTcs = [ ["absolute", "(no period time)"],
+                       ["none", "(infinite time)"]
+                     ];
+        for (const [tc, descr] of pTcs) {
+            if (exports[r_u]["allowed_timecontrols"][tc] === true ||
+                exports[r_u]["allow_all_timecontrols"] === true) {
                 isWarning = true;
-                console.log(`    Warning: potentially problematic --${argNameString} `
-                            + `detected (${timeControl} ${detail}): may cause unwanted `
-                            + `time management problems with users`);
+                console.log(`    Warning: potentially problematic time control for ${r_u} games 
+                             detected -${tc}- ${descr}: may cause unwanted time management 
+                             problems with users`);
             }
         }
     }
-
+    
     if (isWarning) console.log("[ WARNINGS ! ]\n");
     else console.log("[ SUCCESS ]\n");
 }
