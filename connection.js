@@ -674,8 +674,8 @@ function getBlackWhitelistReject(familyNameString, notificationUser, for_r_u_gam
              + `${familyNameString}ed ${for_r_u_games}`);
     const msg = `This bot uses a ${familyNameString}: your user information `
                 + `${notificationUser.username}) (${notificationUser.id}) is not an `
-                + `allowed player against this bot ${r_u_games}, you may try changing `
-                + `the ranked/unranked setting.`;
+                + `allowed player against this bot ${for_r_u_games}, you may try `
+                + `changing the ranked/unranked setting.`;
     return { reject: true, msg };
 }
 
