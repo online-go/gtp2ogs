@@ -17,7 +17,7 @@ const allowed_r_u_Families_strings = ["rules",
                                       "timecontrols"
                                      ];
 const allowed_r_u_Families = allowed_r_u_Families_numbers.concat(allowed_r_u_Families_strings);
-generateExports_r_u(allowed_r_u_Families);
+generateExports_r_u(all_r_u_Families, allowed_r_u_Families);
 
 exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
