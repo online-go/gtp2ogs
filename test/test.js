@@ -21,6 +21,9 @@ config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
 
+const all_r_u_Families =     ["blacklist",
+                              "whitelist"
+                             ];
 const allowed_r_u_Families = ["boardsizes",
                               "komis",
                               "rules",
@@ -28,7 +31,7 @@ const allowed_r_u_Families = ["boardsizes",
                               "speeds",
                               "timecontrols"
                              ];
-generateAllowedFamiliesRankedUnranked(allowed_r_u_Families);
+generateAllowedFamiliesRankedUnranked(all_r_u_Families, allowed_r_u_Families);
 
 // Fake a socket.io-client
 class FakeSocket {
@@ -733,10 +736,13 @@ describe("Retrying bot failures", () => {
     });
 });
 
-function generateAllowedFamiliesRankedUnranked(allowed_r_u_Families) {
+function generateAllowedFamiliesRankedUnranked(all_r_u_Families, allowed_r_u_Families) {
     for (const r_u of ["ranked", "unranked"]) {
-        config[r_u] = { banned_users: {} };
+        config[r_u] = {};
 
+        for (const familyNameString of all_r_u_Families) {
+            exports[r_u][`${familyNameString}ed_users`] = {};
+        }
         for (const familyNameString of allowed_r_u_Families) {
             config[r_u][`allow_all_${familyNameString}`] = false;
             config[r_u][`allowed_${familyNameString}`] = {};

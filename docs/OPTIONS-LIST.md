@@ -216,24 +216,32 @@ a challenge based on the notification (challenge settings)
 
 ##     A) ALL/RANKED/UNRANKED FAMILIES :
 
-  Here the general argument (ex: --bans) does not confict with 
+  Here the general argument (ex: --blacklist) does not confict with 
 the ranked and unranked arguments for accepting/rejecting matches.
 
 example: 
-`--bans A,B --bansranked X,Y --bansunranked Z`
-result of these bans arguments :
-- banned users for ranked games : A,B,X,Y
-- banned users for unranked games : A,B,Z
+`--blacklist A,B --blacklistranked X,Y --blacklistunranked Z`
+result of these blacklist arguments :
+- blacklisted users for ranked games : A,B,X,Y
+- blacklisted users for unranked games : A,B,Z
 
-#### bans
-  ```--bans``` Comma separated list of user names or IDs who 
-are banned from ranked and unranked games
+#### blacklist
+  ```--blacklist``` Comma separated list of usernames or IDs blacklisted 
 
-  ```--bansranked``` Comma separated list of user names or IDs who 
-are banned from ranked games
+  ```--blacklistranked``` Comma separated list of usernames or IDs 
+blacklisted for ranked games
 
-  ```--bansunranked``` Comma separated list of user names or IDs who 
-are banned from unranked games
+  ```--blacklistunranked``` Comma separated list of usernames or IDs 
+blacklisted for unranked games
+
+#### whitelist
+  ```--whitelist``` Comma separated list of usernames or IDs whitelisted 
+
+  ```--whitelistranked``` Comma separated list of usernames or IDs 
+whitelisted for ranked games
+
+  ```--whitelistunranked``` Comma separated list of usernames or IDs 
+whitelisted for unranked games
 
 ##     B) GENERAL/RANKED/UNRANKED FAMILIES :
 

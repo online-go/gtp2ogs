@@ -5,6 +5,9 @@ const console = require('console');
 
 exports.check_rejectnew = function() {};
 
+const all_r_u_Families =             ["blacklist",
+                                      "whitelist"
+                                     ];
 const allowed_r_u_Families_numbers = ["boardsizes",
                                       "komis"
                                      ];
@@ -71,12 +74,18 @@ exports.updateFromArgv = function() {
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
         //     A) ALL/RANKED/UNRANKED FAMILIES:
-        .describe('bans', 'Comma separated list of usernames or IDs')
-        .string('bans')
-        .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
-        .string('bansranked')
-        .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
-        .string('bansunranked')
+        .describe('blacklist', 'Comma separated list of usernames or IDs blacklisted')
+        .string('blacklist')
+        .describe('blacklistranked', 'Comma separated list of usernames or IDs blacklisted for ranked games')
+        .string('blacklistranked')
+        .describe('blacklistunranked', 'Comma separated list of usernames or IDs blacklisted for unranked games')
+        .string('blacklistunranked')
+        .describe('whitelist', 'Comma separated list of usernames or IDs whitelisted')
+        .string('whitelist')
+        .describe('whitelistranked', 'Comma separated list of usernames or IDs whitelisted for ranked games')
+        .string('whitelistranked')
+        .describe('whitelistunranked', 'Comma separated list of usernames or IDs whitelisted for unranked games')
+        .string('whitelistunranked')
         //     B) GENERAL/RANKED/UNRANKED FAMILIES:
         //         B1) ALLOWED FAMILIES:
         .describe('boardsizes', 'Board size(s) to accept')
@@ -233,6 +242,7 @@ exports.updateFromArgv = function() {
                 + `\nDebug status: ${debugStatus}`);
     // B - check unsupported argv //
     testDeprecatedArgv(argv);
+    checkInvalidArgv(argv);
     checkUnsupportedOgspvAI(argv.ogspv, ogsPvAIs);
     checkNotYetReleasedArgv(argv);
 
@@ -251,9 +261,8 @@ exports.updateFromArgv = function() {
     const rank_r_u_Families = ["minrank", "maxrank"];
     // note:   allowed_r_u_Families use a different formula before
     //         exporting, included here as well
-    // note 2: bans family is an example of All/ranked/unranked family:
+    // note 2: blacklist family is an example of All/ranked/unranked family:
     //         export general AND ranked AND unranked args
-    const all_r_u_Families = ["bans"];
 
     // C) combinations of all r_u args, to export separately
     const full_r_u_Families = genericMain_r_u_Families
@@ -365,7 +374,7 @@ exports.updateFromArgv = function() {
             if (argv[argNameString]) {
                 for (const arg of argv[argNameString].split(',')) {
                     for (const r_u of r_us) {
-                        exports[r_u]["banned_users"][arg] = true;
+                        exports[r_u][`${familyNameString}ed_users`][arg] = true;
                     }
                 }
             }
@@ -388,9 +397,13 @@ exports.updateFromArgv = function() {
 }
 
 // before starting:
-function generateExports_r_u(allowed_r_u_Families) {
+function generateExports_r_u(all_r_u_Families, allowed_r_u_Families) {
     for (const r_u of ["ranked", "unranked"]) {
-        exports[r_u] = { banned_users: {} };
+        exports[r_u] = {};
+
+        for (const familyNameString of all_r_u_Families) {
+            exports[r_u][`${familyNameString}ed_users`] = {};
+        }
         for (const familyNameString of allowed_r_u_Families) {
             exports[r_u][`allow_all_${familyNameString}`] = false;
             exports[r_u][`allowed_${familyNameString}`] = {};
@@ -426,9 +439,9 @@ function testDeprecatedArgv(argv) {
          [["minperiods"], "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
          [["minperiodsranked"], "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
          [["minperiodsunranked"], "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
-         [["ban"], "bans"],
-         [["banranked"], "bansranked"],
-         [["banunranked"], "bansunranked"],
+         [["ban", "bans"], "blacklist"],
+         [["banranked", "bansranked"], "blacklistranked"],
+         [["banunranked", "bansunranked"], "blacklistunranked"],
          [["boardsize"], "boardsizes"],
          [["boardsizeranked"], "boardsizesranked"],
          [["boardsizeunranked"], "boardsizesunranked"],
@@ -463,6 +476,16 @@ function testDeprecatedArgv(argv) {
         }
     }
     console.log("\n");
+}
+
+function checkFamilyArgs(familyNameString, argv) {
+    return (argv[familyNameString] || argv[`${familyNameString}ranked`] || `${familyNameString}unranked`);
+}
+
+function checkInvalidArgv(argv) {
+    if (checkFamilyArgs("blacklist", argv) && checkFamilyArgs("whitelist", argv)) {
+        throw `error: you can't use both a blacklist and a whitelist.`
+    }
 }
 
 function checkUnsupportedOgspvAI(argvOgsPv, ogsPvAIs) {

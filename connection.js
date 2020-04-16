@@ -275,12 +275,11 @@ class Connection {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if (config_r_u.banned_users[notification.user[uid]]) {
-                    conn_log(`${uid} ${notification.user[uid]} is banned ${r_u_strings.from_r_u_games}`);
-                    const msg = `You (${uid} ${notification.user[uid]}) are banned `
-                                + `${r_u_strings.from_r_u_games} on this bot by bot admin, `
-                                + `you may try changing the ranked/unranked setting.`;
-                    return { reject: true, msg };
+            if (config_r_u.blacklisted_users[notification.user[uid]]) {
+                return getBlackWhitelistReject("blacklist", notification.user, r_u_strings.for_r_u_games);
+            }
+            if (!config_r_u.whitelisted_users[notification.user[uid]]) {
+                return getBlackWhitelistReject("whitelist", notification.user, r_u_strings.for_r_u_games);
             }
         }
         const resultMinMaxRank = getMinMaxRejectResult("rank", "rank", notification.user.ranking,
@@ -667,8 +666,17 @@ function get_r_u_strings_connection(rankedSetting, speedSetting) {
     const r_u = rankedSetting ? "ranked" : "unranked";
     return { r_u,
              for_r_u_games: `for ${r_u} games`,
-             for_blc_r_u_games: `for ${speedSetting} ${r_u} games`,
-             from_r_u_games: `from ${r_u} games` };
+             for_blc_r_u_games: `for ${speedSetting} ${r_u} games` };
+}
+
+function getBlackWhitelistReject(familyNameString, notificationUser, for_r_u_games) {
+    conn_log(`${notificationUser.username} (${notificationUser.id}) is `
+             + `${familyNameString}ed ${for_r_u_games}`);
+    const msg = `This bot uses a ${familyNameString}: your user information `
+                + `${notificationUser.username}) (${notificationUser.id}) is not an `
+                + `allowed player against this bot ${r_u_games}, you may try changing `
+                + `the ranked/unranked setting.`;
+    return { reject: true, msg };
 }
 
 function rankToString(r) {
