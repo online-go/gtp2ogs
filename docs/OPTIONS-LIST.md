@@ -203,8 +203,6 @@ connected games per user against this bot
 
   ```--unrankedonly```  Only accept unranked matches
 
-  ```--proonly``` For all matches, only accept those from professionals
-
 #### fakerank
   ```--fakerank``` Fake bot ranking to calculate automatic handicap 
 stones number in autohandicap (-1) based on rankDifference between 
@@ -379,6 +377,14 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
 
+#### only (part 2)
+
+  ```--proonly``` For all matches, only accept those from professionals
+
+  ```--proonlyranked``` For ranked games, only accept those from professionals
+
+  ```--proonlyunranked``` For ranked games, only accept those from professionals
+  
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
 

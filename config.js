@@ -88,7 +88,6 @@ exports.updateFromArgv = function() {
         .describe('unrankedonly', 'Only accept unranked matches')
         /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
         /  nor their unranked args since the general argument is for unranked games too*/
-        .describe('proonly', 'For all matches, only accept those from professionals')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
         //     A) ALL/RANKED/UNRANKED FAMILIES :
@@ -135,6 +134,9 @@ exports.updateFromArgv = function() {
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
         //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS : :
+        .describe('proonly', 'For all matches, only accept those from professionals')
+        .describe('proonlyranked', 'For ranked matches, only accept those from professionals')
+        .describe('proonlyunranked', 'For unranked matches, only accept those from professionals')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
