@@ -190,7 +190,11 @@ and stability)
 connected games per user against this bot
 
 
-#### only (part 1)
+#### rankedonly unrankedonly
+
+Below are the "only" options that only have a general option 
+(no ranked or unranked options)
+
   ```--rankedonly``` Only accept ranked matches
 
   ```--unrankedonly```  Only accept unranked matches
@@ -369,7 +373,7 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
 
-#### only (part 2)
+#### proonly
 
   ```--proonly``` For all matches, only accept those from professionals
 
