@@ -173,14 +173,6 @@ So default is disabled
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot
 
-#### nopause
-
-  ```--nopause```  Do not allow pauses during games
-
-  ```--nopauseranked``` Do not allow pauses during ranked games
-
-  ```--nopauseunranked``` Do not allow pauses during unranked games
-
 #### corrqueue
   ```--corrqueue``` Process correspondence games one at a time
 
@@ -384,7 +376,30 @@ see [notes E-](/docs/NOTES.md#e-) for details
   ```--proonlyranked``` For ranked games, only accept those from professionals
 
   ```--proonlyunranked``` For ranked games, only accept those from professionals
-  
+
+#### nopause
+
+  ```--nopause```  Do not allow pauses during games
+
+  ```--nopauseranked``` Do not allow pauses during ranked games
+
+  ```--nopauseunranked``` Do not allow pauses during unranked gamesc
+
+#### nopauseonweekends
+
+note: this setting has no effect on pausing DURING games, here 
+we only accept or reject a match if it comes with the setting 
+"Pause on week-ends" (specific to correspondence games)
+
+  ```--nopauseonweekends```  Do not accept matches that come with the 
+option -pauses on weekends- (specific to correspondence games)
+
+  ```--nopauseonweekendsranked``` Do not accept ranked matches that come 
+with the option -pauses on weekends- (specific to correspondence games)
+
+  ```--nopauseonweekendsunranked``` Do not accept unranked matches that 
+come with the option -pauses on weekends- (specific to correspondence games)
+
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
 
