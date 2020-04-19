@@ -343,16 +343,12 @@ class Connection {
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
     //
     checkChallengeBooleans(notification) {
-        const testBooleanArgs     = [ ["rankedonly", "Unranked games are", !notification.ranked],
-                                      ["unrankedonly", "Ranked games are", notification.ranked]
-                                    ];
 
-        for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
-            if (config[familyNameString] && notifCondition) {
-                const msg = `${nameF} not allowed on this bot.`;
-                conn_log(msg);
-                return { reject: true, msg };
-            }
+        if (config.rankedonly && notification.ranked) {
+            return getBooleansGeneralReject("Ranked games are");
+        }
+        if (config.unrankedonly && !notification.ranked) {
+            return getBooleansGeneralReject("Unranked games are");
         }
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
@@ -361,12 +357,12 @@ class Connection {
                                        ", please manually choose the number of handicap stones"]
                                     ];
 
-        for (const [familyNameString, nameF, notifCondition, ending] of testBooleanArgs_r_u) {
+        for (const [familyNameString, descr, notifCondition, ending] of testBooleanArgs_r_u) {
             if (notifCondition) {
                 for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
                     if (config[argNameString] && rankedCondition) {
                         const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-                        const msg = `${nameF} not allowed on this bot ${rankedUnranked}${ending}.`;
+                        const msg = `${descr} not allowed on this bot ${rankedUnranked}${ending}.`;
                         conn_log(msg);
                         return { reject: true, msg };
                     }
@@ -744,6 +740,16 @@ function bannedFamilyReject(argNameString, uid, notificationUid) {
                 + `${rankedUnranked} on this bot by bot admin, `
                 + `you may try changing the ranked/unranked setting.`;
     return { reject: true, msg};
+}
+
+function getBooleansGeneralReject(descr) {
+    const msg = `${descr} not allowed on this bot.`;
+    conn_log(msg);
+    return { reject: true, msg };
+}
+
+function getBooleans_r_u_Reject(descr) {
+
 }
 
 function boardsizeNotificationIsNotSquareReject(argNameString, notificationWidth, notificationHeight) {
