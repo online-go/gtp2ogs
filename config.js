@@ -39,7 +39,7 @@ exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
     const optimist = require("optimist")
-        // 1) ROOT ARGUMENTS :
+        // 1) ROOT ARGUMENTS:
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -83,19 +83,17 @@ exports.updateFromArgv = function() {
         .default('maxconnectedgamesperuser', 3)
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
-        /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
-        /  nor their unranked args since the general argument is for unranked games too*/
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
-        //     A) ALL/RANKED/UNRANKED FAMILIES :
+        //     A) ALL/RANKED/UNRANKED FAMILIES:
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
         .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
         .string('bansranked')
         .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
         .string('bansunranked')
-        //     B) GENERAL/RANKED/UNRANKED FAMILIES :
-        //         B1) ALLOWED FAMILIES :
+        //     B) GENERAL/RANKED/UNRANKED FAMILIES:
+        //         B1) ALLOWED FAMILIES:
         .describe('boardsizes', 'Board size(s) to accept')
         .string('boardsizes')
         .default('boardsizes', '9,13,19')
@@ -103,18 +101,6 @@ exports.updateFromArgv = function() {
         .string('boardsizesranked')
         .describe('boardsizesunranked', 'Board size(s) to accept for unranked games')
         .string('boardsizesunranked')
-        .describe('boardsizewidths', 'For custom board sizes, boardsize width(s) to accept')
-        .string('boardsizewidths')
-        .describe('boardsizeheights', 'For custom board sizes, boardsize height(s) to accept')
-        .string('boardsizeheights')
-        .describe('boardsizewidthsranked', 'For custom board sizes, boardsize width(s) to accept for ranked games')
-        .string('boardsizewidthsranked')
-        .describe('boardsizeheightsranked', 'For custom board sizes, boardsize height(s) to accept for ranked games')
-        .string('boardsizeheightsranked')
-        .describe('boardsizewidthsunranked', 'For custom board sizes, boardsize width(s) to accept for unranked games')
-        .string('boardsizewidthsunranked')
-        .describe('boardsizeheightsunranked', 'For custom board sizes, boardsize height(s) to accept for unranked games')
-        .string('boardsizeheightsunranked')
         .describe('komis', 'Allowed komi values')
         .string('komis')
         .default('komis', 'automatic')
@@ -252,10 +238,10 @@ exports.updateFromArgv = function() {
                 + `\n- For changelog or latest devel updates, `
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}`);
-    // B - check deprecated argv //
-    testDeprecatedArgv(optimist.argv, "komis");
+    // B - check unsupported argv //
+    testDroppedArgv(argv);
 
-    /* EXPORTS FROM OPTIMIST.ARGV */
+    /* EXPORTS FROM ARGV */
     /* 0) root exports*/
     for (const k in argv) {
         exports[k] = argv[k];
@@ -331,14 +317,6 @@ exports.updateFromArgv = function() {
         for (const boardsize of argv.boardsizes.split(',')) {
             if (boardsize === "all") {
                 exports.allow_all_boardsizes = true;
-            } else if (boardsize === "custom") {
-                exports.allow_custom_boardsizes = true;
-                for (const boardsizewidth of argv.boardsizewidths.split(',')) {
-                    exports.allowed_custom_boardsizewidths[boardsizewidth] = true;
-                }
-                for (const boardsizeheight of argv.boardsizeheights.split(',')) {
-                    exports.allowed_custom_boardsizeheights[boardsizeheight] = true;
-                }
             } else {
                 exports.allowed_boardsizes[boardsize] = true;
             }
@@ -348,14 +326,6 @@ exports.updateFromArgv = function() {
         for (const boardsizeranked of argv.boardsizesranked.split(',')) {
             if (boardsizeranked === "all") {
                 exports.allow_all_boardsizes_ranked = true;
-            } else if (boardsizeranked === "custom") {
-                exports.allow_custom_boardsizes_ranked = true;
-                for (const boardsizewidthranked of argv.boardsizewidthsranked.split(',')) {
-                    exports.allowed_custom_boardsizewidths_ranked[boardsizewidthranked] = true;
-                }
-                for (const boardsizeheightranked of argv.boardsizeheightsranked.split(',')) {
-                    exports.allowed_custom_boardsizeheights_ranked[boardsizeheightranked] = true;
-                }
             } else {
                 exports.allowed_boardsizes_ranked[boardsizeranked] = true;
             }
@@ -365,14 +335,6 @@ exports.updateFromArgv = function() {
         for (const boardsizeunranked of argv.boardsizesunranked.split(',')) {
             if (boardsizeunranked === "all") {
                 exports.allow_all_boardsizes_unranked = true;
-            } else if (boardsizeunranked === "custom") {
-                exports.allow_custom_boardsizes_unranked = true;
-                for (const boardsizewidthunranked of argv.boardsizeswidthunranked.split(',')) {
-                    exports.allowed_custom_boardsizewidths_unranked[boardsizewidthunranked] = true;
-                }
-                for (const boardsizeheightunranked of argv.boardsizeheightsunranked.split(',')) {
-                    exports.allowed_custom_boardsizeheights_unranked[boardsizeheightunranked] = true;
-                }
             } else {
                 exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
             }
@@ -446,8 +408,8 @@ exports.updateFromArgv = function() {
     }
 
     // console messages
-    // C - check exports warnings :
-    checkExportsWarnings("nopause");
+    // C - check exports warnings:
+    checkExportsWarnings();
 
     // Show in debug all the ranked/unranked exports results
     if (exports.DEBUG) {
@@ -458,64 +420,71 @@ exports.updateFromArgv = function() {
     }
 }
 
+function getBLCString(familyNameString, rankedUnranked) {
+    return `${familyNameString}blitz${rankedUnranked}, --${familyNameString}live${rankedUnranked} `
+           + `and/or --${familyNameString}corr${rankedUnranked}`;
+}
+
 // console messages:
-function testDeprecatedArgv(optimistArgv, komisFamilyNameString) {
-    const deprecatedArgv = [["botid", "username"],
-        ["bot", "username"],
-        ["id", "username"],
-        ["minrankedhandicap", "minhandicapranked"],
-        ["minunrankedhandicap", "minhandicapunranked"],
-        ["maxrankedhandicap", "maxhandicapranked"],
-        ["maxunrankedhandicap", "maxhandicapunranked"],
-        ["maxtotalgames", "maxconnectedgames"],
-        ["maxactivegames", "maxconnectedgamesperuser"],
-        ["maxmaintime",  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
-        ["maxmaintimeranked", "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
-        ["maxmaintimeunranked", "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
-        ["minmaintime", "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
-        ["minmaintimeranked", "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
-        ["minmaintimeunranked", "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
-        ["maxperiodtime", "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
-        ["maxperiodtimeranked", "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
-        ["maxperiodtimeunranked", "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
-        ["minperiodtime", "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
-        ["minperiodtimeranked", "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-        ["minperiodtimeunranked", "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
-        ["maxperiods",  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
-        ["maxperiodsranked", "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
-        ["maxperiodsunranked", "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
-        ["minperiods", "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
-        ["minperiodsranked", "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
-        ["minperiodsunranked", "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
-        ["ban", "bans"],
-        ["banranked", "bansranked"],
-        ["banunranked", "bansunranked"],
-        ["boardsize", "boardsizes"],
-        ["boardsizeranked", "boardsizesranked"],
-        ["boardsizeunranked", "boardsizesunranked"],
-        ["komi", "komis"],
-        ["komiranked", "komisranked"],
-        ["komiunranked", "komisunranked"],
-        ["speed", "speeds"],
-        ["speedranked", "speedsranked"],
-        ["speedunranked", "speedsunranked"],
-        ["timecontrol", "timecontrols"],
-        ["timecontrolranked", "timecontrolsranked"],
-        ["timecontrolunranked", "timecontrolsunranked"]
-        ];
-    for (const [oldName, newName] of deprecatedArgv) {
-        if (optimistArgv[oldName]) {
-            console.log(`Deprecated: --${oldName} is no longer `
-                        + `supported, use --${newName} instead.`);
+function testDroppedArgv(argv) {
+    const droppedArgv = [
+         [["botid", "bot", "id"], "username"],
+         [["minrankedhandicap"], "minhandicapranked"],
+         [["minunrankedhandicap"], "minhandicapunranked"],
+         [["maxrankedhandicap"], "maxhandicapranked"],
+         [["maxunrankedhandicap"], "maxhandicapunranked"],
+         [["maxtotalgames"], "maxconnectedgames"],
+         [["maxactivegames"], "maxconnectedgamesperuser"],
+         [["maxmaintime"],  getBLCString("maxmaintime", "")],
+         [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
+         [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
+         [["minmaintime"], getBLCString("minmaintime", "")],
+         [["minmaintimeranked"], getBLCString("minmaintime", "ranked")],
+         [["minmaintimeunranked"], getBLCString("minmaintime", "unranked")],
+         [["maxperiodtime"], getBLCString("maxperiodtime", "")],
+         [["maxperiodtimeranked"], getBLCString("maxperiodtime", "ranked")],
+         [["maxperiodtimeunranked"], getBLCString("maxperiodtime", "unranked")],
+         [["minperiodtime"], getBLCString("minperiodtime", "")],
+         [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
+         [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
+         [["maxperiods"],  getBLCString("maxperiods", "")],
+         [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
+         [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
+         [["minperiods"], getBLCString("minperiods", "")],
+         [["minperiodsranked"], getBLCString("minperiods", "ranked")],
+         [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
+         [["ban"], "bans"],
+         [["banranked"], "bansranked"],
+         [["banunranked"], "bansunranked"],
+         [["boardsize"], "boardsizes"],
+         [["boardsizeranked"], "boardsizesranked"],
+         [["boardsizeunranked"], "boardsizesunranked"],
+         [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked",
+           "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
+         [["komi"], "komis"],
+         [["komiranked"], "komisranked"],
+         [["komiunranked"], "komisunranked"],
+         [["speed"], "speeds"],
+         [["speedranked"], "speedsranked"],
+         [["speedunranked"], "speedsunranked"],
+         [["timecontrol"], "timecontrols"],
+         [["timecontrolranked"], "timecontrolsranked"],
+         [["timecontrolunranked"], "timecontrolsunranked"]
+    ];
+    for (const [oldNames, newName] of droppedArgv) {
+        for (const oldName of oldNames) {
+            if (argv[oldName]) {
+                console.log(`Dropped: --${oldName} is no longer `
+                            + `supported, use --${newName} instead.`);
+            }
         }
     }
-    for (const komisGRUArg of familyArrayNamesGRU(komisFamilyNameString)) {
-        if (optimistArgv[komisGRUArg]) {
+    for (const argNameString of getArgNameStringsGRU("komis")) {
+        if (argv[argNameString]) {
             for (const komi of ["auto","null"]) {
-                if (optimistArgv[komisGRUArg].split(",").includes(komi)) {
-                    console.log(`Deprecated: --${komisGRUArg} /${komi}/ is `
-                                + `no longer supported, use --${komisGRUArg} `
-                                + `/automatic/ instead`);
+                if (argv[argNameString].split(",").includes(komi)) {
+                    console.log(`Dropped: --${argNameString} ${komi} is no longer `
+                                + `supported, use --${argNameString} automatic instead`);
                 }
             }
         }
@@ -532,9 +501,9 @@ function checkUnsupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-// optimist.argv.arg(general/ranked/unranked) to exports.(r_u).arg:
-function familyArrayNamesGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
+// argv.arg(general/ranked/unranked) to exports.(r_u).arg:
+function getArgNameStringsGRU(familyNameString) {
+    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
 
 function parseRank(arg) {
@@ -557,17 +526,19 @@ function parseRank(arg) {
     }
 }
 
-function checkExportsWarnings(noPauseString) {
+function checkExportsWarnings() {
     console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
-    // avoid infinite games
-    // TODO : whenever --maxpausetime +ranked + unranked gets implemented, remove this
+
     for (const r_u of ["ranked", "unranked"]) {
-        if (!exports[noPauseString] && !exports[`${noPauseString}${r_u}`]) {
+        // avoid infinite games
+        // TODO: whenever --maxpausetime gets implemented, remove this
+        if (!exports.nopause && !exports[`nopause${r_u}`]) {
             isWarning = true;
-            console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`); 
+            console.log(`    Warning: No --nopause nor --nopause${r_u}, ${r_u} games are likely to last forever`); 
         }
     }
+
     if (isWarning) console.log("[ WARNINGS ! ]\n");
     else console.log("[ SUCCESS ]\n");
 }

@@ -1,22 +1,5 @@
 #### A : 
 
-Currently, ogs does not support profile id number authentification, 
-so you have to use bot username only. 
-
-For example, for this famous bot https://online-go.com/player/58441/GnuGo, 
-bot admin has to use the bot name `GnuGo` and currently bot admin cannot 
-use profile number `58441` (it will not work).
-
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that 
-still required names and not id numbers, contrary to what this 
-line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) 
-that added confusion to how to use gtp2ogs for bot admins have 
-been removed
-
-To sum up, to connect your bot on OGS, you need and you have 
-to simply use bot name, for example `--username GnuGo` for 
-the bot admin of GnuGo
-
 #### B : 
 
 note : board size format below used on gtp2ogs is 
@@ -105,14 +88,16 @@ bot will timeout in just a few moves)
 
 #### F :
 
-Currently, when handicap is automatic, `notification.handicap` 
-always returns `-1` regardless of actual handicap stone number 
-(ex: `0`, `3`, `5` stones, etc.)
+Currently, when handicap is automatic, ogs does not inform us 
+what the handicap is before accepting the challange. 
+Also, challange notifications do not contain our rank. 
+With fakerank we can estimate the handicap based on the oponent 
+ranking and our (fake) rank.
 
-Example use case : 
-- `--fakerank 6d` and `--maxhandicap 4` and user ranking 
-`2k`
-- 
+Example use case:
+`--fakerank 6d --maxhandicap 4` and user ranking `2k`:
+Expected handicap is 6d-2k = 8 ranks. 8 ranks > 4 max handicap 
+=> Challenge rejected.
 
 **important note** : until the min/maxhandicap bypass issue 
 is fixed (at the server level), it is recommended for botadmin 

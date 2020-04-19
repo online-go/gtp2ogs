@@ -61,7 +61,7 @@ see for details [notes G-](/docs/NOTES.md#g-)
 
 #### username
   ```--username``` Specify the username of the bot, for example 
-`--username GnuGo`, see [notes A-](/docs/NOTES.md#a-) for details
+`--username GnuGo`
 
 #### apikey
   ```--apikey``` Specify the API key for the bot, for example 
@@ -253,14 +253,10 @@ on whether the game is ranked or unranked.
 - for text-only families ("blitz", "fischer", "white", etc.), 
 comma-separated values (without space) will allow every value inputted, 
 every other value will be rejected
-- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
-(boardsizes)), it is possible to use as well the "range" 
-operator `:` to navigate one by one from min to max (ex: 
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
 
-example: `--speeds all`
-example 2: `--speedsranked live,correspondence --speedsunranked all`
-example 3: `--komis 0.5,5.5:7.5,automatic`
+example: `--speeds blitz,live`
+example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
+example 3: `--komis 0.5,5.5,7.5,automatic`
 
 #### boardsizes
 
@@ -272,54 +268,11 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
 Possible boardsize width value(s) :
 - `all` (allows all board size widths)
-- `custom` (format switches from allow square boardsizes only 
-to allow combinations of boardsize widths/heights)
-- comma separated and `:` separated values, for example 
-`25` (allows 25x25), or `9,13,15:17,19` (allows 
+- comma separated values, for example 
+`25` (allows 25x25), or `9,13,15,16,17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-#### boardsize widths/heights
-
-  ```--boardsizewidths``` For custom board sizes, boardsize 
-width(s) to accept
-
-  ```--boardsizewidthranked``` For custom board sizes, boardsize 
-width(s) to accept for ranked games
-
-  ```--boardsizeswidthsunranked``` For custom board sizes, boardsize 
-width(s) to accept for unranked games
-
-Possible boardsize width value(s) :
-- `all` (allows all board size widths)
-- comma separated values, for example `25`, or `9,13,19`
-
-```--boardsizeheights``` For custom board sizes, boardsize 
-height(s) to accept
-
-```--boardsizeheightranked``` For custom board sizes, boardsize 
-height(s) to accept for ranked games
-
-```--boardsizesheightsunranked``` For custom board sizes, boardsize 
-height(s) to accept for unranked games
-
-Possible boardsize height value(s):
-- `all` (allows all board size heights)
-- comma separated values, for example `1`, or `1,2,3` 
-
-  For custom boardsizes, we allow all combinations of allowed 
-widths and heights, for example :
-
-- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9,19` 
-will allow all these boardsizes combinations:
-```
-9x1,9x2,9x3,9x9,9x19
-13x1,13x2,13x3,13x9,13x19
-15x1,15x2,15x3,15x9,15x19
-19x1,19x2,19x3,19x9,19x19
-25x1,25x2,25x3,25x3,25x19
-```
-
-see [notes B-](/docs/NOTES.md#b-) for details:
+see [notes B-](/docs/NOTES.md#b-) for details.
 
 #### komis
   ```--komis``` Allowed komi values
@@ -330,9 +283,9 @@ see [notes B-](/docs/NOTES.md#b-) for details:
  
 Possible komi value(s):
 - `all` (allows all komis)
-- comma separated and `:` separated values, 
-for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
-5.5, 6.5, 7.5, 0.5, automatic.
+- comma separated values, 
+for example `7.5` (allows komi 7.5), or `5.5,7.5,0.5,automatic` allows komis 
+(5.5, 7.5, 0.5, automatic).
 
 For extra komi explanations, see :
 - [notes C-](/docs/NOTES.md#c-)
@@ -348,7 +301,6 @@ accept for ranked games
 accept for unranked games
 
 Possible speed value(s) :
-- `all` (allows all speeds)
 - comma separated values, for example `blitz`, or `live, correspondence`
 
 Full list of possible values :  `blitz`,  `live`, `correspondence`.
@@ -363,7 +315,6 @@ games
 games
 
 Possible timecontrol value(s) :
-- `all` (allows all timecontrol values)
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
@@ -435,8 +386,7 @@ come with the option -pauses on weekends- (specific to correspondence games)
 
   ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
-**important note** : see 
-[fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
+**important note**: see [fakerank](#fakerank).
 
 #### min/max rank
 
@@ -451,7 +401,7 @@ ranked games (e.g. 15k)
 unranked games (e.g. 15k)
 
   max :
-
+  
   ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
 
   ```--maxrankranked``` Maximum opponent rank to accept for 
