@@ -83,8 +83,6 @@ exports.updateFromArgv = function() {
         .default('maxconnectedgamesperuser', 3)
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
-        /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
-        /  nor their unranked args since the general argument is for unranked games too*/
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
         //     A) ALL/RANKED/UNRANKED FAMILIES:

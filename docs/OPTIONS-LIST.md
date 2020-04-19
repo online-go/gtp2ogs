@@ -199,10 +199,6 @@ Below are the "only" options that only have a general option
 
   ```--unrankedonly```  Only accept unranked matches
 
-  ```--privateonly```  (**Not yet supported**) Only accept private matches
-
-  ```--publiconly```  (**Not yet supported**) Only accept public (non-private) matches
-
 #### fakerank
   ```--fakerank``` Fake bot ranking to calculate automatic handicap 
 stones number in autohandicap (-1) based on rankDifference between 

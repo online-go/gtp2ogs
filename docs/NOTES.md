@@ -88,18 +88,16 @@ bot will timeout in just a few moves)
 
 #### F :
 
-Currently, when handicap is automatic, `notification.handicap` 
-always returns `-1` regardless of actual handicap stone number 
-(ex: `0`, `3`, `5` stones, etc.)
+Currently, when handicap is automatic, ogs does not inform us 
+what the handicap is before accepting the challange. 
+Also, challange notifications do not contain our rank. 
+With fakerank we can estimate the handicap based on the oponent 
+ranking and our (fake) rank.
 
-Example use case : 
+Example use case:
 `--fakerank 6d --maxhandicap 4` and user ranking `2k`:
-
-- Automatic handicap stones: 6d - 2k = 8 rank difference 
-=> 8 automatic handicap stones
-- but max handicap is 4 stones
-- 8 (detected automatic stones wanted by user) > 
-max stones allowed 4 => challenge rejected
+Expected handicap is 6d-2k = 8 ranks. 8 ranks > 4 max handicap 
+=> Challenge rejected.
 
 **important note** : until the min/maxhandicap bypass issue 
 is fixed (at the server level), it is recommended for botadmin 
