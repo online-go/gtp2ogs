@@ -253,16 +253,10 @@ on whether the game is ranked or unranked.
 - for text-only families ("blitz", "fischer", "white", etc.), 
 comma-separated values (without space) will allow every value inputted, 
 every other value will be rejected
-- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
-(boardsizes)), it is possible to use as well the "range" 
-operator `:` to navigate one by one from min to max (ex: 
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`), 
-as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`, 
-see [notes A-](/docs/NOTES.md#a-) for details.
 
-example: `--speeds all`
-example 2: `--speedsranked live,correspondence --speedsunranked all`
-example 3: `--komis 0.5,5.5:7.5,automatic`
+example: `--speeds blitz,live`
+example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
+example 3: `--komis 0.5,5.5,7.5,automatic`
 
 #### boardsizes
 
@@ -274,8 +268,8 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
 Possible boardsize width value(s) :
 - `all` (allows all board size widths)
-- comma separated and `:` separated values, for example 
-`25` (allows 25x25), or `9,13,15:17,19` (allows 
+- comma separated values, for example 
+`25` (allows 25x25), or `9,13,15,16,17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
 see [notes B-](/docs/NOTES.md#b-) for details.
@@ -289,7 +283,7 @@ see [notes B-](/docs/NOTES.md#b-) for details.
  
 Possible komi value(s):
 - `all` (allows all komis)
-- comma separated and `:` separated values, 
+- comma separated values, 
 for example `7.5` (allows komi 7.5), or `5.5,7.5,0.5,automatic` allows komis 
 (5.5, 7.5, 0.5, automatic).
 
