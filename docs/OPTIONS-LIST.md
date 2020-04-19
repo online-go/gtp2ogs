@@ -199,6 +199,8 @@ So default is disabled
 
 ### corrqueue
 
+`--corrqueue` Process correspondence games one at a time
+
 ### maxconnectedgames
 
 `--maxconnectedgames` Maximum number of connected games
@@ -207,7 +209,6 @@ included in the connected games count, see
 [#59](https://github.com/online-go/gtp2ogs/issues/59) for details),
 which means the maximum number of games your bot can play at the
 same time (choose a low number to regulate your computer performance
-
 and stability)
 
 ### maxconnectedgamesperuser
@@ -250,7 +251,7 @@ result of these bans arguments :
 - banned users for ranked games : A,B,X,Y
 - banned users for unranked games : A,B,Z
 
-#### bans
+### bans
 
 `--bans` Comma separated list of user names or IDs who
 are banned from ranked and unranked games
@@ -291,7 +292,7 @@ example: `--speeds all`
 example 2: `--speedsranked live,correspondence --speedsunranked all`
 example 3: `--komis 0.5,5.5:7.5,automatic`
 
-##### boardsizes
+#### boardsizes
 
 `--boardsizes` Board size(s) to accept
 
@@ -302,32 +303,31 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 Possible boardsize width value(s) :
 
 - `all` (allows all board size widths)
-- `custom` (format switches from allow square boardsizes only
-to allow combinations of boardsize widths/heights)
-- comma separated and `:` separated values, for example
-`25` (allows 25x25), or `9,13,15:17,19` (allows
-9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
+- comma separated values, for example `25` (allows 25x25), or
+`9,13,15,16,17,19` (allows 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-see [notes B-](/docs/NOTES.md#b-) for details.
+see [notes B](/docs/NOTES.md#b) for details:
 
 #### komis
-  ```--komis``` Allowed komi values
 
-  ```--komisranked``` Allowed komi values for ranked games
+`--komis` Allowed komi values
+
+`--komisranked` Allowed komi values for ranked games
+
+`--komisunranked` Allowed komi values for unranked games
 
 Possible komi value(s):
 
 - `all` (allows all komis)
-- comma separated values, 
-for example `7.5` (allows komi 7.5), or `5.5,7.5,0.5,automatic` allows komis 
-(5.5, 7.5, 0.5, automatic).
+- comma separated values, for example `7.5` (allows komi 7.5), or
+`5.5,7.5,0.5,automatic` allows komis (5.5, 7.5, 0.5, automatic).
 
-For extra komi explanations, see :
+For extra komi explanations, see:
 
 - [notes C](/docs/NOTES.md#c)
 - [notes D](/docs/NOTES.md#d)
 
-##### speeds
+#### speeds
 
 `--speeds` Comma separated list of Game speed(s) to accept
 
@@ -342,7 +342,7 @@ Possible speed value(s) :
 
 Full list of possible values :  `blitz`,  `live`, `correspondence`.
 
-##### timecontrols
+#### timecontrols
 
 `--timecontrols` Time control(s) to accept
 
@@ -352,7 +352,7 @@ games
 `--timecontrolsunranked` Time control(s) to accept for unranked
 games
 
-Possible timecontrol value(s) :
+Possible timecontrol value(s):
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
@@ -439,9 +439,9 @@ ranked games (e.g. 15k)
 `--minrankunranked` Minimum opponent rank to accept for
 unranked games (e.g. 15k)
 
-  max :
-  
-  ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
+max:
+
+`--maxrank` Maximum opponent rank to accept (e.g. 1d)
 
 `--maxrankranked` Maximum opponent rank to accept for
 ranked games (e.g. 1d)

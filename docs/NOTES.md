@@ -1,23 +1,5 @@
 # Notes
 
-## A
-
-Currently, ogs does not support profile id number authentification,
-so you have to use bot username only.
-
-For example, for this famous bot <https://online-go.com/player/58441/GnuGo>,
-bot admin has to use the bot name `GnuGo` and currently bot admin cannot
-use profile number `58441` (it will not work).
-
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that
-still required names and not id numbers, contrary to what this
-line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`)
-that added confusion to how to use gtp2ogs for bot admins have
-been removed
-
-To sum up, to connect your bot on OGS, you need and you have
-to simply use bot name, for example `--username GnuGo` for
-the bot admin of GnuGo
 ## B
 
 note: board size format below used on gtp2ogs is 
@@ -139,7 +121,7 @@ among others:  `!` (one time `!`) , `?` , `,` , `(` , `)` ,
 
 ## H
 
-### ogspv extra notes:
+### ogspv extra notes
 
 note: in the future your AI may have updates that are incompatible 
 with the current implementation of pv (variations ingame) of gtp2ogs.
