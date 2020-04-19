@@ -530,13 +530,12 @@ function checkExportsWarnings() {
     console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
 
-    const noPauseString = "nopause";
     for (const r_u of ["ranked", "unranked"]) {
         // avoid infinite games
         // TODO: whenever --maxpausetime gets implemented, remove this
-        if (!exports[noPauseString] && !exports[`${noPauseString}${r_u}`]) {
+        if (!exports.nopause && !exports[`nopause${r_u}`]) {
             isWarning = true;
-            console.log(`    Warning: No --${noPauseString} nor --${noPauseString}${r_u}, ${r_u} games are likely to last forever`); 
+            console.log(`    Warning: No --nopause nor --nopause${r_u}, ${r_u} games are likely to last forever`); 
         }
     }
 
