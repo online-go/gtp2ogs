@@ -417,6 +417,11 @@ exports.updateFromArgv = function() {
     }
 }
 
+function getBLCDeprecationString(familyNameString, rankedUnranked) {
+    return `${familyNameString}blitz${rankedUnranked}, --${familyNameString}live${rankedUnranked} `
+           + `and/or --${familyNameString}corr${rankedUnranked}`;
+}
+
 // console messages:
 function testDeprecatedArgv(argv) {
     const deprecatedArgv = [
@@ -427,32 +432,32 @@ function testDeprecatedArgv(argv) {
          [["maxunrankedhandicap"], "maxhandicapunranked"],
          [["maxtotalgames"], "maxconnectedgames"],
          [["maxactivegames"], "maxconnectedgamesperuser"],
-         [["maxmaintime"],  "maxmaintimeblitz, --maxmaintimelive and/or --maxmaintimecorr"],
-         [["maxmaintimeranked"], "maxmaintimeblitzranked, --maxmaintimeliveranked and/or --maxmaintimecorrranked"],
-         [["maxmaintimeunranked"], "maxmaintimeblitzunranked, --maxmaintimeliveunranked and/or --maxmaintimecorrunranked"],
-         [["minmaintime"], "minmaintimeblitz, --minmaintimelive and/or --minmaintimecorr"],
-         [["minmaintimeranked"], "minmaintimeblitzranked, --minmaintimeliveranked and/or --minmaintimecorrranked"],
-         [["minmaintimeunranked"], "minmaintimeblitzunranked, --minmaintimeliveunranked and/or --minmaintimecorrunranked"],
-         [["maxperiodtime"], "maxperiodtimeblitz, --maxperiodtimelive and/or --maxperiodtimecorr"],
-         [["maxperiodtimeranked"], "maxperiodtimeblitzranked, --maxperiodtimeliveranked and/or --maxperiodtimecorrranked"],
-         [["maxperiodtimeunranked"], "maxperiodtimeblitzunranked, --maxperiodtimeliveunranked and/or --maxperiodtimecorrunranked"],
-         [["minperiodtime"], "minperiodtimeblitz, --minperiodtimelive and/or --minperiodtimecorr"],
-         [["minperiodtimeranked"], "minperiodtimeblitzranked, --minperiodtimeliveranked and/or --minperiodtimecorrranked"],
-         [["minperiodtimeunranked"], "minperiodtimeblitzunranked, --minperiodtimeliveunranked and/or --minperiodtimecorrunranked"],
-         [["maxperiods"],  "maxperiodsblitz, --maxperiodslive and/or --maxperiodscorr"],
-         [["maxperiodsranked"], "maxperiodsblitzranked, --maxperiodsliveranked and/or --maxperiodscorrranked"],
-         [["maxperiodsunranked"], "maxperiodsblitzunranked, --maxperiodsliveunranked and/or --maxperiodscorrunranked"],
-         [["minperiods"], "minperiodsblitz, --minperiodslive and/or --minperiodscorr"],
-         [["minperiodsranked"], "minperiodsblitzranked, --minperiodsliveranked and/or --minperiodscorrranked"],
-         [["minperiodsunranked"], "minperiodsblitzunranked, --minperiodsliveunranked and/or --minperiodscorrunranked"],
+         [["maxmaintime"],  getBLCDeprecationString("maxmaintime", "")],
+         [["maxmaintimeranked"], getBLCDeprecationString("maxmaintime", "ranked")],
+         [["maxmaintimeunranked"], getBLCDeprecationString("maxmaintime", "unranked")],
+         [["minmaintime"], getBLCDeprecationString("minmaintime", "")],
+         [["minmaintimeranked"], getBLCDeprecationString("minmaintime", "ranked")],
+         [["minmaintimeunranked"], getBLCDeprecationString("minmaintime", "unranked")],
+         [["maxperiodtime"], getBLCDeprecationString("maxperiodtime", "")],
+         [["maxperiodtimeranked"], getBLCDeprecationString("maxperiodtime", "ranked")],
+         [["maxperiodtimeunranked"], getBLCDeprecationString("maxperiodtime", "unranked")],
+         [["minperiodtime"], getBLCDeprecationString("minperiodtime", "")],
+         [["minperiodtimeranked"], getBLCDeprecationString("minperiodtime", "ranked")],
+         [["minperiodtimeunranked"], getBLCDeprecationString("minperiodtime", "unranked")],
+         [["maxperiods"],  getBLCDeprecationString("maxperiods", "")],
+         [["maxperiodsranked"], getBLCDeprecationString("maxperiods", "ranked")],
+         [["maxperiodsunranked"], getBLCDeprecationString("maxperiods", "unranked")],
+         [["minperiods"], getBLCDeprecationString("minperiods", "")],
+         [["minperiodsranked"], getBLCDeprecationString("minperiods", "ranked")],
+         [["minperiodsunranked"], getBLCDeprecationString("minperiods", "unranked")],
          [["ban"], "bans"],
          [["banranked"], "bansranked"],
          [["banunranked"], "bansunranked"],
          [["boardsize"], "boardsizes"],
          [["boardsizeranked"], "boardsizesranked"],
          [["boardsizeunranked"], "boardsizesunranked"],
-         [["boardsizeswidth", "boardsizeswidthranked", "boardsizeswidthunranked", "boardsizesheight", 
-           "boardsizesheightranked", "boardsizesheightunranked"], "boardsizes"],
+         [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked",
+           "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
          [["komi"], "komis"],
          [["komiranked"], "komisranked"],
          [["komiunranked"], "komisunranked"],
