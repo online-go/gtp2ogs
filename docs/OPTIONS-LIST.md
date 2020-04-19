@@ -379,7 +379,7 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
   ```--proonlyranked``` For ranked games, only accept those from professionals
 
-  ```--proonlyunranked``` For ranked games, only accept those from professionals
+  ```--proonlyunranked``` For unranked games, only accept those from professionals
 
 #### nopause
 

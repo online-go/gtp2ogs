@@ -131,9 +131,9 @@ exports.updateFromArgv = function() {
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
         //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS:
-        .describe('proonly', 'For all matches, only accept those from professionals')
-        .describe('proonlyranked', 'For ranked matches, only accept those from professionals')
-        .describe('proonlyunranked', 'For unranked matches, only accept those from professionals')
+        .describe('proonly', 'For all games, only accept those from professionals')
+        .describe('proonlyranked', 'For ranked games, only accept those from professionals')
+        .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
         /* note: - nopause disables pausing DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
