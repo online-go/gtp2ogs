@@ -690,6 +690,10 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special)
     }
 }
 
+function getArgNameStringsGRU(familyNameString) {
+    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
+}
+
 function rankToString(r) {
     const R = Math.floor(r);
     if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
@@ -771,10 +775,6 @@ function genericAllowedFamiliesReject(argNameString, notificationUnit) {
     return { reject: true, msg };
     /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
                      choose one of these allowed speeds for ranked games: -live,correspondence-"*/
-}
-
-function getArgNameStringsGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
 
 function familyObjectMIBL(familyNameString) {
