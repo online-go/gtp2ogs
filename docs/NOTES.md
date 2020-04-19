@@ -2,16 +2,16 @@
 
 ## B
 
-note: board size format below used on gtp2ogs is 
+note: board size format below used on gtp2ogs is
 **width x height (25x1 is NOT THE SAME as 1x25**)
 
-note 2: `--boardsizes all` is the exact same as 
-`--boardsizes custom --boardsizewidths all --boardiszeheights all` 
+note 2: `--boardsizes all` is the exact same as
+`--boardsizes custom --boardsizewidths all --boardiszeheights all`
 
 examples:
 
-ex1: `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9` 
-will allow all these boardsizes :
+ex1: `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9`
+will allow all these boardsizes:
 
 ```Text
 9x1,9x2,9x3,9x9
@@ -21,29 +21,29 @@ will allow all these boardsizes :
 25x1,25x2,25x3,25x9
 ```
 
-ex2 : `--boardsizes custom --boardsizewidths 2,19,25 --boardsizeheights all`
+ex2: `--boardsizes custom --boardsizewidths 2,19,25 --boardsizeheights all`
 will allow all these boardsizes:
 
 ```Text
-2x(all) : 2x1,2x2,2x3,2x4, etc. , 2x23,2x24,2x25
-19x(all) : 19x1,19x2,19x3,19x4, etc. ,19x23,19x24,19x25
-25x(all) : 25x1,25x2,25x3,25x4, etc. ,25x23,25x24,25x25
+2x(all): 2x1,2x2,2x3,2x4, etc. , 2x23,2x24,2x25
+19x(all): 19x1,19x2,19x3,19x4, etc. ,19x23,19x24,19x25
+25x(all): 25x1,25x2,25x3,25x4, etc. ,25x23,25x24,25x25
 ```
 
 ex3: `--boardsizes custom --boardsizewidths all --boardsizeheights 2,19,25`
-will allow all these boardsizes :
+will allow all these boardsizes:
 
 ```Text
-(all)x2 : 1x2,2x2,3x2,4x2, etc. ,23x2,24x2,25x2
-(all)x19 : 1x19,2x19,3x19,4x19, etc. ,23x19,24x19,25x19
-(all)x25 : 1x25,2x25,3x25x3,4x25, etc. ,23x25,24x25,25x25
+(all)x2: 1x2,2x2,3x2,4x2, etc. ,23x2,24x2,25x2
+(all)x19: 1x19,2x19,3x19,4x19, etc. ,23x19,24x19,25x19
+(all)x25: 1x25,2x25,3x25x3,4x25, etc. ,23x25,24x25,25x25
 ```
 
 ex4: you may want to be more specific using different values
 for ranked and unranked games, for example:
 
 `--boardsizesranked 19 --boardsizesunranked custom --boardsizewidthsunranked 2,19,25 --boardsizeheightsunranked 1:3`,
-to allow :
+to allow:
 
 - for ranked games: 19x19
 - for unranked games: all widths and heights combinations as seen above.
@@ -80,50 +80,50 @@ with 7.5 komi, if your bot does not support 0.5 komi value.
 for timecontrols:
 
 "absolute" and/or "none" can be manually allowed by bot admin
-intimecontrol if want, but then :
+intimecontrol if want, but then:
 
-- for absolute games : make sure you increase --minmaintime/
+- for absolute games: make sure you increase --minmaintime/
 blitz*live*corr higher than default (with current defaults,
 bot will timeout in just a few moves)
-- for "none" : games would be very very long
+- for "none": games would be very very long
 
 ## F
 
-Currently, when handicap is automatic, ogs does not inform us 
-what the handicap is before accepting the challange. 
-Also, challange notifications do not contain our rank. 
-With fakerank we can estimate the handicap based on the oponent 
+Currently, when handicap is automatic, ogs does not inform us
+what the handicap is before accepting the challange.
+Also, challange notifications do not contain our rank.
+With fakerank we can estimate the handicap based on the oponent
 ranking and our (fake) rank.
 
 Example use case:
 `--fakerank 6d --maxhandicap 4` and user ranking `2k`:
-Expected handicap is 6d-2k = 8 ranks. 8 ranks > 4 max handicap 
+Expected handicap is 6d-2k = 8 ranks. 8 ranks > 4 max handicap
 => Challenge rejected.
 
-**important note** : until the min/maxhandicap bypass issue 
-is fixed (at the server level), it is recommended for botadmin 
-(at the gtp2ogs level) to use the `--fakerank` option, or 
-`--noautohandicapranked`, see for details :
-[#165](https://github.com/online-go/gtp2ogs/pull/165), 
+**important note**: until the min/maxhandicap bypass issue
+is fixed (at the server level), it is recommended for botadmin
+(at the gtp2ogs level) to use the `--fakerank` option, or
+`--noautohandicapranked`, see for details:
+[#165](https://github.com/online-go/gtp2ogs/pull/165),
 [#207](https://github.com/online-go/gtp2ogs/pull/207),
 [#28](https://github.com/online-go/gtp2ogs/issues/28).
 
 ## G
 
-when using the "msg" arguments (`--greeting` , `--farewell` , 
-`--rejectnew --rejectnewmsg` , some special characters will 
-make gtp2ogs crash, such as `!!` (two times `!`) , so test 
-special characters in your messages with caution 
+when using the "msg" arguments (`--greeting` , `--farewell` ,
+`--rejectnew --rejectnewmsg` , some special characters will
+make gtp2ogs crash, such as `!!` (two times `!`) , so test
+special characters in your messages with caution
 
-these special characters have been tested to work on messages, 
-among others:  `!` (one time `!`) , `?` , `,` , `(` , `)` , 
-`:` , `;` 
+these special characters have been tested to work on messages,
+among others:  `!` (one time `!`) , `?` , `,` , `(` , `)` ,
+`:` , `;`
 
 ## H
 
 ### ogspv extra notes
 
-note: in the future your AI may have updates that are incompatible 
+note: in the future your AI may have updates that are incompatible
 with the current implementation of pv (variations ingame) of gtp2ogs.
 
 If your AI stops working because of `--ogspv`, you can temporarily stop using

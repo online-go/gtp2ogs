@@ -30,7 +30,7 @@ A local copy of your gtp2ogs fork will be cloned/downloaded on your computer
 ## 3) (optional) update your fork if it is outdated
 
 this step is needed only if you forked from online-go/gtp2ogs devel branch
-long ago : there are probably new commits available
+long ago: there are probably new commits available
 
 The code below will:
 
@@ -137,7 +137,7 @@ git reset --hard <sha1_of_previous_commit>
 ```
 
 You can find the sha1 commit in the commits list, for example here for
-online-go/gtp2ogs devel branch :
+online-go/gtp2ogs devel branch:
 [example of commits list](https://github.com/online-go/gtp2ogs/commits/devel)
 
 [example of commit sha1 b60368b7376933e5a108c979473e5c9abe599711](https://github.com/online-go/gtp2ogs/commit/b60368b7376933e5a108c979473e5c9abe599711)
@@ -149,7 +149,7 @@ example:
 git reset --hard b60368b7376933e5a108c979473e5c9abe599711
 ```
 
-note : the "hard" reset will erase forever all commits later than this
+note: the "hard" reset will erase forever all commits later than this
 commit, use with caution!!
 
 Then to export your local changes to the github server website page,

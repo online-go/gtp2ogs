@@ -11,11 +11,11 @@ use the ones you want only, no need to use them all !
 Also, some options come provided with a default, so even if
 you don't input any value, it will work as-is
 
-However, you can also use your own value if you want : this will
+However, you can also use your own value if you want: this will
 overwrite the default one
 
 For easier reference, you can see below all default values gtp2ogs
-currently provides :
+currently provides:
 
 ```Text
 --host online-go.com
@@ -71,7 +71,7 @@ see for details [notes G](/docs/NOTES.md#g)
 `--apikey` Specify the API key for the bot, for example
 `--apikey 5srvb5es4se7651741r61devr864re`
 
-note : in debug, the apikey is replaced with a "hidden" for
+note: in debug, the apikey is replaced with a "hidden" for
 security reasons
 
 ### greeting
@@ -246,10 +246,10 @@ the ranked and unranked arguments for accepting/rejecting matches.
 
 example:
 `--bans A,B --bansranked X,Y --bansunranked Z`
-result of these bans arguments :
+result of these bans arguments:
 
-- banned users for ranked games : A,B,X,Y
-- banned users for unranked games : A,B,Z
+- banned users for ranked games: A,B,X,Y
+- banned users for unranked games: A,B,Z
 
 ### bans
 
@@ -264,7 +264,7 @@ are banned from unranked games
 
 ## B) GENERAL/RANKED/UNRANKED FAMILIES
 
-Here you can either use :
+Here you can either use:
 
 - only the general argument (ex: `--maxhandicap 2`), the same setting
 will be used for ranked and unranked games
@@ -279,7 +279,7 @@ on whether the game is ranked or unranked.
 
 For the allowed families arguments, you can either use the value:
 
-- `all` : will allow ALL possible values
+- `all`: will allow ALL possible values
 - for text-only families ("blitz", "fischer", "white", etc.),
 comma-separated values (without space) will allow every value inputted,
 every other value will be rejected
@@ -300,7 +300,7 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
 `--boardsizesunranked` Board size(s) to accept for unranked games
 
-Possible boardsize width value(s) :
+Possible boardsize width value(s):
 
 - `all` (allows all board size widths)
 - comma separated values, for example `25` (allows 25x25), or
@@ -337,10 +337,11 @@ accept for ranked games
 `--speedsunranked` Comma separated list of Game speed(s) to
 accept for unranked games
 
-Possible speed value(s) :
+Possible speed value(s):
+
 - comma separated values, for example `blitz`, or `live, correspondence`
 
-Full list of possible values :  `blitz`,  `live`, `correspondence`.
+Full list of possible values:  `blitz`,  `live`, `correspondence`.
 
 #### timecontrols
 
@@ -353,9 +354,10 @@ games
 games
 
 Possible timecontrol value(s):
+
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
-Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
+Full list of possible values:  `fischer`,  `byoyomi`, `canadian`,
 `simple`, `absolute`, `none`.
 
 see [notes E](/docs/NOTES.md#e) for details
@@ -409,7 +411,7 @@ come with the option -pauses on weekends- (specific to correspondence games)
 
 #### min/max handicap
 
-min :
+min:
 
 `--minhandicap`  Minimum handicap to accept
 
@@ -417,7 +419,7 @@ min :
 
 `--minhandicapunranked` Minimum handicap to accept for unranked games
 
-max :
+max:
 
 `--maxhandicap`  Maximum handicap to accept for all games
 
@@ -429,7 +431,7 @@ max :
 
 #### min/max rank
 
-min :
+min:
 
 `--minrank` Minimum opponent rank to accept (e.g. 15k)
 
@@ -451,7 +453,7 @@ unranked games (e.g. 1d)
 
 #### min/max maintime blitz/live/corr
 
-min :
+min:
 
 `--minmaintimeblitz` Minimum seconds of main time for
 blitz games (default 15 , which is 15 seconds)
@@ -480,7 +482,7 @@ correspondence ranked games
 `--minmaintimecorrunranked` Minimum seconds of main time
 for correspondence unranked games
 
-max :
+max:
 
 `--maxmaintimeblitz` Maximum seconds of main time for
 blitz games (default 300, which is 5 minutes)
@@ -511,7 +513,7 @@ correspondence unranked games
 
 #### min/max periods blitz/live/corr
 
-min :
+min:
 
 `--minperiodsblitz` Minimum number of periods for
 blitz games
@@ -540,7 +542,7 @@ for correspondence ranked games
 `--minperiodscorrunranked` Minimum number of periods
 for correspondence unranked games
 
-max :
+max:
 
 `--maxperiodsblitz` Maximum number of periods for
 blitz games
@@ -577,7 +579,7 @@ wanted period time for all the stones by the number of stones per period,
 for example max periodtime
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
 
-min :
+min:
 
 `--minperiodtimeblitz` Minimum seconds per period
 (average time per stone if timecontrol is canadian) for blitz games
@@ -609,7 +611,7 @@ min :
 `--minperiodtimecorrunranked` Minimum seconds per period
 (average time per stone if timecontrol is canadian) for correspondence unranked games
 
-max :
+max:
 
 `--maxperiodtimeblitz` Maximum seconds per period
 (average time per stone if timecontrol is canadian) for blitz games
@@ -641,7 +643,7 @@ max :
 `--maxperiodtimecorrunranked` Maximum seconds per period
 (average time per stone if timecontrol is canadian) for correspondence unranked games
 
-## extra : notes
+## extra: notes
 
 Additional notes have been added [here](/docs/NOTES.md)
 
