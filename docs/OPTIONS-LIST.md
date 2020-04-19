@@ -212,7 +212,7 @@ see [notes F-](/docs/NOTES.md#f-) for details
   Arguments in this category allow us to accept or reject 
 a challenge based on the notification (challenge settings)
 
-##     A) ALL/RANKED/UNRANKED FAMILIES :
+## A) ALL/RANKED/UNRANKED FAMILIES :
 
   Here the general argument (ex: --bans) does not confict with 
 the ranked and unranked arguments for accepting/rejecting matches.
@@ -233,7 +233,7 @@ are banned from ranked games
   ```--bansunranked``` Comma separated list of user names or IDs who 
 are banned from unranked games
 
-##     B) GENERAL/RANKED/UNRANKED FAMILIES :
+## B) GENERAL/RANKED/UNRANKED FAMILIES :
 
   Here you can either use :
 
@@ -246,7 +246,7 @@ and in that case, the general argument will be ignored
 and instead the ranked and unranked will be used depending 
 on whether the game is ranked or unranked.
 
-##         B1) ALLOWED FAMILIES :
+### B1) ALLOWED FAMILIES :
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
@@ -371,7 +371,11 @@ Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
 
 see [notes E-](/docs/NOTES.md#e-) for details
 
-##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+### B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+
+  Arguments in this category are not comma-separated, they are either 
+booleans (enabled just from activating the option, nothing else to specify, 
+for example `--noautohandicap`), or single values (for example `--maxhandicap 9`)
 
 #### proonly
 
@@ -458,9 +462,7 @@ unranked games (e.g. 1d)
 
 #### min/max maintime blitz/live/corr
 
-
   min :
-
 
   ```--minmaintimeblitz``` Minimum seconds of main time for 
 blitz games (default 15 , which is 15 seconds)
@@ -489,9 +491,7 @@ correspondence ranked games
  ```--minmaintimecorrunranked``` Minimum seconds of main time 
 for correspondence unranked games 
 
-
   max :
-
 
   ```--maxmaintimeblitz``` Maximum seconds of main time for 
 blitz games (default 300, which is 5 minutes)
@@ -522,9 +522,7 @@ correspondence unranked games
 
 #### min/max periods blitz/live/corr
 
-
   min :
-
 
   ```--minperiodsblitz``` Minimum number of periods for 
 blitz games
@@ -553,9 +551,7 @@ for correspondence ranked games
   ```--minperiodscorrunranked``` Minimum number of periods 
 for correspondence unranked games
 
-
   max :
-
 
   ```--maxperiodsblitz``` Maximum number of periods for 
 blitz games
@@ -592,9 +588,7 @@ wanted period time for all the stones by the number of stones per period,
 for example max periodtime 
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
 
-
   min :
-
 
   ```--minperiodtimeblitz``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
@@ -626,9 +620,7 @@ for example max periodtime
   ```--minperiodtimecorrunranked``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence unranked games 
 
-
   max :
-
 
   ```--maxperiodtimeblitz``` Maximum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
