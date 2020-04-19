@@ -1,0 +1,5 @@
+KataGo v1.3.3
+Loaded model D:\lz\ogs\kataNetwork30b20200315.bin.gz
+Model name: g170-b30c320x2-s1840604672-d633482024
+GTP ready, beginning main protocol loop
+CHAT:Visits 4005 Winrate 41.71% ScoreLead -0.9 ScoreStdev 20.6 PV C16 Q16 D4 Q4 F16 F3 C7 C3 D3
