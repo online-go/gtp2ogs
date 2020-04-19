@@ -343,32 +343,34 @@ class Connection {
     // Check challenge booleans allow a game ("nopause" is in game.js, not here)
     //
     checkChallengeBooleans(notification) {
+        const testBooleanArgs     = [ ["rankedonly", "Unranked games are", !notification.ranked],
+                                      ["unrankedonly", "Ranked games are", notification.ranked]
+                                    ];
 
-        if (config.proonly && !notification.user.professional) {
-            conn_log(`${notification.user.username} is not a professional`);
-            const msg = "You are not a professional player, this bot "
-                        + "accepts games vs professionals only. ";
-            return { reject: true, msg };
-        }
-        if (config.rankedonly && !notification.ranked) {
-            conn_log("Ranked games only");
-            const msg = "This bot accepts ranked games only. ";
-            return { reject: true, msg };
-        }
-        if (config.unrankedonly && notification.ranked) {
-            conn_log("Unranked games only");
-            const msg = "This bot accepts Unranked games only. ";
-            return { reject: true, msg };
-        }
-        if (notification.handicap === -1) {
-            if (config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
-                return noAutohandicapReject("noautohandicap");
+        for (const [familyNameString, nameF, notifCondition] of testBooleanArgs) {
+            if (config[familyNameString] && notifCondition) {
+                const msg = `${nameF} not allowed on this bot.`;
+                conn_log(msg);
+                return { reject: true, msg };
             }
-            if (config.noautohandicapranked && notification.ranked) {
-                return noAutohandicapReject("noautohandicapranked");
-            }
-            if (config.noautohandicapunranked && !notification.ranked) {
-                return noAutohandicapReject("noautohandicapunranked");
+        }
+
+        const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
+                                      ["nopauseonweekends", "Pause on week-ends is", notification.pause_on_weekends, ""],
+                                      ["noautohandicap", "-Automatic- handicap is", (notification.handicap === -1), 
+                                       ", please manually choose the number of handicap stones"]
+                                    ];
+
+        for (const [familyNameString, nameF, notifCondition, ending] of testBooleanArgs_r_u) {
+            if (notifCondition) {
+                for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
+                    if (config[argNameString] && rankedCondition) {
+                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
+                        const msg = `${nameF} not allowed on this bot ${rankedUnranked}${ending}.`;
+                        conn_log(msg);
+                        return { reject: true, msg };
+                    }
+                }
             }
         }
 
@@ -727,18 +729,6 @@ function bannedFamilyReject(argNameString, uid, notificationUid) {
                 + `${rankedUnranked} on this bot by bot admin, `
                 + `you may try changing the ranked/unranked setting.`;
     return { reject: true, msg};
-}
-
-function noAutohandicapReject(argNameString) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    conn_log(`no autohandicap ${rankedUnranked}`);
-    const msg = `For easier bot management, -automatic- handicap is `
-                + `disabled on this bot ${rankedUnranked}, please `
-                + `manually select the number of handicap stones you `
-                + `want in -custom handicap-, for example 2 handicap `
-                + `stones, you may try changing the ranked/unranked `
-                + `setting`;
-    return { reject: true, msg };
 }
 
 function boardsizeNotificationIsNotSquareReject(argNameString, notificationWidth, notificationHeight) {
