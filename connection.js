@@ -361,10 +361,7 @@ class Connection {
             if (notifCondition) {
                 for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
                     if (config[argNameString] && rankedCondition) {
-                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-                        const msg = `${descr} not allowed on this bot ${rankedUnranked}${ending}.`;
-                        conn_log(msg);
-                        return { reject: true, msg };
+                        return getBooleans_r_u_Reject(argNameString, descr, ending);
                     }
                 }
             }
@@ -722,17 +719,6 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30  : 1 kyu or weaker
 }
 
-function get_r_u_arr_booleans(familyNameString, notificationRanked) {
-    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
-    // for the booleans "only" checks, we are trying to find any reason to reject
-    // the challenge, so the general and ranked/unranked args dont conflict.
-    // (unlike --minmaintimeranked 50 --minmaintime 300)
-    return [ [general,  true],
-             [ranked,   notificationRanked],
-             [unranked, !notificationRanked]
-           ];
-}
-
 function bannedFamilyReject(argNameString, uid, notificationUid) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
     conn_log(`${uid} ${notificationUid} is banned ${rankedUnranked}`);
@@ -748,8 +734,22 @@ function getBooleansGeneralReject(descr) {
     return { reject: true, msg };
 }
 
-function getBooleans_r_u_Reject(descr) {
+function get_r_u_arr_booleans(familyNameString, notificationRanked) {
+    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
+    // for the booleans "only" checks, we are trying to find any reason to reject
+    // the challenge, so the general and ranked/unranked args dont conflict.
+    // (unlike --minmaintimeranked 50 --minmaintime 300)
+    return [ [general,  true],
+             [ranked,   notificationRanked],
+             [unranked, !notificationRanked]
+           ];
+}
 
+function getBooleans_r_u_Reject(argNameString, descr, ending) {
+    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
+    const msg = `${descr} not allowed on this bot ${rankedUnranked}${ending}.`;
+    conn_log(msg);
+    return { reject: true, msg };
 }
 
 function boardsizeNotificationIsNotSquareReject(argNameString, notificationWidth, notificationHeight) {
