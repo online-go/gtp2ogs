@@ -344,31 +344,26 @@ class Connection {
     //
     checkChallengeBooleans(notification) {
 
-        if (config.proonly && !notification.user.professional) {
-            conn_log(`${notification.user.username} is not a professional`);
-            const msg = "You are not a professional player, this bot "
-                        + "accepts games vs professionals only. ";
-            return { reject: true, msg };
+        if (config.rankedonly && notification.ranked) {
+            return getBooleansGeneralReject("Ranked games are");
         }
-        if (config.rankedonly && !notification.ranked) {
-            conn_log("Ranked games only");
-            const msg = "This bot accepts ranked games only. ";
-            return { reject: true, msg };
+        if (config.unrankedonly && !notification.ranked) {
+            return getBooleansGeneralReject("Unranked games are");
         }
-        if (config.unrankedonly && notification.ranked) {
-            conn_log("Unranked games only");
-            const msg = "This bot accepts Unranked games only. ";
-            return { reject: true, msg };
-        }
-        if (notification.handicap === -1) {
-            if (config.noautohandicap && !config.noautohandicapranked && !config.noautohandicapunranked) {
-                return noAutohandicapReject("noautohandicap");
-            }
-            if (config.noautohandicapranked && notification.ranked) {
-                return noAutohandicapReject("noautohandicapranked");
-            }
-            if (config.noautohandicapunranked && !notification.ranked) {
-                return noAutohandicapReject("noautohandicapunranked");
+
+        const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
+                                      ["nopauseonweekends", "Pause on week-ends is", notification.pause_on_weekends, ""],
+                                      ["noautohandicap", "-Automatic- handicap is", (notification.handicap === -1), 
+                                       ", please manually choose the number of handicap stones"]
+                                    ];
+
+        for (const [familyNameString, descr, notifCondition, ending] of testBooleanArgs_r_u) {
+            if (notifCondition) {
+                for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
+                    if (config[argNameString] && rankedCondition) {
+                        return getBooleans_r_u_Reject(argNameString, descr, ending);
+                    }
+                }
             }
         }
 
@@ -714,6 +709,10 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special)
     }
 }
 
+function getArgNameStringsGRU(familyNameString) {
+    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
+}
+
 function rankToString(r) {
     const R = Math.floor(r);
     if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30 : 1 dan or stronger
@@ -729,15 +728,27 @@ function bannedFamilyReject(argNameString, uid, notificationUid) {
     return { reject: true, msg};
 }
 
-function noAutohandicapReject(argNameString) {
+function getBooleansGeneralReject(descr) {
+    const msg = `${descr} not allowed on this bot.`;
+    conn_log(msg);
+    return { reject: true, msg };
+}
+
+function get_r_u_arr_booleans(familyNameString, notificationRanked) {
+    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
+    // for the booleans "only" checks, we are trying to find any reason to reject
+    // the challenge, so the general and ranked/unranked args dont conflict.
+    // (unlike --minmaintimeranked 50 --minmaintime 300)
+    return [ [general,  true],
+             [ranked,   notificationRanked],
+             [unranked, !notificationRanked]
+           ];
+}
+
+function getBooleans_r_u_Reject(argNameString, descr, ending) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    conn_log(`no autohandicap ${rankedUnranked}`);
-    const msg = `For easier bot management, -automatic- handicap is `
-                + `disabled on this bot ${rankedUnranked}, please `
-                + `manually select the number of handicap stones you `
-                + `want in -custom handicap-, for example 2 handicap `
-                + `stones, you may try changing the ranked/unranked `
-                + `setting`;
+    const msg = `${descr} not allowed on this bot ${rankedUnranked}${ending}.`;
+    conn_log(msg);
     return { reject: true, msg };
 }
 
@@ -818,10 +829,6 @@ function customBoardsizeWidthsHeightsReject(argNameString, notificationWidth, no
     return { reject: true, msg };
 }
 
-function familyArrayFromFamilyNameString(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
-}
-
 function familyObjectMIBL(familyNameString) {
     let minMax = "";
     let incDec = "";
@@ -840,7 +847,7 @@ function familyObjectMIBL(familyNameString) {
         belAbo = "above";
         lowHig = "high";
     }
-    const familyArray = familyArrayFromFamilyNameString(familyNameString);
+    const familyArray = getArgNameStringsGRU(familyNameString);
     return { argNameStrings: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
              MIBL: { minMax, incDec, belAbo, lowHig },
              isMM: { isMin, isMax } };

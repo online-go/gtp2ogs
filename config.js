@@ -74,9 +74,6 @@ exports.updateFromArgv = function() {
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
         .describe('persist', 'Bot process remains running between moves')
         .describe('noclock', 'Do not send any clock/time data to the bot')
-        .describe('nopause', 'Do not allow pauses during games')
-        .describe('nopauseranked', 'Do not allow pauses during ranked games')
-        .describe('nopauseunranked', 'Do not allow pauses during unranked games')
         .describe('corrqueue', 'Process correspondence games one at a time')
         /* note: for maxconnectedgames, correspondence games are currently included
         /  in the maxconnectedgames count if you use `--persist` )*/
@@ -88,7 +85,6 @@ exports.updateFromArgv = function() {
         .describe('unrankedonly', 'Only accept unranked matches')
         /* ranked games can't be private (public only), no need for --publiconlyranked nor --privateonlyranked,
         /  nor their unranked args since the general argument is for unranked games too*/
-        .describe('proonly', 'For all matches, only accept those from professionals')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
         //     A) ALL/RANKED/UNRANKED FAMILIES :
@@ -134,13 +130,22 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS : :
+        //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS:
+        .describe('proonly', 'For all games, only accept those from professionals')
+        .describe('proonlyranked', 'For ranked games, only accept those from professionals')
+        .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
+        /* note: - nopause disables pausing DURING games, (game.js), but
+        /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
+        /          (only for correspondence games)*/
+        .describe('nopause', 'Disable pausing during games')
+        .describe('nopauseranked', 'Disable pausing during ranked games')
+        .describe('nopauseunranked', 'Disable pausing during unranked games')
+        .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games)')
+        .describe('nopauseonweekendsranked', 'Do not accept ranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
+        .describe('nopauseonweekendsunranked', 'Do not accept unranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        /* note: - nopause allows to disable pauses DURING games, (game.js), but
-        /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
-        /          (only for correspondence games)*/
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
