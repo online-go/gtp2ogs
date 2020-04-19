@@ -8,7 +8,7 @@ This javascript tool allows all bots/AI that support
 to communicate with [OGS (Online-Go.com Server)](https://online-go.com/).
 
 After being configured, gtp2ogs is ready to work as-is, 
-but it is also possible to [customize](#extra--custom-branches) it.
+but it is also possible to customize it.
 
 Being a bot admin on OGS means :
 - you can put your bot online whenever you want
@@ -165,16 +165,6 @@ see: [Submit-Move Button](https://github.com/wonderingabout/gtp2ogs-tutorial#imp
 **gtp2ogs has default support for showing ingame winrate and variations for some AI.**
 
 see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
-
-# Extra : Custom branches
-
-Some branches add some not obligatory, but add some nice features
-
-You may customize your gtp2ogs code by yourself if you have the programming 
-knowledge.
-
-However, some contributors freely provide their custom branches, see 
-[Custom Branches](/docs/CUSTOM-BRANCHES.md) for details.
 
 # Community Involvment
 

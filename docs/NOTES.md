@@ -1,22 +1,5 @@
 #### A : 
 
-Currently, ogs does not support profile id number authentification, 
-so you have to use bot username only. 
-
-For example, for this famous bot https://online-go.com/player/58441/GnuGo, 
-bot admin has to use the bot name `GnuGo` and currently bot admin cannot 
-use profile number `58441` (it will not work).
-
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that 
-still required names and not id numbers, contrary to what this 
-line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) 
-that added confusion to how to use gtp2ogs for bot admins have 
-been removed
-
-To sum up, to connect your bot on OGS, you need and you have 
-to simply use bot name, for example `--username GnuGo` for 
-the bot admin of GnuGo
-
 #### B : 
 
 note : board size format below used on gtp2ogs is 
@@ -110,9 +93,13 @@ always returns `-1` regardless of actual handicap stone number
 (ex: `0`, `3`, `5` stones, etc.)
 
 Example use case : 
-- `--fakerank 6d` and `--maxhandicap 4` and user ranking 
-`2k`
-- 
+`--fakerank 6d --maxhandicap 4` and user ranking `2k`:
+
+- Automatic handicap stones: 6d - 2k = 8 rank difference 
+=> 8 automatic handicap stones
+- but max handicap is 4 stones
+- 8 (detected automatic stones wanted by user) > 
+max stones allowed 4 => challenge rejected
 
 **important note** : until the min/maxhandicap bypass issue 
 is fixed (at the server level), it is recommended for botadmin 

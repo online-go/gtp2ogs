@@ -225,7 +225,7 @@ class Connection {
         for (const game_id in this.connected_games) {
             const game = this.connected_games[game_id];
             const msg = [];
-            msg.push(`game_id = ${game_id} :`);
+            msg.push(`game_id = ${game_id}:`);
             if (game.state === null) {
                 msg.push('no_state');
                 conn_log(...msg);
@@ -288,7 +288,7 @@ class Connection {
         const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
         if (resultRank) return resultRank;
 
-        // check bot is available, else don't mislead user :
+        // check bot is available, else don't mislead user:
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
@@ -379,53 +379,29 @@ class Connection {
     //
     checkChallengeAllowedFamilies(notification) {
 
-        /*------- begining of BOARDSIZES -------*/
-        // 1) for square board sizes only
-        //     A) if not square
+        // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
-            if (!config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-                return boardsizeNotificationIsNotSquareReject("boardsizes", notification.width, notification.height);
+            if (!config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
+                return getBoardsizeNotSquareReject("boardsizes", notification.width, notification.height);
             }
-            if (!config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked) {
-                return boardsizeNotificationIsNotSquareReject("boardsizesranked", notification.width, notification.height);
+            if (!config.allow_all_boardsizes_ranked && notification.ranked) {
+                return getBoardsizeNotSquareReject("boardsizesranked", notification.width, notification.height);
             }
-            if (!config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked) {
-                return boardsizeNotificationIsNotSquareReject("boardsizesunranked", notification.width, notification.height);
+            if (!config.allow_all_boardsizes_unranked && !notification.ranked) {
+                return getBoardsizeNotSquareReject("boardsizesunranked", notification.width, notification.height);
             }
         }
-        //     B) if square, check if square board size is allowed
-        if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.allow_custom_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
+        
+        // if square, check if square board size is allowed
+        if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
             return genericAllowedFamiliesReject("boardsizes", notification.width);
         }
-        if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && !config.allow_custom_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
+        if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
             return genericAllowedFamiliesReject("boardsizesranked", notification.width);
         }
-        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !config.allow_custom_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
+        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
             return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
         }
-
-        // 2) for custom board sizes, including square board sizes if width === height as well
-        //     A) if custom, check width
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizewidths[notification.width] && !config.boardsizewidthsranked && !config.boardsizewidthsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidths", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes_ranked && config.allow_custom_boardsizes_ranked && !config.allowed_custom_boardsizewidths_ranked[notification.width] && notification.ranked && config.boardsizewidthsranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidthsranked", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes_unranked && config.allow_custom_boardsizes_unranked && !config.allowed_custom_boardsizewidths_unranked[notification.width] && !notification.ranked && config.boardsizewidthsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizewidthsunranked", notification.width, notification.height);
-        }
-        //     B) if custom, check height
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !config.boardsizeheightsranked && !config.boardsizeheightsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheights", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && notification.ranked && config.boardsizeheightsranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheightsranked", notification.width, notification.height);
-        }
-        if (!config.allow_all_boardsizes && config.allow_custom_boardsizes && !config.allowed_custom_boardsizeheights[notification.height] && !notification.ranked && config.boardsizeheightsunranked) {
-            return customBoardsizeWidthsHeightsReject("boardsizeheightsunranked", notification.width, notification.height);
-        }
-        /*------- end of BOARDSIZES -------*/
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
             return genericAllowedFamiliesReject("komis", notification.komi);
@@ -716,8 +692,8 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special)
 
 function rankToString(r) {
     const R = Math.floor(r);
-    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30 : 1 dan or stronger
-    else          return `${30 - R}k`;     // R < 30  : 1 kyu or weaker
+    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
+    else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
 function bannedFamilyReject(argNameString, uid, notificationUid) {
@@ -741,7 +717,7 @@ function noAutohandicapReject(argNameString) {
     return { reject: true, msg };
 }
 
-function boardsizeNotificationIsNotSquareReject(argNameString, notificationWidth, notificationHeight) {
+function getBoardsizeNotSquareReject(argNameString, notificationWidth, notificationHeight) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
     conn_log(`boardsize ${notificationWidth} x ${notificationHeight} `
              + `is not square, not allowed ${rankedUnranked}`);
@@ -798,26 +774,6 @@ function genericAllowedFamiliesReject(argNameString, notificationUnit) {
                      choose one of these allowed speeds for ranked games: -live,correspondence-"*/
 }
 
-function customBoardsizeWidthsHeightsReject(argNameString, notificationWidth, notificationHeight) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    let widthHeight = "width";
-    let notificationUnit = notificationWidth;
-    if (argNameString.includes("height")) {
-        widthHeight = "height";
-        notificationUnit = notificationHeight;
-    }
-    conn_log(`boardsize ${widthHeight} ${rankedUnranked} -${notificationUnit}-, `
-             + `not in -${config[argNameString]}- `);
-    const msg = `In your selected board size ${notificationWidth} `
-                + `x ${notificationHeight} (width x height), boardsize `
-                + `${widthHeight.toUpperCase()} (${notificationUnit}) `
-                + `is not allowed ${rankedUnranked} on this bot, please `
-                + `choose one of these allowed CUSTOM boardsize `
-                + `${widthHeight.toUpperCase()}S values ${rankedUnranked}: `
-                + `${config[argNameString]}`;
-    return { reject: true, msg };
-}
-
 function familyArrayFromFamilyNameString(familyNameString) {
     return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
 }
@@ -851,7 +807,7 @@ function checkObjectArgsToArgNameString(familyObjectArgNameStrings, notification
         return familyObjectArgNameStrings.unranked;
     } else if (config[familyObjectArgNameStrings.ranked] !== undefined && notificationRanked) {
         return familyObjectArgNameStrings.ranked;
-    } else { /* beware : since we don't always provide defaults for the general arg, we would 
+    } else { /* beware: since we don't always provide defaults for the general arg, we would 
              /  need to check it if we use this function in other functions than the minMax ones (ex: minrank, minhandicap) */ 
         return familyObjectArgNameStrings.all;
     }

@@ -61,7 +61,7 @@ see for details [notes G-](/docs/NOTES.md#g-)
 
 #### username
   ```--username``` Specify the username of the bot, for example 
-`--username GnuGo`, see [notes A-](/docs/NOTES.md#a-) for details
+`--username GnuGo`
 
 #### apikey
   ```--apikey``` Specify the API key for the bot, for example 
@@ -173,14 +173,6 @@ So default is disabled
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot
 
-#### nopause
-
-  ```--nopause```  Do not allow pauses during games
-
-  ```--nopauseranked``` Do not allow pauses during ranked games
-
-  ```--nopauseunranked``` Do not allow pauses during unranked games
-
 #### corrqueue
   ```--corrqueue``` Process correspondence games one at a time
 
@@ -203,7 +195,9 @@ connected games per user against this bot
 
   ```--unrankedonly```  Only accept unranked matches
 
-  ```--proonly``` For all matches, only accept those from professionals
+  ```--privateonly```  (**Not yet supported**) Only accept private matches
+
+  ```--publiconly```  (**Not yet supported**) Only accept public (non-private) matches
 
 #### fakerank
   ```--fakerank``` Fake bot ranking to calculate automatic handicap 
@@ -262,7 +256,9 @@ every other value will be rejected
 - for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
 (boardsizes)), it is possible to use as well the "range" 
 operator `:` to navigate one by one from min to max (ex: 
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
+`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`), 
+as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`, 
+see [notes A-](/docs/NOTES.md#a-) for details.
 
 example: `--speeds all`
 example 2: `--speedsranked live,correspondence --speedsunranked all`
@@ -278,54 +274,11 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
 Possible boardsize width value(s) :
 - `all` (allows all board size widths)
-- `custom` (format switches from allow square boardsizes only 
-to allow combinations of boardsize widths/heights)
 - comma separated and `:` separated values, for example 
 `25` (allows 25x25), or `9,13,15:17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-#### boardsize widths/heights
-
-  ```--boardsizewidths``` For custom board sizes, boardsize 
-width(s) to accept
-
-  ```--boardsizewidthranked``` For custom board sizes, boardsize 
-width(s) to accept for ranked games
-
-  ```--boardsizeswidthsunranked``` For custom board sizes, boardsize 
-width(s) to accept for unranked games
-
-Possible boardsize width value(s) :
-- `all` (allows all board size widths)
-- comma separated values, for example `25`, or `9,13,19`
-
-```--boardsizeheights``` For custom board sizes, boardsize 
-height(s) to accept
-
-```--boardsizeheightranked``` For custom board sizes, boardsize 
-height(s) to accept for ranked games
-
-```--boardsizesheightsunranked``` For custom board sizes, boardsize 
-height(s) to accept for unranked games
-
-Possible boardsize height value(s):
-- `all` (allows all board size heights)
-- comma separated values, for example `1`, or `1,2,3` 
-
-  For custom boardsizes, we allow all combinations of allowed 
-widths and heights, for example :
-
-- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9,19` 
-will allow all these boardsizes combinations:
-```
-9x1,9x2,9x3,9x9,9x19
-13x1,13x2,13x3,13x9,13x19
-15x1,15x2,15x3,15x9,15x19
-19x1,19x2,19x3,19x9,19x19
-25x1,25x2,25x3,25x3,25x19
-```
-
-see [notes B-](/docs/NOTES.md#b-) for details:
+see [notes B-](/docs/NOTES.md#b-) for details.
 
 #### komis
   ```--komis``` Allowed komi values
@@ -337,8 +290,8 @@ see [notes B-](/docs/NOTES.md#b-) for details:
 Possible komi value(s):
 - `all` (allows all komis)
 - comma separated and `:` separated values, 
-for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
-5.5, 6.5, 7.5, 0.5, automatic.
+for example `7.5` (allows komi 7.5), or `5.5,7.5,0.5,automatic` allows komis 
+(5.5, 7.5, 0.5, automatic).
 
 For extra komi explanations, see :
 - [notes C-](/docs/NOTES.md#c-)
@@ -354,7 +307,6 @@ accept for ranked games
 accept for unranked games
 
 Possible speed value(s) :
-- `all` (allows all speeds)
 - comma separated values, for example `blitz`, or `live, correspondence`
 
 Full list of possible values :  `blitz`,  `live`, `correspondence`.
@@ -369,7 +321,6 @@ games
 games
 
 Possible timecontrol value(s) :
-- `all` (allows all timecontrol values)
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
@@ -378,6 +329,18 @@ Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
 see [notes E-](/docs/NOTES.md#e-) for details
 
 ##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+
+#### only (part 2)
+
+  ```--proonly``` For all matches, only accept those from professionals
+
+#### nopause
+
+  ```--nopause```  Do not allow pauses during games
+
+  ```--nopauseranked``` Do not allow pauses during ranked games
+
+  ```--nopauseunranked``` Do not allow pauses during unranked gamesc
 
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
@@ -406,8 +369,7 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
   ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
-**important note** : see 
-[fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
+**important note** : see [fakerank](#fakerank).
 
 #### min/max rank
 
@@ -422,7 +384,7 @@ ranked games (e.g. 15k)
 unranked games (e.g. 15k)
 
   max :
-
+  
   ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
 
   ```--maxrankranked``` Maximum opponent rank to accept for 
@@ -433,9 +395,7 @@ unranked games (e.g. 1d)
 
 #### min/max maintime blitz/live/corr
 
-
   min :
-
 
   ```--minmaintimeblitz``` Minimum seconds of main time for 
 blitz games (default 15 , which is 15 seconds)
@@ -464,9 +424,7 @@ correspondence ranked games
  ```--minmaintimecorrunranked``` Minimum seconds of main time 
 for correspondence unranked games 
 
-
   max :
-
 
   ```--maxmaintimeblitz``` Maximum seconds of main time for 
 blitz games (default 300, which is 5 minutes)
@@ -497,9 +455,7 @@ correspondence unranked games
 
 #### min/max periods blitz/live/corr
 
-
   min :
-
 
   ```--minperiodsblitz``` Minimum number of periods for 
 blitz games
@@ -528,9 +484,7 @@ for correspondence ranked games
   ```--minperiodscorrunranked``` Minimum number of periods 
 for correspondence unranked games
 
-
   max :
-
 
   ```--maxperiodsblitz``` Maximum number of periods for 
 blitz games
@@ -567,9 +521,7 @@ wanted period time for all the stones by the number of stones per period,
 for example max periodtime 
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
 
-
   min :
-
 
   ```--minperiodtimeblitz``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
@@ -601,9 +553,7 @@ for example max periodtime
   ```--minperiodtimecorrunranked``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence unranked games 
 
-
   max :
-
 
   ```--maxperiodtimeblitz``` Maximum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
