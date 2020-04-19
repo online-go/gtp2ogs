@@ -137,12 +137,12 @@ exports.updateFromArgv = function() {
         .describe('proonly', 'For all matches, only accept those from professionals')
         .describe('proonlyranked', 'For ranked matches, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked matches, only accept those from professionals')
-                /* note: - nopause allows to disable pauses DURING games, (game.js), but
+        /* note: - nopause disables pausing DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
-        .describe('nopause', 'Do not allow pauses during games')
-        .describe('nopauseranked', 'Do not allow pauses during ranked games')
-        .describe('nopauseunranked', 'Do not allow pauses during unranked games')
+        .describe('nopause', 'Disable pausing during games')
+        .describe('nopauseranked', 'Disable pausing during ranked games')
+        .describe('nopauseunranked', 'Disable pausing during unranked games')
         .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games)')
         .describe('nopauseonweekendsranked', 'Do not accept ranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
         .describe('nopauseonweekendsunranked', 'Do not accept unranked matches that come with the option -pauses in weekends- (specific to correspondence games)')

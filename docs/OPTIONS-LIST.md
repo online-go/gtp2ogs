@@ -379,11 +379,11 @@ see [notes E-](/docs/NOTES.md#e-) for details
 
 #### nopause
 
-  ```--nopause```  Do not allow pauses during games
+  ```--nopause```  Disable pausing during games
 
-  ```--nopauseranked``` Do not allow pauses during ranked games
+  ```--nopauseranked``` Disable pausing during ranked games
 
-  ```--nopauseunranked``` Do not allow pauses during unranked gamesc
+  ```--nopauseunranked``` Disable pausing during unranked gamesc
 
 #### nopauseonweekends
 
