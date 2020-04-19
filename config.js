@@ -119,13 +119,18 @@ exports.updateFromArgv = function() {
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
         //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS:
-        .describe('proonly', 'For all matches, only accept those from professionals')
-        /* note: - nopause allows to disable pauses DURING games, (game.js), but
-        /        - nopauseonweekends (not yet added) rejects challenges BEFORE games (connection.js)
+        .describe('proonly', 'For all games, only accept those from professionals')
+        .describe('proonlyranked', 'For ranked games, only accept those from professionals')
+        .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
+        /* note: - nopause disables pausing DURING games, (game.js), but
+        /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
-        .describe('nopause', 'Do not allow pauses during games')
-        .describe('nopauseranked', 'Do not allow pauses during ranked games')
-        .describe('nopauseunranked', 'Do not allow pauses during unranked games')
+        .describe('nopause', 'Disable pausing during games')
+        .describe('nopauseranked', 'Disable pausing during ranked games')
+        .describe('nopauseunranked', 'Disable pausing during unranked games')
+        .describe('nopauseonweekends', 'Do not accept matches that come with the option -pauses in weekends- (specific to correspondence games)')
+        .describe('nopauseonweekendsranked', 'Do not accept ranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
+        .describe('nopauseonweekendsunranked', 'Do not accept unranked matches that come with the option -pauses in weekends- (specific to correspondence games)')
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
