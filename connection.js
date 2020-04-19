@@ -722,6 +722,17 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30  : 1 kyu or weaker
 }
 
+function get_r_u_arr_booleans(familyNameString, notificationRanked) {
+    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
+    // for the booleans "only" checks, we are trying to find any reason to reject
+    // the challenge, so the general and ranked/unranked args dont conflict.
+    // (unlike --minmaintimeranked 50 --minmaintime 300)
+    return [ [general,  true],
+             [ranked,   notificationRanked],
+             [unranked, !notificationRanked]
+           ];
+}
+
 function bannedFamilyReject(argNameString, uid, notificationUid) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
     conn_log(`${uid} ${notificationUid} is banned ${rankedUnranked}`);
@@ -809,7 +820,7 @@ function customBoardsizeWidthsHeightsReject(argNameString, notificationWidth, no
 }
 
 function familyArrayFromFamilyNameString(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
+    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
 
 function familyObjectMIBL(familyNameString) {
