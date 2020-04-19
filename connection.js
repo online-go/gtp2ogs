@@ -716,6 +716,10 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argNameString, special)
     }
 }
 
+function getArgNameStringsGRU(familyNameString) {
+    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
+}
+
 function rankToString(r) {
     const R = Math.floor(r);
     if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30 : 1 dan or stronger
@@ -819,10 +823,6 @@ function customBoardsizeWidthsHeightsReject(argNameString, notificationWidth, no
     return { reject: true, msg };
 }
 
-function familyArrayFromFamilyNameString(familyNameString) {
-    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
-}
-
 function familyObjectMIBL(familyNameString) {
     let minMax = "";
     let incDec = "";
@@ -841,7 +841,7 @@ function familyObjectMIBL(familyNameString) {
         belAbo = "above";
         lowHig = "high";
     }
-    const familyArray = familyArrayFromFamilyNameString(familyNameString);
+    const familyArray = getArgNameStringsGRU(familyNameString);
     return { argNameStrings: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
              MIBL: { minMax, incDec, belAbo, lowHig },
              isMM: { isMin, isMax } };
