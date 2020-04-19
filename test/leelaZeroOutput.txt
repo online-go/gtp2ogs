@@ -1,0 +1,54 @@
+Using OpenCL batch size of 5
+Using 10 thread(s).
+RNG seed: 247152982541402928
+Using per-move time margin of 10.00s.
+BLAS Core: built-in Eigen 3.3.7 library.
+Detecting residual layers...v1...256 channels...40 blocks.
+Initializing OpenCL (half precision).
+Detected 1 OpenCL platforms.
+Platform version: OpenCL 1.2 CUDA 10.2.115
+Platform profile: FULL_PROFILE
+Platform name:    NVIDIA CUDA
+Platform vendor:  NVIDIA Corporation
+Device ID:     0
+Device name:   GeForce RTX 2080
+Device type:   GPU
+Device vendor: NVIDIA Corporation
+Device driver: 441.87
+Device speed:  1860 MHz
+Device cores:  46 CU
+Device score:  1112
+Selected platform: NVIDIA CUDA
+Selected device: GeForce RTX 2080
+with OpenCL 1.2 capability.
+Half precision compute support: No.
+Tensor Core support: Yes.
+Loaded existing SGEMM tuning.
+Wavefront/Warp size: 32
+Max workgroup size: 1024
+Max workgroup dimensions: 1024 1024 64
+Setting max tree size to 3736 MiB and cache size to 415 MiB.
+Thinking at most 27.4 seconds...
+NN eval=0.577368
+Playouts: 1867, Win: 57.27%, PV: D16 C17 C16 D17 E16 F18 Q16 D4 R6 G17 O3
+Playouts: 4199, Win: 57.30%, PV: D16 C17 C16 D17 E16 F18 Q16 D4 R6 G17 O3 Q6 Q7
+Playouts: 7040, Win: 57.34%, PV: D16 C17 C16 D17 E16 F18 Q16 D4 R6 G17 O3 Q6 Q7 P6
+Playouts: 9955, Win: 57.35%, PV: D16 C17 C16 D17 E16 F18 Q16 D4 R3 Q3 R4 R6 S6 S7 R5
+Playouts: 12722, Win: 57.36%, PV: D16 C17 C16 D17 E16 F18 Q16 D4 R3 Q3 R4 R6 S6 S7 R5 Q6
+Playouts: 15769, Win: 57.36%, PV: D16 C17 C16 D17 E16 F18 Q16 D4 R3 Q3 R4 R6 S6 S7 R5 Q6 Q5
+10.7s left, stopping early.
+D16 ->    6703 (V: 57.50%) (LCB: 57.46%) (N: 29.75%) PV: D16 C17 C16 D17 E16 F18 Q16 D4 R3 Q3 R4 R6 S6 S7 R5 Q6 Q5 P5
+D4 ->    4787 (V: 57.45%) (LCB: 57.40%) (N: 21.74%) PV: D4 C3 C4 D3 E4 F2 Q16 D16 R3 Q3 R4 Q5 R5 R6 S6 R17 Q17 R16 R15
+Q16 ->    4662 (V: 57.44%) (LCB: 57.40%) (N: 21.72%) PV: Q16 R17 Q17 R16 Q15 S14 D4 D16 R3 R4 Q3 P4 P3 O3 O2 C3 C4 D3 E3
+D3 ->     625 (V: 56.49%) (LCB: 56.36%) (N:  7.34%) PV: D3 D16 Q16 C5 F4 R17 Q17 R16 R15 S15 S14
+R16 ->     618 (V: 56.48%) (LCB: 56.35%) (N:  7.30%) PV: R16 D16 D4 P17 Q14 C3 C4 D3 E3 E2 F2
+D17 ->     204 (V: 56.43%) (LCB: 56.23%) (N:  2.54%) PV: D17 D4 Q16 C15 E16 R17 R16 Q17 P17 P18 O18
+C16 ->     204 (V: 56.38%) (LCB: 56.18%) (N:  2.61%) PV: C16 Q16 D4 E17 D15 C3 D3 C4 C5 B5
+C4 ->      50 (V: 56.16%) (LCB: 55.79%) (N:  0.73%) PV: C4 D16 R16 E3 D6 P17 Q14
+Q17 ->      48 (V: 56.21%) (LCB: 55.83%) (N:  0.67%) PV: Q17 D16 D3 C5 F4 R15 O16
+C17 ->      14 (V: 55.72%) (LCB: 54.72%) (N:  0.25%) PV: C17 D4 R16 P17 Q14 R12
+R17 ->      11 (V: 55.72%) (LCB: 54.27%) (N:  0.19%) PV: R17 D4 C16 E17 D14 C12
+C3 ->      10 (V: 55.82%) (LCB: 54.14%) (N:  0.18%) PV: C3 Q16 D17 C15 F16 H17
+12.1 average depth, 33 max depth
+14584 non leaf nodes, 1.23 average children
+17937 visits, 6257774 nodes, 17936 playouts, 1037 n/s

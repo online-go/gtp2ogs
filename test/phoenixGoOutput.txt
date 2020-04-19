@@ -1,0 +1,163 @@
+use config file 'etc\mcts_cpu.conf'
+log to D:\pg\PhoenixGo-win-x64-cpuonly-v1\log
+start mcts_main
+I0419 16:05:29.949105  5500 mcts_main.cc:75] load config succ:
+num_eval_threads: 1
+num_search_threads: 8
+max_search_tree_size: 400000000
+max_children_per_node: 64
+timeout_ms_per_step: 5000
+eval_batch_size: 4
+eval_wait_batch_timeout_us: 100
+model_config {
+train_dir: "ckpt"
+}
+c_puct: 2.5
+virtual_loss: 1
+enable_resign: true
+v_resign: -0.9
+dirichlet_noise_alpha: 0.03
+dirichlet_noise_ratio: 0.25
+policy_temperature: 0.67
+inherit_default_act: true
+early_stop {
+enable: true
+check_every_ms: 100
+sims_factor: 1
+sims_threshold: 2000
+}
+unstable_overtime {
+enable: true
+time_factor: 0.3
+}
+behind_overtime {
+enable: true
+time_factor: 0.3
+}
+time_control {
+enable: true
+c_denom: 20
+c_maxply: 40
+reserved_time: 1
+}
+I0419 16:05:29.990142  5500 mcts_engine.cc:85] MCTSEngine: waiting all eval threads init
+2020-04-19 16:05:30.015051: I model\zero_model.cc:72] Read checkpoint state succ
+2020-04-19 16:05:30.053776: I model\zero_model.cc:80] Read meta graph succ
+2020-04-19 16:05:30.054721: I E:\Tensorflow\PhoenixGo\tensorflow\tensorflow\core\platform\cpu_feature_guard.cc:140] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX AVX2
+2020-04-19 16:05:30.060376: I model\zero_model.cc:100] Create session succ
+2020-04-19 16:05:30.138061: I model\zero_model.cc:107] Create graph succ
+2020-04-19 16:05:31.688933: I model\zero_model.cc:119] Load checkpoint succ
+I0419 16:05:32.260970 22444 mcts_engine.cc:358] EvalRoutine: init model done, global_step=639200
+I0419 16:05:32.261971  5500 mcts_engine.cc:87] MCTSEngine: all eval threads init done
+I0419 16:05:32.261971  5500 mcts_main.cc:277] input cmd: boardsize 19
+I0419 16:05:32.261971  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0246ms
+I0419 16:05:32.261971  5500 mcts_main.cc:286] =
+I0419 16:05:32.261971  5500 mcts_main.cc:277] input cmd: clear_board
+I0419 16:05:32.261971  5500 mcts_main.cc:286] =
+I0419 16:05:32.261971  5500 mcts_main.cc:277] input cmd: komi 7.5
+I0419 16:05:32.261971  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0256ms
+I0419 16:05:32.261971  5500 mcts_main.cc:286] =
+I0419 16:05:32.261971  5500 mcts_main.cc:277] input cmd: play black c16
+I0419 16:05:32.262972  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.262972  5500 mcts_engine.cc:152] Move: cp
+I0419 16:05:32.262972  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0151ms
+I0419 16:05:32.262972  5500 mcts_engine.cc:157] 1th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+1th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.262972  5500 mcts_main.cc:286] =
+I0419 16:05:32.262972  5500 mcts_main.cc:277] input cmd: play white d4
+I0419 16:05:32.262972  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.262972  5500 mcts_engine.cc:152] Move: cp,dd
+I0419 16:05:32.262972  5500 mcts_engine.cc:157] 2th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.262972  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0158ms
+2th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.263974  5500 mcts_main.cc:286] =
+I0419 16:05:32.263974  5500 mcts_main.cc:277] input cmd: play black q16
+I0419 16:05:32.263974  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.263974  5500 mcts_engine.cc:152] Move: cp,dd,pp
+I0419 16:05:32.263974  5500 mcts_engine.cc:157] 3th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+3th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.263974  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0347ms
+I0419 16:05:32.263974  5500 mcts_main.cc:286] =
+I0419 16:05:32.263974  5500 mcts_main.cc:277] input cmd: play white q4
+I0419 16:05:32.264976  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.264976  5500 mcts_engine.cc:152] Move: cp,dd,pp,pd
+I0419 16:05:32.264976  5500 mcts_engine.cc:157] 4th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+4th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.264976  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.015ms
+I0419 16:05:32.264976  5500 mcts_main.cc:286] =
+I0419 16:05:32.264976  5500 mcts_main.cc:277] input cmd: play black c6
+I0419 16:05:32.264976  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.264976  5500 mcts_engine.cc:152] Move: cp,dd,pp,pd,cf
+I0419 16:05:32.264976  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.011ms
+I0419 16:05:32.264976  5500 mcts_engine.cc:157] 5th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+5th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.264976  5500 mcts_main.cc:286] =
+I0419 16:05:32.264976  5500 mcts_main.cc:277] input cmd: play white k16
+I0419 16:05:32.265976  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.265976  5500 mcts_engine.cc:152] Move: cp,dd,pp,pd,cf,jp
+I0419 16:05:32.265976  5500 mcts_engine.cc:157] 6th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.265976  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0105ms
+6th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.265976  5500 mcts_main.cc:286] =
+I0419 16:05:32.265976  5500 mcts_main.cc:277] input cmd: play black f3
+I0419 16:05:32.265976  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.265976  5500 mcts_engine.cc:152] Move: cp,dd,pp,pd,cf,jp,fc
+I0419 16:05:32.265976  5500 mcts_engine.cc:157] 7th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+7th move(b): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.265976  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0139ms
+I0419 16:05:32.265976  5500 mcts_main.cc:286] =
+I0419 16:05:32.266976  5500 mcts_main.cc:277] input cmd: play white r13
+I0419 16:05:32.266976  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.266976  5500 mcts_engine.cc:152] Move: cp,dd,pp,pd,cf,jp,fc,qm
+I0419 16:05:32.266976  5500 mcts_engine.cc:157] 8th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+8th move(w): zz, winrate=-nan(ind)%, N=0, Q=-nan(ind), p=0.000000, v=-nan(ind), global_step=639200
+I0419 16:05:32.266976  8312 mcts_engine.cc:913] DeleteRoutine: deleted 1 nodes, cost 0.0141ms
+I0419 16:05:32.266976  5500 mcts_main.cc:286] =
+I0419 16:05:32.266976  5500 mcts_main.cc:277] input cmd: time_settings 172800 86400 1
+I0419 16:05:32.266976  5500 mcts_main.cc:286] =
+I0419 16:05:32.266976  5500 mcts_main.cc:277] input cmd: time_left black 518384 0
+I0419 16:05:32.266976  5500 mcts_main.cc:286] =
+I0419 16:05:32.266976  5500 mcts_main.cc:277] input cmd: time_left white 604681 0
+I0419 16:05:32.266976  5500 mcts_main.cc:286] =
+I0419 16:05:32.266976  5500 mcts_main.cc:277] input cmd: genmove black
+I0419 16:05:32.266976  5500 mcts_main.cc:87] Config hasn't changed
+I0419 16:05:32.429124  5500 mcts_engine.cc:687] GetSearchTimeoutUs: timeout=5s
+I0419 16:05:37.429881  5500 mcts_engine.cc:986] GetBestMove: v_resign=0.114916, not resign
+I0419 16:05:38.081475  5500 mcts_monitor.cc:81] MCTSMonitor: avg eval cost 900.309ms
+I0419 16:05:38.081475  5500 mcts_monitor.cc:82] MCTSMonitor: max eval cost 1047.59ms
+I0419 16:05:38.081475  5500 mcts_monitor.cc:83] MCTSMonitor: avg eval cost 513.789ms per batch
+I0419 16:05:38.081475  5500 mcts_monitor.cc:84] MCTSMonitor: max eval cost 627.871ms per batch
+I0419 16:05:38.081475  5500 mcts_monitor.cc:85] MCTSMonitor: avg eval batch size 4
+I0419 16:05:38.081475  5500 mcts_monitor.cc:86] MCTSMonitor: eval timeout 0 times
+I0419 16:05:38.081475  5500 mcts_monitor.cc:87] MCTSMonitor: avg simulation cost 900.454ms
+I0419 16:05:38.081475  5500 mcts_monitor.cc:88] MCTSMonitor: max simulation cost 1047.69ms
+I0419 16:05:38.081475  5500 mcts_monitor.cc:89] MCTSMonitor: avg select cost 0.0432592ms
+I0419 16:05:38.081475  5500 mcts_monitor.cc:90] MCTSMonitor: max select cost 15.0689ms
+I0419 16:05:38.082479  5500 mcts_monitor.cc:91] MCTSMonitor: avg expand cost 0.0181364ms
+I0419 16:05:38.082479  5500 mcts_monitor.cc:92] MCTSMonitor: max expand cost 0.0399ms
+I0419 16:05:38.082479  5500 mcts_monitor.cc:93] MCTSMonitor: avg backup cost 0.000602273ms
+I0419 16:05:38.082479  5500 mcts_monitor.cc:94] MCTSMonitor: max backup cost 0.0014ms
+I0419 16:05:38.082479  5500 mcts_monitor.cc:95] MCTSMonitor: select same node 71117 times
+I0419 16:05:38.082479  5500 mcts_monitor.cc:96] MCTSMonitor: search tree height is 7
+I0419 16:05:38.082479  5500 mcts_monitor.cc:97] MCTSMonitor: avg height of nodes is 2.26639
+I0419 16:05:38.082479  5500 mcts_monitor.cc:98] MCTSMonitor: avg eval task queue size is 0.136364
+I0419 16:05:38.082479  5500 mcts_debugger.cc:43] ========== debug info for 9th move(b) begin ==========
+I0419 16:05:38.082479  5500 mcts_debugger.cc:44] main move path: ee(40,0.12,0.90,0.08),nq(20,-0.13,0.51,-0.13),fp(6,0.14,0.31,0.15),qq(3,-0.13,0.36,-0.13),nc(2,0.13,0.54,0.11),qf(1,-0.14,0.33,-0.14),ni(0,-nan(ind),0.00,-nan(ind))
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] ee: N=40, W=4.62997, Q=0.115749, p=0.898028, v=0.0834833
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] mq: N=1, W=-0.0466156, Q=-0.0466156, p=0.00427386, v=-0.0466287
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] fp: N=1, W=0.0043335, Q=0.0043335, p=0.00373499, v=0.0043378
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] nq: N=1, W=-0.0243073, Q=-0.0243073, p=0.0074345, v=-0.0243142
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] nc: N=1, W=0.0157928, Q=0.0157928, p=0.00470052, v=0.0157933
+I0419 16:05:38.082479  5500 mcts_debugger.cc:48] model global step: 639200
+I0419 16:05:38.082479  5500 mcts_debugger.cc:49] ========== debug info for 9th move(b) end   ==========
+I0419 16:05:38.082479  5500 mcts_engine.cc:986] GetBestMove: v_resign=0.115749, not resign
+I0419 16:05:38.082479  5500 mcts_engine.cc:152] Move: cp,dd,pp,pd,cf,jp,fc,qm,ee
+I0419 16:05:38.082479  5500 mcts_engine.cc:157] 9th move(b): ee, winrate=55.787468%, N=40, Q=0.115749, p=0.898028, v=0.083483, cost 5815.084473ms, sims=44, height=7, avg_height=2.266393, global_step=639200
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] ee,nq: N=20, W=-2.52354, Q=-0.126177, p=0.510691, v=-0.128459
+I0419 16:05:38.082479  8312 mcts_engine.cc:913] DeleteRoutine: deleted 321 nodes, cost 0.039ms
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] ee,ep: N=11, W=-1.16396, Q=-0.105814, p=0.248256, v=-0.129429
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] ee,eq: N=6, W=-0.546951, Q=-0.0911585, p=0.145676, v=-0.116412
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] ee,eb: N=1, W=-0.179169, Q=-0.179169, p=0.0117066, v=-0.179175
+I0419 16:05:38.082479  5500 mcts_debugger.cc:139] ee,qq: N=1, W=-0.132874, Q=-0.132874, p=0.00676016, v=-0.132875
+9th move(b): ee, winrate=55.787468%, N=40, Q=0.115749, p=0.898028, v=0.083483, cost 5815.084473ms, sims=44, height=7, avg_height=2.266393, global_step=639200
+I0419 16:05:38.082479  5500 mcts_main.cc:286] = E5
