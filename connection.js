@@ -719,12 +719,11 @@ function noAutohandicapReject(argNameString) {
 
 function getBoardsizeNotSquareReject(argNameString, notificationWidth, notificationHeight) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    conn_log(`boardsize ${notificationWidth} x ${notificationHeight} `
+    conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
              + `is not square, not allowed ${rankedUnranked}`);
-    const msg = `Your selected board size ${notificationWidth} `
-                + `x ${notificationHeight} is not square, not `
-                + `allowed ${rankedUnranked} on this bot, please `
-                + `choose a SQUARE board size (same width and `
+    const msg = `Your selected board size ${notificationWidth}x${notificationHeight} `
+                + `is not square, not allowed ${rankedUnranked}, `
+                + `please choose a SQUARE board size (same width and `
                 + `height), for example try 9x9 or 19x19}`;
     return { reject: true, msg };
 }
@@ -774,8 +773,8 @@ function genericAllowedFamiliesReject(argNameString, notificationUnit) {
                      choose one of these allowed speeds for ranked games: -live,correspondence-"*/
 }
 
-function familyArrayFromFamilyNameString(familyNameString) {
-    return ["", "ranked", "unranked"].map(e => `${familyNameString}${e}`);
+function getArgNameStringsGRU(familyNameString) {
+    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
 
 function familyObjectMIBL(familyNameString) {
@@ -796,7 +795,7 @@ function familyObjectMIBL(familyNameString) {
         belAbo = "above";
         lowHig = "high";
     }
-    const familyArray = familyArrayFromFamilyNameString(familyNameString);
+    const familyArray = getArgNameStringsGRU(familyNameString);
     return { argNameStrings: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
              MIBL: { minMax, incDec, belAbo, lowHig },
              isMM: { isMin, isMax } };
