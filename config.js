@@ -239,7 +239,7 @@ exports.updateFromArgv = function() {
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}`);
     // B - check unsupported argv //
-    testDeprecatedArgv(argv);
+    testDroppedArgv(argv);
 
     /* EXPORTS FROM ARGV */
     /* 0) root exports*/
@@ -420,14 +420,14 @@ exports.updateFromArgv = function() {
     }
 }
 
-function getBLCDeprecationString(familyNameString, rankedUnranked) {
+function getBLCString(familyNameString, rankedUnranked) {
     return `${familyNameString}blitz${rankedUnranked}, --${familyNameString}live${rankedUnranked} `
            + `and/or --${familyNameString}corr${rankedUnranked}`;
 }
 
 // console messages:
-function testDeprecatedArgv(argv) {
-    const deprecatedArgv = [
+function testDroppedArgv(argv) {
+    const droppedArgv = [
          [["botid", "bot", "id"], "username"],
          [["minrankedhandicap"], "minhandicapranked"],
          [["minunrankedhandicap"], "minhandicapunranked"],
@@ -435,24 +435,24 @@ function testDeprecatedArgv(argv) {
          [["maxunrankedhandicap"], "maxhandicapunranked"],
          [["maxtotalgames"], "maxconnectedgames"],
          [["maxactivegames"], "maxconnectedgamesperuser"],
-         [["maxmaintime"],  getBLCDeprecationString("maxmaintime", "")],
-         [["maxmaintimeranked"], getBLCDeprecationString("maxmaintime", "ranked")],
-         [["maxmaintimeunranked"], getBLCDeprecationString("maxmaintime", "unranked")],
-         [["minmaintime"], getBLCDeprecationString("minmaintime", "")],
-         [["minmaintimeranked"], getBLCDeprecationString("minmaintime", "ranked")],
-         [["minmaintimeunranked"], getBLCDeprecationString("minmaintime", "unranked")],
-         [["maxperiodtime"], getBLCDeprecationString("maxperiodtime", "")],
-         [["maxperiodtimeranked"], getBLCDeprecationString("maxperiodtime", "ranked")],
-         [["maxperiodtimeunranked"], getBLCDeprecationString("maxperiodtime", "unranked")],
-         [["minperiodtime"], getBLCDeprecationString("minperiodtime", "")],
-         [["minperiodtimeranked"], getBLCDeprecationString("minperiodtime", "ranked")],
-         [["minperiodtimeunranked"], getBLCDeprecationString("minperiodtime", "unranked")],
-         [["maxperiods"],  getBLCDeprecationString("maxperiods", "")],
-         [["maxperiodsranked"], getBLCDeprecationString("maxperiods", "ranked")],
-         [["maxperiodsunranked"], getBLCDeprecationString("maxperiods", "unranked")],
-         [["minperiods"], getBLCDeprecationString("minperiods", "")],
-         [["minperiodsranked"], getBLCDeprecationString("minperiods", "ranked")],
-         [["minperiodsunranked"], getBLCDeprecationString("minperiods", "unranked")],
+         [["maxmaintime"],  getBLCString("maxmaintime", "")],
+         [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
+         [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
+         [["minmaintime"], getBLCString("minmaintime", "")],
+         [["minmaintimeranked"], getBLCString("minmaintime", "ranked")],
+         [["minmaintimeunranked"], getBLCString("minmaintime", "unranked")],
+         [["maxperiodtime"], getBLCString("maxperiodtime", "")],
+         [["maxperiodtimeranked"], getBLCString("maxperiodtime", "ranked")],
+         [["maxperiodtimeunranked"], getBLCString("maxperiodtime", "unranked")],
+         [["minperiodtime"], getBLCString("minperiodtime", "")],
+         [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
+         [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
+         [["maxperiods"],  getBLCString("maxperiods", "")],
+         [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
+         [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
+         [["minperiods"], getBLCString("minperiods", "")],
+         [["minperiodsranked"], getBLCString("minperiods", "ranked")],
+         [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
          [["ban"], "bans"],
          [["banranked"], "bansranked"],
          [["banunranked"], "bansunranked"],
@@ -471,10 +471,10 @@ function testDeprecatedArgv(argv) {
          [["timecontrolranked"], "timecontrolsranked"],
          [["timecontrolunranked"], "timecontrolsunranked"]
     ];
-    for (const [oldNames, newName] of deprecatedArgv) {
+    for (const [oldNames, newName] of droppedArgv) {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
-                console.log(`Deprecated: --${oldName} is no longer `
+                console.log(`Dropped: --${oldName} is no longer `
                             + `supported, use --${newName} instead.`);
             }
         }
@@ -483,7 +483,7 @@ function testDeprecatedArgv(argv) {
         if (argv[argNameString]) {
             for (const komi of ["auto","null"]) {
                 if (argv[argNameString].split(",").includes(komi)) {
-                    console.log(`Deprecated: --${argNameString} ${komi} is no longer `
+                    console.log(`Dropped: --${argNameString} ${komi} is no longer `
                                 + `supported, use --${argNameString} automatic instead`);
                 }
             }
