@@ -57,11 +57,11 @@ the ranked/unranked status is.
 
 Note: about the "messages" arguments, some combinations of 
 characters in messages make gtp2ogs crash !!
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### username
   ```--username``` Specify the username of the bot, for example 
-`--username GnuGo`, see [notes A-](/docs/NOTES.md#a-) for details
+`--username GnuGo`
 
 #### apikey
   ```--apikey``` Specify the API key for the bot, for example 
@@ -75,14 +75,14 @@ security reasons
 Greeting message to appear in chat at first move 
 (ex: "Hello, have a nice game")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### farewell
   ```--farewell "Thank you for playing"``` 
 Thank you message to appear in chat at end of game 
 (ex: "Thank you for playing")
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
 #### rejectnew arguments :
   ```--rejectnew``` Reject all new challenges with the default 
@@ -92,13 +92,36 @@ reject message
 if you add the rejectnewmsg argument, Reject all new challenges with a 
 customized message instead of the default message.
 
-see for details [notes G-](/docs/docs/NOTES.md#g-)
+see for details [notes G-](/docs/NOTES.md#g-)
 
   ```--rejectnewfile ~/rejectnew.status``` Reject new challenges if 
 file exists (checked each time, can use for load-balancing)
 
 #### debug
 ```--debug```  Output GTP command and responses from your Go engine
+
+#### ogspv
+``` --ogspv ``` Send winrate and variations for supported AIs with 
+supported settings, in OGS games.
+
+Example of output (Leela Zero):
+```
+Variation: Winrate: 57.93%, Visits: 19821, Playouts: 19820
+```
+
+see a live example in: https://online-go.com/game/23008077
+
+Supported AIs:
+
+- `LeelaZero` (https://zero.sjeng.org/)
+- `Sai` (http://sai.unich.it/)
+- `KataGo` (https://github.com/lightvector/KataGo)
+- `PhoenixGo` (https://github.com/Tencent/PhoenixGo)
+- `Leela` (https://sjeng.org/leela.html)
+
+for example `--ogspv LeelaZero`
+
+**IMPORTANT: see [notes H-](/docs/NOTES.md#h-) for details**
 
 #### logfile
 ```--logfile``` In addition to logging to the console, also log gtp2ogs 
@@ -150,14 +173,6 @@ So default is disabled
 #### noclock
   ```--noclock``` Do not send any clock/time data to the bot
 
-#### nopause
-
-  ```--nopause```  Do not allow pauses during games
-
-  ```--nopauseranked``` Do not allow pauses during ranked games
-
-  ```--nopauseunranked``` Do not allow pauses during unranked games
-
 #### corrqueue
   ```--corrqueue``` Process correspondence games one at a time
 
@@ -175,12 +190,14 @@ and stability)
 connected games per user against this bot
 
 
-#### only (part 1)
+#### rankedonly unrankedonly
+
+Below are the "only" options that only have a general option 
+(no ranked or unranked options)
+
   ```--rankedonly``` Only accept ranked matches
 
   ```--unrankedonly```  Only accept unranked matches
-
-  ```--proonly``` For all matches, only accept those from professionals
 
 #### fakerank
   ```--fakerank``` Fake bot ranking to calculate automatic handicap 
@@ -188,14 +205,14 @@ stones number in autohandicap (-1) based on rankDifference between
 fakerank and user ranking, to fix the bypass minhandicap maxhandicap 
 issue if handicap is -automatic
 
-see [notes F-](/docs/docs/NOTES.md#f-) for details
+see [notes F-](/docs/NOTES.md#f-) for details
 
 # 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
 
   Arguments in this category allow us to accept or reject 
 a challenge based on the notification (challenge settings)
 
-##     A) ALL/RANKED/UNRANKED FAMILIES :
+## A) ALL/RANKED/UNRANKED FAMILIES :
 
   Here the general argument (ex: --bans) does not confict with 
 the ranked and unranked arguments for accepting/rejecting matches.
@@ -216,7 +233,7 @@ are banned from ranked games
   ```--bansunranked``` Comma separated list of user names or IDs who 
 are banned from unranked games
 
-##     B) GENERAL/RANKED/UNRANKED FAMILIES :
+## B) GENERAL/RANKED/UNRANKED FAMILIES :
 
   Here you can either use :
 
@@ -229,21 +246,17 @@ and in that case, the general argument will be ignored
 and instead the ranked and unranked will be used depending 
 on whether the game is ranked or unranked.
 
-##         B1) ALLOWED FAMILIES :
+### B1) ALLOWED FAMILIES :
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
 - for text-only families ("blitz", "fischer", "white", etc.), 
 comma-separated values (without space) will allow every value inputted, 
 every other value will be rejected
-- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
-(boardsizes)), it is possible to use as well the "range" 
-operator `:` to navigate one by one from min to max (ex: 
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
 
-example: `--speeds all`
-example 2: `--speedsranked live,correspondence --speedsunranked all`
-example 3: `--komis 0.5,5.5:7.5,automatic`
+example: `--speeds blitz,live`
+example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
+example 3: `--komis 0.5,5.5,7.5,automatic`
 
 #### boardsizes
 
@@ -255,54 +268,11 @@ example 3: `--komis 0.5,5.5:7.5,automatic`
 
 Possible boardsize width value(s) :
 - `all` (allows all board size widths)
-- `custom` (format switches from allow square boardsizes only 
-to allow combinations of boardsize widths/heights)
-- comma separated and `:` separated values, for example 
-`25` (allows 25x25), or `9,13,15:17,19` (allows 
+- comma separated values, for example 
+`25` (allows 25x25), or `9,13,15,16,17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-#### boardsize widths/heights
-
-  ```--boardsizewidths``` For custom board sizes, boardsize 
-width(s) to accept
-
-  ```--boardsizewidthranked``` For custom board sizes, boardsize 
-width(s) to accept for ranked games
-
-  ```--boardsizeswidthsunranked``` For custom board sizes, boardsize 
-width(s) to accept for unranked games
-
-Possible boardsize width value(s) :
-- `all` (allows all board size widths)
-- comma separated values, for example `25`, or `9,13,19`
-
-```--boardsizeheights``` For custom board sizes, boardsize 
-height(s) to accept
-
-```--boardsizeheightranked``` For custom board sizes, boardsize 
-height(s) to accept for ranked games
-
-```--boardsizesheightsunranked``` For custom board sizes, boardsize 
-height(s) to accept for unranked games
-
-Possible boardsize height value(s):
-- `all` (allows all board size heights)
-- comma separated values, for example `1`, or `1,2,3` 
-
-  For custom boardsizes, we allow all combinations of allowed 
-widths and heights, for example :
-
-- `--boardsizes custom --boardsizewidths 9,13,15,19,25 --boardsizeheights 1:3,9,19` 
-will allow all these boardsizes combinations:
-```
-9x1,9x2,9x3,9x9,9x19
-13x1,13x2,13x3,13x9,13x19
-15x1,15x2,15x3,15x9,15x19
-19x1,19x2,19x3,19x9,19x19
-25x1,25x2,25x3,25x3,25x19
-```
-
-see [notes B-](/docs/docs/NOTES.md#b-) for details:
+see [notes B-](/docs/NOTES.md#b-) for details.
 
 #### komis
   ```--komis``` Allowed komi values
@@ -313,13 +283,13 @@ see [notes B-](/docs/docs/NOTES.md#b-) for details:
  
 Possible komi value(s):
 - `all` (allows all komis)
-- comma separated and `:` separated values, 
-for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
-5.5, 6.5, 7.5, 0.5, automatic.
+- comma separated values, 
+for example `7.5` (allows komi 7.5), or `5.5,7.5,0.5,automatic` allows komis 
+(5.5, 7.5, 0.5, automatic).
 
 For extra komi explanations, see :
-- [notes C-](/docs/docs/NOTES.md#c-)
-- [notes D-](/docs/docs/NOTES.md#d-)
+- [notes C-](/docs/NOTES.md#c-)
+- [notes D-](/docs/NOTES.md#d-)
 
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
@@ -331,7 +301,6 @@ accept for ranked games
 accept for unranked games
 
 Possible speed value(s) :
-- `all` (allows all speeds)
 - comma separated values, for example `blitz`, or `live, correspondence`
 
 Full list of possible values :  `blitz`,  `live`, `correspondence`.
@@ -346,15 +315,49 @@ games
 games
 
 Possible timecontrol value(s) :
-- `all` (allows all timecontrol values)
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
 Full list of possible values :  `fischer`,  `byoyomi`, `canadian`, 
 `simple`, `absolute`, `none`.
 
-see [notes E-](/docs/docs/NOTES.md#e-) for details
+see [notes E-](/docs/NOTES.md#e-) for details
 
-##         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+### B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+
+  Arguments in this category are not comma-separated, they are either 
+booleans (enabled just from activating the option, nothing else to specify, 
+for example `--noautohandicap`), or single values (for example `--maxhandicap 9`)
+
+#### proonly
+
+  ```--proonly``` For all matches, only accept those from professionals
+
+  ```--proonlyranked``` For ranked games, only accept those from professionals
+
+  ```--proonlyunranked``` For unranked games, only accept those from professionals
+
+#### nopause
+
+  ```--nopause```  Disable pausing during games
+
+  ```--nopauseranked``` Disable pausing during ranked games
+
+  ```--nopauseunranked``` Disable pausing during unranked gamesc
+
+#### nopauseonweekends
+
+note: this setting has no effect on pausing DURING games, here 
+we only accept or reject a match if it comes with the setting 
+"Pause on week-ends" (specific to correspondence games)
+
+  ```--nopauseonweekends```  Do not accept matches that come with the 
+option -pauses on weekends- (specific to correspondence games)
+
+  ```--nopauseonweekendsranked``` Do not accept ranked matches that come 
+with the option -pauses on weekends- (specific to correspondence games)
+
+  ```--nopauseonweekendsunranked``` Do not accept unranked matches that 
+come with the option -pauses on weekends- (specific to correspondence games)
 
 #### noautohandicap
   ```--noautohandicap``` Do not allow handicap to be set to -automatic-
@@ -383,8 +386,7 @@ see [notes E-](/docs/docs/NOTES.md#e-) for details
 
   ```--maxhandicapunranked``` Maximum handicap to accept for unranked games
 
-**important note** : see 
-[fakerank](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#fakerank).
+**important note**: see [fakerank](#fakerank).
 
 #### min/max rank
 
@@ -399,7 +401,7 @@ ranked games (e.g. 15k)
 unranked games (e.g. 15k)
 
   max :
-
+  
   ```--maxrank``` Maximum opponent rank to accept (e.g. 1d)
 
   ```--maxrankranked``` Maximum opponent rank to accept for 
@@ -410,9 +412,7 @@ unranked games (e.g. 1d)
 
 #### min/max maintime blitz/live/corr
 
-
   min :
-
 
   ```--minmaintimeblitz``` Minimum seconds of main time for 
 blitz games (default 15 , which is 15 seconds)
@@ -441,9 +441,7 @@ correspondence ranked games
  ```--minmaintimecorrunranked``` Minimum seconds of main time 
 for correspondence unranked games 
 
-
   max :
-
 
   ```--maxmaintimeblitz``` Maximum seconds of main time for 
 blitz games (default 300, which is 5 minutes)
@@ -474,9 +472,7 @@ correspondence unranked games
 
 #### min/max periods blitz/live/corr
 
-
   min :
-
 
   ```--minperiodsblitz``` Minimum number of periods for 
 blitz games
@@ -505,9 +501,7 @@ for correspondence ranked games
   ```--minperiodscorrunranked``` Minimum number of periods 
 for correspondence unranked games
 
-
   max :
-
 
   ```--maxperiodsblitz``` Maximum number of periods for 
 blitz games
@@ -544,9 +538,7 @@ wanted period time for all the stones by the number of stones per period,
 for example max periodtime 
 5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
 
-
   min :
-
 
   ```--minperiodtimeblitz``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 
@@ -578,9 +570,7 @@ for example max periodtime
   ```--minperiodtimecorrunranked``` Minimum seconds per period 
 (average time per stone if timecontrol is canadian) for correspondence unranked games 
 
-
   max :
-
 
   ```--maxperiodtimeblitz``` Maximum seconds per period 
 (average time per stone if timecontrol is canadian) for blitz games 

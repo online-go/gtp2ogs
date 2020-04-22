@@ -17,7 +17,7 @@
   "dependencies": {
     "optimist": "=0.6.1",
     "socket.io-client": "=1.5.1",
-    "sprintf-js": "^1.1.1",
+    "split2": "^3.1.0",
     "tracer": "=0.8.7"
   },
   "devDependencies": {

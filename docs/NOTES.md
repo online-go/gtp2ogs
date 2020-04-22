@@ -1,22 +1,5 @@
 #### A : 
 
-Currently, ogs does not support profile id number authentification, 
-so you have to use bot username only. 
-
-For example, for this famous bot https://online-go.com/player/58441/GnuGo, 
-bot admin has to use the bot name `GnuGo` and currently bot admin cannot 
-use profile number `58441` (it will not work).
-
-Therefore, the old `id` aliases (`id` , `botid` , `bot`), that 
-still required names and not id numbers, contrary to what this 
-line was suggesting `Jan 23 17:18:13   #  Bot is user id: 58441`) 
-that added confusion to how to use gtp2ogs for bot admins have 
-been removed
-
-To sum up, to connect your bot on OGS, you need and you have 
-to simply use bot name, for example `--username GnuGo` for 
-the bot admin of GnuGo
-
 #### B : 
 
 note : board size format below used on gtp2ogs is 
@@ -105,14 +88,16 @@ bot will timeout in just a few moves)
 
 #### F :
 
-Currently, when handicap is automatic, `notification.handicap` 
-always returns `-1` regardless of actual handicap stone number 
-(ex: `0`, `3`, `5` stones, etc.)
+Currently, when handicap is automatic, ogs does not inform us 
+what the handicap is before accepting the challange. 
+Also, challange notifications do not contain our rank. 
+With fakerank we can estimate the handicap based on the oponent 
+ranking and our (fake) rank.
 
-Example use case : 
-- `--fakerank 6d` and `--maxhandicap 4` and user ranking 
-`2k`
-- 
+Example use case:
+`--fakerank 6d --maxhandicap 4` and user ranking `2k`:
+Expected handicap is 6d-2k = 8 ranks. 8 ranks > 4 max handicap 
+=> Challenge rejected.
 
 **important note** : until the min/maxhandicap bypass issue 
 is fixed (at the server level), it is recommended for botadmin 
@@ -132,3 +117,46 @@ special characters in your messages with caution
 these special characters have been tested to work on messages, 
 among others :  `!` (one time `!`) , `?` , `,` , `(` , `)` , 
 `:` , `;` 
+
+#### H :
+
+##### ogspv extra notes:
+
+note: in the future your AI may have updates that are incompatible 
+with the current implementation of pv (variations ingame) of gtp2ogs.
+
+If your AI stops working because of `--ogspv`, you can temporarily stop using 
+this option and report the issue on github issues or on the leela zero discord 
+until the issue is fixed again.
+
+If you get the error split2 is missing, you can install it locally from your 
+gtp2ogs folder with `npm install`, or globally (easier) with `npm install -g split2`.
+
+##### ogspv alternative weights support:
+
+You can run your AI engine **with any weight it supports**, for example 
+leela zero engine with 40b, 15b, elf-v0, elf-v1, elf-v2, minigo, etc.
+
+##### ogspv pondering support:
+
+Working with ponder on and off:
+- Leela Zero
+- Sai
+- KataGo
+- Leela (on linux)
+
+Not working with ponder at all:
+- Leela (on windows)
+- PhoenixGo
+
+##### ogspv AI-specific requirements and tips:
+
+to support pv with gtp2ogs `--ogspv`, you need to do these AI specific changes:
+
+for KataGo:
+- the requirement to set `ogsChatToStderr=true` in the config.
+
+for PhoenixGo:
+- the requirement to disable pondering, you need to set `enable_background_search` 
+to `0` in config file.
+- show pv in stderr with `--logtostderr` and `--v=1` in command-line options.

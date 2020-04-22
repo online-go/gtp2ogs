@@ -1,0 +1,12 @@
+Using per-move time margin of 4.00s.
+110 feature weights loaded, 2608 patterns
+BLAS core: MKL Intel(R) Architecture processors
+3 book moves, 357560 total positions
+5 book moves, 222707 total positions
+MC winrate=0.484375, NN eval=0.531702, score=B+5.5
+F3 ->    1435 (W: 51.28%) (U: 49.54%) (V: 52.19%:     25) (N: 87.4%) PV: F3 E3 E2 D2
+F17 ->      91 (W: 50.75%) (U: 51.69%) (V: 50.25%:      1) (N:  3.6%) PV: F17 H17
+H17 ->      71 (W: 48.30%) (U: 46.42%) (V: 49.29%:      1) (N:  4.4%) PV: H17 H16
+====================================
+1435 visits, score 51.28% (from 51.10%) PV: F3 E3 E2 D2
+1615 visits, 395 nodes, 1615 playouts, 1345 p/s

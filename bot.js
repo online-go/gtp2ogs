@@ -1,14 +1,19 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let child_process = require('child_process');
-let console = require('./console').console;
-let config = require('./config');
+const split2 = require('split2');
+const { char2num } = require("./utils/char2num");
+const { gtpchar2num } = require("./utils/gtpchar2num");
+
+const child_process = require('child_process');
+const console = require('./console').console;
+const config = require('./config');
+const { Pv } = require('./pv');
 
 /*********/
 /** Bot **/
 /*********/
 class Bot {
-    constructor(conn, game, cmd) {{{
+    constructor(conn, game, cmd) {
         this.conn = conn;
         this.game = game;
         this.commands_sent = 0;
@@ -21,6 +26,7 @@ class Bot {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
+        if (config.ogspv) this.pv = new Pv(config.ogspv, game);
 
         try {
             this.proc = child_process.spawn(cmd[0], cmd.slice(1));
@@ -34,10 +40,15 @@ class Bot {
 
         if (config.DEBUG) this.log("Starting ", cmd.join(' '));
 
-        this.proc.stderr.on('data', (data) => {
+        this.proc.stderr.pipe(split2()).on('data', (data) => {
             if (this.ignore)  return;
-            this.error("stderr: " + data);
+            const errline = data.toString().trim();
+            if (errline === "") return;
+            this.error(`stderr: ${errline}`);
+
+            if (config.ogspv) this.pv.postPvToChat(errline);
         });
+
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
             if (this.ignore)  return;
@@ -60,10 +71,10 @@ class Bot {
                 this.log("<<<", stdout_buffer.trim());
             }
 
-            let lines = stdout_buffer.split("\n");
+            const lines = stdout_buffer.split("\n");
             stdout_buffer = "";
-            for (let i=0; i < lines.length; ++i) {
-                let line = lines[i];
+            for (let i = 0; i < lines.length; ++i) {
+                const line = lines[i];
                 if (line.trim() === "") {
                     continue;
                 }
@@ -71,7 +82,7 @@ class Bot {
                     while (lines[i].trim() !== "") {
                         ++i;
                     }
-                    let cb = this.command_callbacks.shift();
+                    const cb = this.command_callbacks.shift();
                     this.command_error_callbacks.shift();
                     if (cb) cb(line.substr(1).trim());
                 }
@@ -83,16 +94,16 @@ class Bot {
                     }
                     this.failed = true;
                     this.command_callbacks.shift();
-                    let eb = this.command_error_callbacks.shift();
+                    const eb = this.command_error_callbacks.shift();
                     if (eb) eb(line.substr(1).trim());
                 }
                 else {
                     this.log("Unexpected output: ", line);
                     this.failed = true;
                     this.command_callbacks.shift();
-                    let eb = this.command_error_callbacks.shift();
+                    const eb = this.command_error_callbacks.shift();
                     if (eb) eb();
-                    //throw new Error("Unexpected output: " + line);
+                    //throw new Error(`Unexpected output: ${line}`);
                 }
             }
         });
@@ -102,7 +113,7 @@ class Bot {
             }
             this.command_callbacks.shift();
             this.dead = true;
-            let eb = this.command_error_callbacks.shift();
+            const eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
         });
         this.proc.stdin.on('error', (code) => {
@@ -112,11 +123,10 @@ class Bot {
             this.command_callbacks.shift();
             this.dead = true;
             this.failed = true;
-            let eb = this.command_error_callbacks.shift();
+            const eb = this.command_error_callbacks.shift();
             if (eb) eb(code);
         });
-    }}}
-
+    }
     pid() {
         if (this.proc) {
             return this.proc.pid;
@@ -124,30 +134,30 @@ class Bot {
             return -1;
         }
     }
-    log() { /* {{{ */
-        let arr = ["[" + this.pid() + "]"];
-        for (let i=0; i < arguments.length; ++i) {
+    log() {
+        const arr = [ `[${this.pid()}]` ];
+        for (let i = 0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
 
         console.log.apply(null, arr);
-    } /* }}} */
-    error() { /* {{{ */
-        let arr = ["[" + this.pid() + "]"];
-        for (let i=0; i < arguments.length; ++i) {
+    }
+    error() {
+        const arr = [ `[${this.pid()}]` ];
+        for (let i = 0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
 
         console.error.apply(null, arr);
-    } /* }}} */
-    verbose() { /* {{{ */
-        let arr = ["[" + this.pid() + "]"];
-        for (let i=0; i < arguments.length; ++i) {
+    }
+    verbose() {
+        const arr = [ `[${this.pid()}]` ];
+        for (let i = 0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
 
         console.verbose.apply(null, arr);
-    } /* }}} */
+    }
     loadClock(state) {
         /* References:
            http://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#sec:time-handling
@@ -208,6 +218,7 @@ class Bot {
                    If we have less than half a period to think and extra periods left,
                    lets go ahead and use the period up.
                 */
+              
                 adjustByoyomiKgsTimeleftAndPeriods(blackObj, state);
                 adjustByoyomiKgsTimeleftAndPeriods(whiteObj, state);
 
@@ -219,6 +230,7 @@ class Bot {
                 */
                 this.command(getByoyomiKgsTimeleft(blackObj, state));
                 this.command(getByoyomiKgsTimeleft(whiteObj, state));
+
             } else {
                 /* OGS enforces the number of periods is always 1 or greater.
                    Let's pretend the final period is a Canadian Byoyomi of 1 stone.
@@ -309,7 +321,7 @@ class Bot {
         */
     }
     
-    loadState(state, cb, eb) { /* {{{ */
+    loadState(state, cb, eb) {
         if (this.dead) {
             if (config.DEBUG) { this.log("Attempting to load dead bot") }
             this.failed = true;
@@ -317,33 +329,32 @@ class Bot {
             return false;
         }
 
-        this.command("boardsize " + state.width, () => {}, eb);
+        this.command(`boardsize ${state.width}`, () => {}, eb);
         this.command("clear_board", () => {}, eb);
-        this.command("komi " + state.komi, () => {}, eb);
+        this.command(`komi ${state.komi}`, () => {}, eb);
         //this.log(state);
 
         //this.loadClock(state);
 
         let have_initial_state = false;
         if (state.initial_state) {
-            let black = decodeMoves(state.initial_state.black, state.width);
-            let white = decodeMoves(state.initial_state.white, state.width);
+            const black = decodeMoves(state.initial_state.black, state.width);
+            const white = decodeMoves(state.initial_state.white, state.width);
             have_initial_state = (black.length || white.length);
 
-            for (let i=0; i < black.length; ++i)
-                this.command("play black " + move2gtpvertex(black[i], state.width), () => {}, eb);
-            for (let i=0; i < white.length; ++i)
-                this.command("play white " + move2gtpvertex(white[i], state.width), () => {}, eb);
+            for (let i = 0; i < black.length; ++i)
+                this.command(`play black ${move2gtpvertex(black[i], state.width)}`, () => {}, eb);
+            for (let i = 0; i < white.length; ++i)
+                this.command(`play white ${move2gtpvertex(white[i], state.width)}`, () => {}, eb);
         }
 
         // Replay moves made
         let color = state.initial_player;
-        let doing_handicap = (!have_initial_state && state.free_handicap_placement && state.handicap > 1);
-        let handicap_moves = [];
-        let moves = decodeMoves(state.moves, state.width);
-        for (let i=0; i < moves.length; ++i) {
-            let move = moves[i];
-            let c = color
+        const doing_handicap = (!have_initial_state && state.free_handicap_placement && state.handicap > 1);
+        const handicap_moves = [];
+        const moves = decodeMoves(state.moves, state.width);
+        for (let i = 0; i < moves.length; ++i) {
+            const move = moves[i];
 
             // Use set_free_handicap for handicap stones, play otherwise.
             if (doing_handicap && handicap_moves.length < state.handicap) {
@@ -352,18 +363,18 @@ class Bot {
                     this.sendHandicapMoves(handicap_moves, state.width);
                 else continue;  // don't switch color.
             } else {
-                this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
+                this.command(`play ${color} ${move2gtpvertex(move, state.width)}`)
             }
 
-            color = color === 'black' ? 'white' : 'black';
+            color = (color === 'black' ? 'white' : 'black');
         }
         if (config.showboard) {
             this.command("showboard", cb, eb);
         }
         return true;
-    } /* }}} */
+    }
 
-    command(str, cb, eb, final_command) { /* {{{ */
+    command(str, cb, eb, final_command) {
         if (this.dead) {
             if (config.DEBUG) { this.log("Attempting to send a command to dead bot:", str) }
             this.failed = true;
@@ -390,7 +401,7 @@ class Bot {
                     this.proc.stdin.end()
                 }
             } else {
-                this.proc.stdin.write(str + "\r\n");
+                this.proc.stdin.write(`${str}\r\n`);
             }
         } catch (e) {
             // I think this does not normally happen, the exception will usually be raised in the async write handler
@@ -404,13 +415,13 @@ class Bot {
             this.command_error_callbacks.shift();
             if (eb) eb(e);
         }
-    } /* }}} */
+    }
 
     // For commands like genmove, place_free_handicap ... :
     // Send @cmd to engine and call @cb with returned moves.
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
-    getMoves(cmd, state, cb, eb) { /* {{{ */
+    getMoves(cmd, state, cb, eb) {
         // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
         // subtract that missing time from what we tell the bot.
         //
@@ -423,21 +434,22 @@ class Bot {
 
         this.command(cmd, (line) => {
             line = typeof(line) === "string" ? line.toLowerCase() : null;
-            let parts = line.split(/ +/);
-            let moves = [];
+            const parts = line.split(/ +/);
+            const moves = [];
 
-            for (let i=0; i < parts.length; i++) {
-                let move = parts[i];
+            for (let i = 0; i < parts.length; i++) {
+                const move = parts[i];
 
                 let resign = move === 'resign';
-                let pass = move === 'pass';
-                let x=-1, y=-1;
+                const pass = move === 'pass';
+                let x = -1,
+                    y = -1;
                 if (!resign && !pass) {
                     if (move && move[0]) {
                         x = gtpchar2num(move[0]);
                         y = state.width - parseInt(move.substr(1))
                     } else {
-                        this.log(cmd + " failed, resigning");
+                        this.log(`${cmd} failed, resigning`);
                         resign = true;
                     }
                 }
@@ -449,9 +461,9 @@ class Bot {
             eb,
             true /* final command */
         )
-    } /* }}} */
+    }
 
-    kill() { /* {{{ */
+    kill() {
         this.log("Stopping bot");
         this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
         this.dead = true;
@@ -464,17 +476,17 @@ class Bot {
                 this.proc.kill(9);
             }, 5000);
         }
-    } /* }}} */
+    }
     sendMove(move, width, color){
         if (config.DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
-        this.command("play " + color + " " + move2gtpvertex(move, width));
+        this.command(`play ${color} ${move2gtpvertex(move, width)}`);
     }
-    sendHandicapMoves(moves, width) { /* {{{ */
+    sendHandicapMoves(moves, width) {
         let cmd = "set_free_handicap";
         for (let i = 0; i < moves.length; i++)
-            cmd += " " + move2gtpvertex(moves[i], width);
+            cmd += ` ${move2gtpvertex(moves[i], width)}`;
         this.command(cmd);
-    } /* }}} */
+    }
     // Called on game over, in case you need something special.
     //
     gameOver() {
@@ -555,10 +567,10 @@ function getAbsoluteTimeleft(obj) {
     return `time_left ${obj.color} ${obj.timeleft} 0`;
 }
 
-function decodeMoves(move_obj, board_size) { /* {{{ */
-    let ret = [];
-    let width = board_size;
-    let height = board_size;
+function decodeMoves(move_obj, board_size) {
+    const ret = [];
+    const width = board_size;
+    const height = board_size;
 
     /*
     if (DEBUG) {
@@ -566,15 +578,15 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
     */
 
-    let decodeSingleMoveArray = (arr) => {
-        let obj = {
+   const decodeSingleMoveArray = (arr) => {
+        const obj = {
             x         : arr[0],
             y         : arr[1],
             timedelta : arr.length > 2 ? arr[2] : -1,
             color     : arr.length > 3 ? arr[3] : 0,
         }
-        let extra = arr.length > 4 ? arr[4] : {};
-        for (let k in extra) {
+        const extra = arr.length > 4 ? arr[4] : {};
+        for (const k in extra) {
             obj[k] = extra[k];
         }
         return obj;
@@ -585,8 +597,8 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
             ret.push(decodeSingleMoveArray(move_obj));
         }
         else {
-            for (let i=0; i < move_obj.length; ++i) {
-                let mv = move_obj[i];
+            for (let i = 0; i < move_obj.length; ++i) {
+                const mv = move_obj[i];
                 if (mv instanceof Array) {
                     ret.push(decodeSingleMoveArray(mv));
                 }
@@ -600,40 +612,43 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
 
         if (/[a-zA-Z][0-9]/.test(move_obj)) {
             /* coordinate form, used from human input. */
-            let move_string = move_obj;
+            const move_string = move_obj;
 
-            let moves = move_string.split(/([a-zA-Z][0-9]+|[.][.])/);
-            for (let i=0; i < moves.length; ++i) {
+            const moves = move_string.split(/([a-zA-Z][0-9]+|[.][.])/);
+            for (let i = 0; i < moves.length; ++i) {
                 if (i%2) { /* even are the 'splits', which should always be blank unless there is an error */
                     let x = pretty_char2num(moves[i][0]);
                     let y = height-parseInt(moves[i].substring(1));
-                    if ((width && x >= width) || x < 0) x = y= -1;
-                    if ((height && y >= height) || y < 0) x = y = -1;
+                    if ( ((width && x >= width) || x < 0) ||
+                         ((height && y >= height) || y < 0) ) {
+                        x = y = -1;
+                    }
                     ret.push({"x": x, "y": y, "edited": false, "color": 0});
                 } else {
                     if (moves[i] !== "") { 
-                        throw "Unparsed move input: " + moves[i];
+                        throw `Unparsed move input: ${moves[i]}`;
                     }
                 }
             }
         } else {
             /* Pure letter encoded form, used for all records */
-            let move_string = move_obj;
+            const move_string = move_obj;
 
-            for (let i=0; i < move_string.length-1; i += 2) {
+            for (let i = 0; i < move_string.length-1; i += 2) {
                 let edited = false;
                 let color = 0;
-                if (move_string[i+0] === '!') {
+                if (move_string[i + 0] === '!') {
                     edited = true;
-                    color = parseInt(move_string[i+1]);
+                    color = parseInt(move_string[i + 1]);
                     i += 2;
                 }
 
 
                 let x = char2num(move_string[i]);
-                let y = char2num(move_string[i+1]);
-                if (width && x >= width) x = y= -1;
-                if (height && y >= height) x = y = -1;
+                let y = char2num(move_string[i + 1]);
+                if ((width && x >= width) || (height && y >= height)) {
+                    x = y = -1;
+                }
                 ret.push({"x": x, "y": y, "edited": edited, "color": color});
             }
         }
@@ -643,31 +658,22 @@ function decodeMoves(move_obj, board_size) { /* {{{ */
     }
 
     return ret;
-} /* }}} */
-function char2num(ch) { /* {{{ */
-    if (ch === ".") return -1;
-    return "abcdefghijklmnopqrstuvwxyz".indexOf(ch);
-} /* }}} */
-function pretty_char2num(ch) { /* {{{ */
+}
+function pretty_char2num(ch) {
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-} /* }}} */
-function move2gtpvertex(move, board_size) { /* {{{ */
+}
+function move2gtpvertex(move, board_size) {
     if (move.x < 0) {
         return "pass";
     }
     return num2gtpchar(move['x']) + (board_size-move['y'])
-} /* }}} */
-function gtpchar2num(ch) { /* {{{ */
-    if (ch === "." || !ch)
-        return -1;
-    return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
-} /* }}} */
-function num2gtpchar(num) { /* {{{ */
+}
+function num2gtpchar(num) {
     if (num === -1) 
         return ".";
     return "abcdefghjklmnopqrstuvwxyz"[num];
-} /* }}} */
+}
 
 exports.Bot = Bot;
 exports.decodeMoves = decodeMoves;

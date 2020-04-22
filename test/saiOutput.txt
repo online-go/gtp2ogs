@@ -1,0 +1,160 @@
+Logging to betasai.
+Using OpenCL batch size of 5
+Using 10 thread(s).
+RNG seed: 7005372788090766428
+Using per-move time margin of 10.00s.
+BLAS Core: built-in Eigen 3.3.7 library.
+Version 209 weights file (advanced board features + chain liberties + chain size).
+Detecting residual layers... v209
+13 input planes, 1 input moves
+256 channels... 12 blocks
+2 policy outputs. Double value head. Type Y.
+Common convolution: 5 outputs.
+Alpha head: 384 channels. Beta head: 256 channels.
+Initializing OpenCL (half precision).
+Detected 1 OpenCL platforms.
+Platform version: OpenCL 1.2 CUDA 10.2.115
+Platform profile: FULL_PROFILE
+Platform name:    NVIDIA CUDA
+Platform vendor:  NVIDIA Corporation
+Device ID:     0
+Device name:   GeForce RTX 2080
+Device type:   GPU
+Device vendor: NVIDIA Corporation
+Device driver: 441.87
+Device speed:  1860 MHz
+Device cores:  46 CU
+Device score:  1112
+Selected platform: NVIDIA CUDA
+Selected device: GeForce RTX 2080
+with OpenCL 1.2 capability.
+Half precision compute support: No.
+Tensor Core support: Yes.
+Loaded existing SGEMM tuning.
+Wavefront/Warp size: 32
+Max workgroup size: 1024
+Max workgroup dimensions: 1024 1024 64
+Setting max tree size to 4188 MiB and cache size to 465 MiB.
+Thinking at most 94069.6 seconds...
+NN eval=0.562913. Agent eval=0.547216
+cpus=10
+Playouts: 3148, Win: 57.75%, PV: E17 O17 Q14 E3 F2 C5 B6 E2
+Playouts: 9037, Win: 57.71%, PV: O17 C5 D5 C4 B6 E2 E3 D2 F2 B5 E17 E4 F4 F5 E7 G5 J3 F8 F7 G7 G8 H7 F9
+94063.3s left, stopping early.
+O17 ->    7012 (V: 56.84%) (LCB: 56.59%) (N: 18.93%) (A:  3.1) PV: O17 E3 E4 D3 F2 B5 B6 C5 C2 D2 B3 D5 D6 E6 G5 B4 C3 D1 E7 F6 G8 E17
+O3 ->     811 (V: 56.59%) (LCB: 56.10%) (N:  1.98%) (A:  3.1) PV: O3 O17 R6 Q6 Q7 P6 R5 R4 R10 M3 N4 M4 N6 M5 N5
+E17 ->     837 (V: 56.32%) (LCB: 55.75%) (N:  5.08%) (A:  3.0) PV: E17 O17 Q14 S15 R17 Q13 O14 E3 F2 B5 B6 E2
+R3 ->     792 (V: 56.03%) (LCB: 55.53%) (N:  7.06%) (A:  2.8) PV: R3 R4 Q3 O3 O2 N2 P2 N3 P4 P3 S4 S5 S3 P5 R5 Q5 R6 E2
+N17 ->     694 (V: 56.46%) (LCB: 55.77%) (N:  3.01%) (A:  3.1) PV: N17 E3 E2 D2 F2 B5 B6 C5 D5 B3 F17 D6 C8 D9 E7 O3
+F17 ->     463 (V: 56.19%) (LCB: 55.51%) (N:  3.46%) (A:  2.8) PV: F17 O17 Q14 S15 R17 Q13 O14 B5 D2 B6 C8 C7 D7
+R6 ->     223 (V: 56.43%) (LCB: 55.55%) (N:  1.08%) (A:  2.9) PV: R6 O17 O3 Q6 Q7 P6 R5 R4 R9 P7 Q8 M3
+N16 ->     191 (V: 56.42%) (LCB: 55.33%) (N:  0.83%) (A:  3.1) PV: N16 C5 B6 B5 D5 C3 D2 C2 A5 E2
+F16 ->     122 (V: 55.83%) (LCB: 54.52%) (N:  1.30%) (A:  2.8) PV: F16 O17 Q14 E3 F2 B5 B6 E2 E4 C3 R14
+M17 ->      92 (V: 56.04%) (LCB: 54.60%) (N:  0.78%) (A:  2.9) PV: M17 E3 F2 E2 E4 C3 B4 B3 C4 F4
+E16 ->      66 (V: 55.67%) (LCB: 53.91%) (N:  0.81%) (A:  2.7) PV: E16 O17 O16 N16 P17 O15 P16 N17 S15 E2 F2 B5
+O16 ->      62 (V: 55.92%) (LCB: 54.24%) (N:  0.61%) (A:  2.8) PV: O16 C5 B6 E2 F2 B5 D5 C3 E3 D2 A5
+R4 ->      47 (V: 55.92%) (LCB: 54.24%) (N:  0.49%) (A:  2.8) PV: R4 R3 R5 Q5 S3 S2 R7 Q6 O17 R6 S6 C5 B6
+B4 ->      38 (V: 51.41%) (LCB: 49.23%) (N:  1.60%) (A:  1.1) PV: B4 O17 O16 N16 P17 O15 P16 N17 Q14 E17 D14
+N3 ->      27 (V: 55.11%) (LCB: 52.29%) (N:  0.46%) (A:  2.6) PV: N3 C5 B6 E2 F2 B5 D5 C3 D2 C2 E3 O17
+R11 ->      26 (V: 54.33%) (LCB: 51.50%) (N:  0.65%) (A:  2.3) PV: R11 E3 F2 B5 B6 E2 E4 C3 C5 B4 E1
+M4 ->      25 (V: 55.47%) (LCB: 52.80%) (N:  0.38%) (A:  2.7) PV: M4 E2 F2 B5 B6 C5 D5 C3 O17
+N4 ->      24 (V: 55.41%) (LCB: 52.81%) (N:  0.37%) (A:  2.6) PV: N4 C5 B6 E2 F2 B5 D5 C3
+Q3 ->      23 (V: 55.27%) (LCB: 52.66%) (N:  0.40%) (A:  2.6) PV: Q3 R3 P3 R4 M3 B5 B6 E2 F2 C5 D5
+E12 ->      22 (V: 55.59%) (LCB: 51.36%) (N:  0.24%) (A:  2.7) PV: E12 B5 B6 E2 F2 C5 D5 C3
+J8 ->      21 (V: 55.53%) (LCB: 52.06%) (N:  0.31%) (A:  2.6) PV: J8 B5 B6 E2 F2 C5 D5
+S15 ->      20 (V: 54.08%) (LCB: 51.08%) (N:  0.59%) (A:  2.1) PV: S15 E2 F2 B5 B6 E3 E4 C3
+Q11 ->      19 (V: 55.31%) (LCB: 50.63%) (N:  0.28%) (A:  2.6) PV: Q11 B5 B6 E2 F2 E3
+R10 ->      19 (V: 55.10%) (LCB: 52.22%) (N:  0.37%) (A:  2.5) PV: R10 E3 F2 B5 B6 E2 E4 D5
+G11 ->      19 (V: 55.04%) (LCB: 51.32%) (N:  0.34%) (A:  2.5) PV: G11 E2 F2 B5 B6 C5 D5 C3
+O4 ->      19 (V: 54.84%) (LCB: 51.65%) (N:  0.40%) (A:  2.4) PV: O4 C5 B6 E2 F2 B5 D5 C3 R6 Q6
+Q14 ->      19 (V: 54.79%) (LCB: 52.60%) (N:  0.43%) (A:  2.4) PV: Q14 E3 F2 C5 B6 B5 D5
+R15 ->      19 (V: 54.69%) (LCB: 51.71%) (N:  0.42%) (A:  2.3) PV: R15 C5 B6 E2 F2 B5 D5
+Q13 ->      19 (V: 54.55%) (LCB: 50.59%) (N:  0.37%) (A:  2.3) PV: Q13 Q14 R12 S14 P14 P13 Q12 P15 O14 Q15
+L7 ->      17 (V: 55.36%) (LCB: 52.04%) (N:  0.27%) (A:  2.6) PV: L7 C5 B6 E2 F2 B5 D5 C3 O3 O17 R6
+H10 ->      17 (V: 54.49%) (LCB: 50.06%) (N:  0.39%) (A:  2.3) PV: H10 C5 B6 E2 F2 B5 D5 C3
+L4 ->      17 (V: 54.35%) (LCB: 50.31%) (N:  0.38%) (A:  2.2) PV: L4 B5 B6 E2 F2 C5 D5 C3
+J16 ->      16 (V: 55.47%) (LCB: 50.50%) (N:  0.26%) (A:  2.6) PV: J16 E3 E4 D3 F2 B5 B6 C5
+K4 ->      16 (V: 55.01%) (LCB: 50.76%) (N:  0.32%) (A:  2.5) PV: K4 E3 F2 B5 B6 E2 E4 C3 O17
+D12 ->      16 (V: 54.71%) (LCB: 51.14%) (N:  0.37%) (A:  2.4) PV: D12 O17 Q14 E2 F2 B5
+H9 ->      16 (V: 54.64%) (LCB: 50.35%) (N:  0.32%) (A:  2.3) PV: H9 O17 O16 N16 P17 O15 P16 N17
+H12 ->      15 (V: 55.36%) (LCB: 50.76%) (N:  0.26%) (A:  2.6) PV: H12 E2 F2 B5 B6 C5 D5
+M8 ->      15 (V: 55.15%) (LCB: 51.26%) (N:  0.28%) (A:  2.5) PV: M8 B5 B6 E2 F2 C5 D5 C3
+D14 ->      15 (V: 55.09%) (LCB: 51.88%) (N:  0.29%) (A:  2.5) PV: D14 C5 B6 E2 F2 B5 D5 C3
+R7 ->      15 (V: 54.96%) (LCB: 50.34%) (N:  0.32%) (A:  2.4) PV: R7 E2 F2 B5 B6 E3 E4 C3
+D10 ->      15 (V: 54.82%) (LCB: 51.04%) (N:  0.34%) (A:  2.4) PV: D10 C5 B6 E2 F2 E3 E4 C3
+L16 ->      15 (V: 53.80%) (LCB: 49.19%) (N:  0.22%) (A:  2.0) PV: L16 L17 M17 M16 L15 N17 M18 N18 L18 K17 N16 M15 K18
+H17 ->      15 (V: 53.61%) (LCB: 48.73%) (N:  0.40%) (A:  2.0) PV: H17 O17 O16 N16 P17 O15 P16 N17
+Q12 ->      14 (V: 54.98%) (LCB: 50.91%) (N:  0.30%) (A:  2.4) PV: Q12 Q13 O17 C5 B6 E2 F2 B5 D5
+L9 ->      14 (V: 54.80%) (LCB: 51.26%) (N:  0.32%) (A:  2.4) PV: L9 B5 B6 E2 F2 C5 D5 C3
+G9 ->      14 (V: 54.71%) (LCB: 50.87%) (N:  0.29%) (A:  2.4) PV: G9 E3 F2 B5 B6 E2 E4 C3
+F10 ->      14 (V: 54.64%) (LCB: 50.51%) (N:  0.31%) (A:  2.3) PV: F10 C5 B6 E2 F2 B5 D5 C3
+L8 ->      14 (V: 54.64%) (LCB: 49.24%) (N:  0.31%) (A:  2.3) PV: L8 B5 B6 E2 F2 E3 E4 C3
+H11 ->      14 (V: 54.53%) (LCB: 49.14%) (N:  0.33%) (A:  2.3) PV: H11 E2 F2 B5 B6 E3 E4
+L10 ->      14 (V: 54.21%) (LCB: 47.88%) (N:  0.33%) (A:  2.2) PV: L10 O17 O16 N16 P17 O15 P16 N17
+K9 ->      14 (V: 54.12%) (LCB: 48.33%) (N:  0.33%) (A:  2.1) PV: K9 O17 O16 N16 P17 O15 P16 N17
+G17 ->      14 (V: 53.39%) (LCB: 47.80%) (N:  0.41%) (A:  1.9) PV: G17 O17 O16 N16 P17 O15 P16 N17 Q14 S15
+Q9 ->      13 (V: 54.89%) (LCB: 50.48%) (N:  0.28%) (A:  2.4) PV: Q9 B5 B6 E2 F2 E3 E4 C3
+M16 ->      13 (V: 54.84%) (LCB: 49.96%) (N:  0.29%) (A:  2.4) PV: M16 E3 F2 B5 B6 E2 E4 C3 B4 B3
+M10 ->      13 (V: 53.75%) (LCB: 48.38%) (N:  0.31%) (A:  2.0) PV: M10 O17 O16 N16 P17 O15 P16 N17 S15
+J6 ->      12 (V: 55.10%) (LCB: 49.07%) (N:  0.23%) (A:  2.5) PV: J6 B5 B6 E2 F2 E3 E4 C3
+G10 ->      12 (V: 54.38%) (LCB: 49.66%) (N:  0.32%) (A:  2.3) PV: G10 O17 O16 N16 O15 P17 Q17
+M3 ->      12 (V: 54.30%) (LCB: 50.02%) (N:  0.33%) (A:  2.2) PV: M3 C5 B6 E2 F2 B5 D5 C3 O17
+D13 ->      12 (V: 54.27%) (LCB: 48.22%) (N:  0.35%) (A:  2.2) PV: D13 E2 F2 B5 B6
+N8 ->      12 (V: 54.20%) (LCB: 48.31%) (N:  0.27%) (A:  2.2) PV: N8 E3 F2 B5 B6 E2 E4
+M9 ->      12 (V: 53.88%) (LCB: 48.02%) (N:  0.30%) (A:  2.1) PV: M9 E2 F2 B5 B6 C5 D5
+E11 ->      12 (V: 53.58%) (LCB: 47.50%) (N:  0.28%) (A:  1.9) PV: E11 O17 O16 N16 P17 O15 P16 N17
+D2 ->      12 (V: 50.49%) (LCB: 44.66%) (N:  0.56%) (A:  0.7) PV: D2 O17 O16 N16 P17 O15 P16 N17 S15 E17
+K11 ->      11 (V: 54.67%) (LCB: 47.53%) (N:  0.23%) (A:  2.3) PV: K11 E2 F2 B5 B6 C5 D5
+L11 ->      11 (V: 54.52%) (LCB: 49.88%) (N:  0.29%) (A:  2.4) PV: L11 E3 F2 B5 B6 E2 E4 C3 C5
+J9 ->      11 (V: 54.41%) (LCB: 49.29%) (N:  0.30%) (A:  2.3) PV: J9 O17 R3 R4
+K7 ->      11 (V: 54.26%) (LCB: 48.17%) (N:  0.28%) (A:  2.2) PV: K7 B5 B6 E2 F2 E3 E4
+F11 ->      11 (V: 54.00%) (LCB: 47.70%) (N:  0.29%) (A:  2.1) PV: F11 O17 O16 N16 P17 O15 P16
+K8 ->      11 (V: 53.54%) (LCB: 47.21%) (N:  0.33%) (A:  1.9) PV: K8 O17 O16 N16 P17 O15 P16 N17 S15
+K10 ->      11 (V: 52.91%) (LCB: 46.87%) (N:  0.36%) (A:  1.7) PV: K10 O17 O16 N16 P17 O15 P16 N17
+C3 ->      11 (V: 51.90%) (LCB: 45.85%) (N:  0.49%) (A:  1.3) PV: C3 O17 O16 N16 P17 O15 P16 N17
+Q8 ->      10 (V: 54.81%) (LCB: 48.53%) (N:  0.22%) (A:  2.4) PV: Q8 B5 B6 E3 F2 E2
+Q7 ->      10 (V: 54.69%) (LCB: 49.34%) (N:  0.23%) (A:  2.4) PV: Q7 B5 B6 E2 F2 E3 E4 C3
+N10 ->      10 (V: 54.31%) (LCB: 46.69%) (N:  0.25%) (A:  2.2) PV: N10 E2 B4 B3 C3 C4
+Q6 ->      10 (V: 54.00%) (LCB: 46.89%) (N:  0.31%) (A:  2.1) PV: Q6 E3 F2 B5 B6 E2 E4 C3 O3
+Q10 ->      10 (V: 53.26%) (LCB: 48.26%) (N:  0.36%) (A:  1.8) PV: Q10 E3 F2 B5 B6 E2 E4 C3 B4
+F9 ->      10 (V: 53.16%) (LCB: 43.74%) (N:  0.26%) (A:  1.8) PV: F9 O17 O16 N16 P17 O15 P16 N17
+G16 ->      10 (V: 52.85%) (LCB: 47.35%) (N:  0.34%) (A:  1.7) PV: G16 O17 O16 N16 P17 O15 P16 N17
+D11 ->      10 (V: 52.23%) (LCB: 46.32%) (N:  0.35%) (A:  1.4) PV: D11 O17 O16 N16 P17 O15 P16 N17 Q14
+L5 ->       9 (V: 54.48%) (LCB: 47.26%) (N:  0.22%) (A:  2.2) PV: L5 E2 F2 B5 B6 C5
+M11 ->       9 (V: 54.26%) (LCB: 48.77%) (N:  0.26%) (A:  2.2) PV: M11 E3 F2 B5 B6 E2
+K12 ->       9 (V: 54.04%) (LCB: 46.71%) (N:  0.23%) (A:  2.2) PV: K12 B5 B6 E2 F2 C5 D5
+R14 ->       9 (V: 53.12%) (LCB: 46.55%) (N:  0.34%) (A:  1.8) PV: R14 S14 Q14 S15 R17 Q13 N17
+H8 ->       9 (V: 52.94%) (LCB: 43.09%) (N:  0.29%) (A:  1.7) PV: H8 O17 O16 N16 P17 O15 P16 N17
+B5 ->       9 (V: 52.52%) (LCB: 41.94%) (N:  0.30%) (A:  1.5) PV: B5 O17 O16 N16 P17 O15 P16 N17
+N11 ->       8 (V: 54.23%) (LCB: 45.17%) (N:  0.24%) (A:  2.2) PV: N11 E2 F2 B5 B6 E3
+N7 ->       8 (V: 53.96%) (LCB: 44.54%) (N:  0.27%) (A:  2.1) PV: N7 C5 B6 E2 F2
+O9 ->       8 (V: 53.85%) (LCB: 45.59%) (N:  0.22%) (A:  2.1) PV: O9 E3 F2 B5 B6 E2
+K6 ->       8 (V: 53.82%) (LCB: 45.87%) (N:  0.24%) (A:  2.0) PV: K6 O17 O16 N16 P17
+J11 ->       8 (V: 53.72%) (LCB: 48.26%) (N:  0.25%) (A:  2.0) PV: J11 E3 F2 B5 B6 E2 E4 C3
+J4 ->       8 (V: 53.63%) (LCB: 48.62%) (N:  0.24%) (A:  1.9) PV: J4 E3 F2 B5
+L3 ->       8 (V: 53.62%) (LCB: 42.11%) (N:  0.23%) (A:  1.9) PV: L3 E3 F2 B5 B6 E2
+L6 ->       8 (V: 53.60%) (LCB: 43.17%) (N:  0.24%) (A:  1.9) PV: L6 B5 B6 E2 F2 C5
+E10 ->       8 (V: 53.31%) (LCB: 43.51%) (N:  0.25%) (A:  1.8) PV: E10 O17 O16 N16 P17 O15
+J7 ->       8 (V: 53.25%) (LCB: 44.41%) (N:  0.25%) (A:  1.8) PV: J7 E3 F2 B5 B6 E2
+G13 ->       8 (V: 52.94%) (LCB: 36.76%) (N:  0.29%) (A:  1.7) PV: G13 O17 O16 N16 P17 O15
+G8 ->       8 (V: 52.58%) (LCB: 44.08%) (N:  0.23%) (A:  1.6) PV: G8 O17 O16 N16 P17 O15 P16 N17
+J10 ->       8 (V: 52.28%) (LCB: 41.57%) (N:  0.27%) (A:  1.5) PV: J10 O17 O16 N16 P17 O15 P16 N17
+G12 ->       8 (V: 52.28%) (LCB: 38.57%) (N:  0.27%) (A:  1.5) PV: G12 O17 O16 N16 P17 O15 P16 N17
+F12 ->       8 (V: 52.27%) (LCB: 41.40%) (N:  0.25%) (A:  1.4) PV: F12 O17 O16 N16 P17 O15 P16 N17
+R8 ->       7 (V: 53.96%) (LCB: 41.78%) (N:  0.26%) (A:  2.1) PV: R8 E2 F2 B5 B6 E3 E4
+C12 ->       7 (V: 53.56%) (LCB: 43.74%) (N:  0.22%) (A:  1.9) PV: C12 C5 B6 E2
+N9 ->       7 (V: 53.53%) (LCB: 41.94%) (N:  0.26%) (A:  1.9) PV: N9 B5 B6 E2 F2 E3
+M7 ->       7 (V: 53.52%) (LCB: 47.91%) (N:  0.27%) (A:  1.9) PV: M7 E2 B4 B3
+C13 ->       7 (V: 53.19%) (LCB: 43.63%) (N:  0.27%) (A:  1.8) PV: C13 B5 B6 E2 F2 C5
+D9 ->       7 (V: 52.48%) (LCB: 41.03%) (N:  0.25%) (A:  1.5) PV: D9 O17 O16 N16 P17 O15 P16
+M6 ->       6 (V: 53.46%) (LCB: 37.99%) (N:  0.23%) (A:  1.9) PV: M6 B5 B6 E2 F2
+N6 ->       6 (V: 53.04%) (LCB: 32.20%) (N:  0.22%) (A:  1.7) PV: N6 E2 F2 B5 B6 C5
+L12 ->       6 (V: 52.73%) (LCB: 42.44%) (N:  0.22%) (A:  1.6) PV: L12 O17 O16 N16
+H16 ->       6 (V: 52.40%) (LCB: 32.36%) (N:  0.24%) (A:  1.5) PV: H16 O17 O16 N16 O15 P17
+R9 ->       6 (V: 52.36%) (LCB: 45.26%) (N:  0.30%) (A:  1.5) PV: R9 R6 O17 E3 F2 B5
+H14 ->       6 (V: 52.17%) (LCB: 35.25%) (N:  0.23%) (A:  1.4) PV: H14 O17 O16 N16 P17 O15
+M12 ->       4 (V: 53.98%) (LCB: 27.81%) (N:  0.21%) (A:  2.2) PV: M12 O17 O16 N16
+H13 ->       4 (V: 52.40%) (LCB:  0.00%) (N:  0.21%) (A:  1.5) PV: H13 O17 O16 N16
+9.5 average depth, 27 max depth
+10012 non leaf nodes, 1.27 average children
+12681 visits, 4342664 nodes, 12680 playouts, 1991 n/s

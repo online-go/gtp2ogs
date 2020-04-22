@@ -8,7 +8,7 @@ This javascript tool allows all bots/AI that support
 to communicate with [OGS (Online-Go.com Server)](https://online-go.com/).
 
 After being configured, gtp2ogs is ready to work as-is, 
-but it is also possible to [customize](#extra--custom-branches) it.
+but it is also possible to customize it.
 
 Being a bot admin on OGS means :
 - you can put your bot online whenever you want
@@ -153,16 +153,18 @@ but it works the same way on other platforms and AI :
 
 ```sudo node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --beta --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username testbot --debug --startupbuffer 2 --bans 454,someplayer,489,512 --noclock --unrankedonly --maxconnectedgames 10 --maxconnectedgamesperuser 1 --minrank 5d --noautohandicapranked --maxhandicap 0 --fakerank 8d --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2019/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2019/PhoenixGo/etc/mcts_1gpu_beta.conf --v=1```
 
-# Extra : Custom branches
+# Submit Move Button
 
-Some branches add some not obligatory, but still nice features such as 
-**displaying variations (PV) ingame for Leela zero and PhoenixGo** 
+To avoid accidental misclicks while spectating a game from 
+your bot account, 
 
-You may customize your gtp2ogs code by yourself if you have the programming 
-knowledge.
+see: [Submit-Move Button](https://github.com/wonderingabout/gtp2ogs-tutorial#important-submit-move-button)
 
-However, some contributors freely provide their custom branches, see 
-[Custom Branches](/docs/CUSTOM-BRANCHES.md) for details.
+# Show winrate and variations ingame
+
+**gtp2ogs has default support for showing ingame winrate and variations for some AI.**
+
+see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
 
 # Community Involvment
 
