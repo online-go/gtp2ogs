@@ -64,7 +64,7 @@ see for details [notes G](/docs/NOTES.md#g)
 ### username
 
 `--username` Specify the username of the bot, for example
-`--username GnuGo`, see [notes A](/docs/NOTES.md#a) for details
+`--username GnuGo`
 
 ### apikey
 
@@ -288,9 +288,9 @@ every other value will be rejected
 operator `:` to navigate one by one from min to max (ex:
 `5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
 
-example: `--speeds all`
-example 2: `--speedsranked live,correspondence --speedsunranked all`
-example 3: `--komis 0.5,5.5:7.5,automatic`
+example: `--speeds blitz,live`
+example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
+example 3: `--komis 0.5,5.5,7.5,automatic`
 
 #### boardsizes
 
