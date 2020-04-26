@@ -424,7 +424,8 @@ function exportAllowedFamilyNumbers(familyNameString, argv) {
                 } else if (arg.includes(":")) {
                     const [numberA, numberB, incr] = arg.split(":").map( n => Number(n) );
                     const [min, max] = [Math.min(numberA, numberB), Math.max(numberA, numberB)];
-                    const increment = incr || 1; // default is 1, this also removes arg number 0 (infinite loop)
+                    const increment = Math.abs(incr) || 1; // default is 1, this also removes arg number 0 (infinite loop)
+                                                           // negative increments need to be positive since we force order of min/max
                     // if too much incrementations, sanity check
                     const threshold = 1000;
                     if (((max - min) / increment) > threshold) {
