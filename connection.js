@@ -344,11 +344,11 @@ class Connection {
     //
     checkChallengeBooleans(notification) {
 
-        if (config.rankedonly && notification.ranked) {
-            return getBooleansGeneralReject("Ranked games are");
-        }
-        if (config.unrankedonly && !notification.ranked) {
+        if (config.rankedonly && !notification.ranked) {
             return getBooleansGeneralReject("Unranked games are");
+        }
+        if (config.unrankedonly && notification.ranked) {
+            return getBooleansGeneralReject("Ranked games are");
         }
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
