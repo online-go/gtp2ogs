@@ -344,10 +344,10 @@ class Connection {
     //
     checkChallengeBooleans(notification) {
 
-        if (config.rankedonly && notification.ranked) {
+        if (config.rankedonly && !notification.ranked) {
             return getBooleansGeneralReject("Ranked games are");
         }
-        if (config.unrankedonly && !notification.ranked) {
+        if (config.unrankedonly && notification.ranked) {
             return getBooleansGeneralReject("Unranked games are");
         }
 
