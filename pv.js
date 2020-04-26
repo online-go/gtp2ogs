@@ -16,12 +16,14 @@ class Pv {
         this.postPvToChat = { 'LEELAZERO':  this.postPvToChatDualLine,
                               'SAI': this.postPvToChatDualLine,
                               'KATAGO': this.postPvToChatSingleLine,
+                              'FREE': this.postPvToChatFree,
                               'PHOENIXGO':  this.postPvToChatDualLine,
                               'LEELA': this.postPvToChatSingleLine
                             }[setting];
         this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
                            'KATAGO': this.getPvChatKata,
+                           'FREE': this.getPvChatFree,
                            'PHOENIXGO':  this.getPvChatPG,
                            'LEELA': this.getPvChatLeela
                          }[setting];
@@ -32,6 +34,7 @@ class Pv {
         this.STOPRE =    { 'LEELAZERO':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'SAI': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'KATAGO': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
+                           'FREE': (/CHAT:(.*)/),
                            'PHOENIXGO':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
                            'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
                          }[setting];
@@ -63,7 +66,13 @@ class Pv {
             this.pvLine = null;
         }
     }
-
+    postPvToChatFree(errline) {
+        const stop = this.STOPRE.exec(errline);
+        if (stop && this.pvLine) {
+            const body = this.getPvChat(stop);
+            this.game.sendChat(body, "malkovich");
+        }
+    }
     startupCheckSai(line) {
         if ((/^Alpha head: /).exec(line)) this.saiScore = true;
     }
@@ -124,6 +133,9 @@ class Pv {
               name = `Visits: ${visits}, Winrate: ${winrate}, Score: ${scoreLead}${PDA}`;
 
         return this.createMessage(name, pv);
+    }
+    getPvChatFree(stop) {
+       return stop[1];
     }
     getPvChatLeela(stop) {
         const visits = stop[1],
