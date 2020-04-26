@@ -343,10 +343,10 @@ class Connection {
     checkChallengeBooleans(notification, r_u_strings) {
 
         if (config.rankedonly && !notification.ranked) {
-            return getBooleansGeneralReject("Ranked games are");
+            return getBooleansGeneralReject("Unranked games are");
         }
         if (config.unrankedonly && notification.ranked) {
-            return getBooleansGeneralReject("Unranked games are");
+            return getBooleansGeneralReject("Ranked games are");
         }
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
