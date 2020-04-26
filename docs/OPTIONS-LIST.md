@@ -25,7 +25,8 @@ currently provides :
 --rejectnewmsg "Currently, this bot is not accepting games, try again later "
 --boardsizes 9,13,19
 --komis automatic
---speeds blitz,live,correspondence
+--challengercolors all
+--speeds all
 --timecontrols fischer,byoyomi,simple,canadian
 --minmaintimeblitz 15
 --maxmaintimeblitz 300
@@ -189,6 +190,10 @@ and stability)
   ```--maxconnectedgamesperuser``` Maximum number of 
 connected games per user against this bot
 
+#### rankedonly unrankedonly
+
+Below are the "only" options that only have a general option 
+(no ranked or unranked options)
 
 #### rankedonly unrankedonly
 
@@ -212,7 +217,7 @@ see [notes F-](/docs/NOTES.md#f-) for details
   Arguments in this category allow us to accept or reject 
 a challenge based on the notification (challenge settings)
 
-## A) ALL/RANKED/UNRANKED FAMILIES :
+## A) ALL/RANKED/UNRANKED FAMILIES:
 
   Here the general argument (ex: --bans) does not confict with 
 the ranked and unranked arguments for accepting/rejecting matches.
@@ -233,7 +238,7 @@ are banned from ranked games
   ```--bansunranked``` Comma separated list of user names or IDs who 
 are banned from unranked games
 
-## B) GENERAL/RANKED/UNRANKED FAMILIES :
+## B) GENERAL/RANKED/UNRANKED FAMILIES:
 
   Here you can either use :
 
@@ -246,13 +251,19 @@ and in that case, the general argument will be ignored
 and instead the ranked and unranked will be used depending 
 on whether the game is ranked or unranked.
 
-### B1) ALLOWED FAMILIES :
+### B1) ALLOWED FAMILIES:
 
   For the allowed families arguments, you can either use the value :
 - `all` : will allow ALL possible values
 - for text-only families ("blitz", "fischer", "white", etc.), 
 comma-separated values (without space) will allow every value inputted, 
 every other value will be rejected
+- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
+(boardsizes)), it is possible to use as well the "range" 
+operator `:` to navigate one by one from min to max (ex: 
+`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`), 
+as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`, 
+see [notes A-](/docs/NOTES.md#a-) for details.
 
 example: `--speeds blitz,live`
 example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
@@ -268,8 +279,8 @@ example 3: `--komis 0.5,5.5,7.5,automatic`
 
 Possible boardsize width value(s) :
 - `all` (allows all board size widths)
-- comma separated values, for example 
-`25` (allows 25x25), or `9,13,15,16,17,19` (allows 
+- comma separated and `:` separated values, for example 
+`25` (allows 25x25), or `9,13,15:17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
 see [notes B-](/docs/NOTES.md#b-) for details.
@@ -283,13 +294,30 @@ see [notes B-](/docs/NOTES.md#b-) for details.
  
 Possible komi value(s):
 - `all` (allows all komis)
-- comma separated values, 
-for example `7.5` (allows komi 7.5), or `5.5,7.5,0.5,automatic` allows komis 
-(5.5, 7.5, 0.5, automatic).
+- comma separated and `:` separated values, 
+for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
+(5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis 
+(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
 
 For extra komi explanations, see :
 - [notes C-](/docs/NOTES.md#c-)
 - [notes D-](/docs/NOTES.md#d-)
+
+#### challengercolors
+
+  ```--challengercolors``` Challenger color(s) to accept
+
+  ```--challengercolorsranked``` Challenger color(s) to accept 
+for ranked games
+
+  ```--challengercolorsunranked``` Challenger color(s) to accept 
+for unranked games
+
+Possible challengercolors value(s) : 
+- `all` (allows all challengercolors)
+- comma separated values, for example `white`, or `automatic,random` 
+
+Full list of possible values :  `black`, `white`, `automatic`, `random`
 
 #### speeds
   ```--speeds``` Comma separated list of Game speed(s) to accept 
@@ -322,7 +350,7 @@ Full list of possible values :  `fischer`,  `byoyomi`, `canadian`,
 
 see [notes E-](/docs/NOTES.md#e-) for details
 
-### B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS :
+### B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS:
 
   Arguments in this category are not comma-separated, they are either 
 booleans (enabled just from activating the option, nothing else to specify, 
@@ -330,7 +358,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 #### proonly
 
-  ```--proonly``` For all matches, only accept those from professionals
+  ```--proonly``` For all games, only accept those from professionals
 
   ```--proonlyranked``` For ranked games, only accept those from professionals
 
@@ -342,7 +370,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
   ```--nopauseranked``` Disable pausing during ranked games
 
-  ```--nopauseunranked``` Disable pausing during unranked gamesc
+  ```--nopauseunranked``` Disable pausing during unranked games
 
 #### nopauseonweekends
 

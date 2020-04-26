@@ -15,18 +15,24 @@ const fs = require('fs')
 
 const stream = new require('stream');
 
+// - since test.js does not take its arguments from config.updateFromArgv,
+//   the test fails to detect check_rejectnew, so check_reject_new is undefined,
+//   which is not compatible with required type "function".
+// - however in the real gtp2ogs run, check_rejectnew is successfully exported
+//   as a function, so specifying check_rejectnew here is only so that test.js
+//   can run.
+config.check_rejectnew = function() {};
+
 config.DEBUG = true;
 config.apikey = 'deadbeef';
 config.host = 'test';
 config.port = 80;
 config.username = 'testbot';
-config.allowed_boardsizes[19] = true;
-config.allow_all_komis = true;
-config.allowed_speeds['live'] = true;
-config.allowed_timecontrols['fischer'] = true;
 config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
+
+generateConfig_r_u();
 
 // Fake a socket.io-client
 class FakeSocket {
@@ -812,3 +818,30 @@ describe("Pv should work", () => {
         conn.terminate();
     }
 });
+
+function generateConfig_r_u() {
+    const allowed_r_u_Families = ["boardsizes",
+                                  "komis",
+                                  "challengercolors",
+                                  "speeds",
+                                  "timecontrols"
+                                 ];
+
+    for (const _r_u of ["", "_ranked", "_unranked"]) {
+        config[`banned_users${_r_u}`] = {};
+
+        for (const familyNameString of allowed_r_u_Families) {
+            config[`allow_all_${familyNameString}${_r_u}`] = false;
+            config[`allowed_${familyNameString}${_r_u}`] = {};
+        }
+
+        ["komis",
+         "challengercolors"
+        ].forEach( familyNameString => config[`allow_all_${familyNameString}${_r_u}`] = true );
+
+        [ ["boardsizes", "19"],
+          ["speeds", "live"],
+          ["timecontrols", "fischer"]
+        ].forEach( ([familyNameString, allowedArg]) => config[`allowed_${familyNameString}${_r_u}`][allowedArg] = true );
+    }
+}

@@ -125,13 +125,13 @@ class Game {
                     && !clock.pause.pause_control[`vacation-${clock.black_player_id}`]
                     && !clock.pause.pause_control[`vacation-${clock.white_player_id}`]) {
 
-                    const forRankedUnranked = getForRankedUnranked(this.state.ranked);
-                    const noPauseMg = `Pausing not allowed ${forRankedUnranked}. Resuming game.`;
-                    this.sendChat(noPauseMg);
-                    if (config.DEBUG) this.log(noPauseMg);
+                    const r_u = (this.state.ranked ? "ranked" : "unranked");
+                    const noPauseMsg = `Pausing not allowed for ${r_u} games. Resuming game.`;
+                    if (config.DEBUG) this.log(noPauseMsg);
+                    this.sendChat(noPauseMsg);
                     this.resumeGame();
                 }
-            } 
+            }
 
             //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
@@ -518,10 +518,6 @@ function encodeMove(move) {
     if (move['x'] === -1) 
         return "..";
     return num2char(move['x']) + num2char(move['y']);
-}
-function getForRankedUnranked(rankedStatus) {
-    if (rankedStatus) return "for ranked games";
-    return "for unranked games";
 }
 
 Game.moves_processing = 0;
