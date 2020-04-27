@@ -274,7 +274,7 @@ class Connection {
     //
     checkChallengeMandatory(notification, r_u_strings) {
 
-        // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
+        // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here)
         for (const uid of ["username", "id"]) {
             if ((config.banned_users[notification.user[uid]])
                 || (config.banned_users_ranked[notification.user[uid]] && notification.ranked)
@@ -286,7 +286,7 @@ class Connection {
                                                                 false, notification.ranked, r_u_strings.for_r_u_games);
         if (resultMinMaxRank) return resultMinMaxRank;
 
-        // check bot is available, else don't mislead user:
+        // check bot is available, else don't mislead user
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
@@ -564,7 +564,7 @@ function request(method, host, port, path, data) {
             /  const noapidata = JSON.parse(JSON.stringify(data));
             /  noapidata.apikey = "hidden";*/
 
-            // ES6 offers shallow copy syntax using spread:
+            // ES6 offers shallow copy syntax using spread
             const noapidata = { ...data, apikey: "hidden" };
             console.debug(method, host, port, path, noapidata);
         }
@@ -666,8 +666,8 @@ function getArgNameStringsGRU(familyNameString) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
-    else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
+    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30  1 dan or stronger
+    else          return `${30 - R}k`;     // R < 30   1 kyu or weaker
 }
 
 function getBannedFamilyReject(uid, notificationUserUid, from_r_u_games) {
@@ -813,7 +813,7 @@ function minMaxHandicapRankRejectResult(handicapRank, nameF, notif, isFakeHandic
                 notifConverted = rankToString(notifConverted);
                 endingSentence = `your rank is too ${familyObject.MIBL.lowHig}`;
             }
-            // if we are not in any "handicap" specific reject case, we return the generic return below instead:
+            // if we are not in any "handicap" specific reject case, we return the generic return below instead
             conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} `
                      + `${nameF} ${for_r_u_games} ${argToString}`);
             const msg = `${familyObject.MIBL.minMax} ${nameF} ${for_r_u_games} `
