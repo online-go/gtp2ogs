@@ -278,14 +278,7 @@ exports.updateFromArgv = function() {
     // console messages
     // C - test exports warnings
     testExportsWarnings();
-
-    // Show in debug all the ranked/unranked exports results
-    if (exports.DEBUG) {
-        const result = JSON.stringify({ ...exports, apikey: "hidden"});
-        console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):`
-                    + `\n-------------------------------------------------------`
-                    + `\n${result}\n`);
-    }
+    
 }
 
 function getBLCString(familyNameString, rankedUnranked) {
