@@ -275,14 +275,10 @@ class Connection {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
-            if (config.banned_users[notification.user[uid]]) {
-                return bannedFamilyReject("bans", uid, notification.user[uid]);
-            }
-            if (notification.ranked && config.banned_users_ranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansranked", uid, [notification.user[uid]]);
-            }
-            if (!notification.ranked && config.banned_users_unranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansunranked", uid, [notification.user[uid]]);
+            if ((config.banned_users[notification.user[uid]])
+                || (config.banned_users_ranked[notification.user[uid]] && notification.ranked)
+                || (config.banned_users_unranked[notification.user[uid]] && !notification.ranked)) {
+                return getBannedFamilyReject(uid, notification.user[uid], notification.ranked);
             }
         }
         const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
@@ -695,13 +691,14 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function bannedFamilyReject(argNameString, uid, notificationUid) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
-    conn_log(`${uid} ${notificationUid} is banned ${rankedUnranked}`);
-    const msg = `You (${uid} ${notificationUid}) are banned `
-                + `${rankedUnranked} on this bot by bot admin, `
+function getBannedFamilyReject(uid, notificationUserUid, notificationRanked) {
+    const rankedUnranked = (notificationRanked ? "ranked" : "unranked");
+    const from_r_u_games = beforeRankedUnrankedGamesSpecial("from ", "", rankedUnranked, "");
+    conn_log(`${uid} ${notificationUserUid} is banned ${from_r_u_games}`);
+    const msg = `You (${uid} ${notificationUserUid}) are banned `
+                + `${from_r_u_games} on this bot by bot admin, `
                 + `you may try changing the ranked/unranked setting.`;
-    return { reject: true, msg};
+    return { reject: true, msg };
 }
 
 function getBooleansGeneralReject(descr) {
