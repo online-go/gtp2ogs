@@ -376,14 +376,10 @@ class Connection {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
-            if (!config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-                return getBoardsizeNotSquareReject("boardsizes", notification.width, notification.height);
-            }
-            if (!config.allow_all_boardsizes_ranked && notification.ranked) {
-                return getBoardsizeNotSquareReject("boardsizesranked", notification.width, notification.height);
-            }
-            if (!config.allow_all_boardsizes_unranked && !notification.ranked) {
-                return getBoardsizeNotSquareReject("boardsizesunranked", notification.width, notification.height);
+            if (!config["allow_all_boardsizes"]
+                || (!config["allow_all_boardsizes_ranked"]   && notification.ranked)
+                || (!config["allow_all_boardsizes_unranked"] && !notification.ranked)) {
+                return getBoardsizeNotSquareReject(notification.width, notification.height, notification.ranked);
             }
         }
         
@@ -728,12 +724,13 @@ function getBooleans_r_u_Reject(argNameString, descr, ending) {
     return { reject: true, msg };
 }
 
-function getBoardsizeNotSquareReject(argNameString, notificationWidth, notificationHeight) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
+function getBoardsizeNotSquareReject(notificationWidth, notificationHeight, notificationRanked) {
+    const rankedUnranked = (notificationRanked ? "ranked" : "unranked");
+    const for_r_u_games = beforeRankedUnrankedGamesSpecial("for ", "", rankedUnranked, "");
     conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
-             + `is not square, not allowed ${rankedUnranked}`);
+             + `is not square, not allowed ${for_r_u_games}`);
     const msg = `Your selected board size ${notificationWidth}x${notificationHeight} `
-                + `is not square, not allowed ${rankedUnranked}, `
+                + `is not square, not allowed ${for_r_u_games}, `
                 + `please choose a SQUARE board size (same width and `
                 + `height), for example try 9x9 or 19x19}`;
     return { reject: true, msg };
