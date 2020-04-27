@@ -27,7 +27,6 @@ currently provides:
 --rejectnewmsg "Currently, this bot is not accepting games, try again later "
 --boardsizes 9,13,19
 --komis automatic
---challengercolors all
 --speeds blitz,live,correspondence
 --timecontrols fischer,byoyomi,simple,canadian
 --minmaintimeblitz 15
