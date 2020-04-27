@@ -353,16 +353,16 @@ class Connection {
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
                                       ["nopauseonweekends", "Pause on week-ends is", notification.pause_on_weekends, ""],
-                                      ["noautohandicap", "-Automatic- handicap is", (notification.handicap === -1), 
+                                      ["noautohandicap", "-Automatic- handicap is", (notification.handicap === -1),
                                        ", please manually choose the number of handicap stones"]
                                     ];
 
-        for (const [familyNameString, descr, notifCondition, ending] of testBooleanArgs_r_u) {
+        for (const [familyNameString, nameF, notifCondition, ending] of testBooleanArgs_r_u) {
             if (notifCondition) {
-                for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
-                    if (config[argNameString] && rankedCondition) {
-                        return getBooleans_r_u_Reject(argNameString, descr, ending);
-                    }
+                if (config[familyNameString]
+                    || (config[`${familyNameString}ranked`] && notification.ranked)
+                    || (config[`${familyNameString}unranked`] && !notification.ranked)) {
+                    return getBooleans_r_u_Reject(nameF, ending, notification.ranked);
                 }
             }
         }
@@ -710,20 +710,10 @@ function getBooleansGeneralReject(descr) {
     return { reject: true, msg };
 }
 
-function get_r_u_arr_booleans(familyNameString, notificationRanked) {
-    const [general, ranked, unranked] = getArgNameStringsGRU(familyNameString);
-    // for the booleans "only" checks, we are trying to find any reason to reject
-    // the challenge, so the general and ranked/unranked args dont conflict.
-    // (unlike --minmaintimeranked 50 --minmaintime 300)
-    return [ [general,  true],
-             [ranked,   notificationRanked],
-             [unranked, !notificationRanked]
-           ];
-}
-
-function getBooleans_r_u_Reject(argNameString, descr, ending) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    const msg = `${descr} not allowed on this bot ${rankedUnranked}${ending}.`;
+function getBooleans_r_u_Reject(nameF, ending, notificationRanked) {
+    const rankedUnranked = (notificationRanked ? "ranked" : "unranked");
+    const for_r_u_games  = beforeRankedUnrankedGamesSpecial("for ", "", rankedUnranked, "");
+    const msg = `${nameF} not allowed on this bot ${for_r_u_games}${ending}.`;
     conn_log(msg);
     return { reject: true, msg };
 }
