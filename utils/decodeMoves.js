@@ -1,4 +1,4 @@
-const { char2num } = require("./utils/char2num");
+const { char2num } = require("./char2num");
 
 function pretty_char2num(ch) {
     if (ch === ".") return -1;
