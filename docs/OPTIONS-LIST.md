@@ -311,6 +311,9 @@ Possible boardsize width value(s):
 `25` (allows 25x25), or `9,13,15:17,19` (allows 
 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
+note: it is possible to allow non-square boardsizes by using `all` 
+(which will allow possible boardsizes)
+
 see [notes B](/docs/NOTES.md#b) for details:
 
 #### komis
@@ -348,7 +351,7 @@ Possible challengercolors value(s) :
 - `all` (allows all challengercolors)
 - comma separated values, for example `white`, or `automatic,random` 
 
-Full list of possible values :  `black`, `white`, `automatic`, `random`
+Full list of possible values :  `all`, `black`, `white`, `automatic`, `random`
 
 #### speeds
 
@@ -362,9 +365,10 @@ accept for unranked games
 
 Possible speed value(s):
 
+- `all` (allows all speeds)
 - comma separated values, for example `blitz`, or `live, correspondence`
 
-Full list of possible values:  `blitz`,  `live`, `correspondence`.
+Full list of possible values:  `all`, `blitz`,  `live`, `correspondence`.
 
 #### timecontrols
 
@@ -378,9 +382,10 @@ games
 
 Possible timecontrol value(s):
 
+- `all` (allows all timecontrols)
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
-Full list of possible values:  `fischer`,  `byoyomi`, `canadian`,
+Full list of possible values:  `all`, `fischer`,  `byoyomi`, `canadian`,
 `simple`, `absolute`, `none`.
 
 see [notes E](/docs/NOTES.md#e) for details
@@ -393,7 +398,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 #### proonly
 
-  ```--proonly``` For all games, only accept those from professionals
+```--proonly``` For all games, only accept those from professionals
 
 `--proonlyranked` For ranked games, only accept those from professionals
 
@@ -405,7 +410,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 `--nopauseranked` Disable pausing during ranked games
 
-  ```--nopauseunranked``` Disable pausing during unranked games
+```--nopauseunranked``` Disable pausing during unranked games
 
 #### nopauseonweekends
 
