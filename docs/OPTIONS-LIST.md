@@ -217,7 +217,6 @@ and stability)
 `--maxconnectedgamesperuser` Maximum number of
 connected games per user against this bot
 
-
 ### rankedonly unrankedonly
 
 Below are the "only" options that only have a general option
@@ -285,11 +284,11 @@ For the allowed families arguments, you can either use the value:
 - for text-only families ("blitz", "fischer", "white", etc.),
 comma-separated values (without space) will allow every value inputted,
 every other value will be rejected
-- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19 
-(boardsizes)), it is possible to use as well the "range" 
-operator `:` to navigate one by one from min to max (ex: 
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`), 
-as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`, 
+- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19
+ (boardsizes)), it is possible to use as well the "range"
+operator `:` to navigate one by one from min to max (ex:
+ `5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`),
+ as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`,
 see [notes A-](/docs/NOTES.md#a) for details.
 
 example: `--speeds blitz,live`
@@ -307,12 +306,12 @@ example 3: `--komis 0.5,5.5,7.5,automatic`
 Possible boardsize width value(s):
 
 - `all` (allows all board size widths)
-- comma separated and `:` separated values, for example 
-`25` (allows 25x25), or `9,13,15:17,19` (allows 
-9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
+- comma separated and `:` separated values, for example
+ `25` (allows 25x25), or `9,13,15:17,19` (allows
+ 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
-note: it is possible to allow non-square boardsizes by using `all` 
-(which will allow possible boardsizes)
+note: it is possible to allow non-square boardsizes by using `all`
+ (which will allow possible boardsizes)
 
 see [notes B](/docs/NOTES.md#b) for details:
 
@@ -327,10 +326,10 @@ see [notes B](/docs/NOTES.md#b) for details:
 Possible komi value(s):
 
 - `all` (allows all komis)
-- comma separated and `:` separated values, 
-for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis 
-(5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis 
-(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
+- comma separated and `:` separated values,
+ for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis
+ (5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis
+ (-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
 
 For extra komi explanations, see:
 
@@ -341,15 +340,15 @@ For extra komi explanations, see:
 
   ```--challengercolors``` Challenger color(s) to accept
 
-  ```--challengercolorsranked``` Challenger color(s) to accept 
-for ranked games
+  ```--challengercolorsranked``` Challenger color(s) to accept
+ for ranked games
 
-  ```--challengercolorsunranked``` Challenger color(s) to accept 
-for unranked games
+  ```--challengercolorsunranked``` Challenger color(s) to accept
+ for unranked games
 
-Possible challengercolors value(s) : 
-- `all` (allows all challengercolors)
-- comma separated values, for example `white`, or `automatic,random` 
+Possible challenger color(s) value(s):
+-`all` (allows all challengercolors)
+-comma separated values, for example `white`, or `automatic,random`
 
 Full list of possible values :  `all`, `black`, `white`, `automatic`, `random`
 

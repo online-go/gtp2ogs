@@ -2,22 +2,22 @@
 
 ## A
 
-For numbers +/- text allowed families, it is possible to choose a 
-range of allowed values faster using the "range" operator `:` ,
+For numbers +/- text allowed families, it is possible to choose a
+ range of allowed values faster using the "range" operator `:` ,
 and optionally the "increment" operator `:` (default increment is `1`).
 
-note: for safety reasons, the max list length using the "range" 
-with/without the "increment" operator is 1000 values.
+note: for safety reasons, the max list length using the "range"
+ with/without the "increment" operator is 1000 values.
 
 - "range":
 
-instead of doing `9,10,11,12,13,14,15,16,17,18,19`, you can simply do 
-`9:19` which means select all values from 9 to 19 with a +1 distance 
-between each value (increment)
+instead of doing `9,10,11,12,13,14,15,16,17,18,19`, you can simply do
+ `9:19` which means select all values from 9 to 19 with a +1 distance
+ between each value (increment)
 
-range can be safely reversed: `19:9` will work the exact same as `9:19`, 
-because the range algorithm detects min and max value before applying 
-the increment.
+range can be safely reversed: `19:9` will work the exact same as `9:19`,
+ because the range algorithm detects min and max value before applying
+ the increment.
 
 - "increment":
 
@@ -25,30 +25,29 @@ increment is the distance between two values in the range.
 
 Default increment is `1`, for example `9:19:1` is the same as `9:19`.
 
-Because we detect min and max before doing the range, increment can be 
-both positive and negative, it will work the exact same way.
+Because we detect min and max before doing the range, increment can be
+ both positive and negative, it will work the exact same way.
 
-Finally, decimal increments such as (`0.5` or `19.5`) only work 
-for komis.
+Finally, decimal increments such as (`0.5` or `19.5`) only work
+ for komis.
 
-Other families, for example boardsizes, can only be 
-integers (`0`, `1`) so in that case the increment will be 
-ceiled to next value, for example `2.5` will be `3`, `2.189` 
-will be ceiled to `3`.
+Other families, for example boardsizes, can only be
+ integers (`0`, `1`) so in that case the increment will be
+ ceiled to next value, for example `2.5` will be `3`, `2.189`
+ will be ceiled to `3`.
 
 examples :
-- `9:19:2` is `9,11,13,15,17,19`
-- `9:19:2`, `9:19:-2`, `19:9:2`, `19:9:-2` are all the exact same
-- `9:19:0.5` for boardsizes will be same as `9:19:1` which is the same 
-as `9:19`
-- `
+-`9:19:2` is `9,11,13,15,17,19`
+-`9:19:2`, `9:19:-2`, `19:9:2`, `19:9:-2` are all the exact same
+-`9:19:0.5` for boardsizes will be same as `9:19:1` which is the same
+ as `9:19`
 
-Finally range and increments can be used many times, and don't conflict 
-with text, for example:
+Finally range and increments can be used many times, and don't conflict
+ with text, for example:
 
 - `--boardsizes 9,13:19:2,21:25` is `9,13,15,17,19,21,22,23,24,25`
-- `--komis -7:7,automatic,0.5,5.5:7.5` is 
-`-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,automatic,0.5,5.5,6.5,7.5`.
+- `--komis -7:7,automatic,0.5,5.5:7.5` is
+ `-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,automatic,0.5,5.5,6.5,7.5`.
 
 ## B
 
