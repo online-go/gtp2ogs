@@ -387,46 +387,28 @@ class Connection {
             }
         }
         
-        // if square, check if square board size is allowed
-        if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizes", notification.width);
-        }
-        if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            return genericAllowedFamiliesReject("boardsizesranked", notification.width);
-        }
-        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
-        }
+        const testsAllowedFamilies = [ ["boardsizes",       "board size",       notification.width],
+                                       ["komis",            "komi",             notification.komi],
+                                       ["speeds",           "speed",            notification.time_control.speed],
+                                       ["timecontrols",     "time control",     notification.time_control.time_control]
+                                     ];
 
-        if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            return genericAllowedFamiliesReject("komis", notification.komi);
-        }
-        if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            return genericAllowedFamiliesReject("komisranked", notification.komi);
-        }
-        if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            return genericAllowedFamiliesReject("komisunranked", notification.komi);
-        }
-
-        if (!config.allowed_speeds[notification.time_control.speed] && !config.speedsranked && !config.speedsunranked) {
-            return genericAllowedFamiliesReject("speeds", notification.time_control.speed);
-        }
-        if (!config.allowed_speeds_ranked[notification.time_control.speed] && notification.ranked && config.speedsranked) {
-            return genericAllowedFamiliesReject("speedsranked", notification.time_control.speed);
-        }
-        if (!config.allowed_speeds_unranked[notification.time_control.speed] && !notification.ranked && config.speedsunranked) {
-            return genericAllowedFamiliesReject("speedsunranked", notification.time_control.speed);
-        }
-
-        // note : "absolute" and/or "none" are possible, but not in defaults, see OPTIONS-LIST for details
-        if (!config.allowed_timecontrols[notification.time_control.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrols", notification.time_control.time_control);
-        }
-        if (!config.allowed_timecontrols_ranked[notification.time_control.time_control] && notification.ranked && config.timecontrolsranked) { 
-            return genericAllowedFamiliesReject("timecontrolsranked", notification.time_control.time_control);
-        }
-        if (!config.allowed_timecontrols_unranked[notification.time_control.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrolsunranked", notification.time_control.time_control);
+        for (const [familyNameString, nameF, notif] of testsAllowedFamilies) {
+            if (!config[`allow_all_${familyNameString}`]
+                && config[familyNameString] && !config[`${familyNameString}ranked`] && !config[`${familyNameString}ranked`]
+                && !config[`allowed_${familyNameString}`][String(notif)]) {
+                return getAllowedFamiliesReject(familyNameString, nameF, "", notif, notification.ranked);
+            }
+            if (!config[`allow_all_${familyNameString}_ranked`]
+                && config[`${familyNameString}ranked`] && notification.ranked
+                && !config[`allowed_${familyNameString}_ranked`][String(notif)]) {
+                return getAllowedFamiliesReject(familyNameString, nameF, "_ranked", notif, notification.ranked);
+            }
+            if (!config[`allow_all_${familyNameString}_unranked`]
+                && config[`${familyNameString}unranked`] && !notification.ranked
+                && !config[`allowed_${familyNameString}_unranked`][String(notif)]) {
+                return getAllowedFamiliesReject(familyNameString, nameF, "_unranked", notif, notification.ranked);
+            }
         }
 
         return { reject: false }; // OK !
@@ -748,40 +730,21 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function pluralFamilyStringToSingularString(plural) {
-    const pluralArr = plural.split("unranked")[0]
-                            .split("ranked")[0]
-                            .split("");
-    // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
-    pluralArr.pop();
-    // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
-
-    return pluralArr.join("");  // for example ["s", "p", "e", "e", "d"] -> "speed"
-}
-
-function genericAllowedFamiliesReject(argNameString, notificationUnit) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    const argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
-    // for example "speedsranked" -> "speed"
-    let argValueString = config[argNameString];
-    let notificationUnitConverted = notificationUnit;
-
-    if (argFamilySingularString.includes("boardsize")) {
-        argValueString = boardsizeSquareToDisplayString(config[argNameString]);
-        // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
-        notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
-    } else if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
-        notificationUnitConverted = "automatic";
+function getAllowedFamiliesReject(familyNameString, nameF, _r_u, notif, notificationRanked) {
+    const rankedUnranked = (notificationRanked ? "ranked" : "unranked");
+    const for_r_u_games = beforeRankedUnrankedGamesSpecial("for ", "", rankedUnranked, "");
+    let notifDisplayed = notif;
+    let allowedValuesString = Object.keys(config[`allowed_${familyNameString}${_r_u}`]).join(',');
+    if (familyNameString ===("boardsizes")) {
+        notifDisplayed =      boardsizeSquareToDisplayString(notif);
+        allowedValuesString = boardsizeSquareToDisplayString(allowedValuesString);
+    } else if (familyNameString === "komis" && notifDisplayed === "null") {
+        notifDisplayed = "automatic";
     }
-    conn_log(`${argFamilySingularString} ${rankedUnranked} `
-             + `-${notificationUnitConverted}-, not in -${argValueString}- `);
-    const msg = `${argFamilySingularString} -${notificationUnitConverted}- `
-                + `is not allowed on this bot ${rankedUnranked}, please `
-                + `choose one of these allowed ${argFamilySingularString}s `
-                + `${rankedUnranked}: -${argValueString}-`;
+    conn_log(`${nameF} -${notifDisplayed}- ${for_r_u_games}, not in -${allowedValuesString}- `);
+    const msg = `${nameF} -${notifDisplayed}- is not allowed on this bot ${for_r_u_games}, `
+                + `please choose among:\n${allowedValuesString}.`;
     return { reject: true, msg };
-    /* for example : "speed -blitz- is not allowed on this bot for ranked games, please
-                     choose one of these allowed speeds for ranked games: -live,correspondence-"*/
 }
 
 function familyObjectMIBL(familyNameString) {
