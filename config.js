@@ -240,6 +240,7 @@ exports.updateFromArgv = function() {
                 + `\nDebug status: ${debugStatus}`);
     // B - check unsupported argv //
     testDroppedArgv(argv);
+    ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
 
     /* EXPORTS FROM ARGV */
     /* 0) root exports*/
@@ -272,9 +273,7 @@ exports.updateFromArgv = function() {
         return false;
     };
     if (argv.ogspv) {
-        const ogsPv = argv.ogspv.toUpperCase();  // being case sensitive tolerant
-        checkUnsupportedOgspvAI(ogsPv, ogsPvAIs);
-        exports.ogspv = ogsPv;
+        exports.ogspv = argv.ogspv.toUpperCase();
     }
 
     /* 2) specifc r_u cases :*/
@@ -492,10 +491,12 @@ function testDroppedArgv(argv) {
     console.log("\n");
 }
 
-function checkUnsupportedOgspvAI(ogspv, ogsPvAIs) {
-    const upperCaseAIs = ogsPvAIs.map(e => e.toUpperCase());
+function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
+    // being case tolerant
+    const upperCaseOgsPv = ogspv.toUpperCase();
+    const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 
-    if (!upperCaseAIs.includes(ogspv)) {
+    if (!upperCaseAIs.includes(upperCaseOgsPv)) {
         throw `Unsupported --ogspv option ${ogspv}.`
               + `\nSupported options are ${ogsPvAIs.join(', ')}`;
     }
@@ -520,8 +521,7 @@ function parseRank(arg) {
                 return (36 + parseInt(results[1]));
             }
         } else {
-            console.error(`error: could not parse rank -${arg}-`);
-            process.exit();
+            throw `error: could not parse rank -${arg}-`;
         }
     }
 }
