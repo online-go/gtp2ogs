@@ -338,12 +338,12 @@ For extra komi explanations, see:
 
 #### challengercolors
 
-  ```--challengercolors``` Challenger color(s) to accept
+`--challengercolors` Challenger color(s) to accept
 
-  ```--challengercolorsranked``` Challenger color(s) to accept
+`--challengercolorsranked` Challenger color(s) to accept
  for ranked games
 
-  ```--challengercolorsunranked``` Challenger color(s) to accept
+`--challengercolorsunranked` Challenger color(s) to accept
  for unranked games
 
 Possible challenger color(s) value(s):
@@ -397,7 +397,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 #### proonly
 
-```--proonly``` For all games, only accept those from professionals
+`--proonly` For all games, only accept those from professionals
 
 `--proonlyranked` For ranked games, only accept those from professionals
 
@@ -409,7 +409,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 `--nopauseranked` Disable pausing during ranked games
 
-```--nopauseunranked``` Disable pausing during unranked games
+`--nopauseunranked` Disable pausing during unranked games
 
 #### nopauseonweekends
 
