@@ -276,13 +276,13 @@ class Connection {
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
         for (const uid of ["username", "id"]) {
             if (config.banned_users[notification.user[uid]]) {
-                return bannedFamilyReject("bans", uid, notification.user[uid]);
+                return getBannedFamilyReject("bans", uid, notification.user[uid]);
             }
             if (notification.ranked && config.banned_users_ranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansranked", uid, [notification.user[uid]]);
+                return getBannedFamilyReject("bansranked", uid, [notification.user[uid]]);
             }
             if (!notification.ranked && config.banned_users_unranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansunranked", uid, [notification.user[uid]]);
+                return getBannedFamilyReject("bansunranked", uid, [notification.user[uid]]);
             }
         }
         const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
@@ -389,44 +389,44 @@ class Connection {
         
         // if square, check if square board size is allowed
         if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizes", notification.width);
+            return getAllowedFamiliesReject("boardsizes", notification.width);
         }
         if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
-            return genericAllowedFamiliesReject("boardsizesranked", notification.width);
+            return getAllowedFamiliesReject("boardsizesranked", notification.width);
         }
         if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
-            return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
+            return getAllowedFamiliesReject("boardsizesunranked", notification.width);
         }
 
         if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
-            return genericAllowedFamiliesReject("komis", notification.komi);
+            return getAllowedFamiliesReject("komis", notification.komi);
         }
         if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
-            return genericAllowedFamiliesReject("komisranked", notification.komi);
+            return getAllowedFamiliesReject("komisranked", notification.komi);
         }
         if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
-            return genericAllowedFamiliesReject("komisunranked", notification.komi);
+            return getAllowedFamiliesReject("komisunranked", notification.komi);
         }
 
         if (!config.allowed_speeds[notification.time_control.speed] && !config.speedsranked && !config.speedsunranked) {
-            return genericAllowedFamiliesReject("speeds", notification.time_control.speed);
+            return getAllowedFamiliesReject("speeds", notification.time_control.speed);
         }
         if (!config.allowed_speeds_ranked[notification.time_control.speed] && notification.ranked && config.speedsranked) {
-            return genericAllowedFamiliesReject("speedsranked", notification.time_control.speed);
+            return getAllowedFamiliesReject("speedsranked", notification.time_control.speed);
         }
         if (!config.allowed_speeds_unranked[notification.time_control.speed] && !notification.ranked && config.speedsunranked) {
-            return genericAllowedFamiliesReject("speedsunranked", notification.time_control.speed);
+            return getAllowedFamiliesReject("speedsunranked", notification.time_control.speed);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see OPTIONS-LIST for details
         if (!config.allowed_timecontrols[notification.time_control.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrols", notification.time_control.time_control);
+            return getAllowedFamiliesReject("timecontrols", notification.time_control.time_control);
         }
         if (!config.allowed_timecontrols_ranked[notification.time_control.time_control] && notification.ranked && config.timecontrolsranked) { 
-            return genericAllowedFamiliesReject("timecontrolsranked", notification.time_control.time_control);
+            return getAllowedFamiliesReject("timecontrolsranked", notification.time_control.time_control);
         }
         if (!config.allowed_timecontrols_unranked[notification.time_control.time_control] && !notification.ranked && config.timecontrolsunranked) { 
-            return genericAllowedFamiliesReject("timecontrolsunranked", notification.time_control.time_control);
+            return getAllowedFamiliesReject("timecontrolsunranked", notification.time_control.time_control);
         }
 
         return { reject: false }; // OK !
@@ -446,11 +446,11 @@ class Connection {
         }
         const resultHandicap = minMaxHandicapRankRejectResult("handicap", handicapSettings.notif, handicapSettings.isFakeHandicap, notification.ranked);
         if (resultHandicap) return resultHandicap;
-        const resultMaintime = UHMAEATRejectResult("maintime", notification.time_control, notification.ranked);
+        const resultMaintime = getUHMAEATRejectResult("maintime", notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
-        const resultPeriods = minMaxPeriodsRejectResult("periods", notification.time_control.periods, notification.time_control.speed, notification.ranked);
+        const resultPeriods = getMinMaxPeriodsRejectResult("periods", notification.time_control.periods, notification.time_control.speed, notification.ranked);
         if (resultPeriods) return resultPeriods;
-        const resultPeriodtime = UHMAEATRejectResult("periodtime", notification.time_control, notification.ranked);
+        const resultPeriodtime = getUHMAEATRejectResult("periodtime", notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
 
         return { reject: false };  // Ok !
@@ -695,7 +695,7 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function bannedFamilyReject(argNameString, uid, notificationUid) {
+function getBannedFamilyReject(argNameString, uid, notificationUid) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
     conn_log(`${uid} ${notificationUid} is banned ${rankedUnranked}`);
     const msg = `You (${uid} ${notificationUid}) are banned `
@@ -759,7 +759,7 @@ function pluralFamilyStringToSingularString(plural) {
     return pluralArr.join("");  // for example ["s", "p", "e", "e", "d"] -> "speed"
 }
 
-function genericAllowedFamiliesReject(argNameString, notificationUnit) {
+function getAllowedFamiliesReject(argNameString, notificationUnit) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
     const argFamilySingularString = pluralFamilyStringToSingularString(argNameString);
     // for example "speedsranked" -> "speed"
@@ -784,7 +784,7 @@ function genericAllowedFamiliesReject(argNameString, notificationUnit) {
                      choose one of these allowed speeds for ranked games: -live,correspondence-"*/
 }
 
-function familyObjectMIBL(familyNameString) {
+function getFamilyObjectMIBL(familyNameString) {
     let minMax = "";
     let incDec = "";
     let belAbo = "";
@@ -819,7 +819,7 @@ function checkObjectArgsToArgNameString(familyObjectArgNameStrings, notification
     }
 }
 
-function convertBlitzLiveCorr(blitzLiveCorr) {
+function getBlitzLiveCorrCoverted(blitzLiveCorr) {
     if (blitzLiveCorr === "corr") {
         return "correspondence";
     } else {
@@ -827,7 +827,7 @@ function convertBlitzLiveCorr(blitzLiveCorr) {
     }
 }
 
-function minMaxCondition(arg, familyNotification, isMin) {
+function checkMinMaxCondition(arg, familyNotification, isMin) {
     if (isMin) {
         return familyNotification < arg; // to reject in minimum, we need notification < arg
     } else {
@@ -836,12 +836,12 @@ function minMaxCondition(arg, familyNotification, isMin) {
 }
 
 function minMaxHandicapRankRejectResult(familyNameString, familyNotification, isFakeHandicap, notificationRanked) {
-    const minFamilyObject = familyObjectMIBL(`min${familyNameString}`);
-    const maxFamilyObject = familyObjectMIBL(`max${familyNameString}`);
+    const minFamilyObject = getFamilyObjectMIBL(`min${familyNameString}`);
+    const maxFamilyObject = getFamilyObjectMIBL(`max${familyNameString}`);
     let argNameString = "";
     for (const familyObject of [minFamilyObject, maxFamilyObject]) {
         argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (config[argNameString] !== undefined && minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+        if (config[argNameString] !== undefined && checkMinMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
             let argToString = config[argNameString];
             let familyNameStringConverted = familyNameString;
             let familyNotificationConverted = familyNotification;
@@ -910,7 +910,7 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) {
+function getUHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) {
     /*// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree *** (version 4.0) ///////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     / 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
@@ -922,10 +922,10 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
     /      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
 
     for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-        if (notificationT.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
-            const minFamilyObject = familyObjectMIBL(`min${mainPeriodTime}${blitzLiveCorr}`);
-            const maxFamilyObject = familyObjectMIBL(`max${mainPeriodTime}${blitzLiveCorr}`);
-            const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTime, notificationT);
+        if (notificationT.speed === getBlitzLiveCorrCoverted(blitzLiveCorr)) {
+            const minFamilyObject = getFamilyObjectMIBL(`min${mainPeriodTime}${blitzLiveCorr}`);
+            const maxFamilyObject = getFamilyObjectMIBL(`max${mainPeriodTime}${blitzLiveCorr}`);
+            const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTime, notificationT);
             let argNameString = "";
             let argNumberConverted = -1;
             for (const familyObject of [minFamilyObject, maxFamilyObject]) {
@@ -936,7 +936,7 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
                         if (setting[0] === "canadian" && mainPeriodTime === "periodtime") {
                             argNumberConverted = argNumberConverted * notificationT.stones_per_period;
                         }
-                        if (minMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+                        if (checkMinMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
                             const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
                             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                             let endingSentence = "";
@@ -963,7 +963,7 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
     }
 }
 
-function timecontrolsMainPeriodTime(mpt, notificationT) {
+function getTimecontrolsMainPeriodTime(mpt, notificationT) {
     if (mpt === "maintime") {
         return [["fischer", "Initial Time", notificationT.initial_time],
                 ["fischer", "Max Time", notificationT.max_time],
@@ -978,20 +978,20 @@ function timecontrolsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function minMaxPeriodsRejectResult(familyNameString, familyNotification, notificationTSpeed, notificationRanked) {
+function getMinMaxPeriodsRejectResult(familyNameString, familyNotification, notificationTSpeed, notificationRanked) {
     /* "fischer", "simple", "absolute", "none", don't have a periods number,
     /  so this function only applies to "byoyomi" and "canadian"*/
     for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-        if (notificationTSpeed === convertBlitzLiveCorr(blitzLiveCorr)) {
-            const minFamilyObject = familyObjectMIBL(`min${familyNameString}${blitzLiveCorr}`);
-            const maxFamilyObject = familyObjectMIBL(`max${familyNameString}${blitzLiveCorr}`);
+        if (notificationTSpeed === getBlitzLiveCorrCoverted(blitzLiveCorr)) {
+            const minFamilyObject = getFamilyObjectMIBL(`min${familyNameString}${blitzLiveCorr}`);
+            const maxFamilyObject = getFamilyObjectMIBL(`max${familyNameString}${blitzLiveCorr}`);
             /* example : {argNameStrings {all: "minperiodsblitz", ranked: "minperiodsblitzranked", unranked: "minperiodsblitzunranked"},
                                     MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
                                     isMM {isMin: true, isMax: false}};*/
             let argNameString = "";
             for (const familyObject of [minFamilyObject, maxFamilyObject]) {
                 argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-                if (minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+                if (checkMinMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationTSpeed} `, argNameString, "");
                     conn_log(`${familyNotification} is ${familyObject.MIBL.belAbo} `
                              + `${familyObject.MIBL.minMax} ${familyNameString} `
