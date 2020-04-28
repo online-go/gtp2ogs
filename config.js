@@ -39,7 +39,7 @@ exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
     const optimist = require("optimist")
-        // 1) ROOT ARGUMENTS:
+        // 1) ROOT ARGUMENTS
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
@@ -84,16 +84,16 @@ exports.updateFromArgv = function() {
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
-        // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES:
-        //     A) ALL/RANKED/UNRANKED FAMILIES:
+        // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES
+        //     2A) ALL/RANKED/UNRANKED FAMILIES
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
         .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
         .string('bansranked')
         .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
         .string('bansunranked')
-        //     B) GENERAL/RANKED/UNRANKED FAMILIES:
-        //         B1) ALLOWED FAMILIES:
+        //     2B) GENERAL/RANKED/UNRANKED FAMILIES
+        //         2B1) ALLOWED FAMILIES
         .describe('boardsizes', 'Board size(s) to accept')
         .string('boardsizes')
         .default('boardsizes', '9,13,19')
@@ -116,7 +116,7 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        //         B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS:
+        //         2B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS
         .describe('proonly', 'For all games, only accept those from professionals')
         .describe('proonlyranked', 'For ranked games, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
@@ -238,13 +238,14 @@ exports.updateFromArgv = function() {
                 + `\n- For changelog or latest devel updates, `
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}`);
-    // B - check unsupported argv //
+    // B - test unsupported argv //
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
 
     /* EXPORTS FROM ARGV */
     /* 0) root exports*/
     for (const k in argv) {
+        // export everything first, then modify/adjust later
         exports[k] = argv[k];
     }
 
@@ -407,16 +408,9 @@ exports.updateFromArgv = function() {
     }
 
     // console messages
-    // C - check exports warnings:
-    checkExportsWarnings();
+    // C - test exports warnings
+    testExportsWarnings();
 
-    // Show in debug all the ranked/unranked exports results
-    if (exports.DEBUG) {
-        const result = JSON.stringify({ ...exports, apikey: "hidden"});
-        console.log(`${"r_u".toUpperCase()} EXPORTS RESULT (apikey hidden):`
-                    + `\n-------------------------------------------------------`
-                    + `\n${result}\n`);
-    }
 }
 
 function getBLCString(familyNameString, rankedUnranked) {
@@ -424,7 +418,7 @@ function getBLCString(familyNameString, rankedUnranked) {
            + `and/or --${familyNameString}corr${rankedUnranked}`;
 }
 
-// console messages:
+// console messages
 function testDroppedArgv(argv) {
     const droppedArgv = [
          [["botid", "bot", "id"], "username"],
@@ -502,7 +496,7 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-// argv.arg(general/ranked/unranked) to exports.(r_u).arg:
+// argv.arg(general/ranked/unranked) to exports.(r_u).arg
 function getArgNameStringsGRU(familyNameString) {
     return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
@@ -526,8 +520,8 @@ function parseRank(arg) {
     }
 }
 
-function checkExportsWarnings() {
-    console.log("CHECKING WARNINGS:\n-------------------------------------------------------");
+function testExportsWarnings() {
+    console.log("TESTING WARNINGS:\n-------------------------------------------------------");
     let isWarning = false;
 
     for (const r_u of ["ranked", "unranked"]) {
@@ -535,7 +529,8 @@ function checkExportsWarnings() {
         // TODO: whenever --maxpausetime gets implemented, remove this
         if (!exports.nopause && !exports[`nopause${r_u}`]) {
             isWarning = true;
-            console.log(`    Warning: No --nopause nor --nopause${r_u}, ${r_u} games are likely to last forever`); 
+            console.log(`    Warning: No --nopause nor --nopause${r_u}, `
+                        + `${r_u} games are likely to last forever`); 
         }
     }
 
