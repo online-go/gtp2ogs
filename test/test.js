@@ -15,6 +15,14 @@ const fs = require('fs')
 
 const stream = new require('stream');
 
+// - since test.js does not take its arguments from config.updateFromArgv,
+//   the test fails to detect check_rejectnew, so check_reject_new is undefined,
+//   which is not compatible with required type "function".
+// - however in the real gtp2ogs run, check_rejectnew is successfully exported
+//   as a function, so specifying check_rejectnew here is only so that test.js
+//   can run.
+config.check_rejectnew = function() {}; // needed or test.js can't run
+
 config.DEBUG = true;
 config.apikey = 'deadbeef';
 config.host = 'test';

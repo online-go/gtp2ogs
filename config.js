@@ -3,7 +3,6 @@
 const fs = require('fs')
 const console = require('console');
 
-exports.check_rejectnew = function() {};
 exports.banned_users = {};
 exports.banned_users_ranked = {};
 exports.banned_users_unranked = {};
