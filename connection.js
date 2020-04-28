@@ -691,8 +691,8 @@ function getArgNameStringsGRU(familyNameString) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30  1 dan or stronger
-    else          return `${30 - R}k`;     // R < 30   1 kyu or weaker
+    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
+    else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
 function bannedFamilyReject(argNameString, uid, notificationUid) {
