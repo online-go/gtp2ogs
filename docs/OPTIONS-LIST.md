@@ -143,12 +143,19 @@ for example `--ogspv LeelaZero`
 **IMPORTANT: see [notes H](/docs/NOTES.md#h) for details**
 
 ### aichat
+<<<<<<< HEAD
 
 `--aichat` Allow bots to send messages to the chat and malkovich log.
 
 Bots should output messages to standard error output in the format:
 
 ```Text
+=======
+`--aichat` Allow bots to send messages to the chat and malkovich log.
+
+Bots should output messages to standard error output in the format:
+```
+>>>>>>> docs
 DISCUSSION: What an interesting move you played!
 MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 ```
