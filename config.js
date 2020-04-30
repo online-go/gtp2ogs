@@ -483,6 +483,7 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (!ogspv) return;
     const upperCaseOgsPv = ogspv.toUpperCase();
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
@@ -500,11 +501,15 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
         const upperCaseOgsPv = ogspv.toUpperCase();
         const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 >>>>>>> back inside you
+=======
+    if (!ogspv) return
+    const upperCaseOgsPv = ogspv.toUpperCase();
+    const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
+>>>>>>> dorus dislikes nesting
 
-        if (!upperCaseAIs.includes(upperCaseOgsPv)) {
-            throw `Unsupported --ogspv option ${ogspv}.`
-                  + `\nSupported options are ${ogsPvAIs.join(', ')}`;
-        }
+    if (!upperCaseAIs.includes(upperCaseOgsPv)) {
+        throw `Unsupported --ogspv option ${ogspv}.`
+              + `\nSupported options are ${ogsPvAIs.join(', ')}`;
     }
 }
 
