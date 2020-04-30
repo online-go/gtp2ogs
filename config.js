@@ -241,7 +241,7 @@ exports.updateFromArgv = function() {
                 + `\nDebug status: ${debugStatus}`);
     // B - test unsupported argv //
     testDroppedArgv(argv);
-    if (args.ogspv) {
+    if (argv.ogspv) {
         ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     }
 
