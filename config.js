@@ -56,6 +56,7 @@ exports.updateFromArgv = function() {
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings, in OGS games`)
         .string('ogspv')
+        .describe('aichat', 'Allow bots to send chat messages using `DISCUSSION:` `MALKOVICH:` in stderr')
         .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
@@ -487,6 +488,7 @@ function testDroppedArgv(argv) {
 
 function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     // being case tolerant
+    if (!ogspv) return;
     const upperCaseOgsPv = ogspv.toUpperCase();
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 
