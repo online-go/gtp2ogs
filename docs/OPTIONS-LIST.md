@@ -150,6 +150,7 @@ for example `--ogspv LeelaZero`
 
 Bots should output messages to standard error output in the format:
 
+<<<<<<< HEAD
 ```Text
 =======
 =======
@@ -158,6 +159,8 @@ Bots should output messages to standard error output in the format:
 `--aichat` Allow bots to send messages to the chat and malkovich log.
 
 Bots should output messages to standard error output in the format:
+=======
+>>>>>>> jaevla travis
 ```
 >>>>>>> docs
 DISCUSSION: What an interesting move you played!
