@@ -144,6 +144,7 @@ for example `--ogspv LeelaZero`
 
 ### aichat
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 `--aichat` Allow bots to send messages to the chat and malkovich log.
 
@@ -151,6 +152,9 @@ Bots should output messages to standard error output in the format:
 
 ```Text
 =======
+=======
+
+>>>>>>> please travis
 `--aichat` Allow bots to send messages to the chat and malkovich log.
 
 Bots should output messages to standard error output in the format:
