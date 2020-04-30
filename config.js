@@ -233,9 +233,7 @@ exports.updateFromArgv = function() {
                 + `\nDebug status: ${debugStatus}`);
     // B - test unsupported argv //
     testDroppedArgv(argv);
-    if (argv.ogspv) {
-        ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
-    }
+    ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
 
     /* EXPORTS FROM ARGV */
     /* 0) root exports*/
@@ -484,6 +482,7 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     // being case tolerant
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (!ogspv) return;
     const upperCaseOgsPv = ogspv.toUpperCase();
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
@@ -496,10 +495,16 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     const upperCaseOgsPv = ogspv.toUpperCase();
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 >>>>>>> formatting
+=======
+    if (ogspv) {
+        const upperCaseOgsPv = ogspv.toUpperCase();
+        const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
+>>>>>>> back inside you
 
-    if (!upperCaseAIs.includes(upperCaseOgsPv)) {
-        throw `Unsupported --ogspv option ${ogspv}.`
-              + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+        if (!upperCaseAIs.includes(upperCaseOgsPv)) {
+            throw `Unsupported --ogspv option ${ogspv}.`
+                  + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+        }
     }
 }
 
