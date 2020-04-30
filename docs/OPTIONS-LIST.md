@@ -151,6 +151,7 @@ for example `--ogspv LeelaZero`
 Bots should output messages to standard error output in the format:
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ```Text
 =======
 =======
@@ -163,6 +164,9 @@ Bots should output messages to standard error output in the format:
 >>>>>>> jaevla travis
 ```
 >>>>>>> docs
+=======
+```Text
+>>>>>>> jaevla travis
 DISCUSSION: What an interesting move you played!
 MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 ```
