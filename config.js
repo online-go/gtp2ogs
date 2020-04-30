@@ -36,7 +36,7 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
-    const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela", "Free"];
+    const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
     const optimist = require("optimist")
         // 1) ROOT ARGUMENTS
@@ -488,12 +488,14 @@ function testDroppedArgv(argv) {
 
 function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     // being case tolerant
-    const upperCaseOgsPv = ogspv.toUpperCase();
-    const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
+    if(ogspv) {
+        const upperCaseOgsPv = ogspv.toUpperCase();
+        const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 
-    if (!upperCaseAIs.includes(upperCaseOgsPv)) {
-        throw `Unsupported --ogspv option ${ogspv}.`
-              + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+        if (!upperCaseAIs.includes(upperCaseOgsPv)) {
+            throw `Unsupported --ogspv option ${ogspv}.`
+                  + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+        }
     }
 }
 
