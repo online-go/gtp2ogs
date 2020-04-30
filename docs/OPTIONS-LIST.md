@@ -134,6 +134,7 @@ for example `--ogspv LeelaZero`
 **IMPORTANT: see [notes H](/docs/NOTES.md#h) for details**
 
 ### aichat
+
 `--aichat` Allow bots to send messages to the chat and malkovich log.
 
 Bots should output messages to standard error output in the format:
