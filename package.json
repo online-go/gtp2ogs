@@ -22,12 +22,15 @@
   },
   "devDependencies": {
     "eslint": "5.14.1",
+    "markdownlint": "^0.20.2",
+    "markdownlint-cli": "^0.22.0",
     "mocha": "^5.2.0",
     "sinon": "^7.2.3"
   },
   "scripts": {
     "test": "mocha",
-    "lint": "eslint \"./**/*.js\""
+    "lint": "eslint \"./**/*.js\"",
+    "markdown": "markdownlint **/*.md --ignore node_modules"
   },
   "repository": {
     "type": "git",
