@@ -138,6 +138,7 @@ for example `--ogspv LeelaZero`
 `--aichat` Allow bots to send messages to the chat and malkovich log.
 
 Bots should output messages to standard error output in the format:
+
 ```
 DISCUSSION: What an interesting move you played!
 MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
