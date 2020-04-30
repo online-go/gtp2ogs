@@ -58,7 +58,7 @@ class Bot {
 =======
 >>>>>>> fix
             if (config.aichat) {
-               var chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
+               const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
                if (chat_match) {
                  this.game.sendChat(chat_match[2], this.game.state.moves.length + 1, chat_match[1].toLowerCase())
                }
