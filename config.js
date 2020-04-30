@@ -488,7 +488,7 @@ function testDroppedArgv(argv) {
 
 function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     // being case tolerant
-    if (!ogspv) return
+    if (!ogspv) return;
     const upperCaseOgsPv = ogspv.toUpperCase();
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 
