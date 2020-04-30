@@ -58,11 +58,18 @@ class Bot {
 =======
 >>>>>>> fix
             if (config.aichat) {
+<<<<<<< HEAD
                const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
                if (chat_match) {
                  this.game.sendChat(chat_match[2], this.game.state.moves.length + 1, chat_match[1].toLowerCase())
                }
 >>>>>>> refactor
+=======
+                const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
+                if (chat_match) {
+                    this.game.sendChat(chat_match[2], this.game.state.moves.length + 1, chat_match[1].toLowerCase())
+                }
+>>>>>>> formatting
             }
         });
 
