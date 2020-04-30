@@ -46,11 +46,21 @@ class Bot {
             this.error(`stderr: ${errline}`);
 
             if (config.ogspv) this.pv.postPvToChat(errline);
+<<<<<<< HEAD
             if (config.aichat) {
                 const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
                 if (chat_match) {
                     this.game.sendChat(chat_match[2], this.game.state.moves.length + 1, chat_match[1].toLowerCase())
                 }
+=======
+            this.log("got error", errline,"chat on?", config.aichat);
+            if (config.aichat) {
+               chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
+               if (chat_match) {
+                 this.log("MATCH",chat_match[2],chat_match[1])
+                 this.game.sendChat(chat_match[2], this.game.state.moves.length + 1, chat_match[1].toLowerCase())
+               }
+>>>>>>> refactor
             }
         });
 

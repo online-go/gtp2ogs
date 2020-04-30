@@ -27,7 +27,7 @@ exports.allowed_timecontrols_ranked = {};
 exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
-    const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela","Free"];
+    const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela", "Free"];
 
     const optimist = require("optimist")
         // 1) ROOT ARGUMENTS
