@@ -547,7 +547,7 @@ function testExportsWarnings() {
             console.log(`    Warning: Max handicap value 0 for ${r_u} games does not totally prevent from `
                         + `accepting some handicap challenges that have handicap "automatic", even if `
                         + `these games actually happen to have handicap stones number lower than `
-                        + `your max handicap.\n${msg}`);
+                        + `your max handicap.\n${explantionHandicap}`);
         }
     }
 
