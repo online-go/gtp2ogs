@@ -532,7 +532,7 @@ function testExportsWarnings() {
             console.log(`    Warning: No --nopause nor --nopause${r_u}, `
                         + `${r_u} games are likely to last forever`); 
         }
-        const explantionHandicap = `\nThis behaviour is due to OGS server specific code, `
+        const explantionHandicap = `This behaviour is due to OGS server specific code, `
                                    + `(notification.handicap is -1 if handicap is automatic).`
                                    + `\nConsider using the fakerank and/or noautohandicap options`;
         if (exports.minhandicap >= 0 || exports[`minhandicap${r_u}`] >= 0) {
