@@ -173,8 +173,7 @@ instead of [OGS](https://online-go.com/) (changes host automatically)
 ### hidden
 
 `--hidden` Hides the botname from the OGS game "Play against
-
-computer" bot list (but it can still accept challenges)
+ computer" bot list (but it can still accept challenges)
 
 ### startupbuffer
 
