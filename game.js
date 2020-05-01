@@ -492,13 +492,14 @@ class Game {
             this.ensureBotKilled();
 =======
             this.bot.command('final_score', sendTheScore, false, true); // allow bot to process end of game
-        }
-        else {
-            if (this.bot) {
+        } else if (this.bot) {
                 this.bot.gameOver();
                 this.ensureBotKilled();
+<<<<<<< HEAD
             }
 >>>>>>> final score option
+=======
+>>>>>>> style
         }
         if (!this.disconnect_timeout) {
             if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
