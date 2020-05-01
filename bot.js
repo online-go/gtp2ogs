@@ -28,6 +28,7 @@ class Bot {
         this.failed = false;
         if (config.ogspv) this.pv = new Pv(config.ogspv, game);
 
+        if (config.DEBUG) this.log("Starting ", cmd.join(' '));
         try {
             this.proc = child_process.spawn(cmd[0], cmd.slice(1));
         } catch (e) {
@@ -38,8 +39,6 @@ class Bot {
             return;
         }
 
-        if (config.DEBUG) this.log("Starting ", cmd.join(' '));
-
         this.proc.stderr.pipe(split2()).on('data', (data) => {
             if (this.ignore)  return;
             const errline = data.toString().trim();
@@ -47,6 +46,12 @@ class Bot {
             this.error(`stderr: ${errline}`);
 
             if (config.ogspv) this.pv.postPvToChat(errline);
+            if (config.aichat) {
+                const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline)
+                if (chat_match) {
+                    this.game.sendChat(chat_match[2], this.game.state.moves.length + 1, chat_match[1].toLowerCase())
+                }
+            }
         });
 
         let stdout_buffer = "";
