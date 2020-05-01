@@ -542,10 +542,10 @@ function testExportsWarnings() {
                         + `these games actually happen to have handicap stones number equal to 0.`
                         + `\n${explantionHandicap}`);
         }
-        if (exports.maxhandicap || exports[`maxhandicap${r_u}`]) {
+        if (exports.maxhandicap >= 0 || exports[`maxhandicap${r_u}`] >= 0) {
             isWarning = true;
-            console.log(`    Warning: Max handicap value 0 for ${r_u} games does not totally prevent from `
-                        + `accepting some handicap challenges that have handicap "automatic", even if `
+            console.log(`    Warning: Max handicap value 0 or higher for ${r_u} games does not totally `
+                        + `prevent from accepting some handicap challenges that have handicap "automatic", even if `
                         + `these games actually happen to have handicap stones number lower than `
                         + `your max handicap.\n${explantionHandicap}`);
         }
