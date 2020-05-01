@@ -354,7 +354,6 @@ class Game {
             'game_id': this.game_id,
             'move': encodeMove(move)
         }));
-        //this.sendChat(`Test chat message, my move #${move_number}  is: ${move.text}`, move_number, "malkovich");
     }
 
     // Get move from bot and upload to server.
@@ -454,11 +453,24 @@ class Game {
         const winloss = (this.state.winner === this.conn.bot_id ? "W" : "L");
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
-        if (this.bot) {
-            this.bot.gameOver();
-            this.ensureBotKilled();
+        // Notify bot of end of game and send score
+        if (config.farewell_score && this.state) {
+            const sendTheScore = (score) => {
+                if (score) this.log(`Bot thinks the score was ${score}`);
+                if (res != "R") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
+                if (this.bot) { // only kill the bot after it processed this
+                    this.bot.gameOver();
+                    this.ensureBotKilled();
+                }
+            };
+            this.bot.command('final_score', sendTheScore, false, true); // allow bot to process end of game
         }
-
+        else {
+            if (this.bot) {
+                this.bot.gameOver();
+                this.ensureBotKilled();
+            }
+        }
         if (!this.disconnect_timeout) {
             if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
             this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
