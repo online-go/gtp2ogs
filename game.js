@@ -107,6 +107,7 @@ class Game {
                 if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
                     this.corr_move_pending = true;
                 } else {
+                    this.log('Calling makemove - game',this.game_id,'!bot',!this.bot,'!processing',!this.processing,'movelen',this.state.moves.length,'gamedata',!!gamedata);
                     if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
                 }
             }
@@ -175,10 +176,10 @@ class Game {
                 this.state.moves.push(move.move);
 
                 // Log opponent moves
-                const m = decodeMoves(move.move, this.state.width)[0];
+                const m = decodeMoves(move.move, this.state.width, this.state.height)[0];
                 if ((this.my_color === "white" && (this.state.handicap) >= this.state.moves.length) ||
                     move.move_number % 2 === this.opponent_evenodd)
-                    this.log(`Got     ${move2gtpvertex(m, this.state.width)}`);
+                    this.log(`Got     ${move2gtpvertex(m, this.state.width, this.state.height)}`);
             } catch (e) {
                 console.error(e)
             }
@@ -198,7 +199,7 @@ class Game {
                     this.makeMove(this.state.moves.length);
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color === "black" ? "white" : "black");
+                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     if (config.DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
                     if (this.state.moves.length ===1) { // remind once, avoid spamming the reminder
                         this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
@@ -209,12 +210,13 @@ class Game {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color === "black" ? "white" : "black");
+                        this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     }
 
                     if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
                         this.corr_move_pending = true;
                     } else {
+                        this.log('Calling makemove in game/move',this.game_id,'!bot',!this.bot,'!processing',!this.processing,'movelen',this.state.moves.length); 
                         this.makeMove(this.state.moves.length);
                     }
                     //this.makeMove(this.state.moves.length);
@@ -376,7 +378,9 @@ class Game {
 
         if (!doing_handicap) {  // Regular genmove ...
             const sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+            this.log("calling genmove in makeMove",this.game_id);
             this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
+            this.log("called genmove in makeMove",this.game_id);
             return;
         }
 
@@ -454,53 +458,21 @@ class Game {
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         // Notify bot of end of game and send score
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         if (config.farewellscore && this.bot) {
             const sendTheScore = (score) => {
                 if (score) this.log(`Bot thinks the score was ${score}`);
                 if (res !== "R" && res !== "Time" && res !== "Can") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
-=======
-        if (config.farewell_score && this.state) {
-            const sendTheScore = (score) => {
-                if (score) this.log(`Bot thinks the score was ${score}`);
-<<<<<<< HEAD
-                if (res != "R") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
->>>>>>> final score option
-=======
-                if (res !== "R") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
->>>>>>> travis
-=======
-        if (config.farewell_score) {
-=======
-        if (config.farewellscore) {
->>>>>>> no underscore
-            const sendTheScore = (score) => {
-                if (score) this.log(`Bot thinks the score was ${score}`);
-                if (res !== "R" && res !== "Time" && res !== "Can") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
->>>>>>> fix
                 if (this.bot) { // only kill the bot after it processed this
                     this.bot.gameOver();
                     this.ensureBotKilled();
                 }
             };
-<<<<<<< HEAD
             this.bot.command('final_score', sendTheScore, null, true); // allow bot to process end of game
         } else if (this.bot) {
             this.bot.gameOver();
             this.ensureBotKilled();
-=======
-            this.bot.command('final_score', sendTheScore, false, true); // allow bot to process end of game
-        } else if (this.bot) {
-                this.bot.gameOver();
-                this.ensureBotKilled();
-<<<<<<< HEAD
-            }
->>>>>>> final score option
-=======
->>>>>>> style
         }
+
         if (!this.disconnect_timeout) {
             if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
             this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
