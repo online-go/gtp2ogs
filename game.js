@@ -454,21 +454,37 @@ class Game {
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         // Notify bot of end of game and send score
+<<<<<<< HEAD
         if (config.farewellscore && this.bot) {
             const sendTheScore = (score) => {
                 if (score) this.log(`Bot thinks the score was ${score}`);
                 if (res !== "R" && res !== "Time" && res !== "Can") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
+=======
+        if (config.farewell_score && this.state) {
+            const sendTheScore = (score) => {
+                if (score) this.log(`Bot thinks the score was ${score}`);
+                if (res != "R") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
+>>>>>>> final score option
                 if (this.bot) { // only kill the bot after it processed this
                     this.bot.gameOver();
                     this.ensureBotKilled();
                 }
             };
+<<<<<<< HEAD
             this.bot.command('final_score', sendTheScore, null, true); // allow bot to process end of game
         } else if (this.bot) {
             this.bot.gameOver();
             this.ensureBotKilled();
+=======
+            this.bot.command('final_score', sendTheScore, false, true); // allow bot to process end of game
         }
-
+        else {
+            if (this.bot) {
+                this.bot.gameOver();
+                this.ensureBotKilled();
+            }
+>>>>>>> final score option
+        }
         if (!this.disconnect_timeout) {
             if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
             this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);

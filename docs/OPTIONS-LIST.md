@@ -90,9 +90,15 @@ Thank you message to appear in chat at end of game
 
 see for details [notes G](/docs/NOTES.md#g)
 
+<<<<<<< HEAD
 ### farewellscore
 
 `--farewellscore`
+=======
+### farewell_score
+
+`--farewell_score`
+>>>>>>> final score option
 Asks the bot for the score using `final_score` and sends it to the chat
 if the game ended by passing.
 The command is sent regardless of whether the game ends by passing or
