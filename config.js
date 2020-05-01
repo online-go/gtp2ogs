@@ -223,6 +223,17 @@ exports.updateFromArgv = function() {
         .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games')
         .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games')
         .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games')
+        //         2B3) TIMERS FAMILIES
+        .describe('opentimesweek', 'Reject new challenges if local time of the day hh:mm is not in specified '
+                                  + 'open times of this day of the week')
+        .default('opentimesweek', 'free,free,free,free,free,free,free')
+        .describe('opentimesweekranked', 'Reject new challenges if local time of the day hh:mm is not in specified '
+                                         + 'open times of this day of the week for ranked games')
+        .describe('opentimesweekunranked', 'Reject new challenges if local time of the day hh:mm is not in specified '
+                                           + 'open times of this day of the week for unranked games')
+        .describe('opentimecountdown', 'Reject new challenges after more than specified time hh:mm has elapsed')
+        .describe('opentimecountdownranked', 'Reject new challenges after more than specified time hh:mm has elapsed for ranked games')
+        .describe('opentimecountdownunranked', 'Reject new challenges after more than specified time hh:mm has elapsed for unranked games')
     ;
     const argv = optimist.argv;
 
@@ -408,6 +419,35 @@ exports.updateFromArgv = function() {
         }
     }
 
+    exports.time_start_date = new Date();
+    const now = exports.time_start_date.getTime();
+
+    for (const argNameString of ["opentimecountdown", "opentimecountdownranked", "opentimecountdownunranked"]) {
+        const resultObj          = getParsedHoursMinutesObj(argv[argNameString]);
+        const resultMilliseconds = (resultObj.hh * 3600 + resultObj.mm * 60) * 1000;
+        exports[argNameString] = now + resultMilliseconds;
+    }
+
+    for (const [argNameString, _r_u] of get_r_u_arr_comma("weekopentimes")) {
+        exports[`time_is_free_opentimesweek${_r_u}`] = [];
+        exports[`time_opentimesweek${_r_u}`]         = [];
+        if (argv[argNameString]) {
+            const days = argv[argNameString].split(",");
+            for (let i = 0; i < 7; i++) {
+                if (!days[i] || days[i] === "free") {
+                    exports[`time_is_free_opentimesweek${_r_u}`].push(true);
+                } else {
+                    exports[`time_is_free_opentimesweek${_r_u}`].push(false);
+                    exports[`time_shifts_opentimesweek${_r_u}`][i] = [];
+                    for (const timeShift of days[i].split('/')) {
+                        const timeShiftObj = getParsedHoursMinutesObj(timeShift);
+                        exports[`time_shifts_opentimesweek${_r_u}`][i].push(timeShiftObj);
+                    }
+                }
+            }
+        }
+    }
+
     // console messages
     // C - test exports warnings
     testExportsWarnings();
@@ -503,6 +543,13 @@ function getArgNameStringsGRU(familyNameString) {
     return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
 }
 
+function get_r_u_arr_comma(familyNameString) {
+    return [ [familyNameString, ""],
+             [`${familyNameString}ranked`, "_ranked"],
+             [`${familyNameString}unranked`, "_unranked"]
+           ];
+}
+
 function parseRank(arg) {
     if (arg) {
         const re = /(\d+)([kdp])/;
@@ -520,6 +567,17 @@ function parseRank(arg) {
             throw `error: could not parse rank -${arg}-`;
         }
     }
+}
+
+function getParsedHoursMinutesObj(arg) {
+    const [hh, mm] = arg.split(":")
+                        .map( e => Number(e) );
+
+    if ([hh, mm].some( e => !isFinite(e) )) {
+        throw `error: could not parse time in hh:mm format in -${arg}-`
+              + `\nPlease input a valid time format, for example example 19:45 for 7:45PM.`;
+    }
+    return { hh: hh % 24, mm: mm % 60 };
 }
 
 function testExportsWarnings() {

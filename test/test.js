@@ -27,6 +27,7 @@ config.allowed_timecontrols['fischer'] = true;
 config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
+config.time_start_date = new Date(); // needed or test.js can't run? TODO test removing it before merging this PR
 
 // Fake a socket.io-client
 class FakeSocket {

@@ -47,6 +47,7 @@ currently provides:
 --maxperiodtimelive 120
 --minperiodtimecorr 14400
 --maxperiodtimecorr 259200
+--opentimesweek free,free,free,free,free,free,free
 ```
 
 note: command line arguments should not be separated by skipping
@@ -660,6 +661,67 @@ max:
 
 `--maxperiodtimecorrunranked` Maximum seconds per period
 (average time per stone if timecontrol is canadian) for correspondence unranked games
+
+### 2B3) TIMERS FAMILIES
+
+  The timers arguments allows bot admin to reject challenges past or before a certain time.
+  
+Some arguments of this family are comma-separated, while some other arguments are just single values.
+
+Times are specified in the `hh:mm` 24 hour format: for example `07:45` is
+ 7 hours and 45 minutes,and `23:19` is 23 hours and 19 minutes.
+
+#### opentimecountdown
+
+This uses a time duration in the `hh:mm` format.
+
+`--opentimecountdown` Reject new challenges after more than specified time hh:mm has elapsed
+
+`--opentimecountdownranked` Reject new challenges after more than specified time hh:mm has
+ elapsed for ranked games
+
+`--opentimecountdownunranked` Reject new challenges after more than specified time hh:mm has
+ elapsed for unranked games
+
+For example `--opentimescountdown 03:00` will close the bot (stop accepting
+ new challenges), so 3 hours later than now, bot will stop accepting games
+
+#### opentimesweek
+
+These are 7 comma-separated values for each day of the week to specify the
+ schedule of when bot can accept games (open) and when the bot is closed
+ not accepting games for now.
+
+The values are for the 7 days of the week, in the UTC day order:
+ `sunday,monday,tuesday,wednesday,tuesday,friday,saturday`.
+
+A day schedule can be specified as `free` (open all day, as long as gtp2ogs is running),
+ or a `/` separated combination of **local time** `hh:mm` values
+ `time_when_the_bot_opens/time_when_the_bot_closes/time_when_the_bot_opens` etc.
+
+For example the day schedule value `00:00/12:00/13:00/21:47` means that, for this day:
+
+- the bot first opens at 00:00 AM (begining of the day)
+- then the bot closes at 12:00 AM
+- then the bot opens at 01:00 PM (13:00)
+- then the bot closes at 09:47 PM (21:47), for the rest of the day
+
+This is an example use of open times schedule for an entire week:
+
+```Text
+--opentimesweek 00:00/20:45,00:00/22:05,02:45/05:30/19:30/21:15,00:00/23:30,00:00/6:15/19:55,free
+```
+
+note: any day without a schedule value is treated as `free`.
+
+`--opentimesweek` Reject new challenges if local time of the day hh:mm is not
+ in specified open times of this day of the week
+
+`--opentimesweekranked` Reject new challenges if local time of the day hh:mm is not
+ in specified open times of this day of the week for ranked games
+
+`--opentimesweekunranked` Reject new challenges if local time of the day hh:mm is not
+ in specified open times of this day of the week for unranked games
 
 ## extra: notes
 
