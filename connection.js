@@ -752,6 +752,20 @@ function getOpentimeCountdownRejectResult(countdown, notificationRanked) {
     }
 }
 
+function checkOpentimesweekCurrentlyClosed(dayShift, shiftIndex, currHour, currMinute) {
+    const shiftHour   = dayShift.hh;
+    const shiftMinute = dayShift.mm;
+
+    if (shiftIndex % 2 !== 0) {
+        // odd element of the schedule: opening starting from this time of the day
+        // rejecting if it's too early
+        return ((currHour < dayShift.hh) && (currMinute < dayShift.mm));
+    } else {
+        // even element of the schedule: opening starting from this time of the day
+        // rejecting if it's too late
+    }
+}
+
 function getOpentimesweekRejectResult(_r_u, notificationRanked) {
     const currDate = new Date();
     const currDay  = currDate.getDay();
@@ -759,21 +773,22 @@ function getOpentimesweekRejectResult(_r_u, notificationRanked) {
     if (!config[`time_is_free${argNameString_r_u}`][currDay]) {
         const currHour     = currDate.getHours();
         const currMinute   = currDate.getMinutes();
-    
-        const dayShifts   = config[`time_shifts_${argNameString_r_u}`][currDay];
-        const shiftHour   = dayShifts.hh;
-        const shiftMinute = dayShifts.mm;
-    
-        /* TODO unfinished add conditions
-        */
 
-            const r_u = (notificationRanked ? "ranked" : "unranked");
-            const for_r_u_games = beforeRankedUnrankedGamesSpecial("for ", "", r_u, "");
-            const msg = `This bot is not yet open today ${rankedUnranked}, accepting `
-                        + `games starting from ${shiftUTCString}.`;
-            conn_log(msg);
-            return { reject: true, msg };
-        /*}TODO*/
+        const dayShifts   = config[`time_shifts_${argNameString_r_u}`][currDay];
+        for (const dayShift of dayShifts) {
+            const shiftIndex = dayShifts.indexOf(dayShift);
+            const isCurrentlyClosed = checkOpentimesweekCurrentlyClosed(dayShift, shiftIndex, currHour, currMinute);
+            if (isCurrentlyClosed && !dayShifts[shiftIndex + 1]) {  // make sure we are not going to open later, before rejecting
+                const r_u = (notificationRanked ? "ranked" : "unranked");
+                const for_r_u_games = beforeRankedUnrankedGamesSpecial("for ", "", r_u, "");
+                const nextShiftString = "some time later"; // TODO
+                const msg = `This bot is currently not accepting new games ${for_r_u_games}, `
+                            + `try again later starting from ${nextShiftString}.`;
+                conn_log(msg);
+                return { reject: true, msg };
+            }
+
+        }
     }
 }
 
