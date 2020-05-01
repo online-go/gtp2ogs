@@ -454,7 +454,7 @@ class Game {
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         // Notify bot of end of game and send score
-        if (config.farewell_score) {
+        if (config.farewellscore) {
             const sendTheScore = (score) => {
                 if (score) this.log(`Bot thinks the score was ${score}`);
                 if (res !== "R" && res !== "Time" && res !== "Can") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
