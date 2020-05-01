@@ -532,6 +532,23 @@ function testExportsWarnings() {
             console.log(`    Warning: No --nopause nor --nopause${r_u}, `
                         + `${r_u} games are likely to last forever`); 
         }
+        const explantionHandicap = `\nThis behaviour is due to OGS server specific code, `
+                                   + `(notification.handicap is -1 if handicap is automatic).`
+                                   + `\nConsider using the fakerank and/or noautohandicap options`;
+        if (exports.minhandicap >= 0 || exports[`minhandicap${r_u}`] >= 0) {
+            isWarning = true;
+            console.log(`    Warning: Min handicap value 0 or higher for ${r_u} games will also `
+                        + `reject all challenges that have handicap "automatic", even if `
+                        + `these games actually happen to have handicap stones number equal to 0.`
+                        + `\n${explantionHandicap}`);
+        }
+        if (exports.maxhandicap || exports[`maxhandicap${r_u}`]) {
+            isWarning = true;
+            console.log(`    Warning: Max handicap value 0 for ${r_u} games does not totally prevent from `
+                        + `accepting some handicap challenges that have handicap "automatic", even if `
+                        + `these games actually happen to have handicap stones number lower than `
+                        + `your max handicap.\n${msg}`);
+        }
     }
 
     if (isWarning) console.log("[ WARNINGS ! ]\n");
