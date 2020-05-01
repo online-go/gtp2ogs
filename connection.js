@@ -773,7 +773,7 @@ function getOpentimesweekRejectResult(_r_u, notificationRanked) {
                         + `games starting from ${shiftUTCString}.`;
             conn_log(msg);
             return { reject: true, msg };
-        }
+        /*}TODO*/
     }
 }
 
