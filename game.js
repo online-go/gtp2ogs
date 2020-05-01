@@ -457,7 +457,7 @@ class Game {
         if (config.farewell_score && this.state) {
             const sendTheScore = (score) => {
                 if (score) this.log(`Bot thinks the score was ${score}`);
-                if (res != "R") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
+                if (res !== "R") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
                 if (this.bot) { // only kill the bot after it processed this
                     this.bot.gameOver();
                     this.ensureBotKilled();
