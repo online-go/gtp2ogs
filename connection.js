@@ -271,7 +271,7 @@ class Connection {
 
     // Check challenge mandatory conditions
     //
-    checkChallengeMandatory(notification) {
+    checkChallengePlayer(notification) {
 
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here)
         for (const uid of ["username", "id"]) {
@@ -285,14 +285,21 @@ class Connection {
                 return bannedFamilyReject("bansunranked", uid, [notification.user[uid]]);
             }
         }
+
         const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
         if (resultRank) return resultRank;
+
+        return { reject: false }; // OK !
+
+    }
+    checkChallengeBot(notification) {
 
         // check bot is available, else don't mislead user
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }
+
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
             if (config.DEBUG) console.log(`# of connected games = ${number_connected_games}`);
@@ -310,6 +317,7 @@ class Connection {
         } else if (config.DEBUG) {
             console.log("There are no connected games");
         }
+
         const connected_games_per_user = this.gamesForPlayer(notification.user.id);
         if (connected_games_per_user >= config.maxconnectedgamesperuser) {
             conn_log("Too many connected games for this user.");
@@ -318,6 +326,32 @@ class Connection {
                         + `please reduce your number of simultaneous games against `
                         + `this bot, and try again`;
             return { reject: true, msg };
+        }
+
+        if (config.timecountdown && !config.daycountdownranked && !config.daycountdownunranked) {
+            const result = getOpentimeCountdownRejectResult(config.timecountdown, notification.ranked);
+            if (result) return result;
+        }
+        if (config.timecountdownranked && notification.ranked) {
+            const result = getOpentimeCountdownRejectResult(config.timecountdownranked, notification.ranked);
+            if (result) return result;
+        }
+        if (config.timecountdownunranked && !notification.ranked) {
+            const result = getOpentimeCountdownRejectResult(config.timecountdownunranked, notification.ranked);
+            if (result) return result;
+        }
+
+        if (config.opentimesweek && !config.opentimesweekranked && !config.opentimesweekunranked) {
+            const result = getOpentimesweekRejectResult("", notification.ranked);
+            if (result) return result;
+        }
+        if (config.opentimesweekranked && notification.ranked) {
+            const result = getOpentimesweekRejectResult("_ranked", notification.ranked);
+            if (result) return result;
+        }
+        if (config.opentimesweekunranked && !notification.ranked) {
+            const result = getOpentimesweekRejectResult("_unranked", notification.ranked);
+            if (result) return result;
         }
 
         return { reject: false }; // OK !
@@ -460,7 +494,8 @@ class Connection {
     //
     checkChallenge(notification) {
 
-        for (const test of [this.checkChallengeMandatory,
+        for (const test of [this.checkChallengePlayer,
+                           this.checkChallengeBot,
                            this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
                            this.checkChallengeAllowedFamilies,
@@ -702,6 +737,44 @@ function bannedFamilyReject(argNameString, uid, notificationUid) {
                 + `${rankedUnranked} on this bot by bot admin, `
                 + `you may try changing the ranked/unranked setting.`;
     return { reject: true, msg};
+}
+
+function getOpentimeCountdownRejectResult(countdown, notificationRanked) {
+    const now = new Date().getTime();
+    const isTooLate = ( now > (config.time_start_date.getTime() + countdown) );
+    if (isTooLate) {
+        const r_u = (notificationRanked ? "ranked" : "unranked");
+        const for_r_u_games = beforeRankedUnrankedGamesSpecial("for ", "", r_u, "");
+        const msg = `This bot has entered the shutdown phase for today, not accepting games `
+                    + `anymore ${for_r_u_games}, please try again later or another time`;
+        conn_log(msg);
+        return { reject: true, msg };
+    }
+}
+
+function getOpentimesweekRejectResult(_r_u, notificationRanked) {
+    const currDate = new Date();
+    const currDay  = currDate.getDay();
+    const argNameString_r_u = `opentimesweek${_r_u}`;
+    if (!config[`time_is_free${argNameString_r_u}`][currDay]) {
+        const currHour     = currDate.getHours();
+        const currMinute   = currDate.getMinutes();
+    
+        const dayShifts   = config[`time_shifts_${argNameString_r_u}`][currDay];
+        const shiftHour   = dayShifts.hh;
+        const shiftMinute = dayShifts.mm;
+    
+        /* TODO unfinished add conditions
+        */
+
+            const r_u = (notificationRanked ? "ranked" : "unranked");
+            const for_r_u_games = beforeRankedUnrankedGamesSpecial("for ", "", r_u, "");
+            const msg = `This bot is not yet open today ${rankedUnranked}, accepting `
+                        + `games starting from ${shiftUTCString}.`;
+            conn_log(msg);
+            return { reject: true, msg };
+        }
+    }
 }
 
 function getBooleansGeneralReject(nameF) {
