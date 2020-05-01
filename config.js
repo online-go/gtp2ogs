@@ -539,8 +539,8 @@ function testExportsWarnings() {
             isWarning = true;
             console.log(`    Warning: Min handicap value 0 or higher for ${r_u} games will also `
                         + `reject all challenges that have handicap "automatic", even if `
-                        + `these games actually happen to have handicap stones number equal to 0.`
-                        + `\n${explantionHandicap}`);
+                        + `these games actually happen to have handicap stones number lower than .`
+                        + `your min handicap.\n${explantionHandicap}`);
         }
         if (exports.maxhandicap >= 0 || exports[`maxhandicap${r_u}`] >= 0) {
             isWarning = true;
