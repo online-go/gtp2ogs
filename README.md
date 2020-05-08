@@ -180,4 +180,4 @@ later)
 
 ## Developer Notes
 
-You can find notes for developers [in DEV.MD](/docs/DEV.md)
+You can find notes for developers [in DEV.md](/docs/DEV.md)
