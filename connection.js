@@ -385,6 +385,10 @@ class Connection {
             if (!config.allow_all_boardsizes_unranked && !notification.ranked) {
                 return getBoardsizeNotSquareReject("boardsizesunranked", notification.width, notification.height);
             }
+            if (notification.width < 2 || notification.height < 2) {
+                const msg = "Board size 1 is hax. FBI are on the way."
+                return { reject: true, msg };
+            }
         }
         
         // if square, check if square board size is allowed
