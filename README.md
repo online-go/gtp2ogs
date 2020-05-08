@@ -167,7 +167,6 @@ see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
 
 ## Community Involvment
 
-- You may be interested in [Contributing](/docs/CONTRIBUTING.md)
 - You may also use [Issues](https://github.com/online-go/gtp2ogs/issues)
 to report issues.
 
@@ -177,4 +176,8 @@ In leela zero discord (`#bots` channel): <https://discord.gg/HZ23Cp9>
 This discord can also be useful if you want to have fast and quick,
 interactive chat, or ask simple and quick questions (github Issues are
 preferred for long problems because they live a track that can be useful
-later)!
+later)
+
+## Developer Notes
+
+You can find notes for developers [in DEV.MD](/docs/DEV.md)
