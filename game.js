@@ -39,6 +39,16 @@ class Game {
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
+            const gamedataChanged = false;
+
+            if (this.state) {
+                gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
+
+                // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing.
+                this.log('Ignoring gamedata that matches current state');
+                if (!gamedataChanged) return;
+            }
+
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
 
             const prev_phase = (this.state ? this.state.phase : null);
@@ -80,8 +90,6 @@ class Game {
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
-            const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
-
             if (this.bot && gamedataChanged) {
                 this.log("Killing bot because of gamedata change after bot was started");
 
