@@ -41,7 +41,7 @@ class Game {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
 
-            // Test for chanaged state before overwriting prior state with gamedata packet
+            // Test for changed state before overwriting prior state with gamedata packet
             const gamedataChanged = (this.state ? JSON.stringify(this.state) !== JSON.stringify(gamedata) : true);
             const prev_phase = (this.state ? this.state.phase : null);
 
