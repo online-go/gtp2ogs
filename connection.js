@@ -139,30 +139,30 @@ class Connection {
         socket.on('active_game', (gamedata) => {
             if (config.DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
 
-            /* OGS auto scores bot games now, no removal processing is needed by the bot.
+            // OGS auto scores bot games now, no removal processing is needed by the bot.
             
-            /  Eventually might want OGS to not auto score, or make it bot-optional to enforce.
-            /  Some bots can handle stone removal process.
+            //  Eventually might want OGS to not auto score, or make it bot-optional to enforce.
+            //  Some bots can handle stone removal process.
             
-            /  if (gamedata.phase === 'stone removal'
-            /   && ((!gamedata.black.accepted && gamedata.black.id === this.bot_id)
-            /   ||  (!gamedata.white.accepted && gamedata.white.id === this.bot_id))
-            /   ) {
-            /   this.processMove(gamedata);
-            /   }*/
+            //  if (gamedata.phase === 'stone removal'
+            //   && ((!gamedata.black.accepted && gamedata.black.id === this.bot_id)
+            //   ||  (!gamedata.white.accepted && gamedata.white.id === this.bot_id))
+            //   ) {
+            //   this.processMove(gamedata);
+            //   }
 
             if (gamedata.phase === "finished") {
                 if (gamedata.id in this.connected_games) {
-                    /* When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
-                    /  longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
-                    /  Note: active_game and gamedata events can arrive in either order.*/
+                    // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
+                    //  longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
+                    //  Note: active_game and gamedata events can arrive in either order.
 
                     if (config.DEBUG) conn_log(gamedata.id, "active_game phase === finished");
 
-                    /* XXX We want to disconnect right away here, but there's a game over race condition
-                    /      on server side: sometimes /gamedata event with game outcome is sent after
-                    /      active_game, so it's lost since there's no game to handle it anymore...
-                    /      Work around it with a timeout for now.*/
+                    // XXX We want to disconnect right away here, but there's a game over race condition
+                    //      on server side: sometimes /gamedata event with game outcome is sent after
+                    //      active_game, so it's lost since there's no game to handle it anymore...
+                    //      Work around it with a timeout for now.
                     if (!this.connected_games[gamedata.id].disconnect_timeout) {
                         if (config.DEBUG) console.log(`Starting disconnect Timeout in Connection active_game for ${gamedata.id}`);
                         this.connected_games[gamedata.id].disconnect_timeout =
@@ -505,13 +505,11 @@ class Connection {
             .catch(conn_log)
         }
     }
-    processMove(gamedata) {
-        const game = this.connectToGame(gamedata.id)
-        game.makeMove(gamedata.move_number);
-    }
-    processStoneRemoval(gamedata) {
-        return this.processMove(gamedata);
-    }
+    // OGS auto scores bot games now, same as earlier in the code.
+    // processMove(gamedata) {
+    //    const game = this.connectToGame(gamedata.id)
+    //    game.makeMove(gamedata.move_number);
+    //}
     on_delete() {
         /* don't care about delete notifications */
     }
