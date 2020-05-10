@@ -39,7 +39,7 @@ class Game {
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
-            const gamedataChanged = false;
+            let gamedataChanged = false;
 
             if (this.state) {
                 gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
