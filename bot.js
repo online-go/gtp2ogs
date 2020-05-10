@@ -517,9 +517,13 @@ class Bot {
             }, 5000);
         }
     }
-    sendMove(move, width, color){
+    sendMove(move, width, color) {
+        const botError = (e) => {
+            this.ensureBotKilled();
+        }
+
         if (config.DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
-        this.command(`play ${color} ${move2gtpvertex(move, width)}`);
+        this.command(`play ${color} ${move2gtpvertex(move, width)}`, null, botError);
     }
     sendHandicapMoves(moves, width) {
         let cmd = "set_free_handicap";
