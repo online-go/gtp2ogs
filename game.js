@@ -41,7 +41,7 @@ class Game {
 
             const gamedataChanged = this.state ? (JSON.stringify(this.state) !== JSON.stringify(gamedata)) : false;
 
-            if (this.state & !gamedataChanged) {
+            if (this.state && !gamedataChanged) {
                 // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing.
                 this.log('Ignoring gamedata that matches current state');
                 return;
