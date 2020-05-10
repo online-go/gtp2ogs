@@ -39,75 +39,82 @@ class Game {
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
-            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
+            if (this.state) {
+                const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
 
-            const prev_phase = (this.state ? this.state.phase : null);
-            this.state = gamedata;
-            this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
-            this.log(`gamedata     ${this.header()}`);
+                if (!gamedataChanged) {
+                    // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing.
+                    this.log('Ignoring gamedata that matches current state');
+                    return; 
+                }
+                //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
 
-            this.conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
+                const prev_phase = this.state.phase;
+                this.state = gamedata;
+                this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
+                this.log(`gamedata     ${this.header()}`);
 
-            // Only call game over handler if game really just finished.
-            // For some reason we get connected to already finished games once in a while ...
-            if (gamedata.phase === 'finished' && prev_phase && gamedata.phase !== prev_phase)
-                this.gameOver();
+                this.conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
 
-            // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
-            //
-            if (this.state.free_handicap_placement && this.state.handicap > 1) {
-                //In Chinese, black makes multiple free moves.
+                // Only call game over handler if game really just finished.
+                // For some reason we get connected to already finished games once in a while ...
+                if (gamedata.phase === 'finished' && prev_phase && gamedata.phase !== prev_phase)
+                    this.gameOver();
+
+                // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
                 //
-                this.opponent_evenodd = this.my_color === "black" ? 0 : 1;
-                this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
-            } else if (this.state.handicap > 1) {
-                // In Japanese, white makes the first move.
-                //
-                this.opponent_evenodd = this.my_color === "black" ? 1 : 0;
-            } else {
-                // If the game has a handicap, it can't be a fork and the above code works fine.
-                // If the game has no handicap, it's either a normal game or a fork. Forks may have reversed turn ordering.
-                //
-                if (this.state.clock.current_player === this.conn.bot_id) {
-                    this.opponent_evenodd = this.state.moves.length % 2;
+                if (this.state.free_handicap_placement && this.state.handicap > 1) {
+                    //In Chinese, black makes multiple free moves.
+                    //
+                    this.opponent_evenodd = this.my_color === "black" ? 0 : 1;
+                    this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
+                } else if (this.state.handicap > 1) {
+                    // In Japanese, white makes the first move.
+                    //
+                    this.opponent_evenodd = this.my_color === "black" ? 1 : 0;
                 } else {
-                    this.opponent_evenodd = (this.state.moves.length + 1) % 2;
-                }
-            }
-
-            // If server has issues it might send us a new gamedata packet and not a move event. We could try to
-            // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
-            // restart the bot by killing it here if another gamedata comes in. There normally should only be one
-            // before we process any moves, and makeMove() is where a new Bot is created.
-            //
-            const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
-
-            if (this.bot && gamedataChanged) {
-                this.log("Killing bot because of gamedata change after bot was started");
-
-                if (config.DEBUG) {
-                    this.log('Previously seen gamedata:', this.state);
-                    this.log('New gamedata:', gamedata);
-                }
-
-                this.ensureBotKilled();
-
-                if (this.processing) {
-                    this.processing = false;
-                    --Game.moves_processing;
-                    if (config.corrqueue && this.state.time_control.speed === "correspondence") {
-                        --Game.corr_moves_processing;
+                    // If the game has a handicap, it can't be a fork and the above code works fine.
+                    // If the game has no handicap, it's either a normal game or a fork. Forks may have reversed turn ordering.
+                    //
+                    if (this.state.clock.current_player === this.conn.bot_id) {
+                        this.opponent_evenodd = this.state.moves.length % 2;
+                    } else {
+                        this.opponent_evenodd = (this.state.moves.length + 1) % 2;
                     }
                 }
-            }
 
-            // active_game isn't handling this for us any more. If it is our move, call makeMove.
-            //
-            if (this.state.phase === "play" && this.state.clock.current_player === this.conn.bot_id) {
-                if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
-                    this.corr_move_pending = true;
-                } else {
-                    if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
+                // If server has issues it might send us a new gamedata packet and not a move event. We could try to
+                // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
+                // restart the bot by killing it here if another gamedata comes in. There normally should only be one
+                // before we process any moves, and makeMove() is where a new Bot is created.
+                //
+                if (this.bot && gamedataChanged) {
+                    this.log("Killing bot because of gamedata change after bot was started");
+
+                    if (config.DEBUG) {
+                        this.log('Previously seen gamedata:', this.state);
+                        this.log('New gamedata:', gamedata);
+                    }
+
+                    this.ensureBotKilled();
+
+                    if (this.processing) {
+                        this.processing = false;
+                        --Game.moves_processing;
+                        if (config.corrqueue && this.state.time_control.speed === "correspondence") {
+                            --Game.corr_moves_processing;
+                        }
+                    }
+                }
+
+                // active_game isn't handling this for us any more. If it is our move, call makeMove.
+                //
+                if (this.state.phase === "play" && this.state.clock.current_player === this.conn.bot_id) {
+                    if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
+                        this.corr_move_pending = true;
+                    } else {
+                        if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
+                    }
                 }
             }
         });
