@@ -39,14 +39,12 @@ class Game {
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
-            let gamedataChanged = false;
+            const gamedataChanged = this.state ? (JSON.stringify(this.state) !== JSON.stringify(gamedata)) : false;
 
-            if (this.state) {
-                gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
-
+            if (this.state & !gamedataChanged) {
                 // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing.
                 this.log('Ignoring gamedata that matches current state');
-                if (!gamedataChanged) return;
+                return;
             }
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
