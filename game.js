@@ -41,7 +41,10 @@ class Game {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
 
+            // Test for chanaged state before overwriting prior state with gamedata packet
+            const gamedataChanged = (this.state ? JSON.stringify(this.state) !== JSON.stringify(gamedata) : true);
             const prev_phase = (this.state ? this.state.phase : null);
+
             this.state = gamedata;
             this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`gamedata     ${this.header()}`);
@@ -80,8 +83,6 @@ class Game {
             // restart the bot by killing it here if another gamedata comes in. There normally should only be one
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
-            const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
-
             if (this.bot && gamedataChanged) {
                 this.log("Killing bot because of gamedata change after bot was started");
 
