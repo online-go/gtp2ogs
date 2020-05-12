@@ -107,6 +107,7 @@ class Game {
                 if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
                     this.corr_move_pending = true;
                 } else {
+                    this.log('Calling makemove - game',this.game_id,'!bot',!this.bot,'!processing',!this.processing,'movelen',this.state.moves.length,'gamedata',!!gamedata);
                     if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
                 }
             }
@@ -215,6 +216,7 @@ class Game {
                     if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
                         this.corr_move_pending = true;
                     } else {
+                        this.log('Calling makemove in game/move',this.game_id,'!bot',!this.bot,'!processing',!this.processing,'movelen',this.state.moves.length); 
                         this.makeMove(this.state.moves.length);
                     }
                     //this.makeMove(this.state.moves.length);
@@ -376,7 +378,9 @@ class Game {
 
         if (!doing_handicap) {  // Regular genmove ...
             const sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+            this.log("calling genmove in makeMove",this.game_id);
             this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
+            this.log("called genmove in makeMove",this.game_id);
             return;
         }
 
