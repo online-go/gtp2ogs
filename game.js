@@ -467,7 +467,7 @@ class Game {
                     this.ensureBotKilled();
                 }
             };
-            this.bot.command('final_score', sendTheScore, false, true); // allow bot to process end of game
+            this.bot.command('final_score', sendTheScore, null, true); // allow bot to process end of game
         } else if (this.bot) {
             this.bot.gameOver();
             this.ensureBotKilled();
