@@ -90,6 +90,15 @@ Thank you message to appear in chat at end of game
 
 see for details [notes G](/docs/NOTES.md#g)
 
+### farewellscore
+
+`--farewellscore`
+Asks the bot for the score using `final_score` and sends it to the chat
+if the game ended by passing.
+The command is sent regardless of whether the game ends by passing or
+by resignation, to allow bots to process the end of the game and (e.g.)
+save it locally.
+
 ### rejectnew arguments
 
 `--rejectnew` Reject all new challenges with the default
