@@ -483,7 +483,6 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     if (!ogspv) return;
     const upperCaseOgsPv = ogspv.toUpperCase();
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
-
     if (!upperCaseAIs.includes(upperCaseOgsPv)) {
         throw `Unsupported --ogspv option ${ogspv}.`
               + `\nSupported options are ${ogsPvAIs.join(', ')}`;
