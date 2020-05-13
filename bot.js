@@ -631,7 +631,7 @@ function pretty_char2num(ch) {
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 }
-function move2gtpvertex(move, bot, height) {
+function move2gtpvertex(move, width, height) {
     if (move.x < 0) {
         return "pass";
     }
