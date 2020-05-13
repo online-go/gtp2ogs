@@ -40,6 +40,7 @@ exports.updateFromArgv = function() {
         .string('greeting')
         .describe('farewell', 'Thank you message to appear in chat at end of game (ex: -Thank you for playing-)')
         .string('farewell')
+        .describe('farewellscore', 'Send the score according to the bot at the end of the game')
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
