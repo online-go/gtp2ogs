@@ -12,6 +12,8 @@ class Pv {
             this.startupCheckSai = () => {}; // disable sai check for other bots.
         }
 
+        
+
         this.pvLine =  null;
         this.postPvToChat = { 'LEELAZERO':  this.postPvToChatDualLine,
                               'SAI': this.postPvToChatDualLine,
@@ -36,6 +38,9 @@ class Pv {
                            'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
                          }[setting];
         this.CLPV =      { 'PHOENIXGO':  (/\([^()]*\)/g) }[setting];
+    }
+    fetchOgspvType() {
+        this.game.sendChat()
     }
     checkPondering() {
         if (!(this.game.processing || this.lookingForPv)) return true;

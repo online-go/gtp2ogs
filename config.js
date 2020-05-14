@@ -30,8 +30,8 @@ exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
     const optimist = require("optimist")
-        // 1) ROOT ARGUMENTS
-        .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
+        // 1) ROOT OPTIONS
+        .usage("Usage: $0 --username <bot-username> --apikey <apikey> [gtp2ogs arguments] -- botcommand [bot arguments]")
         .demand('username')
         .demand('apikey')
         .describe('username', 'Specify the username of the bot, for example GnuGo')
@@ -76,7 +76,7 @@ exports.updateFromArgv = function() {
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
-        // 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES
+        // 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
         //     2A) ALL/RANKED/UNRANKED FAMILIES
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
@@ -108,7 +108,7 @@ exports.updateFromArgv = function() {
         .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        //         2B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS
+        //         2B2) GENERIC GENERAL/RANKED/UNRANKED OPTIONS
         .describe('proonly', 'For all games, only accept those from professionals')
         .describe('proonlyranked', 'For ranked games, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
