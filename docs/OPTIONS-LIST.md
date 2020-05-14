@@ -102,7 +102,7 @@ The command is sent regardless of whether the game ends by passing or
 by resignation, to allow bots to process the end of the game and (e.g.)
 save it locally.
 
-### rejectnew
+### rejectnew options
 
 `--rejectnew` Reject all new challenges with the default
 reject message
