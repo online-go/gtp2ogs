@@ -1,6 +1,8 @@
 # Windows Guide
 
-Unless specified otherwise, all windows distributions are supported.
+This tutorial uses Windows 10.
+
+Other recent windows operating systems should be supported.
 
 ## 1. install node.js and npm
 

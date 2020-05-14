@@ -2,7 +2,7 @@
 
 This tutorial uses Ubuntu 20.04.
 
-Unless specified otherwise, all linux distributions are supported.
+But most linux distributions should be supported.
 
 ## 1. install node.js and npm
 
