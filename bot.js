@@ -506,8 +506,9 @@ class Bot {
     kill() {
         this.log("Stopping bot");
         this.ignore = true;  // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
-        this.dead = true;
+        // "quit" needs to be sent before we toggle this.dead since command() checks the status of this.dead
         this.command("quit");
+        this.dead = true;
         if (this.proc) {
             this.proc.kill();
             setTimeout(() => {
