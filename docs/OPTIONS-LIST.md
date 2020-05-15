@@ -1,10 +1,11 @@
 # Option list
 
-below is a list of all available gtp2ogs arguments,
+Below is a list of all available options.
 
-Since they take a lot of place all the list has been moved here
+In gtp2ogs, options need to be inputted as command-line arguments.
 
-use the ones you want only, no need to use them all !
+The number of options (and of bot arguments) is free, use the
+ ones you want.
 
 ## DEFAULT VALUES SUMMARY
 
@@ -49,15 +50,17 @@ currently provides:
 --maxperiodtimecorr 259200
 ```
 
-note: command line arguments should not be separated by skipping
-lines, it was done here only for clearer display
+note: command-line arguments should not be separated by skipping
+lines, it was done here only for clearer display.
 
-## 1) ROOT ARGUMENTS
+note2: additional details are also available [here](/docs/NOTES.md).
 
-Arguments in this category work the same way no matter what
+## 1) ROOT OPTIONS
+
+Options in this category work the same way no matter what
 the ranked/unranked status is.
 
-Note: about the "messages" arguments, some combinations of
+Note: about the "messages" options, some combinations of
 characters in messages make gtp2ogs crash !!
 see for details [notes G](/docs/NOTES.md#g)
 
@@ -99,13 +102,13 @@ The command is sent regardless of whether the game ends by passing or
 by resignation, to allow bots to process the end of the game and (e.g.)
 save it locally.
 
-### rejectnew arguments
+### rejectnew options
 
 `--rejectnew` Reject all new challenges with the default
 reject message
 
 `--rejectnew --rejectnewmsg "not accepting games because blablablah"`
-if you add the rejectnewmsg argument, Reject all new challenges with a
+if you add the rejectnewmsg option, Reject all new challenges with a
 customized message instead of the default message.
 
 see for details [notes G](/docs/NOTES.md#g)
@@ -237,8 +240,7 @@ connected games per user against this bot
 
 ### rankedonly unrankedonly
 
-Below are the "only" options that only have a general option
-(no ranked or unranked options)
+Below are the options of the "only" family.
 
 `--rankedonly` Only accept ranked matches
 
@@ -253,18 +255,19 @@ issue if handicap is -automatic
 
 see [notes F](/docs/NOTES.md#f) for details
 
-## 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES
+## 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
 
-Arguments in this category allow us to accept or reject
+Options in this category allow us to accept or reject
 a challenge based on the notification (challenge settings)
 
 ### 2A) ALL/RANKED/UNRANKED FAMILIES
 
-Here the general argument (ex: --bans) does not confict with
-the ranked and unranked arguments for accepting/rejecting matches.
+Here the general option (ex: bans) does not confict with
+the ranked and unranked options for accepting/rejecting matches.
 
 example:
 `--bans A,B --bansranked X,Y --bansunranked Z`
+
 result of these bans arguments:
 
 - banned users for ranked games: A,B,X,Y
@@ -285,12 +288,12 @@ are banned from unranked games
 
 Here you can either use:
 
-- only the general argument (ex: `--maxhandicap 2`), the same setting
+- only the general option (ex: `--maxhandicap 2`), the same setting
 will be used for ranked and unranked games
 
-- OR both the ranked AND the unranked arguments
+- OR both the ranked AND the unranked option
 (ex: `--maxhandicapranked 0 --maxhandicapunranked 9`),
-and in that case, the general argument will be ignored
+and in that case, the general option will be ignored
 and instead the ranked and unranked will be used depending
 on whether the game is ranked or unranked.
 
@@ -389,10 +392,10 @@ Full list of possible values:  `fischer`,  `byoyomi`, `canadian`,
 
 see [notes E](/docs/NOTES.md#e) for details
 
-### 2B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS
+### 2B2) GENERIC GENERAL/RANKED/UNRANKED OPTIONS
 
 Arguments in this category are not comma-separated, they are either
-booleans (enabled just from activating the option, nothing else to specify,
+booleans (enabled just from enabling the option, nothing else to specify,
 for example `--noautohandicap`), or single values (for example `--maxhandicap 9`)
 
 #### proonly
@@ -669,9 +672,3 @@ max:
 
 `--maxperiodtimecorrunranked` Maximum seconds per period
 (average time per stone if timecontrol is canadian) for correspondence unranked games
-
-## extra: notes
-
-Additional notes have been added [here](/docs/NOTES.md)
-
--> **continue reading in [README.md/Options](/README.md/#options)**

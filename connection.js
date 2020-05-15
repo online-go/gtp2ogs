@@ -173,11 +173,6 @@ class Connection {
                 return;
             }
 
-            // Don't connect if it is not our turn.
-            if (gamedata.player_to_move !== this.bot_id) {
-                return;
-            }
-
             // Set up the game so it can listen for events.
             this.connectToGame(gamedata.id);
         });
@@ -310,7 +305,7 @@ class Connection {
         } else if (config.DEBUG) {
             console.log("There are no connected games");
         }
-        const connected_games_per_user = this.gamesForPlayer(notification.user.id);
+        const connected_games_per_user = this.countGamesForPlayer(notification.user.id);
         if (connected_games_per_user >= config.maxconnectedgamesperuser) {
             conn_log("Too many connected games for this user.");
             const msg = `Maximum number of simultaneous games allowed per player `
@@ -505,10 +500,10 @@ class Connection {
             .catch(conn_log)
         }
     }
-    processMove(gamedata) {
-        const game = this.connectToGame(gamedata.id)
-        game.makeMove(gamedata.move_number);
-    }
+    // processMove(gamedata) {
+    //     const game = this.connectToGame(gamedata.id)
+    //     game.makeMove(gamedata.move_number);
+    // }
     processStoneRemoval(gamedata) {
         return this.processMove(gamedata);
     }
@@ -531,7 +526,7 @@ class Connection {
     removeGameForPlayer(game_id) {
         for (const player in this.games_by_player) {
             const idx = this.games_by_player[player].indexOf(game_id);
-            if (idx === -1)  continue;
+            if (idx === -1) continue;
 
             this.games_by_player[player].splice(idx, 1);  // Remove element
             if (this.games_by_player[player].length === 0) {
@@ -540,7 +535,7 @@ class Connection {
             return;
         }
     }
-    gamesForPlayer(player) {
+    countGamesForPlayer(player) {
         if (!this.games_by_player[player])  return 0;
         return this.games_by_player[player].length;
     }

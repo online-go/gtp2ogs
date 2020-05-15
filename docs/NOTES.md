@@ -69,7 +69,7 @@ is fixed (at the server level), it is recommended for botadmin
 
 ## G
 
-when using the "msg" arguments (`--greeting` , `--farewell` ,
+when using the "msg" options (`--greeting` , `--farewell` ,
 `--rejectnew --rejectnewmsg` , some special characters will
 make gtp2ogs crash, such as `!!` (two times `!`) , so test
 special characters in your messages with caution
@@ -90,7 +90,7 @@ this option and report the issue on github issues or on the leela zero discord
 until the issue is fixed again.
 
 If you get the error split2 is missing, you can install it locally from your
-gtp2ogs folder with `npm install`, or globally (easier) with `npm install -g split2`.
+gtp2ogs folder with `npm install`.
 
 ### ogspv alternative weights support
 
