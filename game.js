@@ -464,7 +464,6 @@ class Game {
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         // Notify bot of end of game and send score
-        this.log("FAREWELL",config.farewellscore,!!this.bot)
         if (config.farewellscore && this.bot) {
             const sendTheScore = (score) => {
                 if (score) this.log(`Bot thinks the score was ${score}`);
