@@ -42,10 +42,9 @@ class Game {
             // Only call game over handler if game really just finished.
             // For some reason we get connected to already finished games once in a while ...
             if (gamedata.phase === 'finished') {
-                const prev_phase = (this.state ? this.state.phase : null);                
                 this.state = gamedata;                
-                if (prev_phase && gamedata.phase !== prev_phase) this.gameOver();
-                return; // ignore if we already handled it
+                if (this.state && gamedata.phase !== this.state.phase) this.gameOver();
+                return; // ignore -- it's either handled by gameOver or we already handled it before.
             }
 
             const gamedataChanged = this.state ? (JSON.stringify(this.state) !== JSON.stringify(gamedata)) : false;
@@ -63,16 +62,12 @@ class Game {
             // before we process any moves, and makeMove() is where a new Bot is created.
             //
             if (this.bot && gamedataChanged) {
-
                 this.log("Killing bot because of gamedata change after bot was started");
-
                 if (config.DEBUG) {
                     this.log('Previously seen gamedata:', this.state);
                     this.log('New gamedata:', gamedata);
                 }
-
                 this.ensureBotKilled();
-
                 if (this.processing) {
                     this.processing = false;
                     --Game.moves_processing;
