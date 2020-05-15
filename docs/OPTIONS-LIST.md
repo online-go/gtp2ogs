@@ -85,6 +85,29 @@ Greeting message to appear in chat at first move
 
 see for details [notes G](/docs/NOTES.md#g)
 
+### greetingbotcommand
+
+`--greetingbotcommand` Additional greeting message displaying
+bot command, in OGS games
+
+for example:
+
+```Text
+You are playing against:
+sai-0.17.5.exe --gtp -w saiNetwork337.gz --noponder -v 12800 -r 2 --precision half --lagbuffer 1000 --nrsymm --lambda 0.5
+```
+
+This gives valuable information to the users who desire it.
+
+And due to its nature, this supports all bots.
+
+You may rename your bot command files and arguments to be self-explanatory,
+for example:
+
+- `saiNetwork337.gz` is shorter than `6470f77e4768bef4ef85641c04a0e3a068cf097c760b4a9c1b9c4d58b304b031.gz`
+(you may want to trim it), and clearer than `network.gz`
+- `sai-0.17.5.exe` or `sai-fb36e42.exe` is clearer than `sai.exe`.
+
 ### farewell
 
 `--farewell "Thank you for playing"`
