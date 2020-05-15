@@ -367,9 +367,9 @@ class Game {
         if (this.state.phase !== 'play')
             return;
         if (!this.greeted && this.state.moves.length < (2 + this.state.handicap)) {
+            this.greeted = true;
             if (config.greeting) {
                 this.sendChat(config.greeting, "discussion");
-                this.greeted = true;
             }
             if (config.greetingbotcommand) {
                 const pretty_bot_command = config.bot_command.join(' ');
