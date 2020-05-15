@@ -42,8 +42,10 @@ class Game {
             // Only call game over handler if game really just finished.
             // For some reason we get connected to already finished games once in a while ...
             if (gamedata.phase === 'finished') {
+                const prev_phase = (this.state ? this.state.phase : null);                
+                this.state = gamedata;                
                 if (prev_phase && gamedata.phase !== prev_phase) this.gameOver();
-                return;
+                return; // ignore if we already handled it
             }
 
             const gamedataChanged = this.state ? (JSON.stringify(this.state) !== JSON.stringify(gamedata)) : false;
@@ -81,8 +83,6 @@ class Game {
             }
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
-
-            const prev_phase = (this.state ? this.state.phase : null);
             this.state = gamedata;
             this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`gamedata     ${this.header()}`);
