@@ -42,8 +42,10 @@ class Game {
             // Only call game over handler if game really just finished.
             // For some reason we get connected to already finished games once in a while ...
             if (gamedata.phase === 'finished') {
-                this.state = gamedata;                
-                if (this.state && gamedata.phase !== this.state.phase) this.gameOver();
+                if (this.state && gamedata.phase !== this.state.phase) {
+                    this.state = gamedata;
+                    this.gameOver();
+                }
                 return; // ignore -- it's either handled by gameOver or we already handled it before.
             }
 
