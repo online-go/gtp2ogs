@@ -93,8 +93,7 @@ bot command, in OGS games
 for example:
 
 ```Text
-You are playing against:
-sai-0.17.5.exe --gtp -w saiNetwork337.gz --noponder -v 12800 -r 2 --precision half --lagbuffer 1000 --nrsymm --lambda 0.5
+You are playing against: sai-0.17.5.exe --gtp -w saiNetwork337.gz --noponder -v 12800 -r 2 --precision half --lagbuffer 1000 --nrsymm --lambda 0.5
 ```
 
 This gives valuable information to the users who desire it.
