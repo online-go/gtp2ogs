@@ -369,7 +369,11 @@ class Bot {
             return false;
         }
 
-        this.command(`boardsize ${state.width}`, () => {}, eb);
+        if (state.width === state.height) {
+            this.command(`boardsize ${state.width}`, () => {}, eb);
+        } else {
+            this.command(`boardsize ${state.width} ${state.height}`, () => {}, eb);
+        }
         this.command("clear_board", () => {}, eb);
         this.command(`komi ${state.komi}`, () => {}, eb);
         //this.log(state);
@@ -378,21 +382,21 @@ class Bot {
 
         let have_initial_state = false;
         if (state.initial_state) {
-            const black = decodeMoves(state.initial_state.black, state.width);
-            const white = decodeMoves(state.initial_state.white, state.width);
+            const black = decodeMoves(state.initial_state.black, state.width, state.height);
+            const white = decodeMoves(state.initial_state.white, state.width, state.height);
             have_initial_state = (black.length || white.length);
 
             for (let i = 0; i < black.length; ++i)
-                this.command(`play black ${move2gtpvertex(black[i], state.width)}`, () => {}, eb);
+                this.command(`play black ${move2gtpvertex(black[i], state.width, state.height)}`, () => {}, eb);
             for (let i = 0; i < white.length; ++i)
-                this.command(`play white ${move2gtpvertex(white[i], state.width)}`, () => {}, eb);
+                this.command(`play white ${move2gtpvertex(white[i], state.width, state.height)}`, () => {}, eb);
         }
 
         // Replay moves made
         let color = state.initial_player;
         const doing_handicap = (!have_initial_state && state.free_handicap_placement && state.handicap > 1);
         const handicap_moves = [];
-        const moves = decodeMoves(state.moves, state.width);
+        const moves = decodeMoves(state.moves, state.width, state.height);
         for (let i = 0; i < moves.length; ++i) {
             const move = moves[i];
 
@@ -400,10 +404,10 @@ class Bot {
             if (doing_handicap && handicap_moves.length < state.handicap) {
                 handicap_moves.push(move);
                 if (handicap_moves.length === state.handicap)
-                    this.sendHandicapMoves(handicap_moves, state.width);
+                    this.sendHandicapMoves(handicap_moves, state.width, state.height);
                 else continue;  // don't switch color.
             } else {
-                this.command(`play ${color} ${move2gtpvertex(move, state.width)}`)
+                this.command(`play ${color} ${move2gtpvertex(move, state.width, state.height)}`)
             }
 
             color = (color === 'black' ? 'white' : 'black');
@@ -487,7 +491,7 @@ class Bot {
                 if (!resign && !pass) {
                     if (move && move[0]) {
                         x = gtpchar2num(move[0]);
-                        y = state.width - parseInt(move.substr(1))
+                        y = state.height - parseInt(move.substr(1))
                     } else {
                         this.log(`${cmd} failed, resigning`);
                         resign = true;
@@ -518,14 +522,14 @@ class Bot {
             }, 5000);
         }
     }
-    sendMove(move, width, color){
-        if (config.DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
-        this.command(`play ${color} ${move2gtpvertex(move, width)}`);
+    sendMove(move, width, height, color){
+        if (config.DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width, height));
+        this.command(`play ${color} ${move2gtpvertex(move, width, height)}`);
     }
-    sendHandicapMoves(moves, width) {
+    sendHandicapMoves(moves, width, height) {
         let cmd = "set_free_handicap";
         for (let i = 0; i < moves.length; i++)
-            cmd += ` ${move2gtpvertex(moves[i], width)}`;
+            cmd += ` ${move2gtpvertex(moves[i], width, height)}`;
         this.command(cmd);
     }
     // Called on game over, in case you need something special.
@@ -534,10 +538,8 @@ class Bot {
     }
 }
 
-function decodeMoves(move_obj, board_size) {
+function decodeMoves(move_obj, width, height) {
     const ret = [];
-    const width = board_size;
-    const height = board_size;
 
     /*
     if (DEBUG) {
@@ -585,7 +587,7 @@ function decodeMoves(move_obj, board_size) {
             for (let i = 0; i < moves.length; ++i) {
                 if (i%2) { /* even are the 'splits', which should always be blank unless there is an error */
                     let x = pretty_char2num(moves[i][0]);
-                    let y = height-parseInt(moves[i].substring(1));
+                    let y = height - parseInt(moves[i].substring(1));
                     if ( ((width && x >= width) || x < 0) ||
                          ((height && y >= height) || y < 0) ) {
                         x = y = -1;
@@ -630,11 +632,11 @@ function pretty_char2num(ch) {
     if (ch === ".") return -1;
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 }
-function move2gtpvertex(move, board_size) {
+function move2gtpvertex(move, width, height) {
     if (move.x < 0) {
         return "pass";
     }
-    return num2gtpchar(move['x']) + (board_size-move['y'])
+    return num2gtpchar(move['x']) + (height-move['y'])
 }
 function num2gtpchar(num) {
     if (num === -1) 

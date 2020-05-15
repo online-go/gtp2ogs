@@ -183,10 +183,10 @@ class Game {
                 this.state.moves.push(move.move);
 
                 // Log opponent moves
-                const m = decodeMoves(move.move, this.state.width)[0];
+                const m = decodeMoves(move.move, this.state.width, this.state.height)[0];
                 if ((this.my_color === "white" && (this.state.handicap) >= this.state.moves.length) ||
                     move.move_number % 2 === this.opponent_evenodd)
-                    this.log(`Got     ${move2gtpvertex(m, this.state.width)}`);
+                    this.log(`Got     ${move2gtpvertex(m, this.state.width, this.state.height)}`);
             } catch (e) {
                 console.error(e)
             }
@@ -206,7 +206,7 @@ class Game {
                     this.makeMove(this.state.moves.length);
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color === "black" ? "white" : "black");
+                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     if (config.DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
                     if (this.state.moves.length ===1) { // remind once, avoid spamming the reminder
                         this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
@@ -217,7 +217,7 @@ class Game {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color === "black" ? "white" : "black");
+                        this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     }
 
                     if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
