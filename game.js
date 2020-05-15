@@ -68,6 +68,7 @@ class Game {
                     this.log('New gamedata:', gamedata);
                 }
                 this.ensureBotKilled();
+
                 if (this.processing) {
                     this.processing = false;
                     --Game.moves_processing;
