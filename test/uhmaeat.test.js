@@ -32,7 +32,7 @@ afterEach(function () {
     sinon.restore();
 });
 
-describe('uhmaeat', () => {
+describe('Challenges', () => {
   
   let conn;
  
