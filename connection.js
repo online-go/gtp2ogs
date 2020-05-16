@@ -14,6 +14,7 @@ const Game = require('./game').Game;
 /** Connection **/
 /****************/
 const ignorable_notifications = {
+    'delete': true,
     'gameStarted': true,
     'gameEnded': true,
     'gameDeclined': true,
@@ -129,10 +130,13 @@ class Connection {
         socket.on('notification', (notification) => {
             if (this[`on_${notification.type}`]) {
                 this[`on_${notification.type}`](notification);
-            }
-            else if (!(notification.type in ignorable_notifications)) {
-                console.log("Unhandled notification type: ", notification.type, notification);
-                this.deleteNotification(notification);
+            } else {
+                if (!(notification.type in ignorable_notifications)) {
+                    console.log("Unhandled notification type: ", notification.type, notification);
+                }
+                if (notification.type !== 'delete') {
+                    this.deleteNotification(notification);
+                }
             }
         });
 
@@ -504,15 +508,6 @@ class Connection {
     //     const game = this.connectToGame(gamedata.id)
     //     game.makeMove(gamedata.move_number);
     // }
-    processStoneRemoval(gamedata) {
-        return this.processMove(gamedata);
-    }
-    on_delete() {
-        /* don't care about delete notifications */
-    }
-    on_gameStarted() {
-        /* don't care about gameStarted notifications */
-    }
     addGameForPlayer(game_id, player) {
         if (!this.games_by_player[player]) {
             this.games_by_player[player] = [ game_id ];
