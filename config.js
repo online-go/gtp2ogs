@@ -407,9 +407,9 @@ exports.updateFromArgv = function() {
 
 }
 
-function getBLCString(familyNameString, rankedUnranked) {
-    return `${familyNameString}blitz${rankedUnranked}, --${familyNameString}live${rankedUnranked} `
-           + `and/or --${familyNameString}corr${rankedUnranked}`;
+function getBLCString(familyName, rankedUnranked) {
+    return `${familyName}blitz${rankedUnranked}, --${familyName}live${rankedUnranked} `
+           + `and/or --${familyName}corr${rankedUnranked}`;
 }
 
 // console messages
@@ -466,12 +466,12 @@ function testDroppedArgv(argv) {
             }
         }
     }
-    for (const argNameString of getArgNameStringsGRU("komis")) {
-        if (argv[argNameString]) {
+    for (const argName of getArgNamesGRU("komis")) {
+        if (argv[argName]) {
             for (const komi of ["auto","null"]) {
-                if (argv[argNameString].split(",").includes(komi)) {
-                    console.log(`Dropped: --${argNameString} ${komi} is no longer `
-                                + `supported, use --${argNameString} automatic instead`);
+                if (argv[argName].split(",").includes(komi)) {
+                    console.log(`Dropped: --${argName} ${komi} is no longer `
+                                + `supported, use --${argName} automatic instead`);
                 }
             }
         }
@@ -492,8 +492,8 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
 }
 
 // argv.arg(general/ranked/unranked) to exports.(r_u).arg
-function getArgNameStringsGRU(familyNameString) {
-    return ["", "ranked", "unranked"].map( e => `${familyNameString}${e}` );
+function getArgNamesGRU(familyName) {
+    return ["", "ranked", "unranked"].map( e => `${familyName}${e}` );
 }
 
 function parseRank(arg) {
