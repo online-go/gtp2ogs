@@ -275,13 +275,13 @@ class Connection {
         // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here)
         for (const uid of ["username", "id"]) {
             if (config.banned_users[notification.user[uid]]) {
-                return bannedFamilyReject("bans", uid, notification.user[uid]);
+                return getRejectBanned(notification.user.username, "");
             }
             if (notification.ranked && config.banned_users_ranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansranked", uid, [notification.user[uid]]);
+                return getRejectBanned(notification.user.username, "ranked");
             }
             if (!notification.ranked && config.banned_users_unranked[notification.user[uid]]) {
-                return bannedFamilyReject("bansunranked", uid, [notification.user[uid]]);
+                return getRejectBanned(notification.user.username, "unranked");
             }
         }
         const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
@@ -685,13 +685,13 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function bannedFamilyReject(argNameString, uid, notificationUid) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("from ", "", argNameString, "all ");
-    conn_log(`${uid} ${notificationUid} is banned ${rankedUnranked}`);
-    const msg = `You (${uid} ${notificationUid}) are banned `
-                + `${rankedUnranked} on this bot by bot admin, `
-                + `you may try changing the ranked/unranked setting.`;
-    return { reject: true, msg};
+function getRejectBanned(username, ranked) {
+    return getReject(`You (${username}) are not allowed to play ${ranked}${ranked ? " " : ""}games against this bot.`)
+}
+
+function getReject(reason) {
+    conn_log(reason);
+    return { reject: true, msg: reason};
 }
 
 function getBooleansGeneralReject(nameF) {

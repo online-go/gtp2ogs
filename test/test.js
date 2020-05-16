@@ -812,3 +812,5 @@ describe("Pv should work", () => {
         conn.terminate();
     }
 });
+
+module.exports = { FakeSocket, FakeAPI, base_challenge };
