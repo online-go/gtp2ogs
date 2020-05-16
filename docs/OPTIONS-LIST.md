@@ -88,7 +88,7 @@ see for details [notes G](/docs/NOTES.md#g)
 ### greetingbotcommand
 
 `--greetingbotcommand` Additional greeting message displaying
-bot command, in OGS games
+bot command
 
 for example:
 
@@ -145,7 +145,7 @@ file exists (checked each time, can use for load-balancing)
 ### ogspv
 
 `--ogspv` Send winrate and variations for supported AIs with
-supported settings, in OGS games.
+supported settings
 
 Example of output (Leela Zero):
 
