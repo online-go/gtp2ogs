@@ -14,6 +14,7 @@ const Game = require('./game').Game;
 /** Connection **/
 /****************/
 const ignorable_notifications = {
+    'delete': true,
     'gameStarted': true,
     'gameEnded': true,
     'gameDeclined': true,
@@ -129,10 +130,13 @@ class Connection {
         socket.on('notification', (notification) => {
             if (this[`on_${notification.type}`]) {
                 this[`on_${notification.type}`](notification);
-            }
-            else if (!(notification.type in ignorable_notifications)) {
-                console.log("Unhandled notification type: ", notification.type, notification);
-                this.deleteNotification(notification);
+            } else {
+                if (!(notification.type in ignorable_notifications)) {
+                    console.log("Unhandled notification type: ", notification.type, notification);
+                }
+                if (notification.type !== 'delete') {
+                    this.deleteNotification(notification);
+                }
             }
         });
 
@@ -170,11 +174,6 @@ class Connection {
                     }
                 }
                 // Don't connect to finished games.
-                return;
-            }
-
-            // Don't connect if it is not our turn.
-            if (gamedata.player_to_move !== this.bot_id) {
                 return;
             }
 
@@ -267,13 +266,13 @@ class Connection {
         post(api1("me/friends/invitations"), this.auth({ 'from_user': notification.user.id }))
         .then((obj)=> conn_log(obj.body))
         .catch(conn_log);
-
     }
+
     // Check challenge mandatory conditions
     //
     checkChallengeMandatory(notification) {
 
-        // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here):
+        // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here)
         for (const uid of ["username", "id"]) {
             if (config.banned_users[notification.user[uid]]) {
                 return bannedFamilyReject("bans", uid, notification.user[uid]);
@@ -288,7 +287,7 @@ class Connection {
         const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
         if (resultRank) return resultRank;
 
-        // check bot is available, else don't mislead user:
+        // check bot is available, else don't mislead user
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
@@ -310,7 +309,7 @@ class Connection {
         } else if (config.DEBUG) {
             console.log("There are no connected games");
         }
-        const connected_games_per_user = this.gamesForPlayer(notification.user.id);
+        const connected_games_per_user = this.countGamesForPlayer(notification.user.id);
         if (connected_games_per_user >= config.maxconnectedgamesperuser) {
             conn_log("Too many connected games for this user.");
             const msg = `Maximum number of simultaneous games allowed per player `
@@ -327,13 +326,13 @@ class Connection {
     //
     checkChallengeSanityChecks(notification) {
 
-        // TODO : add all sanity checks here of all unhandled notifications
-        // Sanity check, user can't choose rules. Bots only play chinese.
+        // TODO: add all sanity checks here of all unhandled notifications
+
+        // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
         if (!notification.rules.includes("chinese")) {
             conn_log(`Unhandled rules: ${notification.rules}`);
-            const msg = `The ${notification.rules} rules are not allowed for `
-                        + `this bot, please choose allowed rules such as `
-                        + `chinese rules. `;
+            const msg = `The ${notification.rules} rules are not allowed on this bot, `
+                        + `please choose allowed rules, for example chinese rules.`;
             return { reject: true, msg };
         }
 
@@ -357,11 +356,11 @@ class Connection {
                                        ", please manually choose the number of handicap stones"]
                                     ];
 
-        for (const [familyNameString, descr, notifCondition, ending] of testBooleanArgs_r_u) {
+        for (const [familyNameString, nameF, notifCondition, ending] of testBooleanArgs_r_u) {
             if (notifCondition) {
                 for (const [argNameString, rankedCondition] of get_r_u_arr_booleans(familyNameString, notification.ranked)) {
                     if (config[argNameString] && rankedCondition) {
-                        return getBooleans_r_u_Reject(argNameString, descr, ending);
+                        return getBooleans_r_u_Reject(argNameString, nameF, ending);
                     }
                 }
             }
@@ -420,10 +419,10 @@ class Connection {
 
         const handicapSettings =  { notif: notification.handicap, isFakeHandicap: config.fakerank || false };
         if (notification.handicap === -1 && config.fakerank) {
-            // TODO : modify or remove fakerank code whenever server sends us automatic handicap 
-            //        notification.handicap different from -1.
-            /* adding a .floor : 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
-            /  but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone*/
+            // TODO: modify or remove fakerank code whenever server sends us automatic handicap
+            //       notification.handicap different from -1.
+            // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+            // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
             handicapSettings.notif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
         const resultHandicap = minMaxHandicapRankRejectResult("handicap", handicapSettings.notif, handicapSettings.isFakeHandicap, notification.ranked);
@@ -487,19 +486,10 @@ class Connection {
             .catch(conn_log)
         }
     }
-    processMove(gamedata) {
-        const game = this.connectToGame(gamedata.id)
-        game.makeMove(gamedata.move_number);
-    }
-    processStoneRemoval(gamedata) {
-        return this.processMove(gamedata);
-    }
-    on_delete() {
-        /* don't care about delete notifications */
-    }
-    on_gameStarted() {
-        /* don't care about gameStarted notifications */
-    }
+    // processMove(gamedata) {
+    //     const game = this.connectToGame(gamedata.id)
+    //     game.makeMove(gamedata.move_number);
+    // }
     addGameForPlayer(game_id, player) {
         if (!this.games_by_player[player]) {
             this.games_by_player[player] = [ game_id ];
@@ -513,7 +503,7 @@ class Connection {
     removeGameForPlayer(game_id) {
         for (const player in this.games_by_player) {
             const idx = this.games_by_player[player].indexOf(game_id);
-            if (idx === -1)  continue;
+            if (idx === -1) continue;
 
             this.games_by_player[player].splice(idx, 1);  // Remove element
             if (this.games_by_player[player].length === 0) {
@@ -522,7 +512,7 @@ class Connection {
             return;
         }
     }
-    gamesForPlayer(player) {
+    countGamesForPlayer(player) {
         if (!this.games_by_player[player])  return 0;
         return this.games_by_player[player].length;
     }
@@ -556,7 +546,7 @@ function request(method, host, port, path, data) {
             /  const noapidata = JSON.parse(JSON.stringify(data));
             /  noapidata.apikey = "hidden";*/
 
-            // ES6 offers shallow copy syntax using spread:
+            // ES6 offers shallow copy syntax using spread
             const noapidata = { ...data, apikey: "hidden" };
             console.debug(method, host, port, path, noapidata);
         }
@@ -686,8 +676,8 @@ function bannedFamilyReject(argNameString, uid, notificationUid) {
     return { reject: true, msg};
 }
 
-function getBooleansGeneralReject(descr) {
-    const msg = `${descr} not allowed on this bot.`;
+function getBooleansGeneralReject(nameF) {
+    const msg = `${nameF} not allowed on this bot.`;
     conn_log(msg);
     return { reject: true, msg };
 }
@@ -703,9 +693,9 @@ function get_r_u_arr_booleans(familyNameString, notificationRanked) {
            ];
 }
 
-function getBooleans_r_u_Reject(argNameString, descr, ending) {
+function getBooleans_r_u_Reject(argNameString, nameF, ending) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    const msg = `${descr} not allowed on this bot ${rankedUnranked}${ending}.`;
+    const msg = `${nameF} not allowed on this bot ${rankedUnranked}${ending}.`;
     conn_log(msg);
     return { reject: true, msg };
 }
@@ -768,7 +758,8 @@ function familyObjectMIBL(familyNameString) {
     const familyArray = getArgNameStringsGRU(familyNameString);
     return { argNameStrings: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
              MIBL: { minMax, incDec, belAbo, lowHig },
-             isMM: { isMin, isMax } };
+             isMM: { isMin, isMax }
+           };
 }
 
 function checkObjectArgsToArgNameString(familyObjectArgNameStrings, notificationRanked) {
@@ -790,31 +781,31 @@ function convertBlitzLiveCorr(blitzLiveCorr) {
     }
 }
 
-function minMaxCondition(arg, familyNotification, isMin) {
+function checkMinMaxCondition(arg, notif, isMin) {
     if (isMin) {
-        return familyNotification < arg; // to reject in minimum, we need notification < arg
+        return notif < arg; // to reject in minimum, we need notification < arg
     } else {
-        return familyNotification > arg;
+        return notif > arg;
     }
 }
 
-function minMaxHandicapRankRejectResult(familyNameString, familyNotification, isFakeHandicap, notificationRanked) {
+function minMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap, notificationRanked) {
     const minFamilyObject = familyObjectMIBL(`min${familyNameString}`);
     const maxFamilyObject = familyObjectMIBL(`max${familyNameString}`);
     let argNameString = "";
     for (const familyObject of [minFamilyObject, maxFamilyObject]) {
         argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (config[argNameString] !== undefined && minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+        if (config[argNameString] !== undefined && checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
             let argToString = config[argNameString];
             let familyNameStringConverted = familyNameString;
-            let familyNotificationConverted = familyNotification;
+            let notifConverted = notif;
             let rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
             let endingSentence = "";
             if (familyNameString === "handicap") {
                 familyNameStringConverted = "handicap stones";
                 endingSentence = `please ${familyObject.MIBL.incDec} the number of ${familyNameStringConverted}`;
                 // handicap specific rejects below :
-                if (familyObject.isMM.isMin && familyNotificationConverted === 0 && config[argNameString] > 0) {
+                if (familyObject.isMM.isMin && notifConverted === 0 && config[argNameString] > 0) {
                     rankedUnranked = beforeRankedUnrankedGamesSpecial("", "even ", argNameString, "");
                     conn_log(`No ${rankedUnranked} (handicap games only)`);
                     const msg = `This bot does not play ${rankedUnranked}, please `
@@ -823,7 +814,7 @@ function minMaxHandicapRankRejectResult(familyNameString, familyNotification, is
                                 + `minimum is ${argToString} ${familyNameStringConverted}, `
                                 + `or try changing ranked/unranked game setting.`;
                     return { reject: true, msg };
-                } else if (familyObject.isMM.isMax && familyNotificationConverted > 0 && config[argNameString] === 0) {
+                } else if (familyObject.isMM.isMax && notifConverted > 0 && config[argNameString] === 0) {
                     rankedUnranked = beforeRankedUnrankedGamesSpecial("", "handicap ", argNameString, "");
                     conn_log(`No ${rankedUnranked} (even games only)'`);
                     const msg = `This bot does not play ${rankedUnranked}, please `
@@ -832,11 +823,11 @@ function minMaxHandicapRankRejectResult(familyNameString, familyNotification, is
                     return { reject: true, msg };
                 } else if (isFakeHandicap) { // fakerank specific reject
                     conn_log(`Automatic handicap ${rankedUnranked} was set `
-                             + `to ${familyNotificationConverted} stones, but `
+                             + `to ${notifConverted} stones, but `
                              + `${familyObject.MIBL.minMax} handicap `
                              + `${rankedUnranked} is ${argToString} stones`);
                     const msg = `Your automatic handicap ${rankedUnranked} was `
-                                + `automatically set to ${familyNotificationConverted} `
+                                + `automatically set to ${notifConverted} `
                                 + `stones based on rank difference between you and `
                                 + `this bot,\nBut ${familyObject.MIBL.minMax} `
                                 + `handicap ${rankedUnranked} is ${argToString} `
@@ -847,11 +838,11 @@ function minMaxHandicapRankRejectResult(familyNameString, familyNotification, is
                 }
             } else if (familyNameString === "rank") {
                 argToString = rankToString(config[argNameString]);
-                familyNotificationConverted = rankToString(familyNotificationConverted);
+                notifConverted = rankToString(notifConverted);
                 endingSentence = `your rank is too ${familyObject.MIBL.lowHig}`;
             }
             // if we are not in any "handicap" specific reject case, we return the generic return below instead :
-            conn_log(`${familyNotificationConverted} is ${familyObject.MIBL.belAbo} `
+            conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} `
                      + `${familyObject.MIBL.minMax} ${familyNameStringConverted} `
                      + `${rankedUnranked} ${argToString}`);
             const msg = `${familyObject.MIBL.minMax} ${familyNameStringConverted} `
@@ -899,7 +890,7 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
                         if (setting[0] === "canadian" && mainPeriodTime === "periodtime") {
                             argNumberConverted = argNumberConverted * notificationT.stones_per_period;
                         }
-                        if (minMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+                        if (checkMinMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
                             const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
                             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                             let endingSentence = "";
@@ -941,7 +932,7 @@ function timecontrolsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function minMaxPeriodsRejectResult(familyNameString, familyNotification, notificationTSpeed, notificationRanked) {
+function minMaxPeriodsRejectResult(familyNameString, notif, notificationTSpeed, notificationRanked) {
     /* "fischer", "simple", "absolute", "none", don't have a periods number,
     /  so this function only applies to "byoyomi" and "canadian"*/
     for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
@@ -954,9 +945,9 @@ function minMaxPeriodsRejectResult(familyNameString, familyNotification, notific
             let argNameString = "";
             for (const familyObject of [minFamilyObject, maxFamilyObject]) {
                 argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-                if (minMaxCondition(config[argNameString], familyNotification, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+                if (checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationTSpeed} `, argNameString, "");
-                    conn_log(`${familyNotification} is ${familyObject.MIBL.belAbo} `
+                    conn_log(`${notif} is ${familyObject.MIBL.belAbo} `
                              + `${familyObject.MIBL.minMax} ${familyNameString} `
                              + `${rankedUnranked} ${config[argNameString]}`);
                     const msg = `${familyObject.MIBL.minMax} ${familyNameString} `

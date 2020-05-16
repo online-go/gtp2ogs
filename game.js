@@ -39,19 +39,53 @@ class Game {
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
-            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
+            // Only call game over handler if game really just finished.
+            // For some reason we get connected to already finished games once in a while ...
+            if (gamedata.phase === 'finished') {
+                if (this.state && gamedata.phase !== this.state.phase) {
+                    this.state = gamedata;
+                    this.gameOver();
+                }
+                return; // ignore -- it's either handled by gameOver or we already handled it before.
+            }
 
-            const prev_phase = (this.state ? this.state.phase : null);
+            const gamedataChanged = this.state ? (JSON.stringify(this.state) !== JSON.stringify(gamedata)) : false;
+            // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing, unless
+            // bot is not running.
+            //
+            if (this.state && !gamedataChanged && this.bot && !this.bot.dead) {
+                this.log('Ignoring gamedata that matches current state');
+                return;
+            }
+
+            // If server has issues it might send us a new gamedata packet and not a move event. We could try to
+            // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
+            // restart the bot by killing it here if another gamedata comes in. There normally should only be one
+            // before we process any moves, and makeMove() is where a new Bot is created.
+            //
+            if (this.bot && gamedataChanged) {
+                this.log("Killing bot because of gamedata change after bot was started");
+                if (config.DEBUG) {
+                    this.log('Previously seen gamedata:', this.state);
+                    this.log('New gamedata:', gamedata);
+                }
+                this.ensureBotKilled();
+
+                if (this.processing) {
+                    this.processing = false;
+                    --Game.moves_processing;
+                    if (config.corrqueue && this.state.time_control.speed === "correspondence") {
+                        --Game.corr_moves_processing;
+                    }
+                }
+            }
+
+            //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`gamedata     ${this.header()}`);
 
             this.conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
-
-            // Only call game over handler if game really just finished.
-            // For some reason we get connected to already finished games once in a while ...
-            if (gamedata.phase === 'finished' && prev_phase && gamedata.phase !== prev_phase)
-                this.gameOver();
 
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
@@ -72,32 +106,6 @@ class Game {
                     this.opponent_evenodd = this.state.moves.length % 2;
                 } else {
                     this.opponent_evenodd = (this.state.moves.length + 1) % 2;
-                }
-            }
-
-            // If server has issues it might send us a new gamedata packet and not a move event. We could try to
-            // check if we're missing a move and send it to bot out of gamedata. For now as a safe fallback just
-            // restart the bot by killing it here if another gamedata comes in. There normally should only be one
-            // before we process any moves, and makeMove() is where a new Bot is created.
-            //
-            const gamedataChanged = (JSON.stringify(this.state) !== JSON.stringify(gamedata));
-
-            if (this.bot && gamedataChanged) {
-                this.log("Killing bot because of gamedata change after bot was started");
-
-                if (config.DEBUG) {
-                    this.log('Previously seen gamedata:', this.state);
-                    this.log('New gamedata:', gamedata);
-                }
-
-                this.ensureBotKilled();
-
-                if (this.processing) {
-                    this.processing = false;
-                    --Game.moves_processing;
-                    if (config.corrqueue && this.state.time_control.speed === "correspondence") {
-                        --Game.corr_moves_processing;
-                    }
                 }
             }
 
@@ -175,10 +183,10 @@ class Game {
                 this.state.moves.push(move.move);
 
                 // Log opponent moves
-                const m = decodeMoves(move.move, this.state.width)[0];
+                const m = decodeMoves(move.move, this.state.width, this.state.height)[0];
                 if ((this.my_color === "white" && (this.state.handicap) >= this.state.moves.length) ||
                     move.move_number % 2 === this.opponent_evenodd)
-                    this.log(`Got     ${move2gtpvertex(m, this.state.width)}`);
+                    this.log(`Got     ${move2gtpvertex(m, this.state.width, this.state.height)}`);
             } catch (e) {
                 console.error(e)
             }
@@ -198,7 +206,7 @@ class Game {
                     this.makeMove(this.state.moves.length);
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color === "black" ? "white" : "black");
+                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     if (config.DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
                     if (this.state.moves.length ===1) { // remind once, avoid spamming the reminder
                         this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
@@ -209,7 +217,7 @@ class Game {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color === "black" ? "white" : "black");
+                        this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     }
 
                     if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
@@ -354,7 +362,6 @@ class Game {
             'game_id': this.game_id,
             'move': encodeMove(move)
         }));
-        //this.sendChat(`Test chat message, my move #${move_number}  is: ${move.text}`, move_number, "malkovich");
     }
 
     // Get move from bot and upload to server.
@@ -367,9 +374,15 @@ class Game {
             return;
         if (this.state.phase !== 'play')
             return;
-        if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-            this.sendChat( config.greeting, "discussion");
+        if (!this.greeted && this.state.moves.length < (2 + this.state.handicap)) {
             this.greeted = true;
+            if (config.greeting) {
+                this.sendChat(config.greeting, "discussion");
+            }
+            if (config.greetingbotcommand) {
+                const pretty_bot_command = config.bot_command.join(' ');
+                this.sendChat(`You are playing against: ${pretty_bot_command}`, "discussion");
+            }
         }
 
         const doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
@@ -454,7 +467,18 @@ class Game {
         const winloss = (this.state.winner === this.conn.bot_id ? "W" : "L");
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
-        if (this.bot) {
+        // Notify bot of end of game and send score
+        if (config.farewellscore && this.bot) {
+            const sendTheScore = (score) => {
+                if (score) this.log(`Bot thinks the score was ${score}`);
+                if (res !== "R" && res !== "Time" && res !== "Can") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
+                if (this.bot) { // only kill the bot after it processed this
+                    this.bot.gameOver();
+                    this.ensureBotKilled();
+                }
+            };
+            this.bot.command('final_score', sendTheScore, null, true); // allow bot to process end of game
+        } else if (this.bot) {
             this.bot.gameOver();
             this.ensureBotKilled();
         }
