@@ -685,10 +685,9 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function getReject(reason, demand) {
-    const msg = (demand ? `${reason}${demand}` : reason);
+function getReject(reason, demand = "") {
     conn_log(reason);
-    return { reject: true, msg };
+    return { reject: true, msg: `${reason}${demand}` };
 }
 
 function getRejectBanned(username, ranked) {
