@@ -685,19 +685,18 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
+function getReject(reason, demand) {
+    const msg = (demand ? `${reason}${demand}` : reason);
+    conn_log(reason);
+    return { reject: true, msg };
+}
+
 function getRejectBanned(username, ranked) {
     return getReject(`You (${username}) are not allowed to play ${ranked}${ranked ? " " : ""}games against this bot.`)
 }
 
-function getReject(reason) {
-    conn_log(reason);
-    return { reject: true, msg: reason};
-}
-
 function getBooleansGeneralReject(nameF) {
-    const msg = `${nameF} not allowed on this bot.`;
-    conn_log(msg);
-    return { reject: true, msg };
+    return getReject(`${nameF} not allowed on this bot.`);
 }
 
 function get_r_u_arr_booleans(familyNameString, notificationRanked) {
@@ -713,20 +712,16 @@ function get_r_u_arr_booleans(familyNameString, notificationRanked) {
 
 function getBooleans_r_u_Reject(argNameString, nameF, ending) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    const msg = `${nameF} not allowed on this bot ${rankedUnranked}${ending}.`;
-    conn_log(msg);
-    return { reject: true, msg };
+    return getReject(`${nameF} not allowed on this bot ${rankedUnranked}${ending}.`);
 }
 
 function getBoardsizeNotSquareReject(argNameString, notificationWidth, notificationHeight) {
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-    conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
-             + `is not square, not allowed ${rankedUnranked}`);
-    const msg = `Your selected board size ${notificationWidth}x${notificationHeight} `
-                + `is not square, not allowed ${rankedUnranked}, `
-                + `please choose a SQUARE board size (same width and `
-                + `height), for example try 9x9 or 19x19}`;
-    return { reject: true, msg };
+    const reason = `Selected board size ${notificationWidth}x${notificationHeight} `
+                   + `is not square, not allowed ${rankedUnranked}`;
+    const demand = ` , please choose a SQUARE board size (same width and `
+                   + `height), for example try 9x9 or 19x19}`;
+    return getReject(reason, demand);
 }
 
 function boardsizeSquareToDisplayString(boardsizeSquare) {
@@ -763,13 +758,11 @@ function genericAllowedFamiliesReject(argNameString, notificationUnit) {
     } else if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
         notificationUnitConverted = "automatic";
     }
-    conn_log(`${argFamilySingularString} ${rankedUnranked} `
-             + `-${notificationUnitConverted}-, not in -${argValueString}- `);
-    const msg = `${argFamilySingularString} -${notificationUnitConverted}- `
-                + `is not allowed on this bot ${rankedUnranked}, please `
-                + `choose one of these allowed ${argFamilySingularString}s `
-                + `${rankedUnranked}: -${argValueString}-`;
-    return { reject: true, msg };
+    const reason = `${argFamilySingularString} -${notificationUnitConverted}- `
+                   + `is not allowed on this bot ${rankedUnranked}`;
+    const demand = ` , please choose one of these allowed ${argFamilySingularString}s `
+                   + `${rankedUnranked}: -${argValueString}-`;
+    return getReject(reason, demand);
 }
 
 function familyObjectMIBL(familyNameString) {
@@ -838,51 +831,40 @@ function minMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap,
             let endingSentence = "";
             if (familyNameString === "handicap") {
                 familyNameStringConverted = "handicap stones";
-                endingSentence = `please ${familyObject.MIBL.incDec} the number of ${familyNameStringConverted}`;
                 // handicap specific rejects below :
                 if (familyObject.isMM.isMin && notifConverted === 0 && config[argNameString] > 0) {
                     rankedUnranked = beforeRankedUnrankedGamesSpecial("", "even ", argNameString, "");
-                    conn_log(`No ${rankedUnranked} (handicap games only)`);
-                    const msg = `This bot does not play ${rankedUnranked}, please `
-                                + `manually select the number of `
-                                + `${familyNameStringConverted} in -custom handicap-: `
-                                + `minimum is ${argToString} ${familyNameStringConverted}, `
-                                + `or try changing ranked/unranked game setting.`;
-                    return { reject: true, msg };
+                    const reason = `This bot does not play ${rankedUnranked}`;
+                    const demand = `, please manually select the number of `
+                                   + `${familyNameStringConverted} in -custom handicap-: `
+                                   + `minimum is ${argToString} ${familyNameStringConverted}, `
+                                   + `or try changing ranked/unranked game setting.`;
+                    return getReject(reason, demand);
                 } else if (familyObject.isMM.isMax && notifConverted > 0 && config[argNameString] === 0) {
                     rankedUnranked = beforeRankedUnrankedGamesSpecial("", "handicap ", argNameString, "");
-                    conn_log(`No ${rankedUnranked} (even games only)'`);
-                    const msg = `This bot does not play ${rankedUnranked}, please `
-                                + `choose handicap -none- (0 handicap stones), or `
-                                + `try changing ranked/unranked game setting.`;
-                    return { reject: true, msg };
+                    const reason = `This bot does not play ${rankedUnranked}`;
+                    const demand = ` , please choose handicap -none- (0 handicap stones), or `
+                                   + `try changing ranked/unranked game setting.`;
+                    return getReject(reason, demand);
                 } else if (isFakeHandicap) { // fakerank specific reject
-                    conn_log(`Automatic handicap ${rankedUnranked} was set `
-                             + `to ${notifConverted} stones, but `
-                             + `${familyObject.MIBL.minMax} handicap `
-                             + `${rankedUnranked} is ${argToString} stones`);
-                    const msg = `Your automatic handicap ${rankedUnranked} was `
-                                + `automatically set to ${notifConverted} `
-                                + `stones based on rank difference between you and `
-                                + `this bot,\nBut ${familyObject.MIBL.minMax} `
-                                + `handicap ${rankedUnranked} is ${argToString} `
-                                + `stones \nPlease ${familyObject.MIBL.incDec} the `
-                                + `number of handicap stones in -custom handicap- `
-                                + `instead of -automatic handicap-`;
-                    return { reject: true, msg };
+                    const reason = `Automatic handicap ${rankedUnranked} was automatically set to `
+                                + `${notifConverted} stones based on rank difference between you `
+                                + ` and this bot,\nBut ${familyObject.MIBL.minMax} handicap `
+                                + `${rankedUnranked} is ${argToString} stones`;
+                    const demand = `\nPlease ${familyObject.MIBL.incDec} the number of handicap `
+                                   + `stones in -custom handicap- instead of -automatic handicap-`;
+                    return getReject(reason, demand);
                 }
-            } else if (familyNameString === "rank") {
+                endingSentence = `please ${familyObject.MIBL.incDec} the number of ${familyNameStringConverted}`;
+            } else {
                 argToString = rankToString(config[argNameString]);
                 notifConverted = rankToString(notifConverted);
-                endingSentence = `your rank is too ${familyObject.MIBL.lowHig}`;
+                endingSentence = `, your rank is too ${familyObject.MIBL.lowHig}`;
             }
             // if we are not in any "handicap" specific reject case, we return the generic return below instead :
-            conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} `
-                     + `${familyObject.MIBL.minMax} ${familyNameStringConverted} `
-                     + `${rankedUnranked} ${argToString}`);
-            const msg = `${familyObject.MIBL.minMax} ${familyNameStringConverted} `
-                        + `${rankedUnranked} is ${argToString}, ${endingSentence}.`;
-            return { reject: true, msg };
+            const reason = `${familyObject.MIBL.minMax} ${familyNameStringConverted} `
+                           + `${rankedUnranked} is ${argToString}`;
+            return getReject(reason, endingSentence);
         }
     }
 }
@@ -932,18 +914,10 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
                             if ((notificationT.time_control === "canadian") && (mainPeriodTime === "periodtime")) {
                                 endingSentence = ", or change the number of stones per period";
                             }
-                            conn_log(`${timespanToDisplayString(setting[2])} is `
-                                     + `${familyObject.MIBL.belAbo} `
-                                     + `${familyObject.MIBL.minMax} ${setting[1]} `
-                                     + `${rankedUnranked} in ${notificationT.time_control} `
-                                     + `${argToString}`);
-                            const msg = `${familyObject.MIBL.minMax} ${setting[1]} ${rankedUnranked} `
-                                        + `in ${notificationT.time_control} is ${argToString}, `
-                                        + `please ${familyObject.MIBL.incDec} `
-                                        + `${setting[1]}${endingSentence}.`;
-                            return { reject : true, msg };
-                            /* example : "Minimum (Main/Period) Time for blitz ranked games
-                             * in byoyomi is 1 minutes, please increase (Main/Period) Time."*/
+                            const reason = `${timespanToDisplayString(setting[2])} is ${familyObject.MIBL.minMax} `
+                                           + `${setting[1]} ${rankedUnranked} in ${notificationT.time_control}: ${argToString}`;
+                            const demand = `\nPlease ${familyObject.MIBL.incDec} ${setting[1]}${endingSentence}.`;
+                            return getReject(reason, demand);
                         }
                     }
                 }
@@ -974,22 +948,15 @@ function minMaxPeriodsRejectResult(familyNameString, notif, notificationTSpeed, 
         if (notificationTSpeed === convertBlitzLiveCorr(blitzLiveCorr)) {
             const minFamilyObject = familyObjectMIBL(`min${familyNameString}${blitzLiveCorr}`);
             const maxFamilyObject = familyObjectMIBL(`max${familyNameString}${blitzLiveCorr}`);
-            /* example : {argNameStrings {all: "minperiodsblitz", ranked: "minperiodsblitzranked", unranked: "minperiodsblitzunranked"},
-                                    MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
-                                    isMM {isMin: true, isMax: false}};*/
             let argNameString = "";
             for (const familyObject of [minFamilyObject, maxFamilyObject]) {
                 argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
                 if (checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationTSpeed} `, argNameString, "");
-                    conn_log(`${notif} is ${familyObject.MIBL.belAbo} `
-                             + `${familyObject.MIBL.minMax} ${familyNameString} `
-                             + `${rankedUnranked} ${config[argNameString]}`);
-                    const msg = `${familyObject.MIBL.minMax} ${familyNameString} `
-                                + `${rankedUnranked} ${config[argNameString]}, `
-                                + `please ${familyObject.MIBL.incDec} the number `
-                                + `of ${familyNameString}.`;
-                    return { reject: true, msg };
+                    const reason = `${notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} `
+                                   + `${familyNameString} ${rankedUnranked} ${config[argNameString]}`;
+                    const demand = `\nPlease ${familyObject.MIBL.incDec} the number of ${familyNameString}.`;
+                    return getReject(reason, demand);
                 }
             }
         }
