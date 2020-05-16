@@ -732,7 +732,6 @@ describe("Retrying bot failures", () => {
     });
 });
 
-
 describe("Pv should work", () => {
     it("should pass bot stderr output to pv class", () => {
         stub_console();
