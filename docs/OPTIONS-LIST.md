@@ -1,10 +1,11 @@
 # Option list
 
-below is a list of all available gtp2ogs arguments,
+Below is a list of all available options.
 
-Since they take a lot of place all the list has been moved here
+In gtp2ogs, options need to be inputted as command-line arguments.
 
-use the ones you want only, no need to use them all !
+The number of options (and of bot arguments) is free, use the
+ ones you want.
 
 ## DEFAULT VALUES SUMMARY
 
@@ -49,15 +50,17 @@ currently provides:
 --maxperiodtimecorr 259200
 ```
 
-note: command line arguments should not be separated by skipping
-lines, it was done here only for clearer display
+note: command-line arguments should not be separated by skipping
+lines, it was done here only for clearer display.
 
-## 1) ROOT ARGUMENTS
+note2: additional details are also available [here](/docs/NOTES.md).
 
-Arguments in this category work the same way no matter what
+## 1) ROOT OPTIONS
+
+Options in this category work the same way no matter what
 the ranked/unranked status is.
 
-Note: about the "messages" arguments, some combinations of
+Note: about the "messages" options, some combinations of
 characters in messages make gtp2ogs crash !!
 see for details [notes G](/docs/NOTES.md#g)
 
@@ -78,25 +81,56 @@ security reasons
 
 `--greeting "Hello, have a nice game"`
 Greeting message to appear in chat at first move
-(ex: "Hello, have a nice game")
+(ex: Hello, have a nice game)
 
 see for details [notes G](/docs/NOTES.md#g)
+
+### greetingbotcommand
+
+`--greetingbotcommand` Additional greeting message displaying
+bot command
+
+for example:
+
+```Text
+You are playing against: sai-0.17.5.exe --gtp -w saiNetwork337.gz --noponder -v 12800 -r 2 --precision half --lagbuffer 1000 --nrsymm --lambda 0.5
+```
+
+This gives valuable information to the users who desire it.
+
+And due to its nature, this supports all bots.
+
+You may rename your bot command files and arguments to be self-explanatory,
+for example:
+
+- `saiNetwork337.gz` is shorter than `6470f77e4768bef4ef85641c04a0e3a068cf097c760b4a9c1b9c4d58b304b031.gz`
+(you may want to trim it), and clearer than `network.gz`
+- `sai-0.17.5.exe` or `sai-fb36e42.exe` is clearer than `sai.exe`.
 
 ### farewell
 
 `--farewell "Thank you for playing"`
 Thank you message to appear in chat at end of game
-(ex: "Thank you for playing")
+(ex: Thank you for playing)
 
 see for details [notes G](/docs/NOTES.md#g)
 
-### rejectnew arguments
+### farewellscore
+
+`--farewellscore`
+Asks the bot for the score using `final_score` and sends it to the chat
+if the game ended by passing.
+The command is sent regardless of whether the game ends by passing or
+by resignation, to allow bots to process the end of the game and (e.g.)
+save it locally.
+
+### rejectnew options
 
 `--rejectnew` Reject all new challenges with the default
 reject message
 
 `--rejectnew --rejectnewmsg "not accepting games because blablablah"`
-if you add the rejectnewmsg argument, Reject all new challenges with a
+if you add the rejectnewmsg option, Reject all new challenges with a
 customized message instead of the default message.
 
 see for details [notes G](/docs/NOTES.md#g)
@@ -111,7 +145,7 @@ file exists (checked each time, can use for load-balancing)
 ### ogspv
 
 `--ogspv` Send winrate and variations for supported AIs with
-supported settings, in OGS games.
+supported settings
 
 Example of output (Leela Zero):
 
@@ -132,6 +166,17 @@ Supported AIs:
 for example `--ogspv LeelaZero`
 
 **IMPORTANT: see [notes H](/docs/NOTES.md#h) for details**
+
+### aichat
+
+`--aichat` Allow bots to send messages to the chat and malkovich log.
+
+Bots should output messages to standard error output in the format:
+
+```Text
+DISCUSSION: What an interesting move you played!
+MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
+```
 
 ### logfile
 
@@ -162,8 +207,7 @@ instead of [OGS](https://online-go.com/) (changes host automatically)
 ### hidden
 
 `--hidden` Hides the botname from the OGS game "Play against
-
-computer" bot list (but it can still accept challenges)
+ computer" bot list (but it can still accept challenges)
 
 ### startupbuffer
 
@@ -216,16 +260,15 @@ and stability)
 `--maxconnectedgamesperuser` Maximum number of
 connected games per user against this bot
 
-#### rankedonly unrankedonly
+### rankedonly unrankedonly
 
-Below are the "only" options that only have a general option
-(no ranked or unranked options)
+Below are the options of the "only" family.
 
 `--rankedonly` Only accept ranked matches
 
 `--unrankedonly`  Only accept unranked matches
 
-#### fakerank
+### fakerank
 
 `--fakerank` Fake bot ranking to calculate automatic handicap
 stones number in autohandicap (-1) based on rankDifference between
@@ -234,24 +277,25 @@ issue if handicap is -automatic
 
 see [notes F](/docs/NOTES.md#f) for details
 
-## 2) ARGUMENTS TO CHECK RANKED/UNRANKED CHALLENGES
+## 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
 
-Arguments in this category allow us to accept or reject
+Options in this category allow us to accept or reject
 a challenge based on the notification (challenge settings)
 
-## A) ALL/RANKED/UNRANKED FAMILIES
+### 2A) ALL/RANKED/UNRANKED FAMILIES
 
-Here the general argument (ex: --bans) does not confict with
-the ranked and unranked arguments for accepting/rejecting matches.
+Here the general option (ex: bans) does not confict with
+the ranked and unranked options for accepting/rejecting matches.
 
 example:
 `--bans A,B --bansranked X,Y --bansunranked Z`
+
 result of these bans arguments:
 
 - banned users for ranked games: A,B,X,Y
 - banned users for unranked games: A,B,Z
 
-### bans
+#### bans
 
 `--bans` Comma separated list of user names or IDs who
 are banned from ranked and unranked games
@@ -262,20 +306,20 @@ are banned from ranked games
 `--bansunranked` Comma separated list of user names or IDs who
 are banned from unranked games
 
-## B) GENERAL/RANKED/UNRANKED FAMILIES
+### 2B) GENERAL/RANKED/UNRANKED FAMILIES
 
 Here you can either use:
 
-- only the general argument (ex: `--maxhandicap 2`), the same setting
+- only the general option (ex: `--maxhandicap 2`), the same setting
 will be used for ranked and unranked games
 
-- OR both the ranked AND the unranked arguments
+- OR both the ranked AND the unranked option
 (ex: `--maxhandicapranked 0 --maxhandicapunranked 9`),
-and in that case, the general argument will be ignored
+and in that case, the general option will be ignored
 and instead the ranked and unranked will be used depending
 on whether the game is ranked or unranked.
 
-### B1) ALLOWED FAMILIES
+### 2B1) ALLOWED FAMILIES
 
 For the allowed families arguments, you can either use the value:
 
@@ -284,9 +328,11 @@ For the allowed families arguments, you can either use the value:
 comma-separated values (without space) will allow every value inputted,
 every other value will be rejected
 - for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19
-(boardsizes)), it is possible to use as well the "range"
+ (boardsizes)), it is possible to use as well the "range"
 operator `:` to navigate one by one from min to max (ex:
-`5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`).
+ `5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`),
+ as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`,
+see [notes A-](/docs/NOTES.md#a) for details.
 
 example: `--speeds blitz,live`
 example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
@@ -303,8 +349,12 @@ example 3: `--komis 0.5,5.5,7.5,automatic`
 Possible boardsize width value(s):
 
 - `all` (allows all board size widths)
-- comma separated values, for example `25` (allows 25x25), or
-`9,13,15,16,17,19` (allows 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
+- comma separated and `:` separated values, for example
+ `25` (allows 25x25), or `9,13,15:17,19` (allows
+ 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
+
+note: it is possible to allow non-square boardsizes by using `all`
+ (which will allow possible boardsizes)
 
 see [notes B](/docs/NOTES.md#b) for details:
 
@@ -319,8 +369,10 @@ see [notes B](/docs/NOTES.md#b) for details:
 Possible komi value(s):
 
 - `all` (allows all komis)
-- comma separated values, for example `7.5` (allows komi 7.5), or
-`5.5,7.5,0.5,automatic` allows komis (5.5, 7.5, 0.5, automatic).
+- comma separated and `:` separated values,
+ for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis
+ (5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis
+ (-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
 
 For extra komi explanations, see:
 
@@ -362,15 +414,15 @@ Full list of possible values:  `fischer`,  `byoyomi`, `canadian`,
 
 see [notes E](/docs/NOTES.md#e) for details
 
-### B2) GENERIC GENERAL/RANKED/UNRANKED ARGUMENTS
+### 2B2) GENERIC GENERAL/RANKED/UNRANKED OPTIONS
 
 Arguments in this category are not comma-separated, they are either
-booleans (enabled just from activating the option, nothing else to specify,
+booleans (enabled just from enabling the option, nothing else to specify,
 for example `--noautohandicap`), or single values (for example `--maxhandicap 9`)
 
 #### proonly
 
-`--proonly` For all matches, only accept those from professionals
+`--proonly` For all games, only accept those from professionals
 
 `--proonlyranked` For ranked games, only accept those from professionals
 
@@ -382,7 +434,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 `--nopauseranked` Disable pausing during ranked games
 
-`--nopauseunranked` Disable pausing during unranked gamesc
+`--nopauseunranked` Disable pausing during unranked games
 
 #### nopauseonweekends
 
@@ -642,9 +694,3 @@ max:
 
 `--maxperiodtimecorrunranked` Maximum seconds per period
 (average time per stone if timecontrol is canadian) for correspondence unranked games
-
-## extra: notes
-
-Additional notes have been added [here](/docs/NOTES.md)
-
--> **continue reading in [README.md/Options](/README.md/#options)**

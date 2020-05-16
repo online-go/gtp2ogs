@@ -3,178 +3,116 @@
 [![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
 
 This javascript tool allows all bots/AI that support
-[GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol)
-to communicate with [OGS (Online-Go.com Server)](https://online-go.com/).
+ [GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol)
+ to communicate with [OGS (Online-Go.com Server)](https://online-go.com/).
 
 After being configured, gtp2ogs is ready to work as-is,
-but it is also possible to customize it.
+ but it is also possible to customize it.
 
 Being a bot admin on OGS means:
 
 - you can put your bot online whenever you want
 - choose settings to automatically accept or reject challenges
-(example: rank, boardsize, blitz/live/correspondence, etc.), or to
-control your GPU/computing device power spent (max number of
-simultaneous games, corrqueue, etc.)
-- choose your bot-specific options (for example `-v 1600` for leela-zero,
-etc.)
+ (example: rank, board size, blitz/live/correspondence, etc.), or to
+ control your GPU/computing device power spent (max number of
+ simultaneous games, corrqueue, etc.)
+- choose your bot-specific options (for example `-v 1600` for leela-zero, etc.)
 
 ## Full tutorial
 
-[for windows and linux, with screenshots, examples, and detailed explanations](https://github.com/wonderingabout/gtp2ogs-tutorial)
+The full tutorial has screenshots, examples, and detailed explanations for windows and linux.
 
-## Quick Guide
+You can see it [here](https://github.com/wonderingabout/gtp2ogs-tutorial).
 
-### 1. install node.js and npm
+## Quick Installation Guide
 
-To install nodejs, you can:
+The "node.js" package is bundled with:
 
-- either use your system package manager (like apt-get for ubuntu)
-- or download it from [nodejs website downloads](https://nodejs.org/en/download/)
-for linux or windows
+- node: to run gtp2ogs.js
+- npm: (node package manager), to install gtp2ogs.
 
-note: installing nodejs will also install npm = node package manager. Both
-will be needed later.
+You can find operating system specific instructions below:
 
-### 2. install gtp2ogs using npm
-
-- For linux in terminal:
-
-```Shell
-sudo npm install -g gtp2ogs
-```
-
-default path install is:
-> /usr/lib/node_modules/gtp2ogs/
-
-- For windows, open a node.js command prompt as admin, then run this command:
-
-```Shell
-npm install -g gtp2ogs
-```
-
-default path install is something like this:
-> C:\Users\yourusername\AppData\Roaming\npm\node_modules\gtp2ogs\
-
-On all operating systems, gtp2ogs will be installed in 2 different directories, but
-**the one that needs to be run with node is gtp2ogs.js in node_modules directory**
-
-### 3. Recommended: Upgrade to devel branch
-
-This step is **highly recommended**
-
-By default, npm installs an old branch of gtp2ogs that does not include latest
-improvements, new features, and fixes
-
-An easy way to upgrade is to copy all the devel gtp2ogs files and folders
-(bot.js, config.js, etc..) to the original directory where gtp2ogs is
-installed, and overwrite the old existing files
-
-note: before overwriting, you can backup your old files so that you can
-go back to the old branch of gtp2ogs anytime later if you want
-
-Then it is needed to do the post install:
-
-The command below will automatically detect all missing packages needed
-from the package.json of the new branch, and install all these packages
-
-- for linux:
-
-```Shell
-cd /usr/lib/node_modules/gtp2ogs/
-sudo npm install
-```
-
-- for windows:
-
-Open a node.js command prompt as admin, then:
-
-```Shell
-pushd C:\Users\yourwindowsusername\AppData\Roaming\npm\node_modules\gtp2ogs\
-npm install
-```
-
-For details or help, you can see:
-
-- for linux: [3A3) Recommended: Upgrade gtp2ogs.js from old branch to “devel” branch (latest)](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3A3-linux-optional-upgrade-to-devel.md)
-- for windows: [3B3) Recommended: Upgrade gtp2ogs from old branch to devel (latest) branch](https://github.com/wonderingabout/gtp2ogs-tutorial/blob/master/docs/3B3-windows-optional-upgrade-to-devel.md)
-
-### 4. Most common usage: start gtp2ogs.js using nodejs
-
-For linux (preferably as sudo):
-
-```Shell
-node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- /replace/with/full/path/to/your/ai/runfile.file <botargument1> <botargument2>
-```
-
-For windows (preferably as admin):
-
-```Shell
-pushd C:\Program Files\nodejs && node.exe C:\Users\yourwindowsusername\AppData\Roaming\npm\node_modules\gtp2ogs\gtp2ogs.js --username <yourbotusername> --apikey <apikey> <gtp2ogsargument1> <gtp2ogsargument2> -- C:\Users\path\to\your\ai\executable.exe <botargument1> <botargument2>
-```
-
-note: for all operating systems, in `--`, the spaces after `<gtp2ogsarguments>`
-and before `/path/to/your/bot.executable` are important: they separate gtp2ogs
-arguments from your bot arguments
-
-note 2: the number of `<gtp2ogsarguments>` and `<botarguments>` is not limited,
-here only 2 were shown but it possible to use for example 3,4,5 , or as many as
-you want
-  
-note 3: to play on [beta OGS server](https://beta.online-go.com/) instead of the
-[OGS server](https://online-go.com/), add the `--beta` argument
+- for Windows, see [the Windows Installation Guide](/docs/INSTALLATION-WINDOWS.md)
+- for Linux, see [the Linux Installation Guide](/docs/INSTALLATION-LINUX.md)
 
 ## Options
 
-You can find a list of all possible to use gtp2ogs arguments [here](/docs/OPTIONS-LIST.md).
+After installing gtp2ogs, we need to specify the settings. This is what we do with
+ gtp2ogs options.
 
-Before putting `<gtp2ogsarguments>`, you have to put the options [username](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#username)
-and [apikey](https://github.com/online-go/gtp2ogs/blob/devel/docs/OPTIONS-LIST.md#apikey)
-first.
+To set up an option in gtp2ogs, you need to enter it as a command-line argument.
 
-Then, choose the wanted `<gtp2ogsarguments>` from the above [list of all options](/docs/OPTIONS-LIST.md) section (no need to use all these options, only the ones you want),
-and separate each option with a space
+### gtp2ogs arguments
 
-After that, add a `--` (with one space before and one space after the `--` ),
-to separate `<gtp2ogsarguments>` from your bot path and `<botarguments>`, as
-shown in
-[Most common usage earlier](#4-most-common-usage--start-gtp2ogsjs-using-nodejs)
+Command-line arguments can be written in any order.
 
-note: some gtp2ogsarguments have default so they are enabled even if you don't
-specify them.
+Some options are mandatory:
 
-### Example of use
+- [username](/docs/OPTIONS-LIST.md#username)
+- [apikey](/docs/OPTIONS-LIST.md#apikey)
 
-We are using the AI PhoenixGo on linux in this example,
-but it works the same way on other platforms and AI:
+You can find all available options in [OPTIONS-LIST](/docs/OPTIONS-LIST.md).
 
-```Shell
-sudo node /usr/lib/node_modules/gtp2ogs/gtp2ogs.js --beta --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username testbot --debug --startupbuffer 2 --bans 454,someplayer,489,512 --noclock --unrankedonly --maxconnectedgames 10 --maxconnectedgamesperuser 1 --minrank 5d --noautohandicapranked --maxhandicap 0 --fakerank 8d --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2019/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2019/PhoenixGo/etc/mcts_1gpu_beta.conf --v=1
-```
+### bot arguments
 
-### Submit Move Button
+After that, use a ` -- ` (with one space before and one space after the `--`)
+ to separate gtp2ogs arguments from bot arguments.
 
-To avoid accidental misclicks while spectating a game from
-your bot account,
+Then specify your bot arguments.
 
-see: [Submit-Move Button](https://github.com/wonderingabout/gtp2ogs-tutorial#important-submit-move-button)
+All in all, general use is something like this:
 
-### Show winrate and variations ingame
+`node_executable path/to/gtp2ogs.js --username <yourbotusername> --apikey <apikey> [arguments] -- path/to/your/ai/executable [bot arguments]`
 
-**gtp2ogs has default support for showing ingame winrate and variations for some AI.**
+## Example of use
 
-see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
+In this example AI is PhoenixGo, but it works in a similar way for any AI.
 
-## Community Involvment
+The number of gtp2ogs options and of bot arguments is free.
 
-- You may be interested in [Contributing](/docs/CONTRIBUTING.md)
+### For Windows
+
+`node C:\Users\yourusername\gtp2ogs\gtp2ogs.js --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username somebot --debug --ogspv PhoenixGo --noclock --unrankedonly --minrank 1d --noautohandicapranked --maxhandicap 0 --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- C:\Users\yourusername\PhoenixGo\mcts\mcts_main --gtp --config_path C:\Users\yourusername\PhoenixGo\etc\mcts_1gpu_beta.conf --logtostderr --v 1`
+
+### For Linux
+
+`node ~/gtp2ogs/gtp2ogs.js --apikey 5rg46ze84f68e4g6v4e4g68es4g8 --username somebot --debug --ogspv PhoenixGo --noclock --unrankedonly --minrank 1d --noautohandicapranked --maxhandicap 0 --boardsizes 19 --komis 7.5 --speeds live --maxmaintimelive 600 --maxperiodsliveranked 5 --maxperiodsliveunranked 10 --maxperiodtimeliveranked 60 --maxperiodtimeliveunranked 180 -- /home/amd2020/PhoenixGo/bazel-bin/mcts/mcts_main --gtp --config_path=/home/amd2020/PhoenixGo/etc/mcts_1gpu_beta.conf --logtostderr --v=1`
+
+## Beta OGS
+
+Before you can play on official [OGS server](https://online-go.com/) server,
+ OGS admins will often ask that you run tests to make sure everything is running fine.
+
+You need to do these tests in [beta OGS server](https://beta.online-go.com/),
+ by adding the option [--beta](/docs/OPTIONS-LIST.md#beta).
+
+When all testing is OK, you can remove the `--beta` and play in the real OGS.
+
+## Submit Move Button
+
+To avoid accidental misclicks while spectating a game from your bot account, see
+ [Submit-Move Button](https://github.com/wonderingabout/gtp2ogs-tutorial#important-submit-move-button).
+
+## Show winrate and variations in games
+
+gtp2ogs has native support for showing ingame winrate and variations for some AI,
+ see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
+
+## Community Involvement
+
 - You may also use [Issues](https://github.com/online-go/gtp2ogs/issues)
-to report issues.
-
-- You may be interested in joining the Discord chat:
-In leela zero discord (`#bots` channel): <https://discord.gg/HZ23Cp9>
+ to report issues.
+- Contributing is most welcome, if you want to add features or submit fixes
+ we'd be glad to review them with you and make gtp2ogs more awesome!
+- You may also be interested in joining the Discord chat:
+ in leela zero's [#bots channel](https://discord.gg/HZ23Cp9)
 
 This discord can also be useful if you want to have fast and quick,
-interactive chat, or ask simple and quick questions (github Issues are
-preferred for long problems because they live a track that can be useful
-later)!
+ interactive chat, or ask simple and quick questions, however github issues
+ are preferred for long problems because they leave a track that can be useful
+ later)
+
+## Developer Notes
+
+You can find notes for developers [here](/docs/DEV.md).
