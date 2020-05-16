@@ -374,9 +374,15 @@ class Game {
             return;
         if (this.state.phase !== 'play')
             return;
-        if( config.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
-            this.sendChat( config.greeting, "discussion");
+        if (!this.greeted && this.state.moves.length < (2 + this.state.handicap)) {
             this.greeted = true;
+            if (config.greeting) {
+                this.sendChat(config.greeting, "discussion");
+            }
+            if (config.greetingbotcommand) {
+                const pretty_bot_command = config.bot_command.join(' ');
+                this.sendChat(`You are playing against: ${pretty_bot_command}`, "discussion");
+            }
         }
 
         const doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
