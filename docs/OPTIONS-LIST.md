@@ -81,7 +81,7 @@ security reasons
 
 `--greeting "Hello, have a nice game"`
 Greeting message to appear in chat at first move
-(ex: "Hello, have a nice game")
+(ex: Hello, have a nice game)
 
 see for details [notes G](/docs/NOTES.md#g)
 
@@ -111,7 +111,7 @@ for example:
 
 `--farewell "Thank you for playing"`
 Thank you message to appear in chat at end of game
-(ex: "Thank you for playing")
+(ex: Thank you for playing)
 
 see for details [notes G](/docs/NOTES.md#g)
 
