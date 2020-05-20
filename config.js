@@ -265,7 +265,7 @@ exports.updateFromArgv = function() {
 
     if (argv.rejectnewtime) {
         const start_date  = new Date();
-        const reject_date = { ...start_date };
+        const reject_date = new Date();
         const [hh, mm] = argv.rejectnewtime.split(':');
         reject_date.setHours(hh);
         reject_date.setMinutes(mm);
