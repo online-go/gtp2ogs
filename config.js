@@ -46,6 +46,7 @@ exports.updateFromArgv = function() {
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
+        .describe('rejectnewtime', 'Reject new challenges if local time of the day is later than specified hh:mm (24 hour format)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
@@ -261,10 +262,30 @@ exports.updateFromArgv = function() {
         exports.fakerank = parseRank(argv.fakerank);
     }
     exports.bot_command = argv._;
+
+    if (argv.rejectnewtime) {
+        const start_date  = new Date();
+        const reject_date = { ...start_date };
+        const [hh, mm] = argv.rejectnewtime.split(':');
+        reject_date.setHours(hh);
+        reject_date.setMinutes(mm);
+
+        // if when we start gtp2ogs hh:mm is already superior than rejectnewtime's hh:mm
+        // (ex: start at 23:05 and reject time at 21:30),
+        // then we'll want to reject at this hh:mm but tomorrow
+        //
+        if (start_date > reject_date) {
+            reject_date.setDate(reject_date.getDate() + 1);
+        }
+        
+        exports.reject_date = reject_date;
+    }
+
     exports.check_rejectnew = function()
     {
         if (argv.rejectnew)  return true;
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
+        if (argv.rejectnewtime && exports.reject_date < new Date()) return true;
         return false;
     };
     if (argv.ogspv) {

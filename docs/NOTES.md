@@ -124,3 +124,23 @@ for PhoenixGo:
 - the requirement to disable pondering, you need to set `enable_background_search`
 to `0` in config file.
 - show pv in stderr with `--logtostderr` and `--v=1` in command-line options.
+
+## I
+
+Example of use:
+
+### If we start gtp2ogs at 08:10
+
+- `--rejectnewtime 02:00` will reject new games starting from **tomorrow** at 02:00
+- `--rejectnewtime 08:25` will reject new games starting from today at 08:25
+- `--rejectnewtime 10:05` will reject new games starting from today at 10:05
+- `--rejectnewtime 21:30` will reject new games starting from today at 21:30
+- `--rejectnewtime 23:05` will reject new games starting from today at 23:05
+
+## If we start gtp2ogs at 21:45
+
+- `--rejectnewtime 02:00` will reject new games starting from **tomorrow** at 02:00
+- `--rejectnewtime 08:25` will reject new games starting from **tomorrow** at 08:25
+- `--rejectnewtime 10:05` will reject new games starting from **tomorrow** at 10:05
+- `--rejectnewtime 21:30` will reject new games starting from **tomorrow** at 21:30
+- `--rejectnewtime 23:05` will reject new games starting from today at 23:05
