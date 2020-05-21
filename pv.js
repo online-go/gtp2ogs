@@ -26,7 +26,7 @@ class Pv {
                            'LEELA': this.getPvChatLeela
                          }[setting];
         this.PVRE =      { 'LEELAZERO':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
-                           'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) \(A: +(-?\d+.\d)\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
+                           'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+\.\d\d)%\) (\(LCB: +(-?\d+\.\d\d)%\) )?\(N: +(\d+\.\d\d)%\) \(A: +(-?\d+\.\d)\)( \(B: (-?\d+\.\d\d)\))? PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'PHOENIXGO':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/)
                          }[setting];
         this.STOPRE =    { 'LEELAZERO':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
@@ -100,7 +100,7 @@ class Pv {
               playouts  = stop[3],
               // nps    = stop[4]; // unused
               name      = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`,
-              pv = this.PvToGtp(this.pvLine[8]);
+              pv = this.PvToGtp(this.pvLine[10]);
 
         return this.createMessage(name, pv);
     }
