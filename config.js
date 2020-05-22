@@ -50,7 +50,9 @@ exports.updateFromArgv = function() {
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
         .describe('aichat', 'Allow bots to send chat messages using `DISCUSSION:` `MALKOVICH:` in stderr')
-        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file')
+        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file.'
+                             + 'Filename argument is optional (using only --logfile will use default filename,'
+                             + 'for example gtp2ogs_logfile_2020-05-21T21:40:22.910Z)')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
         .describe('host', 'OGS Host to connect to')
@@ -246,6 +248,9 @@ exports.updateFromArgv = function() {
     /* Add and Modify exports*/
     if (argv.debug) {
         exports.DEBUG = true;
+    }
+    if (argv.logfile && typeof argv.logfile === "boolean") {
+        exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {

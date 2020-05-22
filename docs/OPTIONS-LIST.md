@@ -181,7 +181,8 @@ MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 ### logfile
 
 `--logfile` In addition to logging to the console, also log gtp2ogs
-output to a text file
+output to a text file. Filename argument is optional (using only `--logfile`
+will use default filename, for example `gtp2ogs_logfile_2020-05-21T21:40:22.910Z`)
 
 ### json
 
