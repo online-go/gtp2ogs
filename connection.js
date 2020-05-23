@@ -67,6 +67,7 @@ class Connection {
             socket.emit('bot/id', {'id': config.username}, (obj) => {
                 this.bot_id = obj.id;
                 this.jwt = obj.jwt;
+                this.showed_jwt = false;
                 if (!this.bot_id) {
                     console.error(`ERROR: Bot account is unknown to the system: ${config.username}`);
                     process.exit();
@@ -562,8 +563,16 @@ function request(method, host, port, path, data) {
         if (config.DEBUG) {
             // ES6 offers shallow copy syntax using spread
             const noapidata = { ...data };
-            if ("apikey" in noapidata) noapidata.apikey = "hidden";
-            if ("jwt" in noapidata)    noapidata.jwt    = "hidden";
+            if ("apikey" in noapidata) {
+                noapidata.apikey = "hidden";
+            }
+            if (this.showed_jwt) {
+                if ("jwt" in noapidata) {
+                    noapidata.jwt = "already showed once";
+                }
+            } else {
+                this.showed_jwt = true;
+            }
             console.debug(method, host, port, path, noapidata);
         }
 
