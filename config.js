@@ -269,11 +269,12 @@ exports.updateFromArgv = function() {
     }
     exports.bot_command = argv._;
     testRejectNewByTime(argv.rejectNewTime);
+    const startTime = new Date();
     exports.check_rejectnew = function()
     {
         if (argv.rejectnew)  return true;
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        if (argv.rejectNewTime) return rejectNewByTime(argv.rejectNewTime, new Date())
+        if (argv.rejectNewTime) return rejectNewByTime(argv.rejectNewTime, new Date(), startTime)
         return false;
     };
     if (argv.ogspv) {
