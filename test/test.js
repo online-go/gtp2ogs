@@ -15,6 +15,13 @@ const fs = require('fs')
 
 const stream = new require('stream');
 
+// test.js does not detect the defaults and exports from argv in config.js,
+// so we need to specify the rejectnew type (function) in test.js too,
+// and we also need to define any property that is accessed in connection.js too
+// so we also need to add the .reject property, defaulting to false here.
+//
+exports.get_rejectnew_result = function() { return { reject: false } };
+
 config.DEBUG = true;
 config.apikey = 'deadbeef';
 config.host = 'test';
