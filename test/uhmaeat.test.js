@@ -20,6 +20,7 @@ config.port = 80;
 config.username = 'testbot';
 
 for (const _r_u of ["", "_ranked", "_unranked"]) {
+  config[`banned_users${_r_u}`] = {};
   config[`allow_all_boardsizes${_r_u}`] = false;
   config[`allowed_boardsizes${_r_u}`] = [];
   config[`allow_all_komis${_r_u}`] = false;
