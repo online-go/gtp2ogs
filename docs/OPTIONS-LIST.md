@@ -138,10 +138,10 @@ see for details [notes G](/docs/NOTES.md#g)
 `--rejectnewfile ~/rejectnew.status` Reject new challenges if
 file exists (checked each time, can use for load-balancing)
 
-`--rejectnewtime` Reject new challenges if local time of the day is later
+`--rejectnewthreshold` Reject new challenges if local time of the day is later
 than specified hh:mm (24 hour format)
 
-For rejectnewtime, if we start gtp2ogs later than specified hours and minutes, we will
+For rejectnewthreshold, if we start gtp2ogs later than specified hours and minutes, we will
 reject starting from these hours and minutes the next day, see for details [notes I](/docs/NOTES.md#i)
 
 ### debug

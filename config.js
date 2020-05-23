@@ -45,7 +45,7 @@ exports.updateFromArgv = function() {
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
-        .describe('rejectnewtime', 'Reject new challenges if local time of the day is later than specified hh:mm (24 hour format)')
+        .describe('rejectnewthreshold', 'Reject new challenges if local time of the day is later than specified hh:mm (24 hour format)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
@@ -262,14 +262,14 @@ exports.updateFromArgv = function() {
     }
     exports.bot_command = argv._;
 
-    if (argv.rejectnewtime) {
+    if (argv.rejectnewthreshold) {
         const start_date  = new Date();
         const reject_date = new Date();
-        const [hh, mm] = argv.rejectnewtime.split(':');
+        const [hh, mm] = argv.rejectnewthreshold.split(':');
         reject_date.setHours(hh);
         reject_date.setMinutes(mm);
 
-        // if when we start gtp2ogs hh:mm is already superior than rejectnewtime's hh:mm
+        // if when we start gtp2ogs hh:mm is already superior than rejectnewthreshold's hh:mm
         // (ex: start at 23:05 and reject time at 21:30),
         // then we'll want to reject at this hh:mm but tomorrow
         //
@@ -287,10 +287,10 @@ exports.updateFromArgv = function() {
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) {
             return { reject: true, msg: argv.rejectnewmsg, type: "rejectnewfile" };
         }
-        if (argv.rejectnewtime && exports.reject_date < new Date()) {
+        if (argv.rejectnewthreshold && exports.reject_date < new Date()) {
             const msg = `This bot stopped accepting games at ${exports.reject_date.toLocaleString()}.`
                         + `\nPlease try again later or next time.`;
-            return { reject: true, msg, type: "rejectnewtime" };
+            return { reject: true, msg, type: "rejectnewthreshold" };
         }
 
         return { reject: false };
