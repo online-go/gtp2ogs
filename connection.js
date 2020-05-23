@@ -566,7 +566,9 @@ function request(method, host, port, path, data) {
             // noapidata.jwt    = "hidden";
 
             // ES6 offers shallow copy syntax using spread
-            const noapidata = { ...data, apikey: "hidden", jwt: "hidden" };
+            const noapidata = { ...data };
+            if ("apikey" in noapidata) noapidata.apikey = "hidden";
+            if ("jwt" in noapidata)    noapidata.jwt    = "hidden";
             console.debug(method, host, port, path, noapidata);
         }
 
