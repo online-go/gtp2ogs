@@ -476,6 +476,11 @@ class Connection {
         const c0 = this.checkChallenge(notification);
         const rejectmsg = (c0.msg ? c0.msg : "");
 
+        if (config.DEBUG) {
+            conn_log(`Keeping track of notification to detect any unexpected receipt:`
+                    + `\n${JSON.stringify(notification)}`);
+        }
+
         const handi = (notification.handicap > 0 ? `H${notification.handicap}` : "");
         const accepting = (c0.reject ? "Rejecting" : "Accepting");
         conn_log(`${accepting} challenge from ${notification.user.username} `
