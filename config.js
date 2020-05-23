@@ -2,7 +2,7 @@
 
 const fs = require('fs')
 const console = require('console');
-const { rejectNewByTime } = require('./config/rejectNewByTime');
+const { rejectNewByTime, testRejectNewByTime } = require('./config/rejectNewByTime');
 
 exports.check_rejectnew = function() {};
 exports.banned_users = {};
@@ -47,7 +47,7 @@ exports.updateFromArgv = function() {
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
-        .describe('rejectnewtime', 'Reject new challenges between certain times. ex 23:00-8:00 to reject at night, or 12:00-16:00 to reject in the afternoon. Format hh:mm-hh:mm.')
+        .describe('rejectnewtime', 'Reject new challenges between certain times. ex 23:00-8:00 to reject at night, or 12:00-16:00 to reject in the afternoon. Format hh:mm-hh:mm. If end time is not specified, the current time is used and it will reject till this time tomorrow.')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
@@ -268,11 +268,12 @@ exports.updateFromArgv = function() {
         exports.fakerank = parseRank(argv.fakerank);
     }
     exports.bot_command = argv._;
+    testRejectNewByTime(argv.rejectNewTime);
     exports.check_rejectnew = function()
     {
         if (argv.rejectnew)  return true;
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        if (argv.rejectnewtime) return rejectNewByTime(argv.rejectnewtime, new Date())
+        if (argv.rejectNewTime) return rejectNewByTime(argv.rejectNewTime, new Date())
         return false;
     };
     if (argv.ogspv) {
