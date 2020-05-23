@@ -12,15 +12,29 @@ let https = require('https');
 
 let { FakeSocket, FakeAPI, base_challenge } = require('./test')
 
+// tests dont get exports from argv, manually inputting the ones we need here again
 config.DEBUG = true;
 config.apikey = 'deadbeef';
 config.host = 'test';
 config.port = 80;
 config.username = 'testbot';
+
+for (const _r_u of ["", "_ranked", "_unranked"]) {
+  config[`allow_all_boardsizes${_r_u}`] = false;
+  config[`allowed_boardsizes${_r_u}`] = [];
+  config[`allow_all_komis${_r_u}`] = false;
+  config[`allowed_komis${_r_u}`] = [];
+  config[`allow_all_speeds${_r_u}`] = false;
+  config[`allowed_speeds${_r_u}`] = {};
+  config[`allow_all_timecontrols${_r_u}`] = false;
+  config[`allowed_timecontrols${_r_u}`] = {};
+}
+
 config.allowed_boardsizes[19] = true;
 config.allow_all_komis = true;
 config.allowed_speeds['live'] = true;
 config.allowed_timecontrols['fischer'] = true;
+
 config.bot_command = ['gtp-program', '--argument'];
 
 function stub_console() {

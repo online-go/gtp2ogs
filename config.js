@@ -4,27 +4,6 @@ const fs = require('fs')
 const console = require('console');
 
 exports.check_rejectnew = function() {};
-exports.banned_users = {};
-exports.banned_users_ranked = {};
-exports.banned_users_unranked = {};
-exports.allowed_boardsizes = [];
-exports.allow_all_boardsizes = false;
-exports.allowed_boardsizes_ranked = [];
-exports.allow_all_boardsizes_ranked = false;
-exports.allowed_boardsizes_unranked = [];
-exports.allow_all_boardsizes_unranked = false;
-exports.allow_all_komis = false;
-exports.allowed_komis = [];
-exports.allow_all_komis_ranked = false;
-exports.allowed_komis_ranked = [];
-exports.allow_all_komis_unranked = false;
-exports.allowed_komis_unranked = [];
-exports.allowed_speeds = {};
-exports.allowed_speeds_ranked = {};
-exports.allowed_speeds_unranked = {};
-exports.allowed_timecontrols = {};
-exports.allowed_timecontrols_ranked = {};
-exports.allowed_timecontrols_unranked = {};
 
 exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
@@ -296,22 +275,27 @@ exports.updateFromArgv = function() {
         exports.maxrankunranked = parseRank(argv.maxrankunranked);
     }
 
+    exports.banned_users = {};
     if (argv.bans) {
         for (const user of argv.bans.split(',')) {
             exports.banned_users[user] = true;
         }
     }
+    exports.banned_users_ranked = {};
     if (argv.bansranked) {
         for (const user of argv.bansranked.split(',')) {
             exports.banned_users_ranked[user] = true;
         }
     }
+    exports.banned_users_unranked = {};
     if (argv.bansunranked) {
         for (const user of argv.bansunranked.split(',')) {
             exports.banned_users_unranked[user] = true;
         }
     }
 
+    exports.allowed_boardsizes = [];
+    exports.allow_all_boardsizes = false;
     if (argv.boardsizes) {
         for (const boardsize of argv.boardsizes.split(',')) {
             if (boardsize === "all") {
@@ -321,6 +305,8 @@ exports.updateFromArgv = function() {
             }
         }
     }
+    exports.allowed_boardsizes_ranked = [];
+    exports.allow_all_boardsizes_ranked = false;
     if (argv.boardsizesranked) {
         for (const boardsizeranked of argv.boardsizesranked.split(',')) {
             if (boardsizeranked === "all") {
@@ -330,6 +316,8 @@ exports.updateFromArgv = function() {
             }
         }
     }
+    exports.allowed_boardsizes_unranked = [];
+    exports.allow_all_boardsizes_unranked = false;
     if (argv.boardsizesunranked) {
         for (const boardsizeunranked of argv.boardsizesunranked.split(',')) {
             if (boardsizeunranked === "all") {
@@ -340,6 +328,8 @@ exports.updateFromArgv = function() {
         }
     }
 
+    exports.allow_all_komis = false;
+    exports.allowed_komis = [];
     if (argv.komis) {
         for (const komi of argv.komis.split(',')) {
             if (komi === "all") {
@@ -351,6 +341,8 @@ exports.updateFromArgv = function() {
             }
         }
     }
+    exports.allow_all_komis_ranked = false;
+    exports.allowed_komis_ranked = [];
     if (argv.komisranked) {
         for (const komiranked of argv.komisranked.split(',')) {
             if (komiranked === "all") {
@@ -362,6 +354,8 @@ exports.updateFromArgv = function() {
             }
         }
     }
+    exports.allow_all_komis_unranked = false;
+    exports.allowed_komis_unranked = [];
     if (argv.komisunranked) {
         for (const komiunranked of argv.komisunranked.split(',')) {
             if (komiunranked === "all") {
@@ -374,32 +368,38 @@ exports.updateFromArgv = function() {
         }
     }
 
+    exports.allowed_speeds = {};
     if (argv.speeds) {
         for (const e of argv.speeds.split(',')) {
             exports.allowed_speeds[e] = true;
         }
     }
+    exports.allowed_speeds_ranked = {};
     if (argv.speedsranked) {
         for (const e of argv.speedsranked.split(',')) {
             exports.allowed_speeds_ranked[e] = true;
         }
     }
+    exports.allowed_speeds_unranked = {};
     if (argv.speedsunranked) {
         for (const e of argv.speedsunranked.split(',')) {
             exports.allowed_speeds_unranked[e] = true;
         }
     }
 
+    exports.allowed_timecontrols = {};
     if (argv.timecontrols) {
         for (const e of argv.timecontrols.split(',')) {
             exports.allowed_timecontrols[e] = true;
         }
     }
+    exports.allowed_timecontrols_ranked = {};
     if (argv.timecontrolsranked) {
         for (const e of argv.timecontrolsranked.split(',')) {
             exports.allowed_timecontrols_ranked[e] = true;
         }
     }
+    exports.allowed_timecontrols_unranked = {};
     if (argv.timecontrolsunranked) {
         for (const e of argv.timecontrolsunranked.split(',')) {
             exports.allowed_timecontrols_unranked[e] = true;
