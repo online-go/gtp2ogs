@@ -288,9 +288,10 @@ class Connection {
         if (resultRank) return resultRank;
 
         // check bot is available, else don't mislead user
-        if (config.check_rejectnew()) {
-            conn_log("Not accepting new games (rejectnew).");
-            return { reject: true, msg: config.rejectnewmsg };
+        const rejectnew_result = config.get_rejectnew_result();
+        if (rejectnew_result.reject) {
+            conn_log(`Not accepting new games (${rejectnew_result.type})`);
+            return rejectnew_result;
         }
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;

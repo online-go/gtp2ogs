@@ -3,7 +3,7 @@
 const fs = require('fs')
 const console = require('console');
 
-exports.check_rejectnew = function() {};
+exports.get_rejectnew_result = function() {};
 exports.banned_users = {};
 exports.banned_users_ranked = {};
 exports.banned_users_unranked = {};
@@ -281,13 +281,22 @@ exports.updateFromArgv = function() {
         exports.reject_date = reject_date;
     }
 
-    exports.check_rejectnew = function()
-    {
-        if (argv.rejectnew)  return true;
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        if (argv.rejectnewtime && exports.reject_date < new Date()) return true;
-        return false;
+    exports.get_rejectnew_result = function() {
+        if (argv.rejectnew) {
+            return { reject: true, msg: argv.rejectnewmsg, type: "rejectnew" };
+        }
+        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile)) {
+            return { reject: true, msg: argv.rejectnewmsg, type: "rejectnewfile" };
+        }
+        if (argv.rejectnewtime && exports.reject_date < new Date()) {
+            const msg = `This bot stopped accepting games at ${exports.reject_date.toLocaleString()}.`
+                        + `\nPlease try again later or next time.`;
+            return { reject: true, msg, type: "rejectnewtime" };
+        }
+
+        return { reject: false };
     };
+
     if (argv.ogspv) {
         exports.ogspv = argv.ogspv.toUpperCase();
     }
