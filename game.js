@@ -39,6 +39,10 @@ class Game {
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
             if (!this.connected) return;
 
+            // Server has an issue that gamedata.clock.now will exist inconsistently. This will cause
+            // false positives for gamedata changes. We never use the field, so just remove it.
+            delete gamedata.clock.now;
+
             // Only call game over handler if game really just finished.
             // For some reason we get connected to already finished games once in a while ...
             if (gamedata.phase === 'finished') {
