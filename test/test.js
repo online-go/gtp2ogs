@@ -20,7 +20,7 @@ const stream = new require('stream');
 // and we also need to define any property that is accessed in connection.js too
 // so we also need to add the .reject property, defaulting to false here.
 //
-exports.get_rejectnew_result = function() { return { reject: false } };
+config.get_rejectnew_result = function() { return { reject: false } };
 
 config.DEBUG = true;
 config.apikey = 'deadbeef';
