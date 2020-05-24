@@ -284,7 +284,7 @@ class Connection {
                 return getRejectBanned(notification.user.username, "unranked");
             }
         }
-        const resultRank = getMinMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
+        const resultRank = getMinMaxHandicapRankRejectResult("rank", notification.user.ranking, false, "", notification.ranked);
         if (resultRank) return resultRank;
 
         // check bot is available, else don't mislead user
@@ -444,14 +444,14 @@ class Connection {
 
             handicapNotifCorrected = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
-        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapNotifCorrected, Boolean(config.fakerank), notification.ranked);
+        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapNotifCorrected, Boolean(config.fakerank), "", notification.ranked);
         if (resultHandicap) return resultHandicap;
 
         const blitzLiveCorr = getBlitzLiveCorr(notification.time_control.speed);
 
         const resultMaintime = getMinMaxMainPeriodTimeRejectResult(`maintime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
-        const resultPeriods = getMinMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, notification.time_control.periods, blitzLiveCorr, notification.ranked);
+        const resultPeriods = getMinMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, notification.time_control.periods, false, blitzLiveCorr, notification.ranked);
         if (resultPeriods) return resultPeriods;
         const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult(`periodtime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
@@ -948,7 +948,7 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function getMinMaxPeriodsRejectResult(familyNameString, notif, blitzLiveCorr, notificationRanked) {
+function getMinMaxPeriodsRejectResult(familyNameString, notif, isFakeHandicap, blitzLiveCorr, notificationRanked) {
     //
     // "fischer", "simple", "absolute", "none", don't have a periods number,
     //  so this function only applies to "byoyomi" and "canadian"
