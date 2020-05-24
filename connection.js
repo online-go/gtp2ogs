@@ -772,29 +772,36 @@ function genericAllowedFamiliesReject(argName, notificationUnit) {
     return { reject: true, msg };
 }
 
-function familyObjectMIBL(familyName) {
-    let minMax = "";
-    let incDec = "";
-    let belAbo = "";
-    let lowHig = "";
-    const isMin = familyName.includes("min");
-    const isMax = familyName.includes("max");
+function getMIBL(isMin) {
     if (isMin) {
-        minMax = "Minimum";
-        incDec = "increase";
-        belAbo = "below";
-        lowHig = "low";
+        return { minMax: "Minimum",
+                 incDec: "increase",
+                 belAbo: "below",
+                 lowHig: "low"
+               };
     } else {
-        minMax = "Maximum";
-        incDec = "reduce";
-        belAbo = "above";
-        lowHig = "high";
+        return { minMax: "Maximum",
+                 incDec: "reduce",
+                 belAbo: "above",
+                 lowHig: "high"
+               };
     }
-    const familyArray = getArgNamesGRU(familyName);
-    return { argNames: { all: familyArray[0], ranked: familyArray[1], unranked: familyArray[2] },
-             MIBL: { minMax, incDec, belAbo, lowHig },
-             isMM: { isMin, isMax }
-           };
+}
+
+function getFamilyObjectMIBL(familyNameString) {
+    const isMin = familyNameString.includes("min");
+    const isMax = familyNameString.includes("max");
+    const isMM  = { isMin, isMax };
+
+    const MIBL  = getMIBL(isMin);
+
+    const familyArray = getArgNameStringsGRU(familyNameString);
+    const argNameStrings = { all: familyArray[0],
+                             ranked: familyArray[1],
+                             unranked: familyArray[2]
+                           };
+
+    return { argNameStrings, isMM, MIBL };
 }
 
 function checkObjectArgsToArgName(familyObjectArgNames, notificationRanked) {
@@ -824,15 +831,13 @@ function checkMinMaxCondition(arg, notif, isMin) {
     }
 }
 
-function minMaxHandicapRankRejectResult(familyName, notif, isFakeHandicap, notificationRanked) {
-    const minFamilyObject = familyObjectMIBL(`min${familyName}`);
-    const maxFamilyObject = familyObjectMIBL(`max${familyName}`);
-    let argName = "";
-    for (const familyObject of [minFamilyObject, maxFamilyObject]) {
-        argName = checkObjectArgsToArgName(familyObject.argNames, notificationRanked);
-        if (config[argName] !== undefined && checkMinMaxCondition(config[argName], notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
-            let argToString = config[argName];
-            let familyNameConverted = familyName;
+function minMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap, notificationRanked) {
+    for (const minMax of ["min", "max"]) {
+        const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
+        const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
+        if (config[argNameString] !== undefined && checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+            let argToString = config[argNameString];
+            const familyNameStringConverted = familyNameString;
             let notifConverted = notif;
             let rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
             let endingSentence = "";
@@ -910,41 +915,22 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
     /    - But config[argName] is for 1 stone, so multiply it.
     /      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
 
-    for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-        if (notificationT.speed === convertBlitzLiveCorr(blitzLiveCorr)) {
-            const minFamilyObject = familyObjectMIBL(`min${mainPeriodTime}${blitzLiveCorr}`);
-            const maxFamilyObject = familyObjectMIBL(`max${mainPeriodTime}${blitzLiveCorr}`);
-            const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTime, notificationT);
-            let argName = "";
-            let argNumberConverted = -1;
-            for (const familyObject of [minFamilyObject, maxFamilyObject]) {
-                for (const setting of timecontrolsSettings) {
-                    if (notificationT.time_control === setting[0]) {
-                        argName = checkObjectArgsToArgName(familyObject.argNames, notificationRanked);
-                        argNumberConverted = config[argName];
-                        if (setting[0] === "canadian" && mainPeriodTime === "periodtime") {
-                            argNumberConverted = argNumberConverted * notificationT.stones_per_period;
-                        }
-                        if (checkMinMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-                            const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
-                            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argName, "");
-                            let endingSentence = "";
-                            if ((notificationT.time_control === "canadian") && (mainPeriodTime === "periodtime")) {
-                                endingSentence = ", or change the number of stones per period";
-                            }
-                            conn_log(`${timespanToDisplayString(setting[2])} is `
-                                     + `${familyObject.MIBL.belAbo} `
-                                     + `${familyObject.MIBL.minMax} ${setting[1]} `
-                                     + `${rankedUnranked} in ${notificationT.time_control} `
-                                     + `${argToString}`);
-                            const msg = `${familyObject.MIBL.minMax} ${setting[1]} ${rankedUnranked} `
-                                        + `in ${notificationT.time_control} is ${argToString}, `
-                                        + `please ${familyObject.MIBL.incDec} `
-                                        + `${setting[1]}${endingSentence}.`;
-                            return { reject : true, msg };
-                            /* example : "Minimum (Main/Period) Time for blitz ranked games
-                             * in byoyomi is 1 minutes, please increase (Main/Period) Time."*/
-                        }
+    const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
+    for (const minMax of ["min", "max"]) {
+        const familyObject = getFamilyObjectMIBL(`${minMax}${mainPeriodTimeBLC}`);
+        for (const setting of timecontrolsSettings) {
+            if (notificationT.time_control === setting[0]) {
+                const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
+                let argNumberConverted = config[argNameString];
+                if (setting[0] === "canadian" && mainPeriodTimeBLC === "periodtime") {
+                    argNumberConverted = argNumberConverted * notificationT.stones_per_period;
+                }
+                if (checkMinMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+                    const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
+                    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
+                    let endingSentence = "";
+                    if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
+                        endingSentence = ", or change the number of stones per period";
                     }
                 }
             }
@@ -970,28 +956,19 @@ function timecontrolsMainPeriodTime(mpt, notificationT) {
 function minMaxPeriodsRejectResult(familyName, notif, notificationTSpeed, notificationRanked) {
     /* "fischer", "simple", "absolute", "none", don't have a periods number,
     /  so this function only applies to "byoyomi" and "canadian"*/
-    for (const blitzLiveCorr of ["blitz", "live", "corr"]) {
-        if (notificationTSpeed === convertBlitzLiveCorr(blitzLiveCorr)) {
-            const minFamilyObject = familyObjectMIBL(`min${familyName}${blitzLiveCorr}`);
-            const maxFamilyObject = familyObjectMIBL(`max${familyName}${blitzLiveCorr}`);
-            /* example : {argNames {all: "minperiodsblitz", ranked: "minperiodsblitzranked", unranked: "minperiodsblitzunranked"},
-                                    MIBL {minMax: mm, incDec: ir, belAbo: ba, lowHig: lh},
-                                    isMM {isMin: true, isMax: false}};*/
-            let argName = "";
-            for (const familyObject of [minFamilyObject, maxFamilyObject]) {
-                argName = checkObjectArgsToArgName(familyObject.argNames, notificationRanked);
-                if (checkMinMaxCondition(config[argName], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-                    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationTSpeed} `, argName, "");
-                    conn_log(`${notif} is ${familyObject.MIBL.belAbo} `
-                             + `${familyObject.MIBL.minMax} ${familyName} `
-                             + `${rankedUnranked} ${config[argName]}`);
-                    const msg = `${familyObject.MIBL.minMax} ${familyName} `
-                                + `${rankedUnranked} ${config[argName]}, `
-                                + `please ${familyObject.MIBL.incDec} the number `
-                                + `of ${familyName}.`;
-                    return { reject: true, msg };
-                }
-            }
+    for (const minMax of ["min", "max"]) {
+        const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
+        const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
+        if (checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationTSpeed} `, argNameString, "");
+            conn_log(`${notif} is ${familyObject.MIBL.belAbo} `
+                        + `${familyObject.MIBL.minMax} ${familyNameString} `
+                        + `${rankedUnranked} ${config[argNameString]}`);
+            const msg = `${familyObject.MIBL.minMax} ${familyNameString} `
+                        + `${rankedUnranked} ${config[argNameString]}, `
+                        + `please ${familyObject.MIBL.incDec} the number `
+                        + `of ${familyNameString}.`;
+            return { reject: true, msg };
         }
     }
 }
