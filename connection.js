@@ -784,28 +784,21 @@ function getMIBL(isMin) {
     }
 }
 
-function getFamilyObjectMIBL(familyNameString, isMin) {
-    const MIBL = getMIBL(isMin);
+function getCheckedArgNameString(familyNameString, notificationRanked) {
+    const argNameStrings = getArgNameStringsGRU(familyNameString);
+    const [general, ranked, unranked] = argNameStrings;
 
-    const familyArray = getArgNameStringsGRU(familyNameString);
-    const argNameStrings = { all: familyArray[0],
-                             ranked: familyArray[1],
-                             unranked: familyArray[2]
-                           };
-
-    return { argNameStrings, MIBL };
-}
-
-function checkObjectArgsToArgName(familyObjectArgNames, notificationRanked) {
-    if (config[familyObjectArgNames.unranked] !== undefined && !notificationRanked) {
-        return familyObjectArgNames.unranked;
-    } else if (config[familyObjectArgNames.ranked] !== undefined && notificationRanked) {
-        return familyObjectArgNames.ranked;
-    } else { /* beware: since we don't always provide defaults for the general arg, we would 
-             /  need to check it if we use this function in other functions than the minMax ones (ex: minrank, minhandicap) */ 
-        return familyObjectArgNames.all;
+    // for numbers, check for undefined: 0 is checked false but is a valid arg number to test against notif
+    //
+    if (config[unranked] !== undefined && !notificationRanked) {
+        return unranked;
+    } else if (config[ranked] !== undefined && notificationRanked) {
+        return ranked;
+    } else if (config[general] !== undefined) {
+        return general;
     }
 }
+
 
 function checkMinMaxCondition(arg, notif, isMin) {
     if (isMin) {
@@ -815,20 +808,20 @@ function checkMinMaxCondition(arg, notif, isMin) {
     }
 }
 
-function getMinMaxRankRejectResult(familyNameString, notif, notificationRanked) {
+function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`, isMin);
-        const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
+        const argNameString = getCheckedArgNameString(`${minMax}rank`, notificationRanked);
         const arg = config[argNameString];
-        if (arg !== undefined && checkMinMaxCondition(arg, notif, isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+        if (arg !== undefined && checkMinMaxCondition(arg, notif, isMin)) {
+            const MIBL = getMIBL(isMin);
             const argToString = rankToString(arg);
             const notifConverted = rankToString(notif);
             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-            conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.miniMaxi} ${familyNameString} `
+            conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
                     + `${rankedUnranked} ${argToString}`);
-            const msg = `${familyObject.MIBL.miniMaxi} ${familyNameString} ${rankedUnranked} is ${argToString}, your `
-                        + `rank is too ${familyObject.MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
+            const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your `
+                        + `rank is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
             return { reject: true, msg };
         }
     }
@@ -846,10 +839,10 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
 
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const familyObject = getFamilyObjectMIBL(`${minMax}${handicapPeriodsBLC}`, isMin);
-        const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
+        const argNameString = getCheckedArgNameString(`${minMax}${handicapPeriodsBLC}`, notificationRanked);
         const arg = config[argNameString];
-        if (checkMinMaxCondition(arg, notif, isMin)) {
+        if (arg !== undefined && checkMinMaxCondition(arg, notif, isMin)) {
+            const MIBL = getMIBL(isMin);
             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
             const suggestion = ", or try changing the ranked/unranked setting.";
             if (handicapPeriodsBLC === "handicap") {
@@ -865,19 +858,18 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
                         return { reject: true, msg };
                     } else if (isFakeHandicap) {
                         conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
-                                 + `${familyObject.MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
+                                 + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
                         const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
-                                    + `stones based on rank difference between you and this bot,\nBut ${familyObject.MIBL.miniMaxi} `
-                                    + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${familyObject.MIBL.incDec} `
+                                    + `stones based on rank difference between you and this bot,\nBut ${MIBL.miniMaxi} `
+                                    + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${MIBL.incDec} `
                                     + `the number of handicap stones in -custom handicap-.`;
                         return { reject: true, msg };
                     }
             }
             // if no specific reject, fall back to generic reject
 
-            conn_log(`${notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.miniMaxi} ${handicapPeriodsBLC} `
-                     + `${rankedUnranked} ${arg}`);
-            const msg = `${familyObject.MIBL.miniMaxi} ${nameF} ${rankedUnranked} ${arg}, please ${familyObject.MIBL.incDec} `
+            conn_log(`${notif} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${handicapPeriodsBLC} ${rankedUnranked} ${arg}`);
+            const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} ${arg}, please ${MIBL.incDec} `
                         + `the number of ${nameF}.`;
             return { reject: true, msg };
         }
@@ -923,23 +915,23 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
 
     const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
     for (const minMax of ["min", "max"]) {
-        const isMin = (minMax === "min");
-        const familyObject = getFamilyObjectMIBL(`${minMax}${mainPeriodTimeBLC}`, isMin);
         for (const setting of timecontrolsSettings) {
             if (notificationT.time_control === setting[0]) {
-                const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
+                const isMin = (minMax === "min");
+                const argNameString = getCheckedArgNameString(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
                 const arg = config[argNameString];
-                if (checkMinMaxCondition(arg, setting[2], isMin)) {
+                if (arg !== undefined && checkMinMaxCondition(arg, setting[2], isMin)) {
                     const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
+                    const MIBL = getMIBL(isMin);
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                     let endingSentence = "";
                     if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
                         endingSentence = ", or change the number of stones per period";
                     }
-                    conn_log(`${timespanToDisplayString(setting[2])} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.miniMaxi} `
+                    conn_log(`${timespanToDisplayString(setting[2])} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
                              + `${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${argToString}`);
-                    const msg = `${familyObject.MIBL.miniMaxi} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} `
-                                + `is ${argToString}, please ${familyObject.MIBL.incDec} ${setting[1]}${endingSentence}.`;
+                    const msg = `${MIBL.miniMaxi} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} `
+                                + `is ${argToString}, please ${MIBL.incDec} ${setting[1]}${endingSentence}.`;
                     return { reject : true, msg };
                     // example : "Minimum (Main/Period) Time for blitz ranked games
                     //            in byoyomi is 1 minutes, please increase (Main/Period) Time."
