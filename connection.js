@@ -435,23 +435,23 @@ class Connection {
     //
     checkChallengeSettings(notification) {
 
-        let handicapNotif = notification.handicap;
+        let handicapNotifCorrected = notification.handicap;
         if (notification.handicap === -1 && config.fakerank) {
             // TODO: modify or remove fakerank code whenever server sends us automatic handicap
             //       notification.handicap different from -1.
             // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
             // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
 
-            handicapNotif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
+            handicapNotifCorrected = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
-        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapNotif, config.fakerank, notification.ranked);
+        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapNotifCorrected, Boolean(config.fakerank), notification.ranked);
         if (resultHandicap) return resultHandicap;
 
         const blitzLiveCorr = getBlitzLiveCorr(notification.time_control.speed);
 
         const resultMaintime = getMinMaxMainPeriodTimeRejectResult(`maintime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
-        const resultPeriods = getMinMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, notification.time_control.periods, notification.time_control.speed, notification.ranked);
+        const resultPeriods = getMinMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, notification.time_control.periods, blitzLiveCorr, notification.ranked);
         if (resultPeriods) return resultPeriods;
         const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult(`periodtime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
@@ -948,7 +948,7 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function getMinMaxPeriodsRejectResult(familyNameString, notif, notificationTSpeed, notificationRanked) {
+function getMinMaxPeriodsRejectResult(familyNameString, notif, blitzLiveCorr, notificationRanked) {
     //
     // "fischer", "simple", "absolute", "none", don't have a periods number,
     //  so this function only applies to "byoyomi" and "canadian"
@@ -957,7 +957,7 @@ function getMinMaxPeriodsRejectResult(familyNameString, notif, notificationTSpee
         const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
         if (checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationTSpeed} `, argNameString, "");
+            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${blitzLiveCorr} `, argNameString, "");
             conn_log(`${notif} is ${familyObject.MIBL.belAbo} `
                         + `${familyObject.MIBL.minMax} ${familyNameString} `
                         + `${rankedUnranked} ${config[argNameString]}`);
