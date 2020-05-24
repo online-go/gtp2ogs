@@ -881,6 +881,13 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                     if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
                         endingSentence = ", or change the number of stones per period";
                     }
+                    conn_log(`${timespanToDisplayString(setting[2])} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} `
+                             + `${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${argToString}`);
+                    const msg = `${familyObject.MIBL.minMax} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} `
+                                + `is ${argToString}, please ${familyObject.MIBL.incDec} ${setting[1]}${endingSentence}.`;
+                    return { reject : true, msg };
+                    // example : "Minimum (Main/Period) Time for blitz ranked games
+                    //            in byoyomi is 1 minutes, please increase (Main/Period) Time."
                 }
             }
         }
@@ -897,11 +904,7 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
     } else {
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
-<<<<<<< HEAD
-                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, notificationT.period_time],
-=======
                 ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, (notificationT.period_time / notificationT.stones_per_period)],
->>>>>>> fix devel's canadian return, and enhance canadian check
                 ["simple", "Time per move", notificationT.per_move]];
     }
 }
