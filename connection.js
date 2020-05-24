@@ -284,7 +284,7 @@ class Connection {
                 return getRejectBanned(notification.user.username, "unranked");
             }
         }
-        const resultRank = getMinMaxHandicapRankRejectResult("rank", notification.user.ranking, false, "", notification.ranked);
+        const resultRank = getMinMaxRankRejectResult("rank", notification.user.ranking, notification.ranked);
         if (resultRank) return resultRank;
 
         // check bot is available, else don't mislead user
@@ -444,14 +444,14 @@ class Connection {
 
             handicapNotifCorrected = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
-        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapNotifCorrected, Boolean(config.fakerank), "", notification.ranked);
+        const resultHandicap = getMinMaxHandicapPeriodsRejectResult("handicap", "handicap stones", handicapNotifCorrected, Boolean(config.fakerank), "", notification.ranked);
         if (resultHandicap) return resultHandicap;
 
         const blitzLiveCorr = getBlitzLiveCorr(notification.time_control.speed);
 
         const resultMaintime = getMinMaxMainPeriodTimeRejectResult(`maintime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
-        const resultPeriods = getMinMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, notification.time_control.periods, false, blitzLiveCorr, notification.ranked);
+        const resultPeriods = getMinMaxHandicapPeriodsRejectResult(`periods${blitzLiveCorr}`, "periods", notification.time_control.periods, false, `${blitzLiveCorr} `, notification.ranked);
         if (resultPeriods) return resultPeriods;
         const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult(`periodtime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
@@ -827,62 +827,19 @@ function checkMinMaxCondition(arg, notif, isMin) {
     }
 }
 
-function getMinMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap, notificationRanked) {
+function getMinMaxRankRejectResult(familyNameString, notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (config[argNameString] !== undefined && checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
-            let argToString = config[argNameString];
-            let familyNameStringConverted = familyNameString;
-            let notifConverted = notif;
-            let rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
-            let endingSentence = "";
-            if (familyName === "handicap") {
-                familyNameConverted = "handicap stones";
-                endingSentence = `please ${familyObject.MIBL.incDec} the number of ${familyNameConverted}`;
-                // handicap specific rejects below :
-                if (familyObject.isMM.isMin && notifConverted === 0 && config[argName] > 0) {
-                    rankedUnranked = beforeRankedUnrankedGamesSpecial("", "even ", argName, "");
-                    conn_log(`No ${rankedUnranked} (handicap games only)`);
-                    const msg = `This bot does not play ${rankedUnranked}, please `
-                                + `manually select the number of `
-                                + `${familyNameConverted} in -custom handicap-: `
-                                + `minimum is ${argToString} ${familyNameConverted}, `
-                                + `or try changing ranked/unranked game setting.`;
-                    return { reject: true, msg };
-                } else if (familyObject.isMM.isMax && notifConverted > 0 && config[argName] === 0) {
-                    rankedUnranked = beforeRankedUnrankedGamesSpecial("", "handicap ", argName, "");
-                    conn_log(`No ${rankedUnranked} (even games only)'`);
-                    const msg = `This bot does not play ${rankedUnranked}, please `
-                                + `choose handicap -none- (0 handicap stones), or `
-                                + `try changing ranked/unranked game setting.`;
-                    return { reject: true, msg };
-                } else if (isFakeHandicap) { // fakerank specific reject
-                    conn_log(`Automatic handicap ${rankedUnranked} was set `
-                             + `to ${notifConverted} stones, but `
-                             + `${familyObject.MIBL.minMax} handicap `
-                             + `${rankedUnranked} is ${argToString} stones`);
-                    const msg = `Your automatic handicap ${rankedUnranked} was `
-                                + `automatically set to ${notifConverted} `
-                                + `stones based on rank difference between you and `
-                                + `this bot,\nBut ${familyObject.MIBL.minMax} `
-                                + `handicap ${rankedUnranked} is ${argToString} `
-                                + `stones \nPlease ${familyObject.MIBL.incDec} the `
-                                + `number of handicap stones in -custom handicap- `
-                                + `instead of -automatic handicap-`;
-                    return { reject: true, msg };
-                }
-            } else if (familyName === "rank") {
-                argToString = rankToString(config[argName]);
-                notifConverted = rankToString(notifConverted);
-                endingSentence = `your rank is too ${familyObject.MIBL.lowHig}`;
-            }
-            // if we are not in any "handicap" specific reject case, we return the generic return below instead :
-            conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} `
-                     + `${familyObject.MIBL.minMax} ${familyNameConverted} `
-                     + `${rankedUnranked} ${argToString}`);
-            const msg = `${familyObject.MIBL.minMax} ${familyNameConverted} `
-                        + `${rankedUnranked} is ${argToString}, ${endingSentence}.`;
+        const arg = config[argNameString];
+        if (arg !== undefined && checkMinMaxCondition(arg, notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+            const argToString = rankToString(arg);
+            const notifConverted = rankToString(notif);
+            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
+            conn_log(`${notifConverted} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${familyNameString} `
+                    + `${rankedUnranked} ${argToString}`);
+            const msg = `${familyObject.MIBL.minMax} ${familyNameString} ${rankedUnranked} is ${argToString}, your `
+                        + `rank is too ${familyObject.MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
             return { reject: true, msg };
         }
     }
@@ -948,23 +905,45 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function getMinMaxPeriodsRejectResult(familyNameString, notif, isFakeHandicap, blitzLiveCorr, notificationRanked) {
+function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, isFakeHandicap, blitzLiveCorrCorrected, notificationRanked) {
     //
     // "fischer", "simple", "absolute", "none", don't have a periods number,
     //  so this function only applies to "byoyomi" and "canadian"
 
     for (const minMax of ["min", "max"]) {
-        const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
+        const familyObject = getFamilyObjectMIBL(`${minMax}${handicapPeriodsBLC}`);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-        if (checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${blitzLiveCorr} `, argNameString, "");
-            conn_log(`${notif} is ${familyObject.MIBL.belAbo} `
-                        + `${familyObject.MIBL.minMax} ${familyNameString} `
-                        + `${rankedUnranked} ${config[argNameString]}`);
-            const msg = `${familyObject.MIBL.minMax} ${familyNameString} `
-                        + `${rankedUnranked} ${config[argNameString]}, `
-                        + `please ${familyObject.MIBL.incDec} the number `
-                        + `of ${familyNameString}.`;
+        const arg = config[argNameString];
+        if (checkMinMaxCondition(arg, notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
+            const suggestion = ", or try changing the ranked/unranked setting.";
+            if (handicapPeriodsBLC === "handicap") {
+                    if (familyObject.isMM.isMin && notif === 0 && arg > 0) {
+                        conn_log(`No ${rankedUnranked} (handicap games only)`);
+                        const msg = `This bot does not play even games ${rankedUnranked}, please manually select the `
+                                    + `number of ${nameF} in -custom handicap-: minimum is ${arg} ${nameF}${suggestion}`;
+                        return { reject: true, msg };
+                    } else if (familyObject.isMM.isMax && notif > 0 && arg === 0) {
+                        conn_log(`No ${rankedUnranked} (even games only)'`);
+                        const msg = `This bot does not play ${rankedUnranked}, please choose handicap -none- `
+                                    + `(0 handicap stones)${suggestion}`;
+                        return { reject: true, msg };
+                    } else if (isFakeHandicap) {
+                        conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
+                                 + `${familyObject.MIBL.minMax} handicap ${rankedUnranked} is ${arg} stones`);
+                        const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
+                                    + `stones based on rank difference between you and this bot,\nBut ${familyObject.MIBL.minMax} `
+                                    + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${familyObject.MIBL.incDec} `
+                                    + `the number of handicap stones in -custom handicap-.`;
+                        return { reject: true, msg };
+                    }
+            }
+            // if no specific reject, fall back to generic reject
+
+            conn_log(`${notif} is ${familyObject.MIBL.belAbo} ${familyObject.MIBL.minMax} ${handicapPeriodsBLC} `
+                     + `${rankedUnranked} ${arg}`);
+            const msg = `${familyObject.MIBL.minMax} ${nameF} ${rankedUnranked} ${arg}, please ${familyObject.MIBL.incDec} `
+                        + `the number of ${nameF}.`;
             return { reject: true, msg };
         }
     }
