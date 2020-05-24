@@ -837,7 +837,7 @@ function minMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap,
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
         if (config[argNameString] !== undefined && checkMinMaxCondition(config[argNameString], notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
             let argToString = config[argNameString];
-            const familyNameStringConverted = familyNameString;
+            let familyNameStringConverted = familyNameString;
             let notifConverted = notif;
             let rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
             let endingSentence = "";
