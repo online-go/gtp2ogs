@@ -825,8 +825,8 @@ function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
             conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
                     + `${rankedUnranked} ${argToString}`);
-            const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your `
-                        + `rank is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
+            const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF}`
+                        + `is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
             return { reject: true, msg };
         }
     }
@@ -864,7 +864,7 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
                     return { reject: true, msg };
                 } else if (isFakeHandicap) {
                     conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
-                                + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
+                             + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
                     const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
                                 + `stones based on rank difference between you and this bot,\nBut ${MIBL.miniMaxi} `
                                 + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${MIBL.incDec} `
@@ -902,6 +902,10 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
                 ["canadian", "Main Time", notificationT.main_time],
                 ["absolute", "Total Time", notificationT.total_time]];
     } else {
+        // for canadian periodtimes, notification is for N stones: provide it for 1 stone by
+        // diving by the number of stones, so we can test it in the same way than all other
+        // timecontrols (which are also a periodtime for 1 stone)
+        //
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
                 ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, (notificationT.period_time / notificationT.stones_per_period)],
