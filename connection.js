@@ -774,17 +774,9 @@ function genericAllowedFamiliesReject(argName, notificationUnit) {
 
 function getMIBL(isMin) {
     if (isMin) {
-        return { minMax: "Minimum",
-                 incDec: "increase",
-                 belAbo: "below",
-                 lowHig: "low"
-               };
+        return { minMax: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low"  };
     } else {
-        return { minMax: "Maximum",
-                 incDec: "reduce",
-                 belAbo: "above",
-                 lowHig: "high"
-               };
+        return { minMax: "Maximum", incDec: "reduce",   belAbo: "above", lowHig: "high" };
     }
 }
 
