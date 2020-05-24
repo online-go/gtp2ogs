@@ -873,12 +873,9 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
         for (const setting of timecontrolsSettings) {
             if (notificationT.time_control === setting[0]) {
                 const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
-                let argNumberConverted = config[argNameString];
-                if (setting[0] === "canadian" && mainPeriodTimeBLC === "periodtime") {
-                    argNumberConverted = argNumberConverted * notificationT.stones_per_period;
-                }
-                if (checkMinMaxCondition(argNumberConverted, setting[2], familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
-                    const argToString = timespanToDisplayString(argNumberConverted); // ex: "1 minutes"
+                const arg = config[argNameString];
+                if (checkMinMaxCondition(arg, setting[2], familyObject.isMM.isMin)) {
+                    const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                     let endingSentence = "";
                     if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
@@ -900,7 +897,11 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
     } else {
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
+<<<<<<< HEAD
                 ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, notificationT.period_time],
+=======
+                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, (notificationT.period_time / notificationT.stones_per_period)],
+>>>>>>> fix devel's canadian return, and enhance canadian check
                 ["simple", "Time per move", notificationT.per_move]];
     }
 }
@@ -914,7 +915,7 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
         const familyObject = getFamilyObjectMIBL(`${minMax}${handicapPeriodsBLC}`);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
         const arg = config[argNameString];
-        if (checkMinMaxCondition(arg, notif, familyObject.isMM.isMin)) { // if we dont reject, we early exit all the remaining reject
+        if (checkMinMaxCondition(arg, notif, familyObject.isMM.isMin)) {
             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
             const suggestion = ", or try changing the ranked/unranked setting.";
             if (handicapPeriodsBLC === "handicap") {
