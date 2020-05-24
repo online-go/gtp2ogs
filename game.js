@@ -126,6 +126,11 @@ class Game {
 
         this.socket.on(`game/${game_id}/clock`, (clock) => {
             if (!this.connected) return;
+
+            // Server has an issue that gamedata.clock.now will exist inconsistently. This will cause
+            // false positives for gamedata changes. We never use the field, so just remove it.
+            delete clock.now;
+
             if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
 
             if ((config.nopause && !config.nopauseranked && !config.nopauseunranked)
