@@ -284,7 +284,7 @@ class Connection {
                 return getRejectBanned(notification.user.username, "unranked");
             }
         }
-        const resultRank = minMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
+        const resultRank = getMinMaxHandicapRankRejectResult("rank", notification.user.ranking, false, notification.ranked);
         if (resultRank) return resultRank;
 
         // check bot is available, else don't mislead user
@@ -443,13 +443,16 @@ class Connection {
             // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
             handicapSettings.notif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
-        const resultHandicap = minMaxHandicapRankRejectResult("handicap", handicapSettings.notif, handicapSettings.isFakeHandicap, notification.ranked);
+        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapSettings.notif, handicapSettings.isFakeHandicap, notification.ranked);
         if (resultHandicap) return resultHandicap;
-        const resultMaintime = UHMAEATRejectResult("maintime", notification.time_control, notification.ranked);
+
+        const blitzLiveCorr = getBlitzLiveCorr(notification.time_control.speed);
+
+        const resultMaintime = getMinMaxMainPeriodTimeRejectResult(`maintime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
-        const resultPeriods = minMaxPeriodsRejectResult("periods", notification.time_control.periods, notification.time_control.speed, notification.ranked);
+        const resultPeriods = getMinMaxPeriodsRejectResult(`periods${blitzLiveCorr}`, notification.time_control.periods, notification.time_control.speed, notification.ranked);
         if (resultPeriods) return resultPeriods;
-        const resultPeriodtime = UHMAEATRejectResult("periodtime", notification.time_control, notification.ranked);
+        const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult(`periodtime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
 
         return { reject: false };  // Ok !
@@ -823,7 +826,7 @@ function checkMinMaxCondition(arg, notif, isMin) {
     }
 }
 
-function minMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap, notificationRanked) {
+function getMinMaxHandicapRankRejectResult(familyNameString, notif, isFakeHandicap, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
@@ -896,18 +899,17 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) {
-    /*// UHMAEAT : Universal Highly Modulable And Expandable Argv Tree *** (version 4.0) ///////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    / 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
-    / 2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
-    / 3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
-    / 4) - for canadian periodtimes, don't multiply notificationT.period_time by the number of stones
-    /      per period (already for X stones)
-    /    - But config[argName] is for 1 stone, so multiply it.
-    /      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.*/
+function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, notificationRanked) {
+    //
+    // 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
+    // 2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
+    // 3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
+    // 4) - for canadian periodtimes, don't multiply notificationT.period_time by the number of stones
+    //      per period (already for X stones)
+    //    - But config[argNameString] is for 1 stone, so multiply it.
+    //      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.
 
-    const timecontrolsSettings = timecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
+    const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
     for (const minMax of ["min", "max"]) {
         const familyObject = getFamilyObjectMIBL(`${minMax}${mainPeriodTimeBLC}`);
         for (const setting of timecontrolsSettings) {
@@ -930,8 +932,8 @@ function UHMAEATRejectResult(mainPeriodTime, notificationT, notificationRanked) 
     }
 }
 
-function timecontrolsMainPeriodTime(mpt, notificationT) {
-    if (mpt === "maintime") {
+function getTimecontrolsMainPeriodTime(mpt, notificationT) {
+    if (mpt.includes("maintime")) {
         return [["fischer", "Initial Time", notificationT.initial_time],
                 ["fischer", "Max Time", notificationT.max_time],
                 ["byoyomi", "Main Time", notificationT.main_time],
@@ -945,9 +947,11 @@ function timecontrolsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function minMaxPeriodsRejectResult(familyName, notif, notificationTSpeed, notificationRanked) {
-    /* "fischer", "simple", "absolute", "none", don't have a periods number,
-    /  so this function only applies to "byoyomi" and "canadian"*/
+function getMinMaxPeriodsRejectResult(familyNameString, notif, notificationTSpeed, notificationRanked) {
+    //
+    // "fischer", "simple", "absolute", "none", don't have a periods number,
+    //  so this function only applies to "byoyomi" and "canadian"
+
     for (const minMax of ["min", "max"]) {
         const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
