@@ -901,6 +901,21 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
+function getTimecontrolsMainPeriodTime(mpt, notificationT) {
+    if (mpt.includes("maintime")) {
+        return [["fischer", "Initial Time", notificationT.initial_time],
+                ["fischer", "Max Time", notificationT.max_time],
+                ["byoyomi", "Main Time", notificationT.main_time],
+                ["canadian", "Main Time", notificationT.main_time],
+                ["absolute", "Total Time", notificationT.total_time]];
+    } else {
+        return [["fischer", "Increment Time", notificationT.time_increment],
+                ["byoyomi", "Period Time", notificationT.period_time],
+                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, (notificationT.period_time / notificationT.stones_per_period)],
+                ["simple", "Time per move", notificationT.per_move]];
+    }
+}
+
 function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, notificationRanked) {
     //
     // 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
@@ -935,21 +950,6 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                 }
             }
         }
-    }
-}
-
-function getTimecontrolsMainPeriodTime(mpt, notificationT) {
-    if (mpt.includes("maintime")) {
-        return [["fischer", "Initial Time", notificationT.initial_time],
-                ["fischer", "Max Time", notificationT.max_time],
-                ["byoyomi", "Main Time", notificationT.main_time],
-                ["canadian", "Main Time", notificationT.main_time],
-                ["absolute", "Total Time", notificationT.total_time]];
-    } else {
-        return [["fischer", "Increment Time", notificationT.time_increment],
-                ["byoyomi", "Period Time", notificationT.period_time],
-                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, (notificationT.period_time / notificationT.stones_per_period)],
-                ["simple", "Time per move", notificationT.per_move]];
     }
 }
 
