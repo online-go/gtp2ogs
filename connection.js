@@ -784,12 +784,8 @@ function getMIBL(isMin) {
     }
 }
 
-function getFamilyObjectMIBL(familyNameString) {
-    const isMin = familyNameString.includes("min");
-    const isMax = familyNameString.includes("max");
-    const isMM  = { isMin, isMax };
-
-    const MIBL  = getMIBL(isMin);
+function getFamilyObjectMIBL(familyNameString, isMin) {
+    const MIBL = getMIBL(isMin);
 
     const familyArray = getArgNameStringsGRU(familyNameString);
     const argNameStrings = { all: familyArray[0],
@@ -797,7 +793,7 @@ function getFamilyObjectMIBL(familyNameString) {
                              unranked: familyArray[2]
                            };
 
-    return { argNameStrings, isMM, MIBL };
+    return { argNameStrings, MIBL };
 }
 
 function checkObjectArgsToArgName(familyObjectArgNames, notificationRanked) {
@@ -821,10 +817,11 @@ function checkMinMaxCondition(arg, notif, isMin) {
 
 function getMinMaxRankRejectResult(familyNameString, notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
-        const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`);
+        const isMin = (minMax === "min");
+        const familyObject = getFamilyObjectMIBL(`${minMax}${familyNameString}`, isMin);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
         const arg = config[argNameString];
-        if (arg !== undefined && checkMinMaxCondition(arg, notif, familyObject.isMM.isMin)) { // add an if arg check, because we dont provide defaults for all arg families
+        if (arg !== undefined && checkMinMaxCondition(arg, notif, isMin)) { // add an if arg check, because we dont provide defaults for all arg families
             const argToString = rankToString(arg);
             const notifConverted = rankToString(notif);
             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
@@ -848,19 +845,20 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
     //  so this function only applies to "byoyomi" and "canadian"
 
     for (const minMax of ["min", "max"]) {
-        const familyObject = getFamilyObjectMIBL(`${minMax}${handicapPeriodsBLC}`);
+        const isMin = (minMax === "min");
+        const familyObject = getFamilyObjectMIBL(`${minMax}${handicapPeriodsBLC}`, isMin);
         const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
         const arg = config[argNameString];
-        if (checkMinMaxCondition(arg, notif, familyObject.isMM.isMin)) {
+        if (checkMinMaxCondition(arg, notif, isMin)) {
             const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
             const suggestion = ", or try changing the ranked/unranked setting.";
             if (handicapPeriodsBLC === "handicap") {
-                    if (familyObject.isMM.isMin && notif === 0 && arg > 0) {
+                    if (isMin && notif === 0 && arg > 0) {
                         conn_log(`No ${rankedUnranked} (handicap games only)`);
                         const msg = `This bot does not play even games ${rankedUnranked}, please manually select the `
                                     + `number of ${nameF} in -custom handicap-: minimum is ${arg} ${nameF}${suggestion}`;
                         return { reject: true, msg };
-                    } else if (familyObject.isMM.isMax && notif > 0 && arg === 0) {
+                    } else if (!isMin && notif > 0 && arg === 0) {
                         conn_log(`No ${rankedUnranked} (even games only)'`);
                         const msg = `This bot does not play ${rankedUnranked}, please choose handicap -none- `
                                     + `(0 handicap stones)${suggestion}`;
@@ -925,12 +923,13 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
 
     const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
     for (const minMax of ["min", "max"]) {
-        const familyObject = getFamilyObjectMIBL(`${minMax}${mainPeriodTimeBLC}`);
+        const isMin = (minMax === "min");
+        const familyObject = getFamilyObjectMIBL(`${minMax}${mainPeriodTimeBLC}`, isMin);
         for (const setting of timecontrolsSettings) {
             if (notificationT.time_control === setting[0]) {
                 const argNameString = checkObjectArgsToArgNameString(familyObject.argNameStrings, notificationRanked);
                 const arg = config[argNameString];
-                if (checkMinMaxCondition(arg, setting[2], familyObject.isMM.isMin)) {
+                if (checkMinMaxCondition(arg, setting[2], isMin)) {
                     const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                     let endingSentence = "";
