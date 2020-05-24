@@ -903,8 +903,9 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
                 ["absolute", "Total Time", notificationT.total_time]];
     } else {
         // for canadian periodtimes, notification is for N stones: provide it for 1 stone by
-        // diving by the number of stones, so we can test it in the same way than all other
-        // timecontrols (which are also a periodtime for 1 stone)
+        // diving by the number of stones (while arg is provided for 1 stone only).
+        // Then we can test notif against arg in the same way than all other timecontrols
+        // (which are also a periodtime notif for 1 stone against an arg for 1 stone)
         //
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
