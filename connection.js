@@ -435,15 +435,16 @@ class Connection {
     //
     checkChallengeSettings(notification) {
 
-        const handicapSettings =  { notif: notification.handicap, isFakeHandicap: config.fakerank || false };
+        let handicapNotif = notification.handicap;
         if (notification.handicap === -1 && config.fakerank) {
             // TODO: modify or remove fakerank code whenever server sends us automatic handicap
             //       notification.handicap different from -1.
             // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
             // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
-            handicapSettings.notif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
+
+            handicapNotif = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
         }
-        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapSettings.notif, handicapSettings.isFakeHandicap, notification.ranked);
+        const resultHandicap = getMinMaxHandicapRankRejectResult("handicap", handicapNotif, config.fakerank, notification.ranked);
         if (resultHandicap) return resultHandicap;
 
         const blitzLiveCorr = getBlitzLiveCorr(notification.time_control.speed);
