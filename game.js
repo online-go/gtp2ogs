@@ -42,6 +42,9 @@ class Game {
             // Server has an issue that gamedata.clock.now will exist inconsistently. This will cause
             // false positives for gamedata changes. We never use the field, so just remove it.
             delete gamedata.clock.now;
+            // auto_score also sometimes inconsistent. We don't use it, so ignore it to avoid pointless
+            // restart.
+            delete gamedata.auto_score;
 
             // Only call game over handler if game really just finished.
             // For some reason we get connected to already finished games once in a while ...
