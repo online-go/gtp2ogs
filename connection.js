@@ -902,8 +902,8 @@ function getTimecontrolsMainPeriodTime(mpt, notificationT) {
                 ["canadian", "Main Time", notificationT.main_time],
                 ["absolute", "Total Time", notificationT.total_time]];
     } else {
-        // for canadian periodtimes, notification is for N stones: convert it for 1 stone by
-        // diving by the number of stones (while arg is provided for 1 stone only).
+        // for canadian periodtime, notification is for N stones: convert it for 1 stone by
+        // diving by the number of stones (while arg is inputted by bot admin for 1 stone only).
         // Then we can test notif against arg in the same way than all other timecontrols
         // (which are also a periodtime notif for 1 stone against an arg for 1 stone)
         //
