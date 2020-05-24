@@ -811,14 +811,6 @@ function checkObjectArgsToArgName(familyObjectArgNames, notificationRanked) {
     }
 }
 
-function convertBlitzLiveCorr(blitzLiveCorr) {
-    if (blitzLiveCorr === "corr") {
-        return "correspondence";
-    } else {
-        return blitzLiveCorr;
-    }
-}
-
 function checkMinMaxCondition(arg, notif, isMin) {
     if (isMin) {
         return notif < arg; // to reject in minimum, we need notification < arg
@@ -843,6 +835,11 @@ function getMinMaxRankRejectResult(familyNameString, notif, notificationRanked) 
             return { reject: true, msg };
         }
     }
+}
+
+function getBlitzLiveCorr(notificationTSpeed) {
+    if (notificationTSpeed === "correspondence") return "corr";
+    return notificationTSpeed;
 }
 
 function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, isFakeHandicap, blitzLiveCorrCorrected, notificationRanked) {
