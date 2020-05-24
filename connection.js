@@ -919,10 +919,8 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
     // 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
     // 2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
     // 3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
-    // 4) - for canadian periodtimes, don't multiply notificationT.period_time by the number of stones
-    //      per period (already for X stones)
-    //    - But config[argNameString] is for 1 stone, so multiply it.
-    //      e.g. 30 seconds average period time for 1 stone = 30*20 = 600 = 10 minutes period time for all the 20 stones.
+    // 4) - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
+    //      arg is inputted by botadmin for 1 stone
 
     const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
     for (const minMax of ["min", "max"]) {
