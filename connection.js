@@ -962,7 +962,7 @@ function timecontrolsMainPeriodTime(mpt, notificationT) {
     } else {
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
-                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones, ${notificationT.period_time}`],
+                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, notificationT.period_time],
                 ["simple", "Time per move", notificationT.per_move]];
     }
 }
