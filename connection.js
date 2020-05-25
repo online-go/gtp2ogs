@@ -900,7 +900,7 @@ function timespanToDisplayString(timespan) {
     .join(" ");
 }
 
-function getTimecontrolsMainPeriodTime(mpt, notificationT) {
+function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
     if (mpt.includes("maintime")) {
         return [["fischer", "Initial Time", notificationT.initial_time],
                 ["fischer", "Max Time", notificationT.max_time],
@@ -928,17 +928,18 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
     // 4) - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
     //      arg is inputted by botadmin for 1 stone
 
-    const timecontrolsSettings = getTimecontrolsMainPeriodTime(mainPeriodTimeBLC, notificationT);
+    const timecontrolArrs = getTimecontrolArrsMainPeriodTime(mainPeriodTimeBLC, notificationT);
     for (const minMax of ["min", "max"]) {
-        for (const setting of timecontrolsSettings) {
-            if (notificationT.time_control === setting[0]) {
+        for (const timecontrolArr of timecontrolArrs) {
+            const [timecontrolName, timecontrolDescr, timecontrolNotif] = timecontrolArr;
+            if (notificationT.time_control === timecontrolName) {
                 const isMin = (minMax === "min");
                 const argNameString = getCheckedArgNameString(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
                 // if there is no arg to test (!argNameString), no need to check for reject,
                 // also this allows to make sure config[argNameString] exists
                 if (argNameString) {
                     const arg = config[argNameString];
-                    if (checkMinMaxCondition(arg, setting[2], isMin)) {
+                    if (checkMinMaxCondition(arg, timecontrolNotif, isMin)) {
                         const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                         const MIBL = getMIBL(isMin);
                         const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
@@ -946,10 +947,10 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                         if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
                             endingSentence = ", or change the number of stones per period";
                         }
-                        conn_log(`${timespanToDisplayString(setting[2])} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
-                                + `${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${argToString}`);
-                        const msg = `${MIBL.miniMaxi} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} `
-                                    + `is ${argToString}, please ${MIBL.incDec} ${setting[1]}${endingSentence}.`;
+                        conn_log(`${timespanToDisplayString(timecontrolNotif)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
+                                + `${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} ${argToString}`);
+                        const msg = `${MIBL.miniMaxi} ${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} `
+                                    + `is ${argToString}, please ${MIBL.incDec} ${timecontrolDescr}${endingSentence}.`;
                         return { reject : true, msg };
                         // example : "Minimum (Main/Period) Time for blitz ranked games
                         //            in byoyomi is 1 minutes, please increase (Main/Period) Time."
