@@ -907,13 +907,15 @@ function timespanToDisplayString(timespan) {
 
 function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
     if (mpt.includes("maintime")) {
+        // "none" and "simple" don't have a maintime, skip the maintime reject
         return [["fischer", "Initial Time", notificationT.initial_time],
                 ["fischer", "Max Time", notificationT.max_time],
                 ["byoyomi", "Main Time", notificationT.main_time],
                 ["canadian", "Main Time", notificationT.main_time],
                 ["absolute", "Total Time", notificationT.total_time]];
     } else {
-        // for canadian periodtime, notification is for N stones
+        // - "none" and "absolute" don't have a periodtime, skip the periodtime reject.
+        // - for canadian periodtime, notification is for N stones
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
                 ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, notificationT.period_time],
@@ -922,30 +924,25 @@ function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
 }
 
 function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, notificationRanked) {
-    //
-    // 1) "none" doesnt have a period time, so we let it slide from both maintime and periodtime rejects
-    // 2) "simple" doesn't have a main time, only a period time, so we let it slide from maintime rejects
-    // 3) "absolute" doesn't have a period time, so we let it slide from periodtime rejects
-    // 4) - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
-    //      arg is inputted by botadmin for 1 stone
-
     const timecontrolArrs = getTimecontrolArrsMainPeriodTime(mainPeriodTimeBLC, notificationT);
-    for (const minMax of ["min", "max"]) {
-        for (const timecontrolArr of timecontrolArrs) {
-            const [timecontrolName, timecontrolDescr, timecontrolNotif] = timecontrolArr;
-            if (notificationT.time_control === timecontrolName) {
+    for (const timecontrolArr of timecontrolArrs) {
+        const [timecontrolName, timecontrolDescr, timecontrolNotif] = timecontrolArr;
+        if (notificationT.time_control === timecontrolName) {
+            for (const minMax of ["min", "max"]) {
                 const isMin = (minMax === "min");
                 const argNameString = getCheckedArgNameString(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
                 // if there is no arg to test (!argNameString), no need to check for reject,
                 // also this allows to make sure config[argNameString] exists
                 if (argNameString) {
-                    // Handle canadian periodtime exception first: notification is for X stones, multiply arg (for 1 stone)
-                    // so we can compare them, and also then display minmax periodtime for all the X stones.
-                    // Use multiply to raise arg rather than division to reduce notif to 1 stone, to avoid binary division
-                    // loss of precision.
                     let arg = config[argNameString];
                     let endingSentence = "";
                     if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC.includes( "periodtime"))) {
+                        // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
+                        // arg is inputted by botadmin for 1 stone, while notification is for X stones:
+                        // multiply arg by the number of stones per period, so we can compare it against notification.
+                        // - also, this allows to display minmax periodtime arg and notif in messages for all the X stones.
+                        // - also, use multiply to raise arg rather than division to reduce notif to 1 stone, to avoid binary division
+                        // loss of precision.
                         arg *= notificationT.stones_per_period;
                         endingSentence = ", or change the number of stones per period";
                     }
