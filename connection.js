@@ -816,18 +816,21 @@ function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argNameString = getCheckedArgNameString(`${minMax}rank`, notificationRanked);
-        const arg = config[argNameString];
-        // if there is no arg to test (!argNameString), no need to check for reject
-        if (argNameString && checkMinMaxCondition(arg, notif, isMin)) {
-            const MIBL = getMIBL(isMin);
-            const argToString = rankToString(arg);
-            const notifConverted = rankToString(notif);
-            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
-            conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
-                    + `${rankedUnranked} ${argToString}`);
-            const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF}`
-                        + `is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
-            return { reject: true, msg };
+        // if there is no arg to test (!argNameString), no need to check for reject,
+        // also this allows to make sure config[argNameString] exists
+        if (argNameString) {
+            const arg = config[argNameString];
+            if (checkMinMaxCondition(arg, notif, isMin)) {
+                const MIBL = getMIBL(isMin);
+                const argToString = rankToString(arg);
+                const notifConverted = rankToString(notif);
+                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
+                conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
+                        + `${rankedUnranked} ${argToString}`);
+                const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF}`
+                            + `is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
+                return { reject: true, msg };
+            }
         }
     }
 }
@@ -845,39 +848,42 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argNameString = getCheckedArgNameString(`${minMax}${handicapPeriodsBLC}`, notificationRanked);
-        const arg = config[argNameString];
-        // if there is no arg to test (!argNameString), no need to check for reject
-        if (argNameString && checkMinMaxCondition(arg, notif, isMin)) {
-            const MIBL = getMIBL(isMin);
-            const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
-            const suggestion = ", or try changing the ranked/unranked setting.";
-            if (handicapPeriodsBLC === "handicap") {
-                if (isMin && notif === 0 && arg > 0) {
-                    conn_log(`No ${rankedUnranked} (handicap games only)`);
-                    const msg = `This bot does not play even games ${rankedUnranked}, please manually select the `
-                                + `number of ${nameF} in -custom handicap-: minimum is ${arg} ${nameF}${suggestion}`;
-                    return { reject: true, msg };
-                } else if (!isMin && notif > 0 && arg === 0) {
-                    conn_log(`No ${rankedUnranked} (even games only)'`);
-                    const msg = `This bot does not play ${rankedUnranked}, please choose handicap -none- `
-                                + `(0 handicap stones)${suggestion}`;
-                    return { reject: true, msg };
-                } else if (isFakeHandicap) {
-                    conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
-                             + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
-                    const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
-                                + `stones based on rank difference between you and this bot,\nBut ${MIBL.miniMaxi} `
-                                + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${MIBL.incDec} `
-                                + `the number of handicap stones in -custom handicap-.`;
-                    return { reject: true, msg };
+        // if there is no arg to test (!argNameString), no need to check for reject,
+        // also this allows to make sure config[argNameString] exists
+        if (argNameString) {
+            const arg = config[argNameString];
+            if (checkMinMaxCondition(arg, notif, isMin)) {
+                const MIBL = getMIBL(isMin);
+                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
+                const suggestion = ", or try changing the ranked/unranked setting.";
+                if (handicapPeriodsBLC === "handicap") {
+                    if (isMin && notif === 0 && arg > 0) {
+                        conn_log(`No ${rankedUnranked} (handicap games only)`);
+                        const msg = `This bot does not play even games ${rankedUnranked}, please manually select the `
+                                    + `number of ${nameF} in -custom handicap-: minimum is ${arg} ${nameF}${suggestion}`;
+                        return { reject: true, msg };
+                    } else if (!isMin && notif > 0 && arg === 0) {
+                        conn_log(`No ${rankedUnranked} (even games only)'`);
+                        const msg = `This bot does not play ${rankedUnranked}, please choose handicap -none- `
+                                    + `(0 handicap stones)${suggestion}`;
+                        return { reject: true, msg };
+                    } else if (isFakeHandicap) {
+                        conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
+                                 + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
+                        const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
+                                    + `stones based on rank difference between you and this bot,\nBut ${MIBL.miniMaxi} `
+                                    + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${MIBL.incDec} `
+                                    + `the number of handicap stones in -custom handicap-.`;
+                        return { reject: true, msg };
+                    }
                 }
+                // if no specific reject, fall back to generic reject
+    
+                conn_log(`${notif} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${handicapPeriodsBLC} ${rankedUnranked} ${arg}`);
+                const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} ${arg}, please ${MIBL.incDec} `
+                            + `the number of ${nameF}.`;
+                return { reject: true, msg };
             }
-            // if no specific reject, fall back to generic reject
-
-            conn_log(`${notif} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${handicapPeriodsBLC} ${rankedUnranked} ${arg}`);
-            const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} ${arg}, please ${MIBL.incDec} `
-                        + `the number of ${nameF}.`;
-            return { reject: true, msg };
         }
     }
 }
@@ -928,9 +934,11 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
             if (notificationT.time_control === setting[0]) {
                 const isMin = (minMax === "min");
                 const argNameString = getCheckedArgNameString(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
-                const arg = config[argNameString];
-                // if there is no arg to test (!argNameString), no need to check for reject
-                if (argNameString && checkMinMaxCondition(arg, setting[2], isMin)) {
+                // if there is no arg to test (!argNameString), no need to check for reject,
+                // also this allows to make sure config[argNameString] exists
+                if (argNameString) {
+                    const arg = config[argNameString];
+                    if (checkMinMaxCondition(arg, notif, isMin)) {
                     const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                     const MIBL = getMIBL(isMin);
                     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
