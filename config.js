@@ -288,7 +288,7 @@ exports.updateFromArgv = function() {
             return { reject: true, msg: argv.rejectnewmsg, type: "rejectnewfile" };
         }
         if (argv.rejectnewthreshold && exports.reject_date < new Date()) {
-            const msg = `This bot stopped accepting games at ${exports.reject_date.toLocaleString()}.`
+            const msg = `This bot stopped accepting games at ${exports.reject_date.toUTCString()}.`
                         + `\nPlease try again later or next time.`;
             return { reject: true, msg, type: "rejectnewthreshold" };
         }
