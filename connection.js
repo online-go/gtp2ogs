@@ -945,15 +945,18 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                 if (argNameString) {
                     const arg = config[argNameString];
                     if (!checkNotifIsInMinMaxArgRange(arg, timecontrolNotif, isMin)) {
-                        const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
-                        const MIBL = getMIBL(isMin);
-                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
-                        let endingSentence = "";
+                        // display canadian periodtime for all the X stones
+                        let argConverted = arg;
                         let timecontrolNotifConverted = timecontrolNotif;
+                        let endingSentence = "";
                         if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
+                            argConverted = arg * notificationT.stones_per_period;
                             timecontrolNotifConverted = timecontrolNotif * notificationT.stones_per_period;
                             endingSentence = ", or change the number of stones per period";
                         }
+                        const argToString = timespanToDisplayString(argConverted); // ex: "1 minutes"
+                        const MIBL = getMIBL(isMin);
+                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                         conn_log(`${timespanToDisplayString(timecontrolNotifConverted)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
                                 + `${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} ${argToString}`);
                         const msg = `${MIBL.miniMaxi} ${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} `
