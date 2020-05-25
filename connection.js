@@ -944,10 +944,12 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                         const MIBL = getMIBL(isMin);
                         const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
                         let endingSentence = "";
+                        let timecontrolNotifConverted = timecontrolNotif;
                         if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
+                            timecontrolNotifConverted = timecontrolNotif * notificationT.stones_per_period;
                             endingSentence = ", or change the number of stones per period";
                         }
-                        conn_log(`${timespanToDisplayString(timecontrolNotif)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
+                        conn_log(`${timespanToDisplayString(timecontrolNotifConverted)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
                                 + `${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} ${argToString}`);
                         const msg = `${MIBL.miniMaxi} ${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} `
                                     + `is ${argToString}, please ${MIBL.incDec} ${timecontrolDescr}${endingSentence}.`;
