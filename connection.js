@@ -793,9 +793,9 @@ function getMIBL(isMin) {
     }
 }
 
-function getCheckedArgNameString(familyNameString, notificationRanked) {
-    const argNameStrings = getArgNameStringsGRU(familyNameString);
-    const [general, ranked, unranked] = argNameStrings;
+function getCheckedArgName(familyName, notificationRanked) {
+    const argNames = getArgNamesGRU(familyName);
+    const [general, ranked, unranked] = argNames;
 
     // for numbers, check for undefined: 0 is checked false but is a valid arg number to test against notif
     //
@@ -824,17 +824,17 @@ function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
 function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const argNameString = getCheckedArgNameString(`${minMax}rank`, notificationRanked);
-        // if there is no arg to test (!argNameString), no need to check for reject,
-        // also this allows to make sure config[argNameString] exists
-        if (argNameString) {
+        const argName = getCheckedArgName(`${minMax}rank`, notificationRanked);
+        // if there is no arg to test (!argName), no need to check for reject,
+        // also this allows to make sure config[argName] exists
+        if (argName) {
             // convert rank "10k" to rank number so we can compare it
-            const arg = config[argNameString];
+            const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 const MIBL = getMIBL(isMin);
                 const argToString = rankToString(arg);
                 const notifConverted = rankToString(notif);
-                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
+                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
                 conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
                         + `${rankedUnranked} ${argToString}`);
                 const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF} `
@@ -853,14 +853,14 @@ function getBlitzLiveCorr(notificationTSpeed) {
 function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, isFakeHandicap, blitzLiveCorrCorrected, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const argNameString = getCheckedArgNameString(`${minMax}${handicapPeriodsBLC}`, notificationRanked);
-        // if there is no arg to test (!argNameString), no need to check for reject,
-        // also this allows to make sure config[argNameString] exists
-        if (argNameString) {
-            const arg = config[argNameString];
+        const argName = getCheckedArgName(`${minMax}${handicapPeriodsBLC}`, notificationRanked);
+        // if there is no arg to test (!argName), no need to check for reject,
+        // also this allows to make sure config[argName] exists
+        if (argName) {
+            const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 const MIBL = getMIBL(isMin);
-                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
+                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argName, "");
                 const suggestion = ", or try changing the ranked/unranked setting.";
                 if (handicapPeriodsBLC === "handicap") {
                     if (isMin && notif === 0 && arg > 0) {
@@ -931,11 +931,11 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
         if (notificationT.time_control === timecontrolName) {
             for (const minMax of ["min", "max"]) {
                 const isMin = (minMax === "min");
-                const argNameString = getCheckedArgNameString(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
-                // if there is no arg to test (!argNameString), no need to check for reject,
-                // also this allows to make sure config[argNameString] exists
-                if (argNameString) {
-                    let arg = config[argNameString];
+                const argName = getCheckedArgName(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
+                // if there is no arg to test (!argName), no need to check for reject,
+                // also this allows to make sure config[argName] exists
+                if (argName) {
+                    let arg = config[argName];
                     let endingSentence = "";
                     if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC.includes( "periodtime"))) {
                         // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
@@ -950,7 +950,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                     if (!checkNotifIsInMinMaxArgRange(arg, timecontrolNotif, isMin)) {
                         const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                         const MIBL = getMIBL(isMin);
-                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
+                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argName, "");
                         conn_log(`${timespanToDisplayString(timecontrolNotif)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
                                 + `${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} ${argToString}`);
                         const msg = `${MIBL.miniMaxi} ${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} `
