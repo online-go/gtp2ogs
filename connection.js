@@ -949,7 +949,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                         let argConverted = arg;
                         let timecontrolNotifConverted = timecontrolNotif;
                         let endingSentence = "";
-                        if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
+                        if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC.includes( "periodtime"))) {
                             argConverted = arg * notificationT.stones_per_period;
                             timecontrolNotifConverted = timecontrolNotif * notificationT.stones_per_period;
                             endingSentence = ", or change the number of stones per period";
