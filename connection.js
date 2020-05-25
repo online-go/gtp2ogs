@@ -451,8 +451,16 @@ class Connection {
 
         const resultMaintime = getMinMaxMainPeriodTimeRejectResult(`maintime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
-        const resultPeriods = getMinMaxHandicapPeriodsRejectResult(`periods${blitzLiveCorr}`, "periods", notification.time_control.periods, false, `${blitzLiveCorr} `, notification.ranked);
-        if (resultPeriods) return resultPeriods;
+
+        // "fischer", "canadian", "simple", "absolute", "none", don't have a periods number,
+        // undefined arg compared to notificationT.periods will always return false, thus
+        // always rejecting: don't check it.
+        //
+        if (notification.time_control.time_control === "byoyomi") {
+            const resultPeriods = getMinMaxHandicapPeriodsRejectResult(`periods${blitzLiveCorr}`, "periods", notification.time_control.periods, false, `${blitzLiveCorr} `, notification.ranked);
+            if (resultPeriods) return resultPeriods;
+        }
+        
         const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult(`periodtime${blitzLiveCorr}`, notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
 
@@ -709,6 +717,7 @@ function get_r_u_arr_booleans(familyName, notificationRanked) {
     // for the booleans "only" checks, we are trying to find any reason to reject
     // the challenge, so the general and ranked/unranked args dont conflict.
     // (unlike --minmaintimeranked 50 --minmaintime 300)
+
     return [ [general,  true],
              [ranked,   notificationRanked],
              [unranked, !notificationRanked]
@@ -841,10 +850,6 @@ function getBlitzLiveCorr(notificationTSpeed) {
 }
 
 function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, isFakeHandicap, blitzLiveCorrCorrected, notificationRanked) {
-    //
-    // "fischer", "simple", "absolute", "none", don't have a periods number,
-    //  so this function only applies to "byoyomi" and "canadian"
-
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argNameString = getCheckedArgNameString(`${minMax}${handicapPeriodsBLC}`, notificationRanked);
@@ -869,7 +874,7 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
                         return { reject: true, msg };
                     } else if (isFakeHandicap) {
                         conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
-                                 + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
+                                    + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
                         const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
                                     + `stones based on rank difference between you and this bot,\nBut ${MIBL.miniMaxi} `
                                     + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${MIBL.incDec} `
