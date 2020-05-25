@@ -815,9 +815,9 @@ function getCheckedArgNameString(familyNameString, notificationRanked) {
 
 function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     if (isMin) {
-        return notif > arg;
+        return notif >= arg;
     } else {
-        return notif < arg;
+        return notif <= arg;
     }
 }
 
