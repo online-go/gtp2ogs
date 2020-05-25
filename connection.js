@@ -828,6 +828,7 @@ function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
         // if there is no arg to test (!argNameString), no need to check for reject,
         // also this allows to make sure config[argNameString] exists
         if (argNameString) {
+            // convert rank "10k" to rank number so we can compare it
             const arg = config[argNameString];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 const MIBL = getMIBL(isMin);
@@ -836,7 +837,7 @@ function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
                 const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argNameString, "");
                 conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
                         + `${rankedUnranked} ${argToString}`);
-                const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF}`
+                const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF} `
                             + `is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
                 return { reject: true, msg };
             }
