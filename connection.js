@@ -804,11 +804,11 @@ function getCheckedArgNameString(familyNameString, notificationRanked) {
 }
 
 
-function checkMinMaxCondition(arg, notif, isMin) {
+function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     if (isMin) {
-        return notif < arg; // to reject in minimum, we need notification < arg
-    } else {
         return notif > arg;
+    } else {
+        return notif < arg;
     }
 }
 
@@ -820,7 +820,7 @@ function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
         // also this allows to make sure config[argNameString] exists
         if (argNameString) {
             const arg = config[argNameString];
-            if (checkMinMaxCondition(arg, notif, isMin)) {
+            if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 const MIBL = getMIBL(isMin);
                 const argToString = rankToString(arg);
                 const notifConverted = rankToString(notif);
@@ -852,7 +852,7 @@ function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, 
         // also this allows to make sure config[argNameString] exists
         if (argNameString) {
             const arg = config[argNameString];
-            if (checkMinMaxCondition(arg, notif, isMin)) {
+            if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 const MIBL = getMIBL(isMin);
                 const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argNameString, "");
                 const suggestion = ", or try changing the ranked/unranked setting.";
@@ -939,7 +939,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                 // also this allows to make sure config[argNameString] exists
                 if (argNameString) {
                     const arg = config[argNameString];
-                    if (checkMinMaxCondition(arg, timecontrolNotif, isMin)) {
+                    if (!checkNotifIsInMinMaxArgRange(arg, timecontrolNotif, isMin)) {
                         const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                         const MIBL = getMIBL(isMin);
                         const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
