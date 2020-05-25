@@ -938,21 +938,22 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                 // also this allows to make sure config[argNameString] exists
                 if (argNameString) {
                     const arg = config[argNameString];
-                    if (checkMinMaxCondition(arg, notif, isMin)) {
-                    const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
-                    const MIBL = getMIBL(isMin);
-                    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
-                    let endingSentence = "";
-                    if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
-                        endingSentence = ", or change the number of stones per period";
+                    if (checkMinMaxCondition(arg, setting[2], isMin)) {
+                        const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
+                        const MIBL = getMIBL(isMin);
+                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
+                        let endingSentence = "";
+                        if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC === "periodtime")) {
+                            endingSentence = ", or change the number of stones per period";
+                        }
+                        conn_log(`${timespanToDisplayString(setting[2])} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
+                                + `${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${argToString}`);
+                        const msg = `${MIBL.miniMaxi} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} `
+                                    + `is ${argToString}, please ${MIBL.incDec} ${setting[1]}${endingSentence}.`;
+                        return { reject : true, msg };
+                        // example : "Minimum (Main/Period) Time for blitz ranked games
+                        //            in byoyomi is 1 minutes, please increase (Main/Period) Time."
                     }
-                    conn_log(`${timespanToDisplayString(setting[2])} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
-                             + `${setting[1]} ${rankedUnranked} in ${notificationT.time_control} ${argToString}`);
-                    const msg = `${MIBL.miniMaxi} ${setting[1]} ${rankedUnranked} in ${notificationT.time_control} `
-                                + `is ${argToString}, please ${MIBL.incDec} ${setting[1]}${endingSentence}.`;
-                    return { reject : true, msg };
-                    // example : "Minimum (Main/Period) Time for blitz ranked games
-                    //            in byoyomi is 1 minutes, please increase (Main/Period) Time."
                 }
             }
         }
