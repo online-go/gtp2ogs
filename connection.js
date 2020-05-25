@@ -913,14 +913,10 @@ function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
                 ["canadian", "Main Time", notificationT.main_time],
                 ["absolute", "Total Time", notificationT.total_time]];
     } else {
-        // for canadian periodtime, notification is for N stones: convert it for 1 stone by
-        // diving by the number of stones (while arg is inputted by bot admin for 1 stone only).
-        // Then we can test notif against arg in the same way than all other timecontrols
-        // (which are also a periodtime notif for 1 stone against an arg for 1 stone)
-        //
+        // for canadian periodtime, notification is for N stones
         return [["fischer", "Increment Time", notificationT.time_increment],
                 ["byoyomi", "Period Time", notificationT.period_time],
-                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, (notificationT.period_time / notificationT.stones_per_period)],
+                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, notificationT.period_time],
                 ["simple", "Time per move", notificationT.per_move]];
     }
 }
@@ -943,21 +939,21 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, n
                 // if there is no arg to test (!argNameString), no need to check for reject,
                 // also this allows to make sure config[argNameString] exists
                 if (argNameString) {
-                    const arg = config[argNameString];
+                    // Handle canadian periodtime exception first: notification is for X stones, multiply arg (for 1 stone)
+                    // so we can compare them, and also then display minmax periodtime for all the X stones.
+                    // Use multiply to raise arg rather than division to reduce notif to 1 stone, to avoid binary division
+                    // loss of precision.
+                    let arg = config[argNameString];
+                    let endingSentence = "";
+                    if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC.includes( "periodtime"))) {
+                        arg *= notificationT.stones_per_period;
+                        endingSentence = ", or change the number of stones per period";
+                    }
                     if (!checkNotifIsInMinMaxArgRange(arg, timecontrolNotif, isMin)) {
-                        // display canadian periodtime for all the X stones
-                        let argConverted = arg;
-                        let timecontrolNotifConverted = timecontrolNotif;
-                        let endingSentence = "";
-                        if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC.includes( "periodtime"))) {
-                            argConverted = arg * notificationT.stones_per_period;
-                            timecontrolNotifConverted = timecontrolNotif * notificationT.stones_per_period;
-                            endingSentence = ", or change the number of stones per period";
-                        }
-                        const argToString = timespanToDisplayString(argConverted); // ex: "1 minutes"
+                        const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
                         const MIBL = getMIBL(isMin);
                         const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argNameString, "");
-                        conn_log(`${timespanToDisplayString(timecontrolNotifConverted)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
+                        conn_log(`${timespanToDisplayString(timecontrolNotif)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
                                 + `${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} ${argToString}`);
                         const msg = `${MIBL.miniMaxi} ${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} `
                                     + `is ${argToString}, please ${MIBL.incDec} ${timecontrolDescr}${endingSentence}.`;
