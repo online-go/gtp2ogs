@@ -131,16 +131,16 @@ Example of use:
 
 ### If we start gtp2ogs at 08:10
 
-- `--rejectnewthreshold 02:00` will reject new games starting from **tomorrow** at 02:00
-- `--rejectnewthreshold 08:25` will reject new games starting from today at 08:25
-- `--rejectnewthreshold 10:05` will reject new games starting from today at 10:05
-- `--rejectnewthreshold 21:30` will reject new games starting from today at 21:30
-- `--rejectnewthreshold 23:05` will reject new games starting from today at 23:05
+- `--rejectnewtimethreshold 02:00` will reject new games starting from **tomorrow** at 02:00
+- `--rejectnewtimethreshold 08:25` will reject new games starting from today at 08:25
+- `--rejectnewtimethreshold 10:05` will reject new games starting from today at 10:05
+- `--rejectnewtimethreshold 21:30` will reject new games starting from today at 21:30
+- `--rejectnewtimethreshold 23:05` will reject new games starting from today at 23:05
 
 ## If we start gtp2ogs at 21:45
 
-- `--rejectnewthreshold 02:00` will reject new games starting from **tomorrow** at 02:00
-- `--rejectnewthreshold 08:25` will reject new games starting from **tomorrow** at 08:25
-- `--rejectnewthreshold 10:05` will reject new games starting from **tomorrow** at 10:05
-- `--rejectnewthreshold 21:30` will reject new games starting from **tomorrow** at 21:30
-- `--rejectnewthreshold 23:05` will reject new games starting from today at 23:05
+- `--rejectnewtimethreshold 02:00` will reject new games starting from **tomorrow** at 02:00
+- `--rejectnewtimethreshold 08:25` will reject new games starting from **tomorrow** at 08:25
+- `--rejectnewtimethreshold 10:05` will reject new games starting from **tomorrow** at 10:05
+- `--rejectnewtimethreshold 21:30` will reject new games starting from **tomorrow** at 21:30
+- `--rejectnewtimethreshold 23:05` will reject new games starting from today at 23:05
