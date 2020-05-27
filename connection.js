@@ -555,9 +555,6 @@ class Connection {
         clearInterval(this.notification_connect_interval);
         clearInterval(this.corr_queue_interval);
     }
-    setHidden(setting) {
-        this.socket.emit('bot/hidden', !!setting);
-    }
     hide() {
         this.socket.emit('bot/hidden', true);
     }
