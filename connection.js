@@ -555,6 +555,15 @@ class Connection {
         clearInterval(this.notification_connect_interval);
         clearInterval(this.corr_queue_interval);
     }
+    setHidden(setting) {
+        socket.emit('bot/hidden', !!setting);
+    }
+    hide() {
+        socket.emit('bot/hidden', true);
+    }
+    unhide() {
+        socket.emit('bot/hidden', false);
+    }
 }
 
 function request(method, host, port, path, data) {
