@@ -556,13 +556,13 @@ class Connection {
         clearInterval(this.corr_queue_interval);
     }
     setHidden(setting) {
-        socket.emit('bot/hidden', !!setting);
+        this.socket.emit('bot/hidden', !!setting);
     }
     hide() {
-        socket.emit('bot/hidden', true);
+        this.socket.emit('bot/hidden', true);
     }
     unhide() {
-        socket.emit('bot/hidden', false);
+        this.socket.emit('bot/hidden', false);
     }
 }
 
