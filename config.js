@@ -265,16 +265,20 @@ exports.updateFromArgv = function() {
     if (argv.fakerank) {
         exports.fakerank = parseRank(argv.fakerank);
     }
-    exports.bot_command = argv._;
+    if (argv.ogspv) {
+        exports.ogspv = argv.ogspv.toUpperCase();
+    }
+    if (argv.rejectnew) {
+        // A bot never accepting new games shouldn't be appearing in the dropdown, polite to our users.
+        exports.hidden = true;
+    }
     exports.check_rejectnew = function()
     {
         if (argv.rejectnew)  return true;
         if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
         return false;
     };
-    if (argv.ogspv) {
-        exports.ogspv = argv.ogspv.toUpperCase();
-    }
+    exports.bot_command = argv._;
 
     /* 2) specifc r_u cases :*/
     if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
