@@ -284,7 +284,7 @@ class Connection {
                 return getRejectBanned(notification.user.username, "unranked");
             }
         }
-        const resultRank = getMinMaxRankRejectResult("rank", notification.user.ranking, notification.ranked);
+        const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
         if (resultRank) return resultRank;
 
         // check bot is available, else don't mislead user
@@ -431,25 +431,16 @@ class Connection {
         return { reject: false }; // OK !
 
     }
-    // Check challenge settings are allowed
+    // Check challenge minMax are allowed
     //
-    checkChallengeSettings(notification) {
+    checkChallengeMinMax(notification) {
 
-        let handicapNotifCorrected = notification.handicap;
-        if (notification.handicap === -1 && config.fakerank) {
-            // TODO: modify or remove fakerank code whenever server sends us automatic handicap
-            //       notification.handicap different from -1.
-            // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
-            // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
+        // minMax rank is checked earlier in checkChallengeMandatory, the rest of the minMax are here.
 
-            handicapNotifCorrected = Math.abs(Math.floor(notification.user.ranking) - Math.floor(config.fakerank));
-        }
-        const resultHandicap = getMinMaxHandicapPeriodsRejectResult("handicap", "handicap stones", handicapNotifCorrected, Boolean(config.fakerank), "", notification.ranked);
+        const resultHandicap = getMinMaxHandicapRejectResult(notification.handicap, notification.user.ranking, notification.ranked);
         if (resultHandicap) return resultHandicap;
 
-        const blitzLiveCorr = getBlitzLiveCorr(notification.time_control.speed);
-
-        const resultMaintime = getMinMaxMainPeriodTimeRejectResult(`maintime${blitzLiveCorr}`, notification.time_control, notification.ranked);
+        const resultMaintime = getMinMaxMainPeriodTimeRejectResult("maintime", notification.time_control, notification.ranked);
         if (resultMaintime) return resultMaintime;
 
         // "fischer", "canadian", "simple", "absolute", "none", don't have a periods number,
@@ -457,11 +448,11 @@ class Connection {
         // always rejecting: don't check it.
         //
         if (notification.time_control.time_control === "byoyomi") {
-            const resultPeriods = getMinMaxHandicapPeriodsRejectResult(`periods${blitzLiveCorr}`, "periods", notification.time_control.periods, false, `${blitzLiveCorr} `, notification.ranked);
+            const resultPeriods = getMinMaxPeriodsRejectResult("periods", notification.time_control, notification.ranked);
             if (resultPeriods) return resultPeriods;
         }
         
-        const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult(`periodtime${blitzLiveCorr}`, notification.time_control, notification.ranked);
+        const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult("periodtime", notification.time_control, notification.ranked);
         if (resultPeriodtime) return resultPeriodtime;
 
         return { reject: false };  // Ok !
@@ -475,7 +466,7 @@ class Connection {
                            this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
                            this.checkChallengeAllowedFamilies,
-                           this.checkChallengeSettings]) {
+                           this.checkChallengeMinMax]) {
             const result = test.bind(this)(notification);
             if (result.reject) return result;
         }
@@ -791,14 +782,6 @@ function genericAllowedFamiliesReject(argName, notificationUnit) {
     return { reject: true, msg };
 }
 
-function getMIBL(isMin) {
-    if (isMin) {
-        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low"  };
-    } else {
-        return { miniMaxi: "Maximum", incDec: "reduce",   belAbo: "above", lowHig: "high" };
-    }
-}
-
 function getCheckedArgName(familyName, notificationRanked) {
     const argNames = getArgNamesGRU(familyName);
     const [general, ranked, unranked] = argNames;
@@ -827,25 +810,89 @@ function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     }
 }
 
-function getMinMaxRankRejectResult(nameF, notif, notificationRanked) {
+function getMIBL(isMin) {
+    if (isMin) {
+        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" , weakStro: "stronger" };
+    } else {
+        return { miniMaxi: "Maximum", incDec: "reduce",   belAbo: "above", lowHig: "high", weakStro: "weaker" };
+    }
+}
+
+function getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence) {
+    if (isRank) {
+        return `This bot only accepts games from ${argToString} or ${MIBL.weakStro} player ranking.`;
+    } else {
+        return `${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} is ${argToString}`
+               + `please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
+    }
+}
+
+function getMinMaxReject(arg, notif, isMin,
+                         speedSentence, timeControlSentence, argName, nameS, middleSentence, isRank) {
+    const MIBL = getMIBL(isMin);
+
+    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", speedSentence, argName, "");
+    const endingSentence = (argName.includes("ranked") ? ".\nYou may also try changing the ranked/unranked setting" : "");
+
+    conn_log(`${notif} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} ${arg} (${argName}).`);
+
+    const msg = getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, arg, middleSentence, endingSentence);
+
+    return { reject : true, msg };
+}
+
+function getMinMaxRankRejectResult(notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argName = getCheckedArgName(`${minMax}rank`, notificationRanked);
-        // if there is no arg to test (!argName), no need to check for reject,
-        // also this allows to make sure config[argName] exists
         if (argName) {
-            // convert rank "10k" to rank number so we can compare it
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                const MIBL = getMIBL(isMin);
-                const argToString = rankToString(arg);
-                const notifConverted = rankToString(notif);
-                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
-                conn_log(`${notifConverted} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameF} `
-                        + `${rankedUnranked} ${argToString}`);
-                const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} is ${argToString}, your ${nameF} `
-                            + `is too ${MIBL.lowHig}, you may try try changing the ranked/unranked setting.`;
-                return { reject: true, msg };
+                return getMinMaxReject(rankToString(arg), rankToString(notif), isMin,
+                                       "", "", argName, "rank", ".", true);
+            }
+        }
+    }
+}
+
+function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
+    if (notifHandicap === -1 && config.fakerank) {
+        // TODO: modify or remove fakerank code whenever server sends us automatic handicap
+        //       notification.handicap different from -1.
+        // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
+        // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
+
+        return Math.abs(Math.floor(notifUserRanking) - Math.floor(config.fakerank));
+    } else {
+        return notifHandicap;
+    }
+}
+
+function getHandicapMiddleSentence(isMin, notif, arg, isFakeHandicap) {
+    if (isMin && notif === 0 && arg > 0) {
+        return " (handicap games only on this bot).";
+    }
+    if (!isMin && notif > 0 && arg === 0) {
+        return " (no handicap games on this bot).";
+    }
+    if (isFakeHandicap) {
+        return ", change this number of handicap stones in -custom handicap-."
+    } else {
+        return ".";
+    }
+}
+
+function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRanked) {
+    const notifCorrected = getCorrectedHandicapNotif(notif, notifUserRanking);
+    for (const minMax of ["min", "max"]) {
+        const isMin = (minMax === "min");
+        const argName = getCheckedArgName(`${minMax}handicap`, notificationRanked);
+        if (argName) {
+            const arg = config[argName];
+            if (!checkNotifIsInMinMaxArgRange(arg, notifCorrected, isMin)) {
+                const middleSentence = getHandicapMiddleSentence(isMin, notifCorrected, arg, Boolean(config.fakerank));
+                return getMinMaxReject(arg, notifCorrected, isMin,
+                                       "", "", argName, "handicap stones", middleSentence, false);
             }
         }
     }
@@ -856,60 +903,20 @@ function getBlitzLiveCorr(notificationTSpeed) {
     return notificationTSpeed;
 }
 
-function getMinMaxHandicapPeriodsRejectResult(handicapPeriodsBLC, nameF, notif, isFakeHandicap, blitzLiveCorrCorrected, notificationRanked) {
+function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRanked) {
+    const blitzLiveCorr = getBlitzLiveCorr(notificationT.speed);
+    const notif = notificationT.periods;
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const argName = getCheckedArgName(`${minMax}${handicapPeriodsBLC}`, notificationRanked);
-        // if there is no arg to test (!argName), no need to check for reject,
-        // also this allows to make sure config[argName] exists
+        const argName = getCheckedArgName(`${minMax}periods${blitzLiveCorr}`, notificationRanked);
         if (argName) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                const MIBL = getMIBL(isMin);
-                const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", blitzLiveCorrCorrected, argName, "");
-                const suggestion = ", or try changing the ranked/unranked setting.";
-                if (handicapPeriodsBLC === "handicap") {
-                    if (isMin && notif === 0 && arg > 0) {
-                        conn_log(`No ${rankedUnranked} (handicap games only)`);
-                        const msg = `This bot does not play even games ${rankedUnranked}, please manually select the `
-                                    + `number of ${nameF} in -custom handicap-: minimum is ${arg} ${nameF}${suggestion}`;
-                        return { reject: true, msg };
-                    } else if (!isMin && notif > 0 && arg === 0) {
-                        conn_log(`No ${rankedUnranked} (even games only)'`);
-                        const msg = `This bot does not play ${rankedUnranked}, please choose handicap -none- `
-                                    + `(0 handicap stones)${suggestion}`;
-                        return { reject: true, msg };
-                    } else if (isFakeHandicap) {
-                        conn_log(`Automatic handicap ${rankedUnranked} was set to ${notif} stones, but `
-                                    + `${MIBL.miniMaxi} handicap ${rankedUnranked} is ${arg} stones`);
-                        const msg = `Automatic handicap ${rankedUnranked} was automatically set to ${notif} `
-                                    + `stones based on rank difference between you and this bot,\nBut ${MIBL.miniMaxi} `
-                                    + `handicap ${rankedUnranked} is ${arg} stones \nPlease ${MIBL.incDec} `
-                                    + `the number of handicap stones in -custom handicap-.`;
-                        return { reject: true, msg };
-                    }
-                }
-                // if no specific reject, fall back to generic reject
-    
-                conn_log(`${notif} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${handicapPeriodsBLC} ${rankedUnranked} ${arg}`);
-                const msg = `${MIBL.miniMaxi} ${nameF} ${rankedUnranked} ${arg}, please ${MIBL.incDec} `
-                            + `the number of ${nameF}.`;
-                return { reject: true, msg };
+                return getMinMaxReject(arg, notif, isMin,
+                                       `${notificationT.speed} `, "", argName, "the number of periods", ".", false);
             }
         }
     }
-}
-
-function timespanToDisplayString(timespan) {
-    const ss = timespan % 60;
-    const mm = Math.floor(timespan / 60 % 60);
-    const hh = Math.floor(timespan / (60*60) % 24);
-    const dd = Math.floor(timespan / (60*60*24));
-    const text = ["days", "hours", "minutes", "seconds"];
-    return [dd, hh, mm, ss]
-    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
-    .filter(e => e !== "")
-    .join(" ");
 }
 
 function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
@@ -930,40 +937,41 @@ function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
     }
 }
 
-function getMinMaxMainPeriodTimeRejectResult(mainPeriodTimeBLC, notificationT, notificationRanked) {
-    const timecontrolArrs = getTimecontrolArrsMainPeriodTime(mainPeriodTimeBLC, notificationT);
+function timespanToDisplayString(timespan) {
+    const ss = timespan % 60;
+    const mm = Math.floor(timespan / 60 % 60);
+    const hh = Math.floor(timespan / (60*60) % 24);
+    const dd = Math.floor(timespan / (60*60*24));
+    const text = ["days", "hours", "minutes", "seconds"];
+    return [dd, hh, mm, ss]
+    .map((e, i) => e === 0 ? "" : `${e} ${text[i]}`)
+    .filter(e => e !== "")
+    .join(" ");
+}
+
+function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, notificationRanked) {
+    const blitzLiveCorr = getBlitzLiveCorr(notificationT.speed);
+    const timecontrolArrs = getTimecontrolArrsMainPeriodTime(mainPeriodTime, notificationT);
     for (const timecontrolArr of timecontrolArrs) {
-        const [timecontrolName, timecontrolDescr, timecontrolNotif] = timecontrolArr;
-        if (notificationT.time_control === timecontrolName) {
+        const [timecontrol, timecontrolName, timecontrolNotif] = timecontrolArr;
+        if (notificationT.time_control === timecontrol) {
             for (const minMax of ["min", "max"]) {
                 const isMin = (minMax === "min");
-                const argName = getCheckedArgName(`${minMax}${mainPeriodTimeBLC}`, notificationRanked);
-                // if there is no arg to test (!argName), no need to check for reject,
-                // also this allows to make sure config[argName] exists
+                const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
                 if (argName) {
                     let arg = config[argName];
-                    let endingSentence = "";
-                    if ((notificationT.time_control === "canadian") && (mainPeriodTimeBLC.includes( "periodtime"))) {
+                    let middleSentence = ".";
+                    if ((notificationT.time_control === "canadian") && (mainPeriodTime.includes("periodtime"))) {
                         // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
-                        // arg is inputted by botadmin for 1 stone, while notification is for X stones:
-                        // multiply arg by the number of stones per period, so we can compare it against notification.
-                        // - also, this allows to display minmax periodtime arg and notif in messages for all the X stones.
-                        // - also, use multiply to raise arg rather than division to reduce notif to 1 stone, to avoid binary division
-                        // loss of precision.
+                        // arg is inputted by botadmin for 1 stone: multiply arg by the number of stones per period, so that
+                        // we can compare it against notification.
+                        // - also, use multiply to raise arg, to avoid binary division loss of precision.
                         arg *= notificationT.stones_per_period;
-                        endingSentence = ", or change the number of stones per period";
+                        middleSentence = ", or change the number of stones per period.";
                     }
                     if (!checkNotifIsInMinMaxArgRange(arg, timecontrolNotif, isMin)) {
-                        const argToString = timespanToDisplayString(arg); // ex: "1 minutes"
-                        const MIBL = getMIBL(isMin);
-                        const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", `${notificationT.speed} `, argName, "");
-                        conn_log(`${timespanToDisplayString(timecontrolNotif)} is ${MIBL.belAbo} ${MIBL.miniMaxi} `
-                                + `${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} ${argToString}`);
-                        const msg = `${MIBL.miniMaxi} ${timecontrolDescr} ${rankedUnranked} in ${timecontrolName} `
-                                    + `is ${argToString}, please ${MIBL.incDec} ${timecontrolDescr}${endingSentence}.`;
-                        return { reject : true, msg };
-                        // example : "Minimum (Main/Period) Time for blitz ranked games
-                        //            in byoyomi is 1 minutes, please increase (Main/Period) Time."
+                        return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(timecontrolNotif), isMin,
+                                               `${notificationT.speed} `, ` in ${timecontrol}`, argName, timecontrolName, middleSentence, false);
                     }
                 }
             }
