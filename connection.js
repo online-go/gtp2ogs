@@ -328,6 +328,15 @@ class Connection {
 
         // TODO: add all sanity checks here of all unhandled notifications
 
+        const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
+        if (!knownTimecontrols.includes(notification.time_control.time_control)) {
+            const msg = `Unknown time control ${notification.time_control.time_control},`
+                        + ` cannot check challenge.\nPlease inform us of this issue in OGS Forum`
+                        + ` (https://forums.online-go.com/c/support/5), or in gtp2ogs's github`
+                        + ` (https://github.com/online-go/gtp2ogs/issues)`;
+            return { reject: true, msg };
+        }
+
         // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
         if (!notification.rules.includes("chinese")) {
             conn_log(`Unhandled rules: ${notification.rules}`);
@@ -440,20 +449,25 @@ class Connection {
         const resultHandicap = getMinMaxHandicapRejectResult(notification.handicap, notification.user.ranking, notification.ranked);
         if (resultHandicap) return resultHandicap;
 
-        const resultMaintime = getMinMaxMainPeriodTimeRejectResult("maintime", notification.time_control, notification.ranked);
-        if (resultMaintime) return resultMaintime;
-
-        // "fischer", "canadian", "simple", "absolute", "none", don't have a periods number,
-        // undefined arg compared to notificationT.periods will always return false, thus
-        // always rejecting: don't check it.
-        //
-        if (notification.time_control.time_control === "byoyomi") {
-            const resultPeriods = getMinMaxPeriodsRejectResult("periods", notification.time_control, notification.ranked);
-            if (resultPeriods) return resultPeriods;
+        // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
+        // also this avoids an undefined error in getTimecontrolArrsMainPeriodTime when getting timesObj.(maintime|periodtime).none
+        if (notification.time_control.time_control !== "none") {
+            const resultMaintime = getMinMaxMainPeriodTimeRejectResult("maintime", notification.time_control, notification.ranked);
+            if (resultMaintime) return resultMaintime;
+    
+            // "fischer", "canadian", "simple", "absolute", don't have a periods number,
+            // undefined arg compared to notificationT.periods will always return false, thus
+            // always rejecting: don't check it.
+            //
+            if (notification.time_control.time_control === "byoyomi") {
+                const resultPeriods = getMinMaxPeriodsRejectResult("periods", notification.time_control, notification.ranked);
+                if (resultPeriods) return resultPeriods;
+            }
+            
+            const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult("periodtime", notification.time_control, notification.ranked);
+            if (resultPeriodtime) return resultPeriodtime;
         }
-        
-        const resultPeriodtime = getMinMaxMainPeriodTimeRejectResult("periodtime", notification.time_control, notification.ranked);
-        if (resultPeriodtime) return resultPeriodtime;
+
 
         return { reject: false };  // Ok !
 
@@ -684,6 +698,11 @@ function beforeRankedUnrankedGamesSpecial(before, extra, argName, special) {
     }
 }
 
+function getSuggestionSentence(argName) {
+    if (argName.includes("ranked")) ".\nYou may also try changing the ranked/unranked setting";
+    else return "";
+}
+
 function getArgNamesGRU(familyName) {
     return ["", "ranked", "unranked"].map( e => `${familyName}${e}` );
 }
@@ -827,16 +846,16 @@ function getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, 
     }
 }
 
-function getMinMaxReject(arg, notif, isMin,
+function getMinMaxReject(argToString, notifToString, isMin,
                          speedSentence, timeControlSentence, argName, nameS, middleSentence, isRank) {
     const MIBL = getMIBL(isMin);
 
     const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", speedSentence, argName, "");
-    const endingSentence = (argName.includes("ranked") ? ".\nYou may also try changing the ranked/unranked setting" : "");
+    const endingSentence = getSuggestionSentence(argName);
 
-    conn_log(`${notif} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} ${arg} (${argName}).`);
+    conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
 
-    const msg = getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, arg, middleSentence, endingSentence);
+    const msg = getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence);
 
     return { reject : true, msg };
 }
@@ -870,13 +889,13 @@ function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
 
 function getHandicapMiddleSentence(isMin, notif, arg, isFakeHandicap) {
     if (isMin && notif === 0 && arg > 0) {
-        return " (handicap games only on this bot).";
+        return " (handicap games only).";
     }
     if (!isMin && notif > 0 && arg === 0) {
-        return " (no handicap games on this bot).";
+        return " (no handicap games).";
     }
     if (isFakeHandicap) {
-        return ", change this number of handicap stones in -custom handicap-."
+        return ", manually select the number of handicap stones in -custom handicap-."
     } else {
         return ".";
     }
@@ -899,13 +918,15 @@ function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRank
 }
 
 function getBlitzLiveCorr(notificationTSpeed) {
-    if (notificationTSpeed === "correspondence") return "corr";
+    if (notificationTSpeed === "correspondence") {
+        return "corr";
+    }
     return notificationTSpeed;
 }
 
 function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRanked) {
     const blitzLiveCorr = getBlitzLiveCorr(notificationT.speed);
-    const notif = notificationT.periods;
+    const notif         = notificationT.periods;
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argName = getCheckedArgName(`${minMax}periods${blitzLiveCorr}`, notificationRanked);
@@ -919,22 +940,25 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
     }
 }
 
-function getTimecontrolArrsMainPeriodTime(mpt, notificationT) {
-    if (mpt.includes("maintime")) {
-        // "none" and "simple" don't have a maintime, skip the maintime reject
-        return [["fischer", "Initial Time", notificationT.initial_time],
-                ["fischer", "Max Time", notificationT.max_time],
-                ["byoyomi", "Main Time", notificationT.main_time],
-                ["canadian", "Main Time", notificationT.main_time],
-                ["absolute", "Total Time", notificationT.total_time]];
-    } else {
-        // - "none" and "absolute" don't have a periodtime, skip the periodtime reject.
-        // - for canadian periodtime, notification is for N stones
-        return [["fischer", "Increment Time", notificationT.time_increment],
-                ["byoyomi", "Period Time", notificationT.period_time],
-                ["canadian", `Period Time for all the ${notificationT.stones_per_period} stones`, notificationT.period_time],
-                ["simple", "Time per move", notificationT.per_move]];
-    }
+function getTimecontrolObjsMainPeriodTime(mainPeriodTime, notificationT ) {
+    // for canadian, periodtime notif is for all the N stones.
+    const timesObj = { fischer:  { maintime:   [{ name: "Initial Time"  , notif: notificationT.initial_time },
+                                                { name: "Max Time"      , notif: notificationT.max_time }],
+                                   periodtime: [{ name: "Increment Time", notif: notificationT.time_increment }]
+                                 },
+                       byoyomi:  { maintime:   [{ name: "Main Time"     , notif: notificationT.main_time }],
+                                   periodtime: [{ name: "Period Time"   , notif: notificationT.period_time }]
+                                 },
+                       canadian: { maintime:   [{ name: "Main Time"     , notif: notificationT.main_time }],
+                                   periodtime: [{ name: `Period Time for all the ${notificationT.stones_per_period} stones`, notif: notificationT.period_time }]
+                                 },
+                       simple:   { periodtime: [{ name: "Time per move" , notif: notificationT.per_move }]
+                                 },
+                       absolute: { maintime:   [{ name: "Total Time"    , notif: notificationT.total_time }]
+                                 },
+                     };
+
+    return timesObj[notificationT.time_control][mainPeriodTime];
 }
 
 function timespanToDisplayString(timespan) {
@@ -951,28 +975,26 @@ function timespanToDisplayString(timespan) {
 
 function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, notificationRanked) {
     const blitzLiveCorr = getBlitzLiveCorr(notificationT.speed);
-    const timecontrolArrs = getTimecontrolArrsMainPeriodTime(mainPeriodTime, notificationT);
-    for (const timecontrolArr of timecontrolArrs) {
-        const [timecontrol, timecontrolName, timecontrolNotif] = timecontrolArr;
-        if (notificationT.time_control === timecontrol) {
-            for (const minMax of ["min", "max"]) {
-                const isMin = (minMax === "min");
-                const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
-                if (argName) {
-                    let arg = config[argName];
-                    let middleSentence = ".";
-                    if ((notificationT.time_control === "canadian") && (mainPeriodTime.includes("periodtime"))) {
-                        // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
-                        // arg is inputted by botadmin for 1 stone: multiply arg by the number of stones per period, so that
-                        // we can compare it against notification.
-                        // - also, use multiply to raise arg, to avoid binary division loss of precision.
-                        arg *= notificationT.stones_per_period;
-                        middleSentence = ", or change the number of stones per period.";
-                    }
-                    if (!checkNotifIsInMinMaxArgRange(arg, timecontrolNotif, isMin)) {
-                        return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(timecontrolNotif), isMin,
-                                               `${notificationT.speed} `, ` in ${timecontrol}`, argName, timecontrolName, middleSentence, false);
-                    }
+    const timecontrolObjs      = getTimecontrolObjsMainPeriodTime(mainPeriodTime, notificationT);
+    for (const minMax of ["min", "max"]) {
+        const isMin = (minMax === "min");
+        const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
+        if (argName) {
+            let arg = config[argName];
+            let middleSentence = ".";
+            if ((notificationT.time_control === "canadian") && (mainPeriodTime.includes("periodtime"))) {
+                // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
+                // arg is inputted by botadmin for 1 stone: multiply arg by the number of stones per period, so that
+                // we can compare it against notification.
+                // - also, use multiply to raise arg, to avoid binary division loss of precision.
+                arg *= notificationT.stones_per_period;
+                middleSentence = ", or change the number of stones per period.";
+            }
+            for (const timecontrolObj of timecontrolObjs) {
+                const notif = timecontrolObj.notif;
+                if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
+                    return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
+                                           `${notificationT.speed} `, ` in ${notificationT.speed}`, argName, timecontrolObj.name, middleSentence, false);
                 }
             }
         }
