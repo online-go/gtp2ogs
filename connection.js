@@ -872,9 +872,11 @@ function getMinMaxRankMsg(argName, argToString, MIBL, endingSentence) {
 
 function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence) {
     const prettyNameS = nameS.split(" ")
-                              .filter( (e) => (e !== "the") )
+                              .filter( (e) => (e !== "the" ) )
                               .join(" ");
-    return `${MIBL.miniMaxi} ${prettyNameS}${forRankedUnranked}${timeControlSentence} is ${argToString}`
+    const prettyName  = (timeControlSentence.includes("canadian") ? nameS : prettyNameS);
+
+    return `${MIBL.miniMaxi} ${prettyName}${forRankedUnranked}${timeControlSentence} is ${argToString}`
            + `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
 }
 

@@ -453,7 +453,7 @@ describe('Challenges', () => {
 
   })
 
-  describe('Min Max Byoyomi time settings', () => {
+  describe('Byoyomi time settings', () => {
 
     // Main Time Blitz
 
@@ -1002,6 +1002,32 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for correspondence games in byoyomi is 3 days, please reduce Period Time.' }));
+    })
+
+  })
+
+  // TODO also test other time controls are not tested for periods number
+
+  describe('Canadian time settings', () => {
+
+    // Just making sure it works similarly as byoyomi
+
+    // Period Time Live
+
+    it('reject main time live too high', () => {
+      let notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 1800 } });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minperiodtimecorr = undefined;
+      config.maxperiodtimecorr = undefined;
+
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 300;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for all the 5 stones for live games in canadian is 25 minutes, please reduce Period Time for all the 5 stones, or change the number of stones per period.' }));
     })
 
   })
