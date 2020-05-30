@@ -860,7 +860,10 @@ function getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, 
     if (isRank) {
         return `This bot only accepts games from ${argToString} or ${MIBL.weakStro} player ranking.`;
     } else {
-        return `${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} is ${argToString}`
+        const prettyNameS = nameS.split(" ")
+                                 .filter( (e) => (e !== "the") )
+                                 .join(" ");
+        return `${MIBL.miniMaxi} ${prettyNameS} ${rankedUnranked}${timeControlSentence} is ${argToString}`
                + `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
     }
 }
@@ -953,7 +956,7 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(arg, notif, isMin,
-                                       notificationT.speed, "", argName, "the number of periods", "", false);
+                                       notificationT.speed, ` in ${notificationT.time_control}`, argName, "the number of periods", "", false);
             }
         }
     }

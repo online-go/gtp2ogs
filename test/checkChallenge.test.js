@@ -118,7 +118,7 @@ describe('Challenges', () => {
 
   // Byoyomi
 
-  // Main Time
+  // Main Time Blitz
 
   it('reject main time blitz too low', () => {
     let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
@@ -175,23 +175,88 @@ describe('Challenges', () => {
     assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for blitz games in byoyomi is 30 seconds, please reduce Main Time.' }));
   })
 
-  // Periods
+  // Periods Blitz
 
-  // Period Time
+  it('reject number of periods blitz too low', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
+
+    // remove old vars
+    // this is not clean but it is a workaround until we review this
+    config.minmaintimeblitz = 0;
+    config.maxmaintimeblitz = 9999999999;
+
+    config.minperiodsblitz = 3;
+    config.maxperiodsblitz = 20;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for blitz games in byoyomi is 3, please increase the number of periods.' }));
+  })
+
+  it('accept number of periods blitz edge min', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 3, period_time: 1 } });
+
+    config.minperiodsblitz = 3;
+    config.maxperiodsblitz = 20;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: false }));
+  })
+
+  it('accept number of periods blitz between min and max ', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 12, period_time: 1 } });
+
+    config.minperiodsblitz = 3;
+    config.maxperiodsblitz = 20;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: false }));
+  })
+
+  it('accept number of periods blitz edge max', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 20, period_time: 1 } });
+
+    config.minperiodsblitz = 3;
+    config.maxperiodsblitz = 20;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: false }));
+  })
+
+  it('accept number of periods blitz too high', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 100, period_time: 1 } });
+
+    config.minperiodsblitz = 3;
+    config.maxperiodsblitz = 20;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for blitz games in byoyomi is 20, please reduce the number of periods.' }));
+  })
+
+  // Period Time Blitz
 
   it('reject period time blitz too low', () => {
-    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", period_time: 1, periods: 1, main_time: 1 } });
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
+
+    // remove old vars
+    // this is not clean but it is a workaround until we review this
+    config.minperiodsblitz = 0;
+    config.maxperiodsblitz = 9999999999;
 
     config.minperiodtimeblitz = 5;
     config.maxperiodtimeblitz = 15;
     
     let result = conn.checkChallengeMinMax(notification);
     
-    assert.deepEqual(result, ({ reject: true,   msg: `${JSON.stringify(config)}Minimum Period Time for blitz games in byoyomi is 5 seconds, please increase Period Time.` }));
+    assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for blitz games in byoyomi is 5 seconds, please increase Period Time.` }));
   })
 
   it('accept period time blitz edge min', () => {
-    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", period_time: 5, periods: 1, main_time: 1 } });
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 5 } });
 
     config.minperiodtimeblitz = 5;
     config.maxperiodtimeblitz = 15;
@@ -202,7 +267,7 @@ describe('Challenges', () => {
   })
 
   it('accept period time blitz between min and max ', () => {
-    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", period_time: 11, periods: 1, main_time: 1 } });
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 11 } });
 
     config.minperiodtimeblitz = 5;
     config.maxperiodtimeblitz = 15;
@@ -213,7 +278,7 @@ describe('Challenges', () => {
   })
 
   it('accept period time blitz edge max', () => {
-    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", period_time: 15, periods: 1, main_time: 1 } });
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 15 } });
 
     config.minperiodtimeblitz = 5;
     config.maxperiodtimeblitz = 15;
@@ -224,7 +289,7 @@ describe('Challenges', () => {
   })
 
   it('accept period time blitz too high', () => {
-    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", period_time: 31, periods: 1, main_time: 1 } });
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 22 } });
 
     config.minperiodtimeblitz = 5;
     config.maxperiodtimeblitz = 15;
