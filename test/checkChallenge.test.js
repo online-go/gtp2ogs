@@ -72,7 +72,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedName) are not allowed to play games against this bot.' }));
-    })
+    });
     
     it('should reject banned users by id', () => {
       let notification = base_challenge({ user: { username: 'bannedName', id: 5 } });
@@ -82,7 +82,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedName) are not allowed to play games against this bot.' }));
-    })
+    });
       
     it('should reject banned ranked users', () => {
       let notification = base_challenge({ ranked: true, user: { username: 'bannedRankedName', id: 6 } });
@@ -92,7 +92,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedRankedName) are not allowed to play ranked games against this bot.' }));
-    })
+    });
       
     it('should reject banned ranked users by id', () => {
       let notification = base_challenge({ ranked: true, user: { username: 'bannedRankedName', id: 6 } });
@@ -102,7 +102,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedRankedName) are not allowed to play ranked games against this bot.' }));
-    })
+    });
     
     it('should reject banned unranked users', () => {
       let notification = base_challenge({ ranked: false, user: { username: 'bannedUnrankedName', id: 7 } });
@@ -112,7 +112,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
-    })
+    });
     
     it('should reject banned unranked users by id', () => {
       let notification = base_challenge({ ranked: false, user: { username: 'bannedUnrankedName', id: 7 } });
@@ -122,7 +122,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
-    })
+    });
 
   })
 
@@ -176,17 +176,20 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: false }));
+
     });
 
     it('reject user ranking too high', () => {
-      let notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 35 } }); // "6d"
 
       config.minrank = 17;
       config.maxrank = 32;
       
       let result = conn.checkChallengeMandatory(notification);
       
-      assert.deepEqual(result, ({ reject: false }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+
     });
 
     it('reject user ranking too high (9d+)', () => {
@@ -213,6 +216,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
    });
+   
   });
 
   describe('Min Max Handicap', () => {
@@ -228,7 +232,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 0, please increase the number of handicap stones.' }));
 
-    })
+    });
 
     it('reject handicap too low (fakerank automatic handicap stone number estimation)', () => {
 
@@ -248,7 +252,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones, please manually select the number of handicap stones in -custom handicap-.' }));
 
-    })
+    });
 
     it('reject handicap too low (handicap games only)', () => {
 
@@ -267,7 +271,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones (handicap games only).' }));
 
-    })
+    });
 
     it('accept handicap edge min', () => {
 
@@ -285,7 +289,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept handicap edge min (fakerank automatic handicap stone number estimation)', () => {
 
@@ -304,7 +308,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept handicap between min and max', () => {
 
@@ -323,7 +327,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept handicap between min and max (fakerank automatic handicap stone number estimation)', () => {
 
@@ -343,7 +347,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept handicap edge max', () => {
 
@@ -362,7 +366,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept handicap edge max (fakerank automatic handicap stone number estimation)', () => {
 
@@ -382,7 +386,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    }); // where?
 
     it('reject handicap too high (even games only) ', () => {
 
@@ -401,7 +405,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 0, please reduce the number of handicap stones (no handicap games).' }));
 
-    })
+    });
 
     it('reject handicap too high ', () => {
 
@@ -419,7 +423,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 6, please reduce the number of handicap stones.' }));
 
-    })
+    });
 
     it('reject handicap too high (fakerank automatic handicap stone number estimation)', () => {
 
@@ -439,7 +443,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 6, please reduce the number of handicap stones, please manually select the number of handicap stones in -custom handicap-.' }));
 
-    })
+    });
 
   })
 
@@ -462,7 +466,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for blitz games in byoyomi is 10 seconds, please increase Main Time.' }));
-    })
+    });
 
     it('accept main time blitz edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 10, periods: 1, period_time: 1 } });
@@ -473,7 +477,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept main time blitz between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 20, periods: 1, period_time: 1 } });
@@ -484,7 +488,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept main time blitz edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 30, periods: 1, period_time: 1 } });
@@ -495,7 +499,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept main time blitz too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 31, periods: 1, period_time: 1 } });
@@ -506,7 +510,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for blitz games in byoyomi is 30 seconds, please reduce Main Time.' }));
-    })
+    });
 
     // Periods Blitz
 
@@ -524,7 +528,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for blitz games in byoyomi is 3, please increase the number of periods.' }));
-    })
+    });
 
     it('accept number of periods blitz edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 3, period_time: 1 } });
@@ -535,7 +539,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept number of periods blitz between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 12, period_time: 1 } });
@@ -546,7 +550,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept number of periods blitz edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 20, period_time: 1 } });
@@ -557,7 +561,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept number of periods blitz too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 100, period_time: 1 } });
@@ -568,7 +572,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for blitz games in byoyomi is 20, please reduce the number of periods.' }));
-    })
+    });
 
     // Period Time Blitz
 
@@ -586,7 +590,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for blitz games in byoyomi is 5 seconds, please increase Period Time.` }));
-    })
+    });
 
     it('accept period time blitz edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 5 } });
@@ -597,7 +601,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept period time blitz between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 11 } });
@@ -608,7 +612,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept period time blitz edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 15 } });
@@ -619,7 +623,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept period time blitz too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 22 } });
@@ -630,7 +634,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for blitz games in byoyomi is 15 seconds, please reduce Period Time.' }));
-    })
+    });
 
     // Main Time Live
 
@@ -643,7 +647,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for live games in byoyomi is 1 minutes, please increase Main Time.' }));
-    })
+    });
   
     it('accept main time live edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 60, periods: 1, period_time: 1 } });
@@ -654,7 +658,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept main time live between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 180, periods: 1, period_time: 1 } });
@@ -665,7 +669,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept main time live edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 300, periods: 1, period_time: 1 } });
@@ -676,7 +680,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept main time live too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 301, periods: 1, period_time: 1 } });
@@ -687,7 +691,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for live games in byoyomi is 5 minutes, please reduce Main Time.' }));
-    })
+    });
   
     // Periods Live
   
@@ -705,7 +709,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for live games in byoyomi is 3, please increase the number of periods.' }));
-    })
+    });
   
     it('accept number of periods live edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 3, period_time: 1 } });
@@ -716,7 +720,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept number of periods live between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 12, period_time: 1 } });
@@ -727,7 +731,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept number of periods live edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 20, period_time: 1 } });
@@ -738,7 +742,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept number of periods live too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 100, period_time: 1 } });
@@ -749,7 +753,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for live games in byoyomi is 20, please reduce the number of periods.' }));
-    })
+    });
   
     // Period Time Live
   
@@ -767,7 +771,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for live games in byoyomi is 10 seconds, please increase Period Time.` }));
-    })
+    });
   
     it('accept period time live edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 10 } });
@@ -778,7 +782,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept period time live between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 30 } });
@@ -789,7 +793,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept period time live edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 120 } });
@@ -800,7 +804,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
   
     it('accept period time live too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 121 } });
@@ -811,7 +815,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for live games in byoyomi is 2 minutes, please reduce Period Time.' }));
-    })
+    });
 
     // Main Time Correspondence
 
@@ -824,7 +828,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for correspondence games in byoyomi is 3 days, please increase Main Time.' }));
-    })
+    });
 
     it('accept main time correspondence edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 259200, periods: 1, period_time: 1 } });
@@ -835,7 +839,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept main time correspondence between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 454600, periods: 1, period_time: 1 } });
@@ -846,7 +850,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept main time correspondence edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 604800, periods: 1, period_time: 1 } });
@@ -857,7 +861,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept main time correspondence too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 604801, periods: 1, period_time: 1 } });
@@ -868,7 +872,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for correspondence games in byoyomi is 7 days, please reduce Main Time.' }));
-    })
+    });
 
     // Periods Correspondence
 
@@ -886,7 +890,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for correspondence games in byoyomi is 3, please increase the number of periods.' }));
-    })
+    });
 
     it('accept number of periods correspondence edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 3, period_time: 1 } });
@@ -897,7 +901,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept number of periods correspondence between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 5, period_time: 1 } });
@@ -908,7 +912,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept number of periods correspondence edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 10, period_time: 1 } });
@@ -919,7 +923,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept number of periods correspondence too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 25, period_time: 1 } });
@@ -930,7 +934,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for correspondence games in byoyomi is 10, please reduce the number of periods.' }));
-    })
+    });
 
     // Period Time Correspondence
 
@@ -948,7 +952,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for correspondence games in byoyomi is 4 hours, please increase Period Time.` }));
-    })
+    });
 
     it('accept period time correspondence edge min', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 14400 } });
@@ -959,7 +963,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept period time correspondence between min and max ', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 60000 } });
@@ -970,7 +974,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept period time correspondence edge max', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 259200 } });
@@ -981,7 +985,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-    })
+    });
 
     it('accept period time correspondence too high', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 512000 } });
@@ -992,25 +996,47 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for correspondence games in byoyomi is 3 days, please reduce Period Time.' }));
-    })
+    });
 
   })
 
   // TODO also test other time controls are not tested for periods number
 
-  describe('Canadian time settings', () => {
+  describe('Canadian time settings', () => { // so, what do we do now xD ah sure :) have fun lol
 
     // Just making sure it works similarly as byoyomi
 
     // Period Time Live
 
-    it('reject main time live too high', () => {
-      let notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 1800 } });
+    it('reject main time live too low', () => {
+      let notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 40 } });
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
       config.minperiodtimecorr = undefined;
-      config.maxperiodtimecorr = undefined;
+      config.maxperiodtimecorr = undefined;//this ah no, didnt
+
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 300;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Period Time for all the 5 stones for live games in canadian is 50 seconds, please increase Period Time for all the 5 stones, or change the number of stones per period.' }));
+    });
+
+    it('accept main time live between min and max', () => {
+      let notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 80 } });
+
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 300;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+
+    it('reject main time live too high', () => {
+      let notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 1800 } });
 
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
@@ -1018,8 +1044,10 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for all the 5 stones for live games in canadian is 25 minutes, please reduce Period Time for all the 5 stones, or change the number of stones per period.' }));
-    })
+    });
 
   })
 
-})
+}) // amazing!!! yes, i need to fix min time WOWOWOWOOWOooooooooooooooooooooooooo!!!! so nice!!! let me add some more lol
+   // ah i prefer semicolon too!!!!!!!!!!!!!!!!!!! nice :)
+   // yes, i'll definitely learn them too lol
