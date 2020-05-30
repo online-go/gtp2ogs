@@ -703,9 +703,9 @@ function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
 
     if (BLC !== "") {
         if (rankedUnranked.includes("ranked")){
-            return `${forFrom}${BLC}${rankedUnranked} games`; // ex: "for blitz ranked games"
+            return ` ${forFrom}${BLC}${rankedUnranked} games`; // ex: "for blitz ranked games"
         } else {
-            return `${forFrom}${BLC} games`;                  // ex: "for correspondence games"
+            return ` ${forFrom}${BLC} games`;                  // ex: "for correspondence games"
         }               
     }
 
@@ -713,7 +713,7 @@ function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
         return `${forFrom}${all} games`;                      // ex: "from all games"
     } else {
         if (rankedUnranked.includes("ranked")) {
-            return `${forFrom}${rankedUnranked} games`;        // ex: "for ranked games"       
+            return ` ${forFrom}${rankedUnranked} games`;        // ex: "for ranked games"       
         } else {
             return "";                                        // no need to say it "for all games" explicitly (general argument)
         }                 
@@ -874,7 +874,7 @@ function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence
     const prettyNameS = nameS.split(" ")
                               .filter( (e) => (e !== "the") )
                               .join(" ");
-    return `${MIBL.miniMaxi} ${prettyNameS} ${forRankedUnranked}${timeControlSentence} is ${argToString}`
+    return `${MIBL.miniMaxi} ${prettyNameS}${forRankedUnranked}${timeControlSentence} is ${argToString}`
            + `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
 }
 
@@ -885,7 +885,7 @@ function getMinMaxReject(argToString, notifToString, isMin,
     const forRankedUnranked = beforeRankedUnrankedGamesSpecial("for ", speed, argName, "");
     const endingSentence = getSuggestionSentence(argName);
 
-    conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS} ${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
+    conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
 
     let msg = "";
     if (isRank) {
@@ -932,7 +932,7 @@ function getHandicapMiddleSentence(isMin, notif, arg, isFakeHandicap) {
         return " (no handicap games)";
     }
     if (isFakeHandicap) {
-        return ", manually select the number of handicap stones in -custom handicap-"
+        return ", please manually select the number of handicap stones in -custom handicap-"
     } else {
         return "";
     }
@@ -948,7 +948,7 @@ function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRank
             if (!checkNotifIsInMinMaxArgRange(arg, notifCorrected, isMin)) {
                 const middleSentence = getHandicapMiddleSentence(isMin, notifCorrected, arg, Boolean(config.fakerank));
                 return getMinMaxReject(arg, notifCorrected, isMin,
-                                       "", "", argName, "handicap stones", middleSentence, false);
+                                       "", "", argName, "the number of handicap stones", middleSentence, false);
             }
         }
     }

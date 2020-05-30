@@ -218,55 +218,18 @@ describe('Challenges', () => {
 
     })
 
-    /*it('reject user ranking for ranked games too low', () => {
-
-      let notification = base_challenge({ ranked: true, user: { ranking: 17 } });
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minrank = undefined;
-      config.maxrank = undefined;
-
-      config.minrankranked = 17;
-      config.maxrankranked = 32;
-      
-      let result = conn.checkChallengeMandatory(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts ranked games from 13k players or stronger ranking.\nYou may try unranked.' }));
-
-    })
-
-    it('reject user ranking for ranked games (not general) too low', () => {
-
-      let notification = base_challenge({ ranked: true, user: { ranking: 17 } });
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minrank = undefined;
-      config.maxrank = undefined;
-
-      config.minrankranked = 17;
-      config.maxrankranked = 32;
-      
-      let result = conn.checkChallengeMandatory(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts ranked games from 13k players or stronger ranking.\nYou may try unranked.' }));
-
-    })*/
-
   })
 
-  /*describe('Min Max Handicap', () => {
+  describe('Min Max Handicap', () => {
 
-    it('reject automatic handicap (-1) too low', () => {
+    it('reject handicap too low (automatic handicap is -1)', () => {
 
       let notification = base_challenge({ ranked: false, handicap: -1 });
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.banned_users          = {};
-      config.banned_users_ranked   = {};
-      config.banned_users_unranked = {};
+      config.minrank = undefined;
+      config.maxrank = undefined;
 
       config.minhandicap = 0;
       config.maxhandicap = 2;
@@ -277,7 +240,198 @@ describe('Challenges', () => {
 
     })
 
-  })*/
+    it('reject handicap too low (fakerank automatic handicap stone number estimation)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.fakerank    = 29; // "1k"
+      // "1d" - "1k" = 30 - 29 = 1 automatic handicap stones
+      config.minhandicap = 2;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones, please manually select the number of handicap stones in -custom handicap-.' }));
+
+    })
+
+    it('reject handicap too low (handicap games only)', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: 0 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.fakerank    = undefined;
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.minhandicap = 2;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones (handicap games only).' }));
+
+    })
+
+    it('accept handicap edge min', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: 0 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.minhandicap = 0;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('accept handicap between min and max', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: 1 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.minhandicap = 0;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('accept handicap between min and max (fakerank automatic handicap stone number estimation)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.fakerank    = 26; // "4k"
+      // "1d" - "4k" = 30 - 26 = 4 automatic handicap stones
+      config.minhandicap =  0;
+      config.maxhandicap =  6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('accept handicap edge max', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: 6 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+      config.fakerank    = undefined;
+
+      config.minhandicap = 0;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('accept handicap edge max (fakerank automatic handicap stone number estimation)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.fakerank    = 24; // "6k"
+      // "1d" - "6k" = 30 - 24 = 6 automatic handicap stones
+      config.minhandicap =  0;
+      config.maxhandicap =  6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('reject handicap too high (even games only) ', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: 1 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.fakerank    = undefined;
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.minhandicap = 0;
+      config.maxhandicap = 0;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 0, please reduce the number of handicap stones (no handicap games).' }));
+
+    })
+
+    it('reject handicap too high ', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: 9 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.minhandicap = 0;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 6, please reduce the number of handicap stones.' }));
+
+    })
+
+    it('reject handicap too high (fakerank automatic handicap stone number estimation)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 17 }, handicap: -1 }); // "13k"
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.fakerank    = 32; // "3d"
+      // "3d" - "13k" = 32 - 17 = 15 automatic handicap stones
+      config.minhandicap = 0;
+      config.maxhandicap = 6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 6, please reduce the number of handicap stones, please manually select the number of handicap stones in -custom handicap-.' }));
+
+    })
+
+  })
 
   describe('Min Max Byoyomi time settings', () => {
 
@@ -285,6 +439,12 @@ describe('Challenges', () => {
 
     it('reject main time blitz too low', () => {
       let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.fakerank    = undefined;
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
 
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
@@ -345,8 +505,8 @@ describe('Challenges', () => {
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.minmaintimeblitz = 0;
-      config.maxmaintimeblitz = 9999999999;
+      config.minmaintimeblitz = undefined;
+      config.maxmaintimeblitz = undefined;
 
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
@@ -407,8 +567,8 @@ describe('Challenges', () => {
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.minperiodsblitz = 0;
-      config.maxperiodsblitz = 9999999999;
+      config.minperiodsblitz = undefined;
+      config.maxperiodsblitz = undefined;
 
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
@@ -526,8 +686,8 @@ describe('Challenges', () => {
   
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.minmaintimelive = 0;
-      config.maxmaintimelive = 9999999999;
+      config.minmaintimelive = undefined;
+      config.maxmaintimelive = undefined;
   
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
@@ -588,8 +748,8 @@ describe('Challenges', () => {
   
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.minperiodslive = 0;
-      config.maxperiodslive = 9999999999;
+      config.minperiodslive = undefined;
+      config.maxperiodslive = undefined;
   
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
@@ -707,8 +867,8 @@ describe('Challenges', () => {
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.minmaintimecorr = 0;
-      config.maxmaintimecorr = 9999999999;
+      config.minmaintimecorr = undefined;
+      config.maxmaintimecorr = undefined;
 
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
@@ -769,8 +929,8 @@ describe('Challenges', () => {
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
-      config.minperiodscorr = 0;
-      config.maxperiodscorr = 9999999999;
+      config.minperiodscorr = undefined;
+      config.maxperiodscorr = undefined;
 
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
