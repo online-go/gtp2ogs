@@ -689,6 +689,15 @@ function getRankedUnranked(argName) {
     else                              return "";
 }
 
+function getRankedUnrankedGames(argName) {
+    const rankedUnranked = getRankedUnranked(argName);
+    if (rankedUnranked.includes("ranked")) {
+        return `${rankedUnranked} games`;
+    } else {
+        return "games";
+    }
+}
+
 function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
     const rankedUnranked = getRankedUnranked(argName);
 
@@ -704,7 +713,7 @@ function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
         return `${forFrom}${all} games`;                      // ex: "from all games"
     } else {
         if (rankedUnranked.includes("ranked")) {
-            return `${forFrom}${rankedUnranked}games`;        // ex: "for ranked games"       
+            return `${forFrom}${rankedUnranked} games`;        // ex: "for ranked games"       
         } else {
             return "";                                        // no need to say it "for all games" explicitly (general argument)
         }                 
@@ -713,10 +722,10 @@ function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
 
 function getSuggestionSentence(argName) {
     if (argName.includes("unranked")) {
-        return ", or try ranked";
+        return ".\nYou may try ranked";
     }
     if (argName.includes("ranked")) {
-        return ", or try unranked";
+        return ".\nYou may try unranked";
     } else {
         return "";
     }
@@ -856,9 +865,9 @@ function getMIBL(isMin) {
     }
 }
 
-function getMinMaxRankMsg(argName, argToString, MIBL) {
-    const rankedUnranked = getRankedUnranked(argName);
-    return `This bot only accepts ${rankedUnranked}games from ${argToString} players or ${MIBL.weakStro} ranking.`;  
+function getMinMaxRankMsg(argName, argToString, MIBL, endingSentence) {
+    const rankedUnrankedGames = getRankedUnrankedGames(argName);
+    return `This bot only accepts ${rankedUnrankedGames} from ${argToString} players or ${MIBL.weakStro} ranking${endingSentence}.`;  
 }
 
 function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence) {
@@ -880,7 +889,7 @@ function getMinMaxReject(argToString, notifToString, isMin,
 
     let msg = "";
     if (isRank) {
-        msg = getMinMaxRankMsg(argName, argToString, MIBL);
+        msg = getMinMaxRankMsg(argName, argToString, MIBL, endingSentence);
     } else {
         msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence);
     }
@@ -895,7 +904,7 @@ function getMinMaxRankRejectResult(notif, notificationRanked) {
         if (argName) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                return getMinMaxReject(arg, rankToString(notif), isMin,
+                return getMinMaxReject(rankToString(arg), rankToString(notif), isMin,
                                        "", "", argName, "rank", "", true);
             }
         }

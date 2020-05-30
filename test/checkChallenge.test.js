@@ -123,7 +123,7 @@ describe('Challenges', () => {
 
     it('reject user ranking too low', () => {
 
-      let notification = base_challenge({ ranked: false, user: { ranking: 17 } });
+      let notification = base_challenge({ ranked: false, user: { ranking: 10 } }); // "20k"
 
       // remove old vars
       // this is not clean but it is a workaround until we review this
@@ -131,14 +131,128 @@ describe('Challenges', () => {
       config.banned_users_ranked   = {};
       config.banned_users_unranked = {};
 
-      config.minrank = "13k";
-      config.maxrank = "3d";
+      config.minrank = 17;
+      config.maxrank = 32;
       
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
 
     })
+
+    it('accept user ranking edge min', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 17 } }); // "13k"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('accept user ranking between min and max', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 25 } }); // "5k"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('accept user ranking edge max', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('reject user ranking too high', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
+    it('reject user ranking too high (9d+)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 41 } }); // "12d"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+
+    })
+
+    it('reject user ranking too high (pro)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 37 } }); // "1p" (1p" = "8d")
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+
+    })
+
+    /*it('reject user ranking for ranked games too low', () => {
+
+      let notification = base_challenge({ ranked: true, user: { ranking: 17 } });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minrank = undefined;
+      config.maxrank = undefined;
+
+      config.minrankranked = 17;
+      config.maxrankranked = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts ranked games from 13k players or stronger ranking.\nYou may try unranked.' }));
+
+    })
+
+    it('reject user ranking for ranked games (not general) too low', () => {
+
+      let notification = base_challenge({ ranked: true, user: { ranking: 17 } });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minrank = undefined;
+      config.maxrank = undefined;
+
+      config.minrankranked = 17;
+      config.maxrankranked = 32;
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts ranked games from 13k players or stronger ranking.\nYou may try unranked.' }));
+
+    })*/
 
   })
 
