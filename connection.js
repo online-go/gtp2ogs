@@ -450,7 +450,7 @@ class Connection {
         if (resultHandicap) return resultHandicap;
 
         // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
-        // also this avoids an undefined error in getTimecontrolArrsMainPeriodTime when getting timesObj.(maintime|periodtime).none
+        // also this avoids an undefined error in getTimecontrolObjsMainPeriodTime when getting timesObj.(maintime|periodtime).none
         if (notification.time_control.time_control !== "none") {
             const resultMaintime = getMinMaxMainPeriodTimeRejectResult("maintime", notification.time_control, notification.ranked);
             if (resultMaintime) return resultMaintime;
@@ -683,24 +683,43 @@ function conn_log() {
     }
 }
 
-function beforeRankedUnrankedGamesSpecial(before, extra, argName, special) {
-    const isExtra = (extra !== "");
-    if (argName.includes("unranked")) {
-        return `${before}${extra}unranked games`; //ex: "for blitz unranked games"
-    } else if (argName.includes("ranked")) {
-        return `${before}${extra}ranked games`;   //ex: "for ranked games"
-    } else if (isExtra) {
-        return `${before}${extra}games`           //ex: "for correspondence games"
-    } else if (special !== "") {
-        return `${before}${special}games`         //ex: "from all games"
+function getRankedUnranked(argName) {
+    if (argName.includes("unranked")) return "unranked";
+    if (argName.includes("ranked"))   return "ranked";
+    else                              return "";
+}
+
+function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
+    const rankedUnranked = getRankedUnranked(argName);
+
+    if (BLC !== "") {
+        if (rankedUnranked.includes("ranked")){
+            return `${forFrom}${BLC}${rankedUnranked} games`; // ex: "for blitz ranked games"
+        } else {
+            return `${forFrom}${BLC} games`;                  // ex: "for correspondence games"
+        }               
+    }
+
+    if (all === "all") {
+        return `${forFrom}${all} games`;                      // ex: "from all games"
     } else {
-        return "";
+        if (rankedUnranked.includes("ranked")) {
+            return `${forFrom}${rankedUnranked}games`;        // ex: "for ranked games"       
+        } else {
+            return "";                                        // no need to say it "for all games" explicitly (general argument)
+        }                 
     }
 }
 
 function getSuggestionSentence(argName) {
-    if (argName.includes("ranked")) ".\nYou may also try changing the ranked/unranked setting";
-    else return "";
+    if (argName.includes("unranked")) {
+        return ", or try ranked";
+    }
+    if (argName.includes("ranked")) {
+        return ", or try unranked";
+    } else {
+        return "";
+    }
 }
 
 function getArgNamesGRU(familyName) {
@@ -842,15 +861,15 @@ function getMinMaxMsg(isRank, MIBL, nameS, rankedUnranked, timeControlSentence, 
         return `This bot only accepts games from ${argToString} or ${MIBL.weakStro} player ranking.`;
     } else {
         return `${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} is ${argToString}`
-               + `please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
+               + `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
     }
 }
 
 function getMinMaxReject(argToString, notifToString, isMin,
-                         speedSentence, timeControlSentence, argName, nameS, middleSentence, isRank) {
+                         speed, timeControlSentence, argName, nameS, middleSentence, isRank) {
     const MIBL = getMIBL(isMin);
 
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", speedSentence, argName, "");
+    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", speed, argName, "");
     const endingSentence = getSuggestionSentence(argName);
 
     conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS} ${rankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
@@ -868,7 +887,7 @@ function getMinMaxRankRejectResult(notif, notificationRanked) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(rankToString(arg), rankToString(notif), isMin,
-                                       "", "", argName, "rank", ".", true);
+                                       "", "", argName, "rank", "", true);
             }
         }
     }
@@ -889,15 +908,15 @@ function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
 
 function getHandicapMiddleSentence(isMin, notif, arg, isFakeHandicap) {
     if (isMin && notif === 0 && arg > 0) {
-        return " (handicap games only).";
+        return " (handicap games only)";
     }
     if (!isMin && notif > 0 && arg === 0) {
-        return " (no handicap games).";
+        return " (no handicap games)";
     }
     if (isFakeHandicap) {
-        return ", manually select the number of handicap stones in -custom handicap-."
+        return ", manually select the number of handicap stones in -custom handicap-"
     } else {
-        return ".";
+        return "";
     }
 }
 
@@ -917,11 +936,11 @@ function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRank
     }
 }
 
-function getBlitzLiveCorr(notificationTSpeed) {
-    if (notificationTSpeed === "correspondence") {
+function getBlitzLiveCorr(speed) {
+    if (speed === "correspondence") {
         return "corr";
     }
-    return notificationTSpeed;
+    return speed;
 }
 
 function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRanked) {
@@ -934,7 +953,7 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(arg, notif, isMin,
-                                       `${notificationT.speed} `, "", argName, "the number of periods", ".", false);
+                                       notificationT.speed, "", argName, "the number of periods", "", false);
             }
         }
     }
@@ -974,27 +993,27 @@ function timespanToDisplayString(timespan) {
 }
 
 function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, notificationRanked) {
-    const blitzLiveCorr = getBlitzLiveCorr(notificationT.speed);
-    const timecontrolObjs      = getTimecontrolObjsMainPeriodTime(mainPeriodTime, notificationT);
+    const blitzLiveCorr   = getBlitzLiveCorr(notificationT.speed);
+    const timecontrolObjs = getTimecontrolObjsMainPeriodTime(mainPeriodTime, notificationT);
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
         if (argName) {
             let arg = config[argName];
-            let middleSentence = ".";
+            let middleSentence = "";
             if ((notificationT.time_control === "canadian") && (mainPeriodTime.includes("periodtime"))) {
                 // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
                 // arg is inputted by botadmin for 1 stone: multiply arg by the number of stones per period, so that
                 // we can compare it against notification.
                 // - also, use multiply to raise arg, to avoid binary division loss of precision.
                 arg *= notificationT.stones_per_period;
-                middleSentence = ", or change the number of stones per period.";
+                middleSentence = ", or change the number of stones per period";
             }
             for (const timecontrolObj of timecontrolObjs) {
                 const notif = timecontrolObj.notif;
                 if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                     return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
-                                           `${notificationT.speed} `, ` in ${notificationT.speed}`, argName, timecontrolObj.name, middleSentence, false);
+                                           notificationT.speed, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence, false);
                 }
             }
         }
