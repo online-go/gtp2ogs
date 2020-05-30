@@ -331,7 +331,7 @@ describe('A single game', () => {
         let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fake_socket; });
+        let conn = new connection.Connection(() => { return fake_socket; }, config);
 
         let bot_id = sinon.spy();
         let bot_connect = sinon.spy();
@@ -471,7 +471,7 @@ describe('Games do not hang', () => {
         let fakes = setupStubs();
         sinon.stub(config, 'corrqueue').value(true);
 
-        let conn = new connection.Connection(() => { return fakes.socket; });
+        let conn = new connection.Connection(() => { return fakes.socket; }, config);
         let seen_moves = setupGames(fakes);
         fakes.socket.inject('connect');
 
@@ -500,7 +500,7 @@ describe('Games do not hang', () => {
         sinon.stub(config, 'corrqueue').value(true);
         sinon.stub(config, 'timeout').value(5);
 
-        let conn = new connection.Connection(() => { return fakes.socket; });
+        let conn = new connection.Connection(() => { return fakes.socket; }, config);
         let seen_moves = setupGames(fakes);
         fakes.socket.inject('connect');
 
@@ -536,7 +536,7 @@ describe('Games do not hang', () => {
         child_process.spawn.restore();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fakes.socket; });
+        let conn = new connection.Connection(() => { return fakes.socket; }, config);
         fakes.socket.inject('connect');
         fakes.socket.inject('active_game', base_active_game());
         assert.equal(genmove.called, false, 'Genmove called with missing gamedata');
@@ -574,7 +574,7 @@ describe('Periodic actions', () => {
             fake_socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
         });
 
-        let conn = new connection.Connection(() => { return fake_socket; });
+        let conn = new connection.Connection(() => { return fake_socket; }, config);
         fake_socket.inject('connect');
 
         // Create 10 games.
@@ -637,7 +637,7 @@ describe("Retrying bot failures", () => {
     }
 
     function ensureRetry(fakes) {
-        let conn = new connection.Connection(() => { return fakes.socket; });
+        let conn = new connection.Connection(() => { return fakes.socket; }, config);
         fakes.socket.inject('connect');
         fakes.socket.inject('active_game', base_active_game());
         fakes.socket.inject('game/1/gamedata', base_gamedata());
@@ -745,7 +745,7 @@ describe("Pv should work", () => {
         let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fake_socket; });
+        let conn = new connection.Connection(() => { return fake_socket; }, config);
 
         const game = sinon.spy();
         config.ogspv = true;
@@ -799,7 +799,7 @@ describe("Pv should work", () => {
         sinon.stub(https, 'request').callsFake(fake_api.request);
         let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
-        let conn = new connection.Connection(() => { return fake_socket; });
+        let conn = new connection.Connection(() => { return fake_socket; }, config);
         const game = sinon.spy();
         game.sendChat = sinon.spy();
         game.processing = true;

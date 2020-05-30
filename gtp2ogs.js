@@ -8,6 +8,7 @@ process.title = 'gtp2ogs';
 
 // Do this before importing anything else in case the other modules use config.
 const config = require('./config');
+const io = require('socket.io-client');
 config.updateFromArgv();
 
 process.title = `gtp2ogs ${config.bot_command.join(' ')}`;
@@ -19,7 +20,7 @@ process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
   console.error(`ERROR: ${er.stack}`);
   if (!conn || !conn.socket) {
-    conn = new Connection();
+    conn = new Connection(io, config);
   } else {
     //conn.connection_reset();
   }
