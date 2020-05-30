@@ -119,7 +119,53 @@ describe('Challenges', () => {
 
   })
 
-  describe('Byoyomi time settings', () => {
+  describe('Min Max Rank', () => {
+
+    it('reject user ranking too low', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 17 } });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.banned_users          = {};
+      config.banned_users_ranked   = {};
+      config.banned_users_unranked = {};
+
+      config.minrank = "13k";
+      config.maxrank = "3d";
+      
+      let result = conn.checkChallengeMandatory(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
+
+    })
+
+  })
+
+  /*describe('Min Max Handicap', () => {
+
+    it('reject automatic handicap (-1) too low', () => {
+
+      let notification = base_challenge({ ranked: false, handicap: -1 });
+
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.banned_users          = {};
+      config.banned_users_ranked   = {};
+      config.banned_users_unranked = {};
+
+      config.minhandicap = 0;
+      config.maxhandicap = 2;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 0, please increase the number of handicap stones.' }));
+
+    })
+
+  })*/
+
+  describe('Min Max Byoyomi time settings', () => {
 
     // Main Time Blitz
 
