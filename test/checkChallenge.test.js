@@ -297,6 +297,25 @@ describe('Challenges', () => {
 
     })
 
+    it('accept handicap edge min (fakerank automatic handicap stone number estimation)', () => {
+
+      let notification = base_challenge({ ranked: false, user: { ranking: 29 }, handicap: -1 }); // "1k"
+      // remove old vars
+      // this is not clean but it is a workaround until we review this
+      config.minhandicap = undefined;
+      config.maxhandicap = undefined;
+
+      config.fakerank    = 29; // "1k"
+      // "1k" - "1k" = 29 - 29 = 0 automatic handicap stones
+      config.minhandicap =  0;
+      config.maxhandicap =  6;
+      
+      let result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    })
+
     it('accept handicap between min and max', () => {
 
       let notification = base_challenge({ ranked: false, handicap: 1 });
@@ -305,6 +324,7 @@ describe('Challenges', () => {
       // this is not clean but it is a workaround until we review this
       config.minhandicap = undefined;
       config.maxhandicap = undefined;
+      config.fakerank    = undefined;
 
       config.minhandicap = 0;
       config.maxhandicap = 6;
