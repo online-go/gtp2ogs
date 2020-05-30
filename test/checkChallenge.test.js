@@ -3,7 +3,7 @@
 let assert = require('assert');
 
 let config;
-let connection = require('../connection');
+let connection;
 let console = require('../console').console;
 
 let sinon = require('sinon');
@@ -17,8 +17,13 @@ function stub_console() {
     sinon.stub(console, 'debug');
 }
 
+function requireUncached(module) {
+  delete require.cache[require.resolve(module)];
+  return require(module);
+}
+
 function getNewConfig() {
-  const config = require('../config');
+  const config = requireUncached('../config');
 
   config.DEBUG = true;
   config.apikey = 'deadbeef';
@@ -45,6 +50,8 @@ describe('Challenges', () => {
  
   beforeEach(function() {
     config = getNewConfig();
+    connection = requireUncached('../connection');
+
     stub_console();
     sinon.useFakeTimers();
     
@@ -53,7 +60,7 @@ describe('Challenges', () => {
     sinon.stub(https, 'request').callsFake(fake_api.request);
     
     let fake_socket = new FakeSocket();
-    conn = new connection.Connection(() => { return fake_socket; });
+    conn = new connection.Connection(() => { return fake_socket; }, config);
   });
   
   describe('Bans', () => {
@@ -125,12 +132,6 @@ describe('Challenges', () => {
 
       let notification = base_challenge({ ranked: false, user: { ranking: 10 } }); // "20k"
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.banned_users          = {};
-      config.banned_users_ranked   = {};
-      config.banned_users_unranked = {};
-
       config.minrank = 17;
       config.maxrank = 32;
       
@@ -138,7 +139,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
 
-    })
+    });
 
     it('accept user ranking edge min', () => {
 
@@ -151,7 +152,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept user ranking between min and max', () => {
 
@@ -164,10 +165,9 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    })
+    });
 
     it('accept user ranking edge max', () => {
-
       let notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
 
       config.minrank = 17;
@@ -176,11 +176,9 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-
-    })
+    });
 
     it('reject user ranking too high', () => {
-
       let notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
 
       config.minrank = 17;
@@ -189,8 +187,7 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-
-    })
+    });
 
     it('reject user ranking too high (9d+)', () => {
 
@@ -203,7 +200,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
 
-    })
+    });
 
     it('reject user ranking too high (pro)', () => {
 
@@ -215,21 +212,14 @@ describe('Challenges', () => {
       let result = conn.checkChallengeMandatory(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
-
-    })
-
-  })
+   });
+  });
 
   describe('Min Max Handicap', () => {
 
     it('reject handicap too low (automatic handicap is -1)', () => {
 
       let notification = base_challenge({ ranked: false, handicap: -1 });
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minrank = undefined;
-      config.maxrank = undefined;
 
       config.minhandicap = 0;
       config.maxhandicap = 2;

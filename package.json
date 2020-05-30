@@ -25,10 +25,11 @@
     "markdownlint": "^0.20.2",
     "markdownlint-cli": "^0.22.0",
     "mocha": "^5.2.0",
+    "nyc": "^15.0.1",
     "sinon": "^7.2.3"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "nyc mocha",
     "lint": "eslint \"./**/*.js\"",
     "markdown": "markdownlint **/*.md --ignore node_modules"
   },

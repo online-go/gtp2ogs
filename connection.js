@@ -2,13 +2,12 @@
 
 const querystring = require('querystring');
 
-const io = require('socket.io-client');
 const http = require('http');
 const https = require('https');
 
 const console = require('./console').console;
-const config = require('./config');
 const Game = require('./game').Game;
+let config;
 
 /****************/
 /** Connection **/
@@ -24,13 +23,11 @@ const ignorable_notifications = {
 };
 
 class Connection {
-    constructor(io_client) {
+    constructor(io_client, myConfig) {
+        config = myConfig;
         const prefix = (config.insecure ? `http://` : `https://`) + `${config.host}:${config.port}`;
 
         conn_log(`Connecting to ${prefix}`);
-        if (!io_client) {
-          io_client = io;
-        }
         const socket = this.socket = io_client(prefix, {
             reconection: true,
             reconnectionDelay: 500,
