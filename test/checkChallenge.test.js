@@ -101,4 +101,25 @@ describe('Challenges', () => {
     
     assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
   })
+
+  it('reject main time blitz too low', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
+    config.minmaintimeblitz = 10;
+    config.maxmaintimeblitz = 30;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for blitz games in byoyomi is 10 seconds, please increase Main Time.' }));
+  })
+
+  it('reject period time blitz too low', () => {
+    let notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 30, periods: 1, period_time: 1 } });
+    config.minperiodtimeblitz = 5;
+    config.maxperiodtimeblitz = 15;
+    
+    let result = conn.checkChallengeMinMax(notification);
+    
+    assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Period Time for blitz games in byoyomi is 5 seconds, please increase Period Time.' }));
+  })
+
 })
