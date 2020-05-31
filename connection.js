@@ -418,13 +418,12 @@ class Connection {
         if (resultHandicap) return resultHandicap;
 
         // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
-        // also this avoids an undefined error in getTimecontrolObjsMainPeriodTime when getting timesObj.(maintime|periodtime).none
         if (notification.time_control.time_control !== "none") {
             const resultMaintime = getMinMaxMainPeriodTimeRejectResult("maintime", notification.time_control, notification.ranked);
             if (resultMaintime) return resultMaintime;
     
             // "fischer", "canadian", "simple", "absolute", don't have a periods number,
-            // undefined arg compared to notificationT.periods will always return false, thus
+            // arg compared to undefined notificationT.periods will always return false, thus
             // always rejecting: don't check it.
             //
             if (notification.time_control.time_control === "byoyomi") {
@@ -667,33 +666,26 @@ function getRankedUnrankedGames(argName) {
 }
 
 function getForFromBLCRankedUnrankedGames(forFrom, BLC, argName, all) {
-    const rankedUnranked = getRankedUnranked(argName);
+    const rankedUnrankedGames = getRankedUnrankedGames(argName);
 
     if (BLC !== "") {
-        if (rankedUnranked.includes("ranked")){
-            return ` ${forFrom}${BLC}${rankedUnranked} games`; // ex: "for blitz ranked games"
-        } else {
-            return ` ${forFrom}${BLC} games`;                  // ex: "for correspondence games"
-        }               
+        return ` ${forFrom}${BLC}${rankedUnrankedGames}`; // ex: "for blitz ranked games"
+                                                          // ex: "for correspondence games"          
     }
-
     if (all === "all") {
-        return `${forFrom}${all} games`;                      // ex: "from all games"
+        return `${forFrom}${all} games`;                  // ex: "from all games"
     } else {
-        if (rankedUnranked.includes("ranked")) {
-            return ` ${forFrom}${rankedUnranked} games`;        // ex: "for ranked games"       
+        if (argName.includes("ranked")) {
+            return ` ${forFrom}${rankedUnrankedGames}`;  // ex: "for ranked games"       
         } else {
-            return "";                                        // no need to say it "for all games" explicitly (general argument)
+            return "";                                   // no need to say explicitly "for all games" (ranked and unranked: general argument)
         }                 
     }
 }
 
 function getSuggestionSentence(argName) {
-    if (argName.includes("unranked")) {
-        return ".\nYou may try ranked";
-    }
     if (argName.includes("ranked")) {
-        return ".\nYou may try unranked";
+        return `.\nYou may try ${argName.includes("unranked") ? "ranked" : "unranked"}`;
     } else {
         return "";
     }
@@ -806,15 +798,16 @@ function getCheckedArgName(familyName, notificationRanked) {
     //
     if (config[unranked] !== undefined && !notificationRanked) {
         return unranked;
-    } else if (config[ranked] !== undefined && notificationRanked) {
-        return ranked;
-    } else if (config[general] !== undefined) {
-        return general;
-    } else {
-        // no valid arg to test, this happens when bot admin inputs no value and we
-        // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
-        return undefined;
     }
+    if (config[ranked] !== undefined && notificationRanked) {
+        return ranked;
+    }
+    if (config[general] !== undefined) {
+        return general;
+    }
+    // no valid arg to test, this happens when bot admin inputs no value and we
+    // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
+    return undefined;
 }
 
 
@@ -828,9 +821,9 @@ function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
 
 function getMIBL(isMin) {
     if (isMin) {
-        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below", lowHig: "low" , weakStro: "stronger" };
+        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below", weakStro: "stronger" };
     } else {
-        return { miniMaxi: "Maximum", incDec: "reduce",   belAbo: "above", lowHig: "high", weakStro: "weaker" };
+        return { miniMaxi: "Maximum", incDec: "reduce",   belAbo: "above", weakStro: "weaker" };
     }
 }
 
@@ -839,13 +832,23 @@ function getMinMaxRankMsg(argName, argToString, MIBL, endingSentence) {
     return `This bot only accepts ${rankedUnrankedGames} from ${argToString} players or ${MIBL.weakStro} ranking${endingSentence}.`;  
 }
 
-function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence) {
-    const prettyNameS = nameS.split(" ")
-                              .filter( (e) => (e !== "the" ) )
-                              .join(" ");
-    const prettyName  = (timeControlSentence.includes("canadian") ? nameS : prettyNameS);
+function getFixedFirstNameS(nameS, timeControlSentence) {
+    if (timeControlSentence.includes("canadian")) {
+        return nameS;
+    }
+    if (nameS.includes("the")) {
+        return nameS.split(" ")
+                    .filter( (e) => (e !== "the" ) )
+                    .join(" ");
+    } else {
+        return nameS;
+    }
+}
 
-    return `${MIBL.miniMaxi} ${prettyName}${forRankedUnranked}${timeControlSentence} is ${argToString}`
+function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence) {
+    const fixedFirstNameS = getFixedFirstNameS(nameS, timeControlSentence);
+
+    return `${MIBL.miniMaxi} ${fixedFirstNameS}${forRankedUnranked}${timeControlSentence} is ${argToString}`
            + `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
 }
 
@@ -943,7 +946,7 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(arg, notif, isMin,
-                                       notificationT.speed, ` in ${notificationT.time_control}`, argName, "the number of periods", "");
+                                       `${notificationT.speed } `, ` in ${notificationT.time_control}`, argName, "the number of periods", "");
             }
         }
     }
@@ -1005,7 +1008,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, noti
                     const notif = timecontrolObj.notif;
                     if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                         return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
-                                               notificationT.speed, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
+                                               `${notificationT.speed } `, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
                     }
                 }
             }
