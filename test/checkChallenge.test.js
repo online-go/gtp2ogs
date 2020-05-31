@@ -137,6 +137,23 @@ describe('Challenges', () => {
 
   });
 
+  describe('Allowed families', () => {
+    it('reject boardsize not in allowed boardsizes', () => {
+
+      const notification = base_challenge({ ranked: false, width: 18, height: 18 });
+
+      config.boardsizes = "9,13,19";
+      config.allow_all_boardsizes = false;
+      config.allowed_boardsizes   = [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: true,   msg: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed Board sizes:\n9x9, 13x13, 19x19.' }));
+
+    });
+
+  });
+
   describe('Min Max Rank', () => {
 
     it('reject user ranking too low', () => {

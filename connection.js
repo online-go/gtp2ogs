@@ -393,16 +393,16 @@ class Connection {
         }
         
         // if square, check if square board size is allowed
-        const resultBoardsizes = getAllowedFamilyRejectResult("boardsizes", notification.width, notification.ranked);
+        const resultBoardsizes = getAllowedFamilyRejectResult("boardsizes", "Board size", notification.width, notification.ranked);
         if (resultBoardsizes) return resultBoardsizes;
 
-        const resultKomis = getAllowedFamilyRejectResult("komis", notification.komi, notification.ranked);
+        const resultKomis = getAllowedFamilyRejectResult("komis", "Komi", notification.komi, notification.ranked);
         if (resultKomis) return resultKomis;
 
-        const resultSpeeds = getAllowedFamilyRejectResult("speeds", notification.time_control.speed, notification.ranked);
+        const resultSpeeds = getAllowedFamilyRejectResult("speeds", "Speed", notification.time_control.speed, notification.ranked);
         if (resultSpeeds) return resultSpeeds;
 
-        const resultTimecontrols = getAllowedFamilyRejectResult("timecontrols", notification.time_control.time_control, notification.ranked);
+        const resultTimecontrols = getAllowedFamilyRejectResult("timecontrols", "Time control", notification.time_control.time_control, notification.ranked);
         if (resultTimecontrols) return resultTimecontrols;
 
         return { reject: false }; // OK !
@@ -666,7 +666,7 @@ function getRankedUnrankedGames(argName) {
     }
 }
 
-function beforeRankedUnrankedGamesSpecial(forFrom, BLC, argName, all) {
+function getForFromBLCRankedUnrankedGames(forFrom, BLC, argName, all) {
     const rankedUnranked = getRankedUnranked(argName);
 
     if (BLC !== "") {
@@ -737,14 +737,14 @@ function get_r_u_arr_booleans(familyName, notificationRanked) {
 }
 
 function getBooleans_r_u_Reject(argName, nameF, ending) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
+    const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
     const msg = `${nameF} not allowed on this bot ${rankedUnranked}${ending}.`;
     conn_log(msg);
     return { reject: true, msg };
 }
 
 function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHeight) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
+    const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
     conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
              + `is not square, not allowed ${rankedUnranked}`);
     const msg = `Your selected board size ${notificationWidth}x${notificationHeight} `
@@ -763,49 +763,36 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function pluralFamilyStringToSingularString(plural) {
-    const pluralArr = plural.split("unranked")[0]
-                            .split("ranked")[0]
-                            .split("");
-    // for example "speedsranked" -> ["s", "p", "e", "e", "d", "s"]
-    pluralArr.pop();
-    // for example ["s", "p", "e", "e", "d", "s"] -> ["s", "p", "e", "e", "d"]
+function getAllowedFamilyReject(argName, nameF, notif) {
+    const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "")
+                                   //.trim();
 
-    return pluralArr.join("");  // for example ["s", "p", "e", "e", "d"] -> "speed"
-}
-
-function genericAllowedFamiliesReject(argName, notificationUnit) {
-    const rankedUnranked = beforeRankedUnrankedGamesSpecial("for ", "", argName, "");
-    const argFamilySingularString = pluralFamilyStringToSingularString(argName);
     // for example "speedsranked" -> "speed"
-    let argValueString = config[argName];
-    let notificationUnitConverted = notificationUnit;
+    let argToString = config[argName];
+    let notifToString = notif;
 
-    if (argFamilySingularString.includes("boardsize")) {
-        argValueString = boardsizeSquareToDisplayString(config[argName]);
+    if (argName.includes("boardsizes")) {
+        argToString = boardsizeSquareToDisplayString(config[argName]);
         // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
-        notificationUnitConverted = boardsizeSquareToDisplayString(notificationUnit);
-    } else if (argFamilySingularString.includes("komi") && (notificationUnit === null)) {
-        notificationUnitConverted = "automatic";
+        notifToString = boardsizeSquareToDisplayString(notif);
+    } else if (argName.includes("komis") && (notif === null)) {
+        notifToString = "automatic";
     }
-    conn_log(`${argFamilySingularString} ${rankedUnranked} `
-             + `-${notificationUnitConverted}-, not in -${argValueString}- `);
-    const msg = `${argFamilySingularString} -${notificationUnitConverted}- `
-                + `is not allowed on this bot ${rankedUnranked}, please `
-                + `choose one of these allowed ${argFamilySingularString}s `
-                + `${rankedUnranked}: -${argValueString}-`;
+    conn_log(`${nameF} ${forRankedUnrankedGames} is ${notifToString}, not in ${argToString}.`);
+    const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}`
+                + `, please choose one of these allowed ${nameF}s${forRankedUnrankedGames}:\n${argToString}.`;
     return { reject: true, msg };
 }
 
-function getAllowedFamilyRejectResult(familyName, notif, notificationRanked) {
+function getAllowedFamilyRejectResult(familyName, nameF, notif, notificationRanked) {
     if (config[familyName] && !config[`${familyName}ranked`] && !config[`${familyName}unranked`] && !config[`allow_all_${familyName}`] && !config[`allowed_${familyName}`][notif]) {
-        return genericAllowedFamiliesReject(familyName, notif);
+        return getAllowedFamilyReject(familyName, nameF, notif);
     }
     if (config[`${familyName}ranked`] && notificationRanked && !config[`allow_all_${familyName}_ranked`] && !config[`allowed_${familyName}_ranked`][notif]) {
-        return genericAllowedFamiliesReject(`${familyName}ranked`, notif);
+        return getAllowedFamilyReject(`${familyName}ranked`, nameF, notif);
     }
     if (config[`${familyName}unranked`] && !notificationRanked && !config[`allow_all_${familyName}_unranked`] && !config[`allowed_${familyName}_unranked`][notif]) {
-        return genericAllowedFamiliesReject(`${familyName}unranked`, notif);
+        return getAllowedFamilyReject(`${familyName}unranked`, nameF, notif);
     }
 }
 
@@ -864,7 +851,7 @@ function getMinMaxReject(argToString, notifToString, isMin,
                          speed, timeControlSentence, argName, nameS, middleSentence, isRank) {
     const MIBL = getMIBL(isMin);
 
-    const forRankedUnranked = beforeRankedUnrankedGamesSpecial("for ", speed, argName, "");
+    const forRankedUnranked = getForFromBLCRankedUnrankedGames("for ", speed, argName, "");
     const endingSentence = getSuggestionSentence(argName);
 
     conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
