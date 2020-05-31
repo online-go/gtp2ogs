@@ -920,7 +920,7 @@ describe('Challenges', () => {
 
   });
 
-  describe('No main time check for some time controls', () => {
+  describe('Some time controls have no main time, do not check maintime', () => {
 
     it('simple timecontrol accepts any main time, even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 1 } });
@@ -957,7 +957,7 @@ describe('Challenges', () => {
     
   });
 
-  describe('No number of periods check for non-byoyomi timecontrols', () => {
+  describe('Non-Byoyomi time controls have no period time, do not check periods', () => {
 
     it('canadian timecontrol accepts any periods number, even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 1, main_time: 1, period_time: 1 } });
@@ -994,10 +994,70 @@ describe('Challenges', () => {
 
   });
 
-  describe('No period time challenge check for some time controls', () => {
+  describe('Some time controls have no period time, do not check periodtime', () => {
 
+    it('absolute timecontrol accepts any period time, even if too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "correspondence", total_time: 1 } });
 
+      config.minperiodtimelive = 30;
+      config.maxperiodtimelive = 120;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('absolute timecontrol accepts any period time, even if between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "correspondence", total_time: 80 } });
+
+      config.minperiodtimelive = 30;
+      config.maxperiodtimelive = 120;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('absolute timecontrol accepts any period time, even if too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "correspondence", total_time: 999 } });
+
+      config.minperiodtimelive = 30;
+      config.maxperiodtimelive = 120;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
     
+  });
+
+  describe('None time control has no main time, no periods, and no period time, do not check any time setting', () => {
+
+    // "none" exists only in "correspondence" games
+
+    it('none time control accepts any period time, even if config is empty of time settings', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "none", time_control: "none", speed: "correspondence" } });
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('none time control accepts any period time, even if config is full of time settings', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "none", time_control: "none", speed: "correspondence" } });
+
+      config.minmaintimecorr   = 20000;
+      config.maxmaintimecorr   = 80000;
+      config.minperiodscorr    = 3;
+      config.maxmaintimecorr   = 10;
+      config.minperiodtimecorr = 2000;
+      config.maxperiodtimecorr = 8000;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
   });
 
   describe('Canadian time settings', () => {
