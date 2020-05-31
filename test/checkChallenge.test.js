@@ -63,6 +63,17 @@ describe('Challenges', () => {
     conn = new connection.Connection(() => { return fake_socket; }, config);
   });
   
+  describe('General rules', () => {
+    it('Empty config (except defaults in test.js) should accept challenge', () => {
+      const notification = base_challenge();
+      
+      const result = conn.checkChallenge(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+  })
+
   describe('Bans', () => {
     it('should reject banned users', () => {
       const notification = base_challenge({ user: { username: 'bannedName', id: 5 } });

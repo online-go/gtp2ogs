@@ -393,44 +393,44 @@ class Connection {
         }
         
         // if square, check if square board size is allowed
-        if (!config.allowed_boardsizes[notification.width] && !config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
+        if (config.boardsizes && !config.boardsizesranked && !config.boardsizesunranked && !config.allow_all_boardsizes && !config.allowed_boardsizes[notification.width] ) {
             return genericAllowedFamiliesReject("boardsizes", notification.width);
         }
-        if (!config.allowed_boardsizes_ranked[notification.width] && !config.allow_all_boardsizes_ranked && notification.ranked && config.boardsizesranked) {
+        if (config.boardsizesranked && notification.ranked && !config.allow_all_boardsizes_ranked && !config.allowed_boardsizes_ranked[notification.width] ) {
             return genericAllowedFamiliesReject("boardsizesranked", notification.width);
         }
-        if (!config.allowed_boardsizes_unranked[notification.width] && !config.allow_all_boardsizes_unranked && !notification.ranked && config.boardsizesunranked) {
+        if (config.boardsizesunranked && !notification.ranked && !config.allow_all_boardsizes_unranked && !config.allowed_boardsizes_unranked[notification.width]) {
             return genericAllowedFamiliesReject("boardsizesunranked", notification.width);
         }
 
-        if (!config.allowed_komis[notification.komi] && !config.allow_all_komis && !config.komisranked && !config.komisunranked) {
+        if (config.komis && !config.komisranked && !config.komisunranked && !config.allow_all_komis && !config.allowed_komis[notification.komi] ) {
             return genericAllowedFamiliesReject("komis", notification.komi);
         }
-        if (!config.allowed_komis_ranked[notification.komi] && notification.ranked && !config.allow_all_komis_ranked && config.komisranked) {
+        if (config.komisranked && notification.ranked && !config.allow_all_komis_ranked && !config.allowed_komis_ranked[notification.komi] ) {
             return genericAllowedFamiliesReject("komisranked", notification.komi);
         }
-        if (!config.allowed_komis_unranked[notification.komi] && !notification.ranked && !config.allow_all_komis_unranked && config.komisunranked) {
+        if (config.komisunranked && !notification.ranked && !config.allow_all_komis_unranked && !config.allowed_komis_unranked[notification.komi]) {
             return genericAllowedFamiliesReject("komisunranked", notification.komi);
         }
 
-        if (!config.allowed_speeds[notification.time_control.speed] && !config.speedsranked && !config.speedsunranked) {
+        if (config.speeds && !config.speedsranked && !config.speedsunranked && !config.allow_all_speeds && !config.allowed_speeds[notification.time_control.speed] ) {
             return genericAllowedFamiliesReject("speeds", notification.time_control.speed);
         }
-        if (!config.allowed_speeds_ranked[notification.time_control.speed] && notification.ranked && config.speedsranked) {
+        if (config.speedasranked && notification.ranked && !config.allow_all_speeds_ranked && !config.allowed_speeds_ranked[notification.time_control.speed] ) {
             return genericAllowedFamiliesReject("speedsranked", notification.time_control.speed);
         }
-        if (!config.allowed_speeds_unranked[notification.time_control.speed] && !notification.ranked && config.speedsunranked) {
+        if (config.speedsunranked && !notification.ranked && !config.allow_all_speeds_unranked && !config.allowed_speeds_unranked[notification.time_control.speed]) {
             return genericAllowedFamiliesReject("speedsunranked", notification.time_control.speed);
         }
 
         // note : "absolute" and/or "none" are possible, but not in defaults, see OPTIONS-LIST for details
-        if (!config.allowed_timecontrols[notification.time_control.time_control] && !config.timecontrolsranked && !config.timecontrolsunranked) { 
+        if (config.timecontrols && !config.timecontrolsranked && !config.timecontrolsunranked && !config.allow_all_timecontrols && !config.allowed_timecontrols[notification.time_control.time_control] ) {
             return genericAllowedFamiliesReject("timecontrols", notification.time_control.time_control);
         }
-        if (!config.allowed_timecontrols_ranked[notification.time_control.time_control] && notification.ranked && config.timecontrolsranked) { 
+        if (config.timecontrolasranked && notification.ranked && !config.allow_all_timecontrols_ranked && !config.allowed_timecontrols_ranked[notification.time_control.time_control] ) {
             return genericAllowedFamiliesReject("timecontrolsranked", notification.time_control.time_control);
         }
-        if (!config.allowed_timecontrols_unranked[notification.time_control.time_control] && !notification.ranked && config.timecontrolsunranked) { 
+        if (config.timecontrolsunranked && !notification.ranked && !config.allow_all_timecontrols_unranked && !config.allowed_timecontrols_unranked[notification.time_control.time_control]) {
             return genericAllowedFamiliesReject("timecontrolsunranked", notification.time_control.time_control);
         }
 
