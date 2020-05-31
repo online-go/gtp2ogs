@@ -238,11 +238,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-
       config.fakerank    = 29; // "1k"
       // "1d" - "1k" = 30 - 29 = 1 automatic handicap stones
       config.minhandicap = 2;
@@ -258,12 +253,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 0 });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.fakerank    = undefined;
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-
       config.minhandicap = 2;
       config.maxhandicap = 6;
       
@@ -277,11 +266,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 0 });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
@@ -294,10 +278,6 @@ describe('Challenges', () => {
     it('accept handicap edge min (fakerank automatic handicap stone number estimation)', () => {
 
       const notification = base_challenge({ ranked: false, user: { ranking: 29 }, handicap: -1 }); // "1k"
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
 
       config.fakerank    = 29; // "1k"
       // "1k" - "1k" = 29 - 29 = 0 automatic handicap stones
@@ -314,12 +294,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 1 });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-      config.fakerank    = undefined;
-
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
@@ -332,11 +306,6 @@ describe('Challenges', () => {
     it('accept handicap between min and max (fakerank automatic handicap stone number estimation)', () => {
 
       const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
 
       config.fakerank    = 26; // "4k"
       // "1d" - "4k" = 30 - 26 = 4 automatic handicap stones
@@ -353,12 +322,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 6 });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-      config.fakerank    = undefined;
-
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
@@ -371,11 +334,6 @@ describe('Challenges', () => {
     it('accept handicap edge max (fakerank automatic handicap stone number estimation)', () => {
 
       const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
 
       config.fakerank    = 24; // "6k"
       // "1d" - "6k" = 30 - 24 = 6 automatic handicap stones
@@ -392,12 +350,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 1 });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.fakerank    = undefined;
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-
       config.minhandicap = 0;
       config.maxhandicap = 0;
       
@@ -411,11 +363,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 9 });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
-
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
@@ -428,11 +375,6 @@ describe('Challenges', () => {
     it('reject handicap too high (fakerank automatic handicap stone number estimation)', () => {
 
       const notification = base_challenge({ ranked: false, user: { ranking: 17 }, handicap: -1 }); // "13k"
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
 
       config.fakerank    = 32; // "3d"
       // "3d" - "13k" = 32 - 17 = 15 automatic handicap stones
@@ -453,12 +395,6 @@ describe('Challenges', () => {
 
     it('reject main time blitz too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.fakerank    = undefined;
-      config.minhandicap = undefined;
-      config.maxhandicap = undefined;
 
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
@@ -517,11 +453,6 @@ describe('Challenges', () => {
     it('reject number of periods blitz too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minmaintimeblitz = undefined;
-      config.maxmaintimeblitz = undefined;
-
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
       
@@ -578,11 +509,6 @@ describe('Challenges', () => {
 
     it('reject period time blitz too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minperiodsblitz = undefined;
-      config.maxperiodsblitz = undefined;
 
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
@@ -698,11 +624,6 @@ describe('Challenges', () => {
     it('reject number of periods live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 1 } });
   
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minmaintimelive = undefined;
-      config.maxmaintimelive = undefined;
-  
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
@@ -759,11 +680,6 @@ describe('Challenges', () => {
   
     it('reject period time live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 1 } });
-  
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minperiodslive = undefined;
-      config.maxperiodslive = undefined;
   
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
@@ -879,11 +795,6 @@ describe('Challenges', () => {
     it('reject number of periods correspondence too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 1 } });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minmaintimecorr = undefined;
-      config.maxmaintimecorr = undefined;
-
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
       
@@ -940,11 +851,6 @@ describe('Challenges', () => {
 
     it('reject period time correspondence too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 1 } });
-
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minperiodscorr = undefined;
-      config.maxperiodscorr = undefined;
 
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
@@ -1011,11 +917,6 @@ describe('Challenges', () => {
     it('reject main time live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 40 } });
 
-      // remove old vars
-      // this is not clean but it is a workaround until we review this
-      config.minperiodtimecorr = undefined;
-      config.maxperiodtimecorr = undefined;//this ah no, didnt
-
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
       
@@ -1048,6 +949,4 @@ describe('Challenges', () => {
 
   })
 
-}) // amazing!!! yes, i need to fix min time WOWOWOWOOWOooooooooooooooooooooooooo!!!! so nice!!! let me add some more lol
-   // ah i prefer semicolon too!!!!!!!!!!!!!!!!!!! nice :)
-   // yes, i'll definitely learn them too lol
+})
