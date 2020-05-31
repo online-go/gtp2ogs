@@ -1,16 +1,16 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-let assert = require('assert');
+const assert = require('assert');
 
 let config;
 let connection;
-let console = require('../console').console;
+const console = require('../console').console;
 
-let sinon = require('sinon');
+const sinon = require('sinon');
 
-let https = require('https');
+const https = require('https');
 
-let { FakeSocket, FakeAPI, base_challenge } = require('./test')
+const { FakeSocket, FakeAPI, base_challenge } = require('./test')
 
 function stub_console() {
     sinon.stub(console, 'log');
@@ -50,11 +50,11 @@ describe('Challenges', () => {
     stub_console();
     sinon.useFakeTimers();
     
-    let fake_api = new FakeAPI();
+    const fake_api = new FakeAPI();
     fake_api.request({path: '/foo'}, () => {});
     sinon.stub(https, 'request').callsFake(fake_api.request);
     
-    let fake_socket = new FakeSocket();
+    const fake_socket = new FakeSocket();
     conn = new connection.Connection(() => { return fake_socket; }, config);
   });
   
