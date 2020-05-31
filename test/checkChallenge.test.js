@@ -355,7 +355,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
 
-    }); // where?
+    });
 
     it('reject handicap too high (even games only) ', () => {
 
@@ -401,6 +401,9 @@ describe('Challenges', () => {
   })
 
   describe('Byoyomi time settings', () => {
+
+    // sample:
+    // {"system":"byoyomi","time_control":"byoyomi","speed":"live","pause_on_weekends":false,"main_time":1200,"period_time":30,"periods":5}
 
     // Main Time Blitz
 
@@ -917,16 +920,66 @@ describe('Challenges', () => {
 
   })
 
-  // TODO also test other time controls are not tested for periods number
+  describe('No main time challenge check for some time controls', () => {
 
-  describe('Canadian time settings', () => { // so, what do we do now xD ah sure :) have fun lol
+
+    
+  })
+
+  describe('No number of periods challenge check for non-byoyomi timecontrols', () => {
+
+    it('canadian timecontrol accepts any periods number even if too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 1, main_time: 1, period_time: 1 } });
+
+      config.minperiodslive = 3;
+      config.maxperiodslive = 20;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('canadian timecontrol accepts any periods number even if between min and mix', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 10, main_time: 10, period_time: 10 } });
+
+      config.minperiodslive = 3;
+      config.maxperiodslive = 20;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('canadian timecontrol accepts any periods number even if too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 99, main_time: 99, period_time: 99 } });
+
+      config.minperiodslive = 3;
+      config.maxperiodslive = 20;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+  })
+
+  describe('No period time challenge check for some time controls', () => {
+
+
+    
+  })
+
+  describe('Canadian time settings', () => {
+
+    // sample:
+    // {"system":"canadian","time_control":"canadian","speed":"live","pause_on_weekends":false,"main_time":600,"period_time":180,"stones_per_period":1}
 
     // Just making sure it works similarly as byoyomi
 
     // Period Time Live
 
     it('reject main time live too low', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 40 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 40 } });
 
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
@@ -937,7 +990,7 @@ describe('Challenges', () => {
     });
 
     it('accept main time live between min and max', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 80 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
 
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
@@ -948,7 +1001,7 @@ describe('Challenges', () => {
     });
 
     it('reject main time live too high', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, periods: undefined, period_time: 1800 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 1800 } });
 
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
@@ -959,5 +1012,13 @@ describe('Challenges', () => {
     });
 
   })
+
+  // {"system":"fischer","time_control":"fischer","speed":"live","pause_on_weekends":false,"time_increment":10,"initial_time":80,"max_time":120}
+
+  // {"system":"simple","time_control":"simple","speed":"blitz","pause_on_weekends":false,"per_move":5}
+
+  // {"system":"absolute","time_control":"absolute","speed":"correspondence","pause_on_weekends":true,"total_time":2419200}
+
+  // {"system":"none","time_control":"none","speed":"correspondence","pause_on_weekends":false}
 
 })

@@ -754,18 +754,6 @@ function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHei
     return { reject: true, msg };
 }
 
-function checkAllowedFamilyReject(argName, notif) {
-    return (config[argName] && !config[`${argName}ranked`] && !config[`${argName}unranked`] && !config[`allow_all_${argName}`] && !config[`allowed_${argName}`][notif]);
-}
-
-function checkAllowedFamilyRankedReject(argName, notif, notificationRanked) {
-    return (config[`${argName}ranked`] && notificationRanked && !config[`allow_all_${argName}_ranked`] && !config[`allowed_${argName}_ranked`][notif]);
-}
-
-function checkAllowedFamilyUnrankedReject(argName, notif, notificationRanked) {
-    return (config[`${argName}unranked`] && !notificationRanked && !config[`allow_all_${argName}_unranked`] && !config[`allowed_${argName}_unranked`][notif]);
-}
-
 function boardsizeSquareToDisplayString(boardsizeSquare) {
     return boardsizeSquare
     .toString()
@@ -810,13 +798,13 @@ function genericAllowedFamiliesReject(argName, notificationUnit) {
 }
 
 function getAllowedFamilyRejectResult(familyName, notif, notificationRanked) {
-    if (checkAllowedFamilyReject(familyName, notif)) {
+    if (config[familyName] && !config[`${familyName}ranked`] && !config[`${familyName}unranked`] && !config[`allow_all_${familyName}`] && !config[`allowed_${familyName}`][notif]) {
         return genericAllowedFamiliesReject(familyName, notif);
     }
-    if (checkAllowedFamilyRankedReject(`${familyName}ranked`, notif, notificationRanked)) {
+    if (config[`${familyName}ranked`] && notificationRanked && !config[`allow_all_${familyName}_ranked`] && !config[`allowed_${familyName}_ranked`][notif]) {
         return genericAllowedFamiliesReject(`${familyName}ranked`, notif);
     }
-    if (checkAllowedFamilyUnrankedReject(`${familyName}ranked`, notif, notificationRanked)) {
+    if (config[`${familyName}unranked`] && !notificationRanked && !config[`allow_all_${familyName}_unranked`] && !config[`allowed_${familyName}_unranked`][notif]) {
         return genericAllowedFamiliesReject(`${familyName}unranked`, notif);
     }
 }
