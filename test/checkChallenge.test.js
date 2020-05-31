@@ -1072,7 +1072,7 @@ describe('Challenges', () => {
 
     // Main time
 
-    it('reject maintime time for all the stones live too low', () => {
+    it('reject main time for all the stones live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 59, period_time: 1 } });
   
       config.minmaintimelive = 60;
@@ -1083,7 +1083,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for live games in canadian is 1 minutes, please increase Main Time.' }));
     });
   
-    it('accept maintime time for all the stones live edge min', () => {
+    it('accept main time for all the stones live edge min', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 60, period_time: 80 } });
   
       config.minmaintimelive = 60;
@@ -1094,7 +1094,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('accept maintime time for all the stones live between min and max', () => {
+    it('accept main time for all the stones live between min and max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 120, period_time: 80 } });
   
       config.minmaintimelive = 60;
@@ -1105,7 +1105,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('accept maintime time for all the stones live edge max', () => {
+    it('accept main time for all the stones live edge max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1800, period_time: 80 } });
   
       config.minmaintimelive = 60;
@@ -1116,7 +1116,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('reject maintime time for all the stones live too high', () => {
+    it('reject main time for all the stones live too high', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1801, period_time: 1800 } });
   
       config.minmaintimelive = 60;
@@ -1197,17 +1197,143 @@ describe('Challenges', () => {
 
     // Main Time 1 (Min Time)
 
+    it('reject main time 1 (min time) too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 59, max_time: 59 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Initial Time for live games in fischer is 1 minutes, please increase Initial Time.' }));
+    });
+  
+    it('accept main time 1 (min time) edge min', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 60, max_time: 60 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept main time 1 (min time) between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 900, max_time: 900 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept main time 1 (min time) edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 1800, max_time: 1800 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
 
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('reject main time 1 (min time) too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 1801, max_time: 1801 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Initial Time for live games in fischer is 30 minutes, please reduce Initial Time.' }));
+    });
 
     // Main Time 2 (Max Time)
 
-
+    it('accept main time 2 (max time) edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 900, max_time: 1800 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('reject main time 2 (max time) too high, even if main time 1 (min time) is accepted', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 900, max_time: 1801 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Max Time for live games in fischer is 30 minutes, please reduce Max Time.' }));
+    });
 
     // Periods are not checked for non-byoyomi time controls
 
     // Period Time (Increment Time)
 
-
+    it('reject period time (increment time) too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 9, initial_time: 1, max_time: 1 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Increment Time for live games in fischer is 10 seconds, please increase Increment Time.' }));
+    });
+  
+    it('accept period time (increment time) edge min', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 10, initial_time: 1, max_time: 1 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept period time (increment time) between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 70, initial_time: 1, max_time: 1 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept period time (increment time) edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 130, initial_time: 1, max_time: 1 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+  
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('reject period time (increment time) too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 131, initial_time: 1, max_time: 1 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Increment Time for live games in fischer is 2 minutes 10 seconds, please reduce Increment Time.' }));
+    });
 
   });
 
