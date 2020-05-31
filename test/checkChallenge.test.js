@@ -1127,9 +1127,9 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for live games in canadian is 30 minutes, please reduce Main Time.' }));
     });
 
-    // Periods are not checked for non-byoyomi time settings
+    // Periods are not checked for non-byoyomi time controls
 
-    // Period Time Live
+    // Period Time (Period Time for all the X Stones)
 
     it('reject period time for all the stones live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 40 } });
@@ -1188,10 +1188,61 @@ describe('Challenges', () => {
 
   });
 
-  // {"system":"fischer","time_control":"fischer","speed":"live","pause_on_weekends":false,"time_increment":10,"initial_time":80,"max_time":120}
+  describe('Fischer time settings', () => {
 
-  // {"system":"simple","time_control":"simple","speed":"blitz","pause_on_weekends":false,"per_move":5}
+    // sample:
+    // {"system":"fischer","time_control":"fischer","speed":"live","pause_on_weekends":false,"time_increment":10,"initial_time":80,"max_time":120}
 
-  // {"system":"absolute","time_control":"absolute","speed":"correspondence","pause_on_weekends":true,"total_time":2419200}
+    // Just making sure it works similarly as byoyomi, so testing only "live" speed.
+
+    // Main Time 1 (Min Time)
+
+
+
+    // Main Time 2 (Max Time)
+
+
+
+    // Periods are not checked for non-byoyomi time controls
+
+    // Period Time (Increment Time)
+
+    
+
+  });
+
+  describe('Simple time settings', () => {
+
+    // sample:
+    // {"system":"simple","time_control":"simple","speed":"blitz","pause_on_weekends":false,"per_move":5}
+
+    // Just making sure it works similarly as byoyomi, so testing only "live" speed.
+
+    // Main Time is not checked for simple time control
+
+    // Periods are not checked for non-byoyomi time controls
+
+    // Period Time (Time per move)
+
+
+
+  });
+
+  describe('Absolute time settings', () => {
+
+    // sample:
+    // {"system":"absolute","time_control":"absolute","speed":"correspondence","pause_on_weekends":true,"total_time":2419200}
+
+    // Just making sure it works similarly as byoyomi, so testing only "live" speed.
+
+    // Main Time (Total time)
+
+
+
+    // Periods are not checked for non-byoyomi time controls
+
+    // Period Time is not checked for absolute time control
+
+  });
 
 });
