@@ -1207,7 +1207,7 @@ describe('Challenges', () => {
 
     // Period Time (Increment Time)
 
-    
+
 
   });
 
@@ -1242,6 +1242,78 @@ describe('Challenges', () => {
     // Periods are not checked for non-byoyomi time controls
 
     // Period Time is not checked for absolute time control
+
+  });
+
+  describe('Min Max General Ranked Unranked precdecence rules', () => {
+
+    // We already tested extensively how the min max args work, so now we just want to
+    // make sure the general / ranked / unranked priority order is respected.
+    // MinMax handicap is a good and simple example
+
+    it('reject handicap based on ranked arg if ranked arg is used and game is ranked', () => {
+
+      const notification = base_challenge({ ranked: true, handicap: 8 });
+
+      config.minhandicap         = 0;
+      config.maxhandicap         = 2;
+      config.minhandicapranked   = 4;
+      config.maxhandicapranked   = 6;
+      config.minhandicapunranked = 8;
+      config.maxhandicapunranked = 10;
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones for ranked games is 6, please reduce the number of handicap stones.\nYou may try unranked.' }));
+
+    });
+
+    it('accept handicap based on ranked arg if ranked arg is used and game is ranked', () => {
+
+      const notification = base_challenge({ ranked: true, handicap: 5 });
+
+      config.minhandicap         = 0;
+      config.maxhandicap         = 2;
+      config.minhandicapranked   = 4;
+      config.maxhandicapranked   = 6;
+      config.minhandicapunranked = 8;
+      config.maxhandicapunranked = 10;
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('reject handicap based on unranked arg if unranked arg is used and game is unranked', () => {
+
+      const notification = base_challenge({ ranked: false, handicap: 7 });
+
+      config.minhandicap         = 0;
+      config.maxhandicap         = 2;
+      config.minhandicapranked   = 4;
+      config.maxhandicapranked   = 6;
+      config.minhandicapunranked = 8;
+      config.maxhandicapunranked = 10;
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones for unranked games is 8, please increase the number of handicap stones.\nYou may try ranked.' }));
+
+    });
+
+    it('accept handicap based on unranked arg if unranked arg is used and game is unranked', () => {
+
+      const notification = base_challenge({ ranked: false, handicap: 9 });
+
+      config.minhandicap         = 0;
+      config.maxhandicap         = 2;
+      config.minhandicapranked   = 4;
+      config.maxhandicapranked   = 6;
+      config.minhandicapunranked = 8;
+      config.maxhandicapunranked = 10;
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
 
   });
 
