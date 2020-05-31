@@ -381,13 +381,13 @@ class Connection {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
-            if (!config.allow_all_boardsizes && !config.boardsizesranked && !config.boardsizesunranked) {
+            if (config.boardsizes && !config.boardsizesranked && !config.boardsizesunranked && !config.allow_all_boardsizes) {
                 return getBoardsizeNotSquareReject("boardsizes", notification.width, notification.height);
             }
-            if (!config.allow_all_boardsizes_ranked && notification.ranked) {
+            if (config.boardsizesranked && notification.ranked && !config.allow_all_boardsizes_ranked) {
                 return getBoardsizeNotSquareReject("boardsizesranked", notification.width, notification.height);
             }
-            if (!config.allow_all_boardsizes_unranked && !notification.ranked) {
+            if (config.boardsizesunranked && !notification.ranked && !config.allow_all_boardsizes_unranked) {
                 return getBoardsizeNotSquareReject("boardsizesunranked", notification.width, notification.height);
             }
         }
@@ -747,10 +747,9 @@ function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHei
     const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
     conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
              + `is not square, not allowed ${rankedUnranked}`);
-    const msg = `Your selected board size ${notificationWidth}x${notificationHeight} `
-                + `is not square, not allowed ${rankedUnranked}, `
-                + `please choose a SQUARE board size (same width and `
-                + `height), for example try 9x9 or 19x19}`;
+    const msg = `Board size ${notificationWidth}x${notificationHeight} is not square`
+                + `, not allowed${rankedUnranked}.\nPlease choose a SQUARE board size`
+                + ` (same width and height), for example try 9x9 or 19x19.`;
     return { reject: true, msg };
 }
 
@@ -764,16 +763,13 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
 }
 
 function getAllowedFamilyReject(argName, nameF, notif) {
-    const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "")
-                                   //.trim();
+    const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
 
-    // for example "speedsranked" -> "speed"
     let argToString = config[argName];
     let notifToString = notif;
 
     if (argName.includes("boardsizes")) {
-        argToString = boardsizeSquareToDisplayString(config[argName]);
-        // for example boardsizeSquareToDisplayString("9,13,19"]) : "9x9, 13x13, 19x19"
+        argToString = boardsizeSquareToDisplayString(argToString);
         notifToString = boardsizeSquareToDisplayString(notif);
     } else if (argName.includes("komis") && (notif === null)) {
         notifToString = "automatic";

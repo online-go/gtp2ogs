@@ -30,11 +30,6 @@ function getNewConfig() {
   config.host = 'test';
   config.port = 80;
   config.username = 'testbot';
- 
-  config.allowed_boardsizes[19] = true;
-  config.allow_all_komis = true;
-  config.allowed_speeds['live'] = true;
-  config.allowed_timecontrols['fischer'] = true;
 
   config.bot_command = ['gtp-program', '--argument'];
   return config; 
@@ -137,18 +132,81 @@ describe('Challenges', () => {
 
   });
 
-  describe('Allowed families', () => {
+  describe('Non-square boardsizes', () => {
+    it('reject non-square boardsizes if not boardsizes "all"', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
+
+      config.boardsizes = "9,13,18,19";
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: true,   msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example try 9x9 or 19x19.' }));
+
+    });
+
+    it('accept non-square boardsizes if boardsizes "all"', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
+
+      config.boardsizes             = "all";
+      config.allow_all_boardsizes   = true;
+      config.allowed_boardsizes     = [];
+
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept non-square boardsizes if no arg is specified', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
+
+      config.allow_all_boardsizes   = false;
+      config.allowed_boardsizes     = [];
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+  });
+
+  describe('Allowed Boardsizes', () => {
     it('reject boardsize not in allowed boardsizes', () => {
 
       const notification = base_challenge({ ranked: false, width: 18, height: 18 });
 
-      config.boardsizes = "9,13,19";
-      config.allow_all_boardsizes = false;
-      config.allowed_boardsizes   = [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+      config.boardsizes             = "9,13,19";
+      config.allow_all_boardsizes   = false;
+      config.allowed_boardsizes     = [];
+      config.allowed_boardsizes[9]  = true;
+      config.allowed_boardsizes[13] = true;
+      config.allowed_boardsizes[19] = true;
 
       const result = conn.checkChallengeAllowedFamilies(notification);
 
       assert.deepEqual(result, ({ reject: true,   msg: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed Board sizes:\n9x9, 13x13, 19x19.' }));
+
+    });
+
+    it('accept boardsize in allowed boardsizes', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 19 });
+
+      config.boardsizes             = "9,13,19";
+      config.allow_all_boardsizes   = false;
+      config.allowed_boardsizes     = [];
+      config.allowed_boardsizes[9]  = true;
+      config.allowed_boardsizes[13] = true;
+      config.allowed_boardsizes[19] = true;
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
 
     });
 
