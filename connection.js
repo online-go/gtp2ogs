@@ -995,25 +995,28 @@ function timespanToDisplayString(timespan) {
 function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, notificationRanked) {
     const blitzLiveCorr   = getBlitzLiveCorr(notificationT.speed);
     const timecontrolObjs = getTimecontrolObjsMainPeriodTime(mainPeriodTime, notificationT);
-    for (const minMax of ["min", "max"]) {
-        const isMin = (minMax === "min");
-        const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
-        if (argName) {
-            let arg = config[argName];
-            let middleSentence = "";
-            if ((notificationT.time_control === "canadian") && (mainPeriodTime.includes("periodtime"))) {
-                // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
-                // arg is inputted by botadmin for 1 stone: multiply arg by the number of stones per period, so that
-                // we can compare it against notification.
-                // - also, use multiply to raise arg, to avoid binary division loss of precision.
-                arg *= notificationT.stones_per_period;
-                middleSentence = ", or change the number of stones per period";
-            }
-            for (const timecontrolObj of timecontrolObjs) {
-                const notif = timecontrolObj.notif;
-                if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                    return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
-                                           notificationT.speed, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence, false);
+
+    if (timecontrolObjs) {
+        for (const minMax of ["min", "max"]) {
+            const isMin = (minMax === "min");
+            const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
+            if (argName) {
+                let arg = config[argName];
+                let middleSentence = "";
+                if ((notificationT.time_control === "canadian") && (mainPeriodTime.includes("periodtime"))) {
+                    // - for canadian periodtimes, notificationT.period_time is provided by server for N stones, but
+                    // arg is inputted by botadmin for 1 stone: multiply arg by the number of stones per period, so that
+                    // we can compare it against notification.
+                    // - also, use multiply to raise arg, to avoid binary division loss of precision.
+                    arg *= notificationT.stones_per_period;
+                    middleSentence = ", or change the number of stones per period";
+                }
+                for (const timecontrolObj of timecontrolObjs) {
+                    const notif = timecontrolObj.notif;
+                    if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
+                        return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
+                                               notificationT.speed, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence, false);
+                    }
                 }
             }
         }

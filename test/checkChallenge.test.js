@@ -64,7 +64,7 @@ describe('Challenges', () => {
   });
   
   describe('General rules', () => {
-    it('Empty config (except defaults in test.js) should accept challenge', () => {
+    it('Almost empty config containing only defaults from test.js accepts challenge', () => {
       const notification = base_challenge();
       
       const result = conn.checkChallenge(notification);
@@ -920,15 +920,46 @@ describe('Challenges', () => {
 
   });
 
-  describe('No main time challenge check for some time controls', () => {
+  describe('No main time check for some time controls', () => {
 
+    it('simple timecontrol accepts any main time, even if too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 1 } });
 
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 300;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('simple timecontrol accepts any main time, even if between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 180 } });
+
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 300;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('simple timecontrol accepts any main time, even if too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 9999 } });
+
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 300;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
     
   });
 
   describe('No number of periods check for non-byoyomi timecontrols', () => {
 
-    it('canadian timecontrol accepts any periods number even if too low', () => {
+    it('canadian timecontrol accepts any periods number, even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 1, main_time: 1, period_time: 1 } });
 
       config.minperiodslive = 3;
@@ -939,7 +970,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: false }));
     });
 
-    it('canadian timecontrol accepts any periods number even if between min and mix', () => {
+    it('canadian timecontrol accepts any periods number, even if between min and mix', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 10, main_time: 10, period_time: 10 } });
 
       config.minperiodslive = 3;
@@ -950,7 +981,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: false }));
     });
 
-    it('canadian timecontrol accepts any periods number even if too high', () => {
+    it('canadian timecontrol accepts any periods number, even if too high', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 99, main_time: 99, period_time: 99 } });
 
       config.minperiodslive = 3;
