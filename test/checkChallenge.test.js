@@ -1035,6 +1035,9 @@ describe('Challenges', () => {
 
     // "none" exists only in "correspondence" games
 
+    // sample:
+    // {"system":"none","time_control":"none","speed":"correspondence","pause_on_weekends":false}
+
     it('none time control accepts any period time, even if config is empty of time settings', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "none", time_control: "none", speed: "correspondence" } });
       
@@ -1065,33 +1068,114 @@ describe('Challenges', () => {
     // sample:
     // {"system":"canadian","time_control":"canadian","speed":"live","pause_on_weekends":false,"main_time":600,"period_time":180,"stones_per_period":1}
 
-    // Just making sure it works similarly as byoyomi
+    // Just making sure it works similarly as byoyomi, so testing only "live" speed.
 
-    // Period Time Live
+    // Main time
 
-    it('reject main time live too low', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 40 } });
-
-      config.minperiodtimelive = 10;
-      config.maxperiodtimelive = 300;
+    it('reject maintime time for all the stones live too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 59, period_time: 1 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
       
       const result = conn.checkChallengeMinMax(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Period Time for all the 5 stones for live games in canadian is 50 seconds, please increase Period Time for all the 5 stones, or change the number of stones per period.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for live games in canadian is 1 minutes, please increase Main Time.' }));
+    });
+  
+    it('accept maintime time for all the stones live edge min', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 60, period_time: 80 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept maintime time for all the stones live between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 120, period_time: 80 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept maintime time for all the stones live edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1800, period_time: 80 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('reject maintime time for all the stones live too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1801, period_time: 1800 } });
+  
+      config.minmaintimelive = 60;
+      config.maxmaintimelive = 1800;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for live games in canadian is 30 minutes, please reduce Main Time.' }));
     });
 
-    it('accept main time live between min and max', () => {
+    // Periods are not checked for non-byoyomi time settings
+
+    // Period Time Live
+
+    it('reject period time for all the stones live too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 40 } });
+
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Period Time for all the 5 stones for live games in canadian is 1 minutes 15 seconds, please increase Period Time for all the 5 stones, or change the number of stones per period.' }));
+    });
+
+    it('accept period time for all the stones live edge min', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
 
-      config.minperiodtimelive = 10;
-      config.maxperiodtimelive = 300;
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
       
       const result = conn.checkChallengeMinMax(notification);
       
       assert.deepEqual(result, { reject: false });
     });
 
-    it('reject main time live too high', () => {
+    it('accept period time for all the stones live between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
+
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+
+    it('accept period time for all the stones live edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
+
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+
+    it('reject period time for all the stones live too high', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 1800 } });
 
       config.minperiodtimelive = 10;
@@ -1109,7 +1193,5 @@ describe('Challenges', () => {
   // {"system":"simple","time_control":"simple","speed":"blitz","pause_on_weekends":false,"per_move":5}
 
   // {"system":"absolute","time_control":"absolute","speed":"correspondence","pause_on_weekends":true,"total_time":2419200}
-
-  // {"system":"none","time_control":"none","speed":"correspondence","pause_on_weekends":false}
 
 });
