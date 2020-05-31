@@ -762,18 +762,24 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
+function getAllowedFamiliesNotifToString(argName, notif) {
+    if (argName.includes("boardsizes")) {
+        return boardsizeSquareToDisplayString(notif);
+    }
+    if (argName.includes("komis") && (notif === null)) {
+        return "automatic";
+    } else {
+        return notif;
+    }
+}
+
 function getAllowedFamilyReject(argName, nameF, notif) {
     const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
 
-    let argToString = config[argName];
-    let notifToString = notif;
+    const arg = config[argName];
+    const argToString = (argName.includes("boardsizes") ? boardsizeSquareToDisplayString(arg) : arg);
+    const notifToString = getAllowedFamiliesNotifToString(argName, notif);
 
-    if (argName.includes("boardsizes")) {
-        argToString = boardsizeSquareToDisplayString(argToString);
-        notifToString = boardsizeSquareToDisplayString(notif);
-    } else if (argName.includes("komis") && (notif === null)) {
-        notifToString = "automatic";
-    }
     conn_log(`${nameF} ${forRankedUnrankedGames} is ${notifToString}, not in ${argToString}.`);
     const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}`
                 + `, please choose one of these allowed ${nameF}s${forRankedUnrankedGames}:\n${argToString}.`;
@@ -844,7 +850,7 @@ function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence
 }
 
 function getMinMaxReject(argToString, notifToString, isMin,
-                         speed, timeControlSentence, argName, nameS, middleSentence, isRank) {
+                         speed, timeControlSentence, argName, nameS, middleSentence) {
     const MIBL = getMIBL(isMin);
 
     const forRankedUnranked = getForFromBLCRankedUnrankedGames("for ", speed, argName, "");
@@ -853,7 +859,8 @@ function getMinMaxReject(argToString, notifToString, isMin,
     conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
 
     let msg = "";
-    if (isRank) {
+    const familyNameisRank = (argName.includes("minrank") || argName.includes("maxrank"));
+    if (familyNameisRank) {
         msg = getMinMaxRankMsg(argName, argToString, MIBL, endingSentence);
     } else {
         msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence);
@@ -870,7 +877,7 @@ function getMinMaxRankRejectResult(notif, notificationRanked) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(rankToString(arg), rankToString(notif), isMin,
-                                       "", "", argName, "rank", "", true);
+                                       "", "", argName, "rank", "");
             }
         }
     }
@@ -913,7 +920,7 @@ function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRank
             if (!checkNotifIsInMinMaxArgRange(arg, notifCorrected, isMin)) {
                 const middleSentence = getHandicapMiddleSentence(isMin, notifCorrected, arg, Boolean(config.fakerank));
                 return getMinMaxReject(arg, notifCorrected, isMin,
-                                       "", "", argName, "the number of handicap stones", middleSentence, false);
+                                       "", "", argName, "the number of handicap stones", middleSentence);
             }
         }
     }
@@ -936,7 +943,7 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(arg, notif, isMin,
-                                       notificationT.speed, ` in ${notificationT.time_control}`, argName, "the number of periods", "", false);
+                                       notificationT.speed, ` in ${notificationT.time_control}`, argName, "the number of periods", "");
             }
         }
     }
@@ -998,7 +1005,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, noti
                     const notif = timecontrolObj.notif;
                     if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                         return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
-                                               notificationT.speed, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence, false);
+                                               notificationT.speed, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
                     }
                 }
             }
