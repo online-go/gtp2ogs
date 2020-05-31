@@ -1350,8 +1350,61 @@ describe('Challenges', () => {
 
     // Period Time (Time per move)
 
-
-
+    it('reject period time (time per move) too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 9 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Time per move for live games in simple is 10 seconds, please increase Time per move.' }));
+    });
+  
+    it('accept period time (time per move) edge min', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 10 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept period time (time per move) between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 70 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept period time (time per move) edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 130 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+  
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('reject period time (time per move) too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 131 } });
+  
+      config.minperiodtimelive = 10;
+      config.maxperiodtimelive = 130;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Time per move for live games in simple is 2 minutes 10 seconds, please reduce Time per move.' }));
+    });
+  
   });
 
   describe('Absolute time settings', () => {
