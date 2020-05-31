@@ -72,7 +72,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: false }));
     });
 
-  })
+  });
 
   describe('Bans', () => {
     it('should reject banned users', () => {
@@ -135,7 +135,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
     });
 
-  })
+  });
 
   describe('Min Max Rank', () => {
 
@@ -398,7 +398,7 @@ describe('Challenges', () => {
 
     });
 
-  })
+  });
 
   describe('Byoyomi time settings', () => {
 
@@ -918,15 +918,15 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for correspondence games in byoyomi is 3 days, please reduce Period Time.' }));
     });
 
-  })
+  });
 
   describe('No main time challenge check for some time controls', () => {
 
 
     
-  })
+  });
 
-  describe('No number of periods challenge check for non-byoyomi timecontrols', () => {
+  describe('No number of periods check for non-byoyomi timecontrols', () => {
 
     it('canadian timecontrol accepts any periods number even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 1, main_time: 1, period_time: 1 } });
@@ -961,13 +961,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: false }));
     });
 
-  })
+  });
 
   describe('No period time challenge check for some time controls', () => {
 
 
     
-  })
+  });
 
   describe('Canadian time settings', () => {
 
@@ -1011,7 +1011,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for all the 5 stones for live games in canadian is 25 minutes, please reduce Period Time for all the 5 stones, or change the number of stones per period.' }));
     });
 
-  })
+  });
 
   // {"system":"fischer","time_control":"fischer","speed":"live","pause_on_weekends":false,"time_increment":10,"initial_time":80,"max_time":120}
 
@@ -1021,4 +1021,4 @@ describe('Challenges', () => {
 
   // {"system":"none","time_control":"none","speed":"correspondence","pause_on_weekends":false}
 
-})
+});
