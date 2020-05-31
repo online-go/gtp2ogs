@@ -1416,7 +1416,60 @@ describe('Challenges', () => {
 
     // Main Time (Total time)
 
-
+    it('reject main time (total time) too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "live", total_time: 351 } });
+  
+      config.minmaintimelive = 352;
+      config.maxmaintimelive = 4127;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Total Time for live games in absolute is 5 minutes 52 seconds, please increase Total Time.' }));
+    });
+  
+    it('accept main time (total time) edge min', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "live", total_time: 352 } });
+  
+      config.minmaintimelive = 352;
+      config.maxmaintimelive = 4127;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept main time (total time) between min and max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "live", total_time: 1249 } });
+  
+      config.minmaintimelive = 352;
+      config.maxmaintimelive = 4127;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('accept main time (total time) edge max', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "live", total_time: 4127 } });
+  
+      config.minmaintimelive = 352;
+      config.maxmaintimelive = 4127;
+  
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, { reject: false });
+    });
+  
+    it('reject main time (total time) too high', () => {
+      const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "live", total_time: 4128 } });
+  
+      config.minmaintimelive = 352;
+      config.maxmaintimelive = 4127;
+      
+      const result = conn.checkChallengeMinMax(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Total Time for live games in absolute is 1 hours 8 minutes 47 seconds, please reduce Total Time.' }));
+    });
 
     // Periods are not checked for non-byoyomi time controls
 
