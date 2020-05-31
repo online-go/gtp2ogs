@@ -946,7 +946,7 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 return getMinMaxReject(arg, notif, isMin,
-                                       `${notificationT.speed } `, ` in ${notificationT.time_control}`, argName, "the number of periods", "");
+                                       `${notificationT.speed} `, ` in ${notificationT.time_control}`, argName, "the number of periods", "");
             }
         }
     }
@@ -1008,7 +1008,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, noti
                     const notif = timecontrolObj.notif;
                     if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                         return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
-                                               `${notificationT.speed } `, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
+                                               `${notificationT.speed} `, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
                     }
                 }
             }
