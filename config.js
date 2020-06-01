@@ -3,6 +3,7 @@
 const fs = require('fs')
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
+const { getRankedUnranked } = require('./utils/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
 const { getFamilyName } = require('./utils/getFamilyName');
 
@@ -444,9 +445,10 @@ function processBansExport(argName, argv) {
 
 function processBoardsizesExport(argName, argv) {
     const arg = argv[argName];
-    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
 
     if (arg) {
+        const rankedUnranked = getRankedUnranked(argName);
+        const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const boardsizes = arg.split(',');
         for (const boardsize of boardsizes) {
             if (boardsize === "all") {
@@ -460,9 +462,10 @@ function processBoardsizesExport(argName, argv) {
 
 function processKomisExport(argName, argv) {
     const arg = argv[argName];
-    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
 
     if (arg) {
+        const rankedUnranked = getRankedUnranked(argName);
+        const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const komis = arg.split(',');
         for (const komi of komis) {
             if (komi === "all") {
@@ -478,10 +481,11 @@ function processKomisExport(argName, argv) {
 
 function processAllowedFamilyExport(argName, argv) {
     const arg = argv[argName];
-    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
 
     if (arg) {
         const familyName = getFamilyName(argName);
+        const rankedUnranked = getRankedUnranked(argName);
+        const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const allowedValues = arg.split(',');
         for (const allowedValue of allowedValues) {
             if (allowedValue === "all") {

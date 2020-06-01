@@ -1,7 +1,7 @@
-function getRankedUnranked(argName) {
-    if (argName.includes("unranked")) return "unranked";
-    if (argName.includes("ranked"))   return "ranked";
-    else                              return "";
+function getRankedUnranked(rankedUnranked) {
+    if (rankedUnranked.includes("unranked")) return "unranked";
+    if (rankedUnranked.includes("ranked"))   return "ranked";
+    else                                     return "";
 }
 
 exports.getRankedUnranked = getRankedUnranked;
