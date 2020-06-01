@@ -305,44 +305,133 @@ describe('Challenges', () => {
    
   });
 
-  describe('Min Max Handicap', () => {
+  describe('Automatic Handicap and Fakerank', () => {
 
-    it('reject handicap too low (automatic handicap is -1)', () => {
+    it('reject automatic handicap (-1) if noautohandicap and fakerank is not set', () => {
 
       const notification = base_challenge({ ranked: false, handicap: -1 });
 
-      config.minhandicap = 0;
-      config.maxhandicap = 2;
+      config.noautohandicap = true;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 0, please increase the number of handicap stones.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: '-Automatic- handicap is not allowed on this bot, please manually select the number of handicap stones in -custom- handicap.' }));
 
     });
 
-    it('reject handicap too low (fakerank automatic handicap stone number estimation)', () => {
+    it('do not reject automatic handicap (-1) if fakerank is set', () => {
+
+      const notification = base_challenge({ ranked: false, handicap: -1 });
+
+      config.fakerank    = 29; // "1k"
+      
+      const result = conn.checkChallengeHandicap(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('reject automatic handicap (-1) if both noautohandicap and fakerank are set', () => {
+
+      const notification = base_challenge({ ranked: false, handicap: -1 });
+
+      config.noautohandicap = true;
+      config.fakerank       = 29; // "1k"
+      
+      const result = conn.checkChallengeHandicap(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: '-Automatic- handicap is not allowed on this bot, please manually select the number of handicap stones in -custom- handicap.' }));
+
+    });
+
+    it('reject automatic handicap (-1) if fakerank is set but estimated handicap stones are too low', () => {
 
       const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
 
       config.fakerank    = 29; // "1k"
       // "1d" - "1k" = 30 - 29 = 1 automatic handicap stones
       config.minhandicap = 2;
-      config.maxhandicap = 6;
+      config.maxhandicap = 4;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones, please manually select the number of handicap stones in -custom handicap-.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones.' }));
 
     });
+
+    it('accept automatic handicap (-1) if fakerank is set and estimated handicap stones are edge min', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 31 }, handicap: -1 }); // "2d"
+
+      config.fakerank    = 29; // "1k"
+      // "2d" - "1k" = 31 - 29 = 2 automatic handicap stones
+      config.minhandicap = 2;
+      config.maxhandicap = 4;
+      
+      const result = conn.checkChallengeHandicap(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept automatic handicap (-1) if fakerank is set and estimated handicap stones are between min and max', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 26 }, handicap: -1 }); // "4k"
+
+      config.fakerank    = 29; // "1k"
+      // "4k" - "1k" = 26 - 29 = 3 automatic handicap stones
+      config.minhandicap = 2;
+      config.maxhandicap = 4;
+      
+      const result = conn.checkChallengeHandicap(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept automatic handicap (-1) if fakerank is set and estimated handicap stones are edge max', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 25 }, handicap: -1 }); // "5k"
+
+      config.fakerank    = 29; // "1k"
+      // "5k" - "1k" = 25 - 29 = 4 automatic handicap stones
+      config.minhandicap = 2;
+      config.maxhandicap = 4;
+      
+      const result = conn.checkChallengeHandicap(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('reject automatic handicap (-1) if fakerank is set but estimated handicap stones are too high', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
+
+      config.fakerank    = 20; // "10k"
+      // "10k" - "1d" = 30 - 20 = 10 automatic handicap stones
+      config.minhandicap = 2;
+      config.maxhandicap = 4;
+      
+      const result = conn.checkChallengeHandicap(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 4, please reduce the number of handicap stones.' }));
+
+    });
+
+  });
+
+  describe('Handicap', () => {
 
     it('reject handicap too low (handicap games only)', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 0 });
 
+      config.noautohandicap = true;
       config.minhandicap = 2;
       config.maxhandicap = 6;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones (handicap games only).' }));
 
@@ -352,25 +441,11 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 0 });
 
+      config.noautohandicap = true;
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
-      const result = conn.checkChallengeMinMax(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept handicap edge min (fakerank automatic handicap stone number estimation)', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 29 }, handicap: -1 }); // "1k"
-
-      config.fakerank    = 29; // "1k"
-      // "1k" - "1k" = 29 - 29 = 0 automatic handicap stones
-      config.minhandicap =  0;
-      config.maxhandicap =  6;
-      
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -380,25 +455,11 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 1 });
 
+      config.noautohandicap = true;
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
-      const result = conn.checkChallengeMinMax(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept handicap between min and max (fakerank automatic handicap stone number estimation)', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
-
-      config.fakerank    = 26; // "4k"
-      // "1d" - "4k" = 30 - 26 = 4 automatic handicap stones
-      config.minhandicap =  0;
-      config.maxhandicap =  6;
-      
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -408,25 +469,11 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 6 });
 
+      config.noautohandicap = true;
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
-      const result = conn.checkChallengeMinMax(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept handicap edge max (fakerank automatic handicap stone number estimation)', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
-
-      config.fakerank    = 24; // "6k"
-      // "1d" - "6k" = 30 - 24 = 6 automatic handicap stones
-      config.minhandicap =  0;
-      config.maxhandicap =  6;
-      
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -436,10 +483,11 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 1 });
 
+      config.noautohandicap = true;
       config.minhandicap = 0;
       config.maxhandicap = 0;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 0, please reduce the number of handicap stones (no handicap games).' }));
 
@@ -449,27 +497,13 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 9 });
 
+      config.noautohandicap = true;
       config.minhandicap = 0;
       config.maxhandicap = 6;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 6, please reduce the number of handicap stones.' }));
-
-    });
-
-    it('reject handicap too high (fakerank automatic handicap stone number estimation)', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 17 }, handicap: -1 }); // "13k"
-
-      config.fakerank    = 32; // "3d"
-      // "3d" - "13k" = 32 - 17 = 15 automatic handicap stones
-      config.minhandicap = 0;
-      config.maxhandicap = 6;
-      
-      const result = conn.checkChallengeMinMax(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones is 6, please reduce the number of handicap stones, please manually select the number of handicap stones in -custom handicap-.' }));
 
     });
 
@@ -488,7 +522,7 @@ describe('Challenges', () => {
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for blitz games in byoyomi is 10 seconds, please increase Main Time.' }));
     });
@@ -499,7 +533,7 @@ describe('Challenges', () => {
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -510,7 +544,7 @@ describe('Challenges', () => {
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -521,7 +555,7 @@ describe('Challenges', () => {
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -532,7 +566,7 @@ describe('Challenges', () => {
       config.minmaintimeblitz = 10;
       config.maxmaintimeblitz = 30;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for blitz games in byoyomi is 30 seconds, please reduce Main Time.' }));
     });
@@ -545,7 +579,7 @@ describe('Challenges', () => {
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for blitz games in byoyomi is 3, please increase the number of periods.' }));
     });
@@ -556,7 +590,7 @@ describe('Challenges', () => {
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -567,7 +601,7 @@ describe('Challenges', () => {
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -578,7 +612,7 @@ describe('Challenges', () => {
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -589,7 +623,7 @@ describe('Challenges', () => {
       config.minperiodsblitz = 3;
       config.maxperiodsblitz = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for blitz games in byoyomi is 20, please reduce the number of periods.' }));
     });
@@ -602,7 +636,7 @@ describe('Challenges', () => {
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for blitz games in byoyomi is 5 seconds, please increase Period Time.` }));
     });
@@ -613,7 +647,7 @@ describe('Challenges', () => {
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -624,7 +658,7 @@ describe('Challenges', () => {
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -635,7 +669,7 @@ describe('Challenges', () => {
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -646,7 +680,7 @@ describe('Challenges', () => {
       config.minperiodtimeblitz = 5;
       config.maxperiodtimeblitz = 15;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for blitz games in byoyomi is 15 seconds, please reduce Period Time.' }));
     });
@@ -659,7 +693,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for live games in byoyomi is 1 minutes, please increase Main Time.' }));
     });
@@ -670,7 +704,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -681,7 +715,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -692,7 +726,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -703,7 +737,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for live games in byoyomi is 5 minutes, please reduce Main Time.' }));
     });
@@ -716,7 +750,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for live games in byoyomi is 3, please increase the number of periods.' }));
     });
@@ -727,7 +761,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -738,7 +772,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -749,7 +783,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -760,7 +794,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for live games in byoyomi is 20, please reduce the number of periods.' }));
     });
@@ -773,7 +807,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for live games in byoyomi is 10 seconds, please increase Period Time.` }));
     });
@@ -784,7 +818,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -795,7 +829,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -806,7 +840,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -817,7 +851,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for live games in byoyomi is 2 minutes, please reduce Period Time.' }));
     });
@@ -830,7 +864,7 @@ describe('Challenges', () => {
       config.minmaintimecorr = 259200;
       config.maxmaintimecorr = 604800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for correspondence games in byoyomi is 3 days, please increase Main Time.' }));
     });
@@ -841,7 +875,7 @@ describe('Challenges', () => {
       config.minmaintimecorr = 259200;
       config.maxmaintimecorr = 604800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -852,7 +886,7 @@ describe('Challenges', () => {
       config.minmaintimecorr = 259200;
       config.maxmaintimecorr = 604800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -863,7 +897,7 @@ describe('Challenges', () => {
       config.minmaintimecorr = 259200;
       config.maxmaintimecorr = 604800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -874,7 +908,7 @@ describe('Challenges', () => {
       config.minmaintimecorr = 259200;
       config.maxmaintimecorr = 604800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for correspondence games in byoyomi is 7 days, please reduce Main Time.' }));
     });
@@ -887,7 +921,7 @@ describe('Challenges', () => {
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of periods for correspondence games in byoyomi is 3, please increase the number of periods.' }));
     });
@@ -898,7 +932,7 @@ describe('Challenges', () => {
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -909,7 +943,7 @@ describe('Challenges', () => {
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -920,7 +954,7 @@ describe('Challenges', () => {
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -931,7 +965,7 @@ describe('Challenges', () => {
       config.minperiodscorr = 3;
       config.maxperiodscorr = 10;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of periods for correspondence games in byoyomi is 10, please reduce the number of periods.' }));
     });
@@ -944,7 +978,7 @@ describe('Challenges', () => {
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: `Minimum Period Time for correspondence games in byoyomi is 4 hours, please increase Period Time.` }));
     });
@@ -955,7 +989,7 @@ describe('Challenges', () => {
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -966,7 +1000,7 @@ describe('Challenges', () => {
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -977,7 +1011,7 @@ describe('Challenges', () => {
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -988,7 +1022,7 @@ describe('Challenges', () => {
       config.minperiodtimecorr = 14400;
       config.maxperiodtimecorr = 259200;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for correspondence games in byoyomi is 3 days, please reduce Period Time.' }));
     });
@@ -1003,7 +1037,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1014,7 +1048,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1025,7 +1059,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1040,7 +1074,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1051,7 +1085,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1062,7 +1096,7 @@ describe('Challenges', () => {
       config.minperiodslive = 3;
       config.maxperiodslive = 20;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1077,7 +1111,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 30;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1088,7 +1122,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 30;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1099,7 +1133,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 30;
       config.maxperiodtimelive = 120;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1116,7 +1150,7 @@ describe('Challenges', () => {
     it('none time control accepts any period time, even if config is empty of time settings', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "none", time_control: "none", speed: "correspondence" } });
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1131,7 +1165,7 @@ describe('Challenges', () => {
       config.minperiodtimecorr = 2000;
       config.maxperiodtimecorr = 8000;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: false }));
     });
@@ -1153,7 +1187,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for live games in canadian is 1 minutes, please increase Main Time.' }));
     });
@@ -1164,7 +1198,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1175,7 +1209,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1186,7 +1220,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1197,7 +1231,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Main Time for live games in canadian is 30 minutes, please reduce Main Time.' }));
     });
@@ -1212,7 +1246,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
       config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Period Time for all the 5 stones for live games in canadian is 1 minutes 15 seconds, please increase Period Time for all the 5 stones, or change the number of stones per period.' }));
     });
@@ -1223,7 +1257,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
       config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1234,7 +1268,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
       config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1245,7 +1279,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
       config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1256,7 +1290,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Period Time for all the 5 stones for live games in canadian is 25 minutes, please reduce Period Time for all the 5 stones, or change the number of stones per period.' }));
     });
@@ -1278,7 +1312,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Initial Time for live games in fischer is 1 minutes, please increase Initial Time.' }));
     });
@@ -1289,7 +1323,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1300,7 +1334,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1311,7 +1345,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
 
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1322,7 +1356,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Initial Time for live games in fischer is 30 minutes, please reduce Initial Time.' }));
     });
@@ -1335,7 +1369,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1346,7 +1380,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 60;
       config.maxmaintimelive = 1800;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Max Time for live games in fischer is 30 minutes, please reduce Max Time.' }));
     });
@@ -1361,7 +1395,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Increment Time for live games in fischer is 10 seconds, please increase Increment Time.' }));
     });
@@ -1372,7 +1406,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1383,7 +1417,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1394,7 +1428,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
   
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1405,7 +1439,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Increment Time for live games in fischer is 2 minutes 10 seconds, please reduce Increment Time.' }));
     });
@@ -1431,7 +1465,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Time per move for live games in simple is 10 seconds, please increase Time per move.' }));
     });
@@ -1442,7 +1476,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1453,7 +1487,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1464,7 +1498,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
   
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1475,7 +1509,7 @@ describe('Challenges', () => {
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 130;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Time per move for live games in simple is 2 minutes 10 seconds, please reduce Time per move.' }));
     });
@@ -1497,7 +1531,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 352;
       config.maxmaintimelive = 4127;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Total Time for live games in absolute is 5 minutes 52 seconds, please increase Total Time.' }));
     });
@@ -1508,7 +1542,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 352;
       config.maxmaintimelive = 4127;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1519,7 +1553,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 352;
       config.maxmaintimelive = 4127;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1530,7 +1564,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 352;
       config.maxmaintimelive = 4127;
   
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, { reject: false });
     });
@@ -1541,7 +1575,7 @@ describe('Challenges', () => {
       config.minmaintimelive = 352;
       config.maxmaintimelive = 4127;
       
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeTimeSettings(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum Total Time for live games in absolute is 1 hours 8 minutes 47 seconds, please reduce Total Time.' }));
     });
@@ -1562,13 +1596,16 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, handicap: 8 });
 
-      config.minhandicap         = 0;
-      config.maxhandicap         = 2;
-      config.minhandicapranked   = 4;
-      config.maxhandicapranked   = 6;
-      config.minhandicapunranked = 8;
-      config.maxhandicapunranked = 10;
-      const result = conn.checkChallengeMinMax(notification);
+      config.noautohandicap         = true;
+      config.noautohandicapranked   = true;
+      config.noautohandicapunranked = true;
+      config.minhandicap            = 0;
+      config.maxhandicap            = 2;
+      config.minhandicapranked      = 4;
+      config.maxhandicapranked      = 6;
+      config.minhandicapunranked    = 8;
+      config.maxhandicapunranked    = 10;
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones for ranked games is 6, please reduce the number of handicap stones.\nYou may try unranked.' }));
 
@@ -1578,13 +1615,16 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, handicap: 5 });
 
+      config.noautohandicap         = true;
+      config.noautohandicapranked   = true;
+      config.noautohandicapunranked = true;
       config.minhandicap         = 0;
       config.maxhandicap         = 2;
       config.minhandicapranked   = 4;
       config.maxhandicapranked   = 6;
       config.minhandicapunranked = 8;
       config.maxhandicapunranked = 10;
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1594,13 +1634,16 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 7 });
 
+      config.noautohandicap         = true;
+      config.noautohandicapranked   = true;
+      config.noautohandicapunranked = true;
       config.minhandicap         = 0;
       config.maxhandicap         = 2;
       config.minhandicapranked   = 4;
       config.maxhandicapranked   = 6;
       config.minhandicapunranked = 8;
       config.maxhandicapunranked = 10;
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones for unranked games is 8, please increase the number of handicap stones.\nYou may try ranked.' }));
 
@@ -1610,13 +1653,16 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 9 });
 
+      config.noautohandicap         = true;
+      config.noautohandicapranked   = true;
+      config.noautohandicapunranked = true;
       config.minhandicap         = 0;
       config.maxhandicap         = 2;
       config.minhandicapranked   = 4;
       config.maxhandicapranked   = 6;
       config.minhandicapunranked = 8;
       config.maxhandicapunranked = 10;
-      const result = conn.checkChallengeMinMax(notification);
+      const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 

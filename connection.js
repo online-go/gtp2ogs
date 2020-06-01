@@ -360,15 +360,13 @@ class Connection {
 
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
                                       ["nopauseonweekends", "Pause on week-ends is", notification.pause_on_weekends, ""],
-                                      ["noautohandicap", "-Automatic- handicap is", (notification.handicap === -1), 
-                                       ", please manually choose the number of handicap stones"]
                                     ];
 
         for (const [familyName, nameF, notifCondition, ending] of testBooleanArgs_r_u) {
             if (notifCondition) {
                 for (const [argName, rankedCondition] of get_r_u_arr_booleans(familyName, notification.ranked)) {
                     if (config[argName] && rankedCondition) {
-                        return getBooleans_r_u_Reject(argName, nameF, ending);
+                        return getBooleansGRUReject(argName, nameF, ending);
                     }
                 }
             }
@@ -410,14 +408,24 @@ class Connection {
         return { reject: false }; // OK !
 
     }
-    // Check challenge minMax are allowed
-    //
-    checkChallengeMinMax(notification) {
 
-        // minMax rank is checked earlier in checkChallengeMandatory, the rest of the minMax are here.
+    // Check challenge handicap is allowed
+    //
+    checkChallengeHandicap(notification) {
+
+        const resultNoAutoHandicap = getNoAutomaticHandicapRejectResult(notification.handicap, notification.ranked);
+        if (resultNoAutoHandicap) return resultNoAutoHandicap;
 
         const resultHandicap = getMinMaxHandicapRejectResult(notification.handicap, notification.user.ranking, notification.ranked);
         if (resultHandicap) return resultHandicap;
+
+        return { reject: false };  // Ok !
+
+    }
+    // Check challenge time settings are allowed
+    //
+    checkChallengeTimeSettings(notification) {
+
 
         // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
         if (notification.time_control.time_control !== "none") {
@@ -449,7 +457,8 @@ class Connection {
                            this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
                            this.checkChallengeAllowedFamilies,
-                           this.checkChallengeMinMax]) {
+                           this.checkChallengeHandicap,
+                           this.checkChallengeTimeSettings]) {
             const result = test.bind(this)(notification);
             if (result.reject) return result;
         }
@@ -716,9 +725,9 @@ function get_r_u_arr_booleans(familyName, notificationRanked) {
            ];
 }
 
-function getBooleans_r_u_Reject(argName, nameF, ending) {
+function getBooleansGRUReject(argName, nameF, ending) {
     const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-    const msg = `${nameF} not allowed on this bot ${rankedUnranked}${ending}.`;
+    const msg = `${nameF} not allowed on this bot${rankedUnranked}${ending}.`;
     conn_log(msg);
     return { reject: true, msg };
 }
@@ -854,8 +863,8 @@ function getMinMaxReject(argToString, notifToString, isMin,
     conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
 
     let msg = "";
-    const familyNameisRank = (argName.includes("minrank") || argName.includes("maxrank"));
-    if (familyNameisRank) {
+    const familyNameIsRank = (argName.includes("minrank") || argName.includes("maxrank"));
+    if (familyNameIsRank) {
         msg = getMinMaxRankMsg(argName, argToString, MIBL, endingSentence);
     } else {
         msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence);
@@ -878,6 +887,24 @@ function getMinMaxRankRejectResult(notif, notificationRanked) {
     }
 }
 
+function getNoAutomaticHandicapRejectResult(notif, notificationRanked) {
+    if (notif === -1) {
+        const beginning = "-Automatic- handicap is";
+        const ending    = ", please manually select the number of handicap stones in -custom- handicap";
+
+        if (config.noautohandicap && !config.noauthandicapranked && !config.noautohandicapunranked) {
+            return getBooleansGRUReject("", beginning, ending);
+        }
+        if (config.noautohandicapranked && notificationRanked) {
+            return getBooleansGRUReject("ranked", beginning, ending);
+        }
+        if (config.noautohandicapunranked && !notificationRanked) {
+            return getBooleansGRUReject("unranked", beginning, ending);
+        }
+    }
+
+}
+
 function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
     if (notifHandicap === -1 && config.fakerank) {
         // TODO: modify or remove fakerank code whenever server sends us automatic handicap
@@ -885,21 +912,21 @@ function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
         // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
         // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
 
-        return Math.abs(Math.floor(notifUserRanking) - Math.floor(config.fakerank));
+        const notifHandicapCorrected = Math.abs(Math.floor(notifUserRanking) - Math.floor(config.fakerank));
+        conn_log(`notification.handicap corrected from -1 (automatic) to ${notifHandicapCorrected}`
+                 +` (fakerank handicap stones estimation).`);
+        return notifHandicapCorrected;
     } else {
         return notifHandicap;
     }
 }
 
-function getHandicapMiddleSentence(isMin, notif, arg, isFakeHandicap) {
+function getHandicapMiddleSentence(isMin, notif, arg) {
     if (isMin && notif === 0 && arg > 0) {
         return " (handicap games only)";
     }
     if (!isMin && notif > 0 && arg === 0) {
         return " (no handicap games)";
-    }
-    if (isFakeHandicap) {
-        return ", please manually select the number of handicap stones in -custom handicap-"
     } else {
         return "";
     }
@@ -913,7 +940,7 @@ function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRank
         if (argName) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notifCorrected, isMin)) {
-                const middleSentence = getHandicapMiddleSentence(isMin, notifCorrected, arg, Boolean(config.fakerank));
+                const middleSentence = getHandicapMiddleSentence(isMin, notifCorrected, arg);
                 return getMinMaxReject(arg, notifCorrected, isMin,
                                        "", "", argName, "the number of handicap stones", middleSentence);
             }
