@@ -361,15 +361,21 @@ class Connection {
         const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
                                       ["nopauseonweekends", "Pause on week-ends is", notification.pause_on_weekends, ""],
                                     ];
+        
+        // noautohandicap is tested in checkChallengeHandicap, not here.
+        
+        if (!notification.user.professional) {
+            const beginning = "Games against non-professionals are";
+            const ending    = "";
+            const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
+            if (resultProonly) return resultProonly;
+        }
 
-        for (const [familyName, nameF, notifCondition, ending] of testBooleanArgs_r_u) {
-            if (notifCondition) {
-                for (const [argName, rankedCondition] of get_r_u_arr_booleans(familyName, notification.ranked)) {
-                    if (config[argName] && rankedCondition) {
-                        return getBooleansGRUReject(argName, nameF, ending);
-                    }
-                }
-            }
+        if (notification.pause_on_weekends) {
+            const beginning = "Pause on week-ends is";
+            const ending    = "";
+            const resultProonly = getBooleansGRURejectResult("nopauseonweekends", notification.ranked, beginning, ending);
+            if (resultProonly) return resultProonly;
         }
 
         return { reject: false }; // OK !
@@ -413,8 +419,12 @@ class Connection {
     //
     checkChallengeHandicap(notification) {
 
-        const resultNoAutoHandicap = getNoAutomaticHandicapRejectResult(notification.handicap, notification.ranked);
-        if (resultNoAutoHandicap) return resultNoAutoHandicap;
+        if (notification.handicap === -1) {
+            const beginning = "-Automatic- handicap is";
+            const ending    = ", please manually select the number of handicap stones in -custom- handicap";
+            const resultNoAutoHandicap = getBooleansGRURejectResult("noautohandicap", notification.ranked, beginning, ending);
+            if (resultNoAutoHandicap) return resultNoAutoHandicap;
+        }
 
         const resultHandicap = getMinMaxHandicapRejectResult(notification.handicap, notification.user.ranking, notification.ranked);
         if (resultHandicap) return resultHandicap;
@@ -713,18 +723,6 @@ function getBooleansGeneralReject(nameF) {
     return { reject: true, msg };
 }
 
-function get_r_u_arr_booleans(familyName, notificationRanked) {
-    const [general, ranked, unranked] = getArgNamesGRU(familyName);
-    // for the booleans "only" checks, we are trying to find any reason to reject
-    // the challenge, so the general and ranked/unranked args dont conflict.
-    // (unlike --minmaintimeranked 50 --minmaintime 300)
-
-    return [ [general,  true],
-             [ranked,   notificationRanked],
-             [unranked, !notificationRanked]
-           ];
-}
-
 function getBooleansGRUReject(argName, nameF, ending) {
     const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
     const msg = `${nameF} not allowed on this bot${rankedUnranked}${ending}.`;
@@ -887,22 +885,18 @@ function getMinMaxRankRejectResult(notif, notificationRanked) {
     }
 }
 
-function getNoAutomaticHandicapRejectResult(notif, notificationRanked) {
-    if (notif === -1) {
-        const beginning = "-Automatic- handicap is";
-        const ending    = ", please manually select the number of handicap stones in -custom- handicap";
+function getBooleansGRURejectResult(argName, notificationRanked, beginning, ending) {
+    const [general, ranked, unranked] = getArgNamesGRU(argName);
 
-        if (config.noautohandicap && !config.noauthandicapranked && !config.noautohandicapunranked) {
-            return getBooleansGRUReject("", beginning, ending);
-        }
-        if (config.noautohandicapranked && notificationRanked) {
-            return getBooleansGRUReject("ranked", beginning, ending);
-        }
-        if (config.noautohandicapunranked && !notificationRanked) {
-            return getBooleansGRUReject("unranked", beginning, ending);
-        }
+    if (config[general] && !config[ranked] && !config[unranked]) {
+        return getBooleansGRUReject("", beginning, ending);
     }
-
+    if (config[ranked] && notificationRanked) {
+        return getBooleansGRUReject("ranked", beginning, ending);
+    }
+    if (config[unranked] && !notificationRanked) {
+        return getBooleansGRUReject("unranked", beginning, ending);
+    }
 }
 
 function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
