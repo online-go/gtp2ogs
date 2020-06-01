@@ -1181,7 +1181,7 @@ describe('Challenges', () => {
 
     // Main time
 
-    it('reject main time for all the stones live too low', () => {
+    it('reject main time live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 59, period_time: 1 } });
   
       config.minmaintimelive = 60;
@@ -1192,7 +1192,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Main Time for live games in canadian is 1 minutes, please increase Main Time.' }));
     });
   
-    it('accept main time for all the stones live edge min', () => {
+    it('accept main time stones live edge min', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 60, period_time: 80 } });
   
       config.minmaintimelive = 60;
@@ -1203,7 +1203,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('accept main time for all the stones live between min and max', () => {
+    it('accept main time live between min and max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 120, period_time: 80 } });
   
       config.minmaintimelive = 60;
@@ -1214,7 +1214,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('accept main time for all the stones live edge max', () => {
+    it('accept main time live edge max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1800, period_time: 80 } });
   
       config.minmaintimelive = 60;
@@ -1225,7 +1225,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('reject main time for all the stones live too high', () => {
+    it('reject main time live too high', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1801, period_time: 1800 } });
   
       config.minmaintimelive = 60;
@@ -1241,10 +1241,10 @@ describe('Challenges', () => {
     // Period Time (Period Time for all the X Stones)
 
     it('reject period time for all the stones live too low', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 40 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 74 } });
 
-      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
-      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 75   = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 1500 = 25 minutes           for all the 5 stones
       
       const result = conn.checkChallengeTimeSettings(notification);
       
@@ -1252,10 +1252,10 @@ describe('Challenges', () => {
     });
 
     it('accept period time for all the stones live edge min', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 75 } });
 
-      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
-      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 75   = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 1500 = 25 minutes           for all the 5 stones
       
       const result = conn.checkChallengeTimeSettings(notification);
       
@@ -1263,10 +1263,10 @@ describe('Challenges', () => {
     });
 
     it('accept period time for all the stones live between min and max', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 120 } });
 
-      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
-      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 75   = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 1500 = 25 minutes           for all the 5 stones
       
       const result = conn.checkChallengeTimeSettings(notification);
       
@@ -1274,10 +1274,10 @@ describe('Challenges', () => {
     });
 
     it('accept period time for all the stones live edge max', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 80 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 1500 } });
 
-      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 1 minutes 15 seconds for all the 5 stones
-      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 25 minutes           for all the 5 stones
+      config.minperiodtimelive = 15;  // 15 seconds per stone * 5 stones = 75   = 1 minutes 15 seconds for all the 5 stones
+      config.maxperiodtimelive = 300; // 5  minutes per stone * 5 stones = 1500 = 25 minutes           for all the 5 stones
       
       const result = conn.checkChallengeTimeSettings(notification);
       
@@ -1285,7 +1285,7 @@ describe('Challenges', () => {
     });
 
     it('reject period time for all the stones live too high', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 1800 } });
+      const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 1501 } });
 
       config.minperiodtimelive = 10;
       config.maxperiodtimelive = 300;
@@ -1304,9 +1304,9 @@ describe('Challenges', () => {
 
     // Just making sure it works similarly as byoyomi, so testing only "live" speed.
 
-    // Main Time 1 (Min Time)
+    // Main Time 1 (Initial time)
 
-    it('reject main time 1 (min time) too low', () => {
+    it('reject main time 1 (initial time) too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 59, max_time: 59 } });
   
       config.minmaintimelive = 60;
@@ -1317,7 +1317,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum Initial Time for live games in fischer is 1 minutes, please increase Initial Time.' }));
     });
   
-    it('accept main time 1 (min time) edge min', () => {
+    it('accept main time 1 (initial time) edge min', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 60, max_time: 60 } });
   
       config.minmaintimelive = 60;
@@ -1328,7 +1328,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('accept main time 1 (min time) between min and max', () => {
+    it('accept main time 1 (initial time) between min and max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 900, max_time: 900 } });
   
       config.minmaintimelive = 60;
@@ -1339,7 +1339,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('accept main time 1 (min time) edge max', () => {
+    it('accept main time 1 (initial time) edge max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 1800, max_time: 1800 } });
   
       config.minmaintimelive = 60;
@@ -1350,7 +1350,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('reject main time 1 (min time) too high', () => {
+    it('reject main time 1 (initial time) too high', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 1801, max_time: 1801 } });
   
       config.minmaintimelive = 60;
@@ -1374,7 +1374,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, { reject: false });
     });
   
-    it('reject main time 2 (max time) too high, even if main time 1 (min time) is accepted', () => {
+    it('reject main time 2 (max time) too high, even if main time 1 (initial time) is accepted', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 900, max_time: 1801 } });
   
       config.minmaintimelive = 60;
