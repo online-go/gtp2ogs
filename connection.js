@@ -5,6 +5,10 @@ const querystring = require('querystring');
 const http = require('http');
 const https = require('https');
 
+const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
+const { getArgNamesUnderscoredGRU } = require('./utils/getArgNamesUnderscoredGRU');
+const { getRankedUnranked } = require('./utils/getRankedUnranked');
+
 const console = require('./console').console;
 const Game = require('./game').Game;
 let config;
@@ -328,9 +332,7 @@ class Connection {
         const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
             const msg = `Unknown time control ${notification.time_control.time_control},`
-                        + ` cannot check challenge.\nPlease inform us of this issue in OGS Forum`
-                        + ` (https://forums.online-go.com/c/support/5), or in gtp2ogs's github`
-                        + ` (https://github.com/online-go/gtp2ogs/issues)`;
+                        + ` cannot check challenge, please contact my bot admin.`;
             return { reject: true, msg };
         }
 
@@ -650,19 +652,9 @@ function conn_log() {
     }
 }
 
-function getRankedUnranked(argName) {
-    if (argName.includes("unranked")) return "unranked";
-    if (argName.includes("ranked"))   return "ranked";
-    else                              return "";
-}
-
 function getRankedUnrankedGames(argName) {
     const rankedUnranked = getRankedUnranked(argName);
-    if (rankedUnranked.includes("ranked")) {
-        return `${rankedUnranked} games`;
-    } else {
-        return "games";
-    }
+    return `${rankedUnranked} games`.trim();
 }
 
 function getForFromBLCRankedUnrankedGames(forFrom, BLC, argName, all) {
@@ -678,8 +670,8 @@ function getForFromBLCRankedUnrankedGames(forFrom, BLC, argName, all) {
         if (argName.includes("ranked")) {
             return ` ${forFrom}${rankedUnrankedGames}`;  // ex: "for ranked games"       
         } else {
-            return "";                                   // no need to say explicitly "for all games" (ranked and unranked: general argument)
-        }                 
+            return "";                                   // no need to say explicitly "for all games"
+        }                                                // "for ranked games and for unranked games": general argument)   
     }
 }
 
@@ -689,10 +681,6 @@ function getSuggestionSentence(argName) {
     } else {
         return "";
     }
-}
-
-function getArgNamesGRU(familyName) {
-    return ["", "ranked", "unranked"].map( e => `${familyName}${e}` );
 }
 
 function rankToString(r) {
@@ -779,14 +767,18 @@ function getAllowedFamilyReject(argName, nameF, notif) {
 }
 
 function getAllowedFamilyRejectResult(familyName, nameF, notif, notificationRanked) {
-    if (config[familyName] && !config[`${familyName}ranked`] && !config[`${familyName}unranked`] && !config[`allow_all_${familyName}`] && !config[`allowed_${familyName}`][notif]) {
-        return getAllowedFamilyReject(familyName, nameF, notif);
+    const argNames = getArgNamesGRU(familyName);
+    const [general, ranked, unranked] = argNames;
+    const [general_underscored, ranked_underscored, unranked_underscored] = getArgNamesUnderscoredGRU(familyName);
+
+    if (config[general] && !config[ranked] && !config[unranked] && !config[`allow_all_${general_underscored}`] && !config[`allowed_${general_underscored}`][notif]) {
+        return getAllowedFamilyReject(general, nameF, notif);
     }
-    if (config[`${familyName}ranked`] && notificationRanked && !config[`allow_all_${familyName}_ranked`] && !config[`allowed_${familyName}_ranked`][notif]) {
-        return getAllowedFamilyReject(`${familyName}ranked`, nameF, notif);
+    if (config[ranked] && notificationRanked && !config[`allow_all_${ranked_underscored}`] && !config[`allowed_${ranked_underscored}`][notif]) {
+        return getAllowedFamilyReject(ranked, nameF, notif);
     }
-    if (config[`${familyName}unranked`] && !notificationRanked && !config[`allow_all_${familyName}_unranked`] && !config[`allowed_${familyName}_unranked`][notif]) {
-        return getAllowedFamilyReject(`${familyName}unranked`, nameF, notif);
+    if (config[unranked] && !notificationRanked && !config[`allow_all_${unranked_underscored}`] && !config[`allowed_${unranked_underscored}`][notif]) {
+        return getAllowedFamilyReject(unranked, nameF, notif);
     }
 }
 

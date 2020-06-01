@@ -1,6 +1,10 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const fs = require('fs')
+
+const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
+const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
+
 const console = require('console');
 
 exports.check_rejectnew = function() {};
@@ -281,24 +285,13 @@ exports.updateFromArgv = function() {
     exports.bot_command = argv._;
 
     /* 2) specifc r_u cases :*/
-    if (argv.minrank && !argv.minrankranked && !argv.minrankunranked) {
-        exports.minrank = parseRank(argv.minrank);
-    }
-    if (argv.minrankranked) {
-        exports.minrankranked = parseRank(argv.minrankranked);
-    }
-    if (argv.minrankunranked) {
-        exports.minrankunranked = parseRank(argv.minrankunranked);
-    }
-    if (argv.maxrank && !argv.maxrankranked && !argv.maxrankunranked) {
-        exports.maxrank = parseRank(argv.maxrank);
-    }
-    if (argv.maxrankranked) {
-        exports.maxrankranked = parseRank(argv.maxrankranked);
-    }
-    if (argv.maxrankunranked) {
-        exports.maxrankunranked = parseRank(argv.maxrankunranked);
-    }
+    processRankExport("minrank", argv);
+    processRankExport("minrankranked", argv);
+    processRankExport("minrankunranked", argv);
+
+    processRankExport("maxrank", argv);
+    processRankExport("maxrankranked", argv);
+    processRankExport("maxrankunranked", argv);
 
     if (argv.bans) {
         for (const user of argv.bans.split(',')) {
@@ -325,24 +318,10 @@ exports.updateFromArgv = function() {
             }
         }
     }
-    if (argv.boardsizesranked) {
-        for (const boardsizeranked of argv.boardsizesranked.split(',')) {
-            if (boardsizeranked === "all") {
-                exports.allow_all_boardsizes_ranked = true;
-            } else {
-                exports.allowed_boardsizes_ranked[boardsizeranked] = true;
-            }
-        }
-    }
-    if (argv.boardsizesunranked) {
-        for (const boardsizeunranked of argv.boardsizesunranked.split(',')) {
-            if (boardsizeunranked === "all") {
-                exports.allow_all_boardsizes_unranked = true;
-            } else {
-                exports.allowed_boardsizes_unranked[boardsizeunranked] = true;
-            }
-        }
-    }
+
+    processBoardsizesExport("boardsizes", argv);
+    processBoardsizesExport("boardsizesranked", argv);
+    processBoardsizesExport("boardsizesunranked", argv);
 
     if (argv.komis) {
         for (const komi of argv.komis.split(',')) {
@@ -500,11 +479,6 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-// argv.arg(general/ranked/unranked) to exports.(r_u).arg
-function getArgNamesGRU(familyName) {
-    return ["", "ranked", "unranked"].map( e => `${familyName}${e}` );
-}
-
 function parseRank(arg) {
     if (arg) {
         const re = /(\d+)([kdp])/;
@@ -520,6 +494,27 @@ function parseRank(arg) {
             }
         } else {
             throw `error: could not parse rank -${arg}-`;
+        }
+    }
+}
+
+function processRankExport(argName, argv) {
+    const arg = argv[argName];
+    if (arg) {
+        exports[argName] = parseRank(arg);
+    }
+}
+
+function processBoardsizesExport(rankedUnranked, argv) {
+    const arg = argv.boardsizes;
+    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
+    if (arg) {
+        for (const boardsize of arg.split(',')) {
+            if (boardsize === "all") {
+                exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = true;
+            } else {
+                exports[`allowed_boardsizes${rankedUnrankedUnderscored}`][boardsize] = true;
+            }
         }
     }
 }
