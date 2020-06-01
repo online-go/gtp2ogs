@@ -357,10 +357,6 @@ class Connection {
         if (config.unrankedonly && notification.ranked) {
             return getBooleansGeneralReject("Ranked games are");
         }
-
-        const testBooleanArgs_r_u = [ ["proonly", "Games against non-professionals are", !notification.user.professional, ""],
-                                      ["nopauseonweekends", "Pause on week-ends is", notification.pause_on_weekends, ""],
-                                    ];
         
         // noautohandicap is tested in checkChallengeHandicap, not here.
         
