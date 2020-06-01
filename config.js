@@ -309,16 +309,6 @@ exports.updateFromArgv = function() {
         }
     }
 
-    if (argv.boardsizes) {
-        for (const boardsize of argv.boardsizes.split(',')) {
-            if (boardsize === "all") {
-                exports.allow_all_boardsizes = true;
-            } else {
-                exports.allowed_boardsizes[boardsize] = true;
-            }
-        }
-    }
-
     processBoardsizesExport("boardsizes", argv);
     processBoardsizesExport("boardsizesranked", argv);
     processBoardsizesExport("boardsizesunranked", argv);
