@@ -4,6 +4,7 @@ const fs = require('fs')
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
 const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
+const { getFamilyName } = require('./utils/getFamilyName');
 
 const console = require('console');
 
@@ -293,91 +294,25 @@ exports.updateFromArgv = function() {
     processRankExport("maxrankranked", argv);
     processRankExport("maxrankunranked", argv);
 
-    if (argv.bans) {
-        for (const user of argv.bans.split(',')) {
-            exports.banned_users[user] = true;
-        }
-    }
-    if (argv.bansranked) {
-        for (const user of argv.bansranked.split(',')) {
-            exports.banned_users_ranked[user] = true;
-        }
-    }
-    if (argv.bansunranked) {
-        for (const user of argv.bansunranked.split(',')) {
-            exports.banned_users_unranked[user] = true;
-        }
-    }
+    processBansExport("bans", argv);
+    processBansExport("bansranked", argv);
+    processBansExport("bansunranked", argv);
 
     processBoardsizesExport("boardsizes", argv);
     processBoardsizesExport("boardsizesranked", argv);
     processBoardsizesExport("boardsizesunranked", argv);
 
-    if (argv.komis) {
-        for (const komi of argv.komis.split(',')) {
-            if (komi === "all") {
-                exports.allow_all_komis = true;
-            } else if (komi === "automatic") {
-                exports.allowed_komis[null] = true;
-            } else {
-                exports.allowed_komis[komi] = true;
-            }
-        }
-    }
-    if (argv.komisranked) {
-        for (const komiranked of argv.komisranked.split(',')) {
-            if (komiranked === "all") {
-                exports.allow_all_komis_ranked = true;
-            } else if (komiranked === "automatic") {
-                exports.allowed_komis_ranked[null] = true;
-            } else {
-                exports.allowed_komis_ranked[komiranked] = true;
-            }
-        }
-    }
-    if (argv.komisunranked) {
-        for (const komiunranked of argv.komisunranked.split(',')) {
-            if (komiunranked === "all") {
-                exports.allow_all_komis_unranked = true;
-            } else if (komiunranked === "automatic") {
-                exports.allowed_komis_unranked[null] = true;
-            } else {
-                exports.allowed_komis_unranked[komiunranked] = true;
-            }
-        }
-    }
+    processKomisExport("komis", argv);
+    processKomisExport("komisranked", argv);
+    processKomisExport("komisunranked", argv);
 
-    if (argv.speeds) {
-        for (const e of argv.speeds.split(',')) {
-            exports.allowed_speeds[e] = true;
-        }
-    }
-    if (argv.speedsranked) {
-        for (const e of argv.speedsranked.split(',')) {
-            exports.allowed_speeds_ranked[e] = true;
-        }
-    }
-    if (argv.speedsunranked) {
-        for (const e of argv.speedsunranked.split(',')) {
-            exports.allowed_speeds_unranked[e] = true;
-        }
-    }
+    processAllowedFamilyExport("speeds", argv);
+    processAllowedFamilyExport("speedsranked", argv);
+    processAllowedFamilyExport("speedsunranked", argv);
 
-    if (argv.timecontrols) {
-        for (const e of argv.timecontrols.split(',')) {
-            exports.allowed_timecontrols[e] = true;
-        }
-    }
-    if (argv.timecontrolsranked) {
-        for (const e of argv.timecontrolsranked.split(',')) {
-            exports.allowed_timecontrols_ranked[e] = true;
-        }
-    }
-    if (argv.timecontrolsunranked) {
-        for (const e of argv.timecontrolsunranked.split(',')) {
-            exports.allowed_timecontrols_unranked[e] = true;
-        }
-    }
+    processAllowedFamilyExport("timecontrols", argv);
+    processAllowedFamilyExport("timecontrolsranked", argv);
+    processAllowedFamilyExport("timecontrolsunranked", argv);
 
     // console messages
     // C - test exports warnings
@@ -495,11 +430,25 @@ function processRankExport(argName, argv) {
     }
 }
 
-function processBoardsizesExport(rankedUnranked, argv) {
-    const arg = argv.boardsizes;
-    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
+function processBansExport(argName, argv) {
+    const arg = argv[argName];
+    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
+
     if (arg) {
-        for (const boardsize of arg.split(',')) {
+        const bans = arg.split(',');
+        for (const bannedUser of bans) {
+            exports[`banned_users${rankedUnrankedUnderscored}`][bannedUser] = true;
+        }
+    }
+}
+
+function processBoardsizesExport(argName, argv) {
+    const arg = argv[argName];
+    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
+
+    if (arg) {
+        const boardsizes = arg.split(',');
+        for (const boardsize of boardsizes) {
             if (boardsize === "all") {
                 exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = true;
             } else {
@@ -507,6 +456,41 @@ function processBoardsizesExport(rankedUnranked, argv) {
             }
         }
     }
+}
+
+function processKomisExport(argName, argv) {
+    const arg = argv[argName];
+    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
+
+    if (arg) {
+        const komis = arg.split(',');
+        for (const komi of komis) {
+            if (komi === "all") {
+                exports[`allow_all_komis${rankedUnrankedUnderscored}`] = true;
+            } else if (komi === "automatic") {
+                exports[`allowed_komis${rankedUnrankedUnderscored}`][null] = true;
+            } else {
+                exports[`allowed_komis${rankedUnrankedUnderscored}`][komi] = true;
+            }
+        }
+    } 
+}
+
+function processAllowedFamilyExport(argName, argv) {
+    const arg = argv[argName];
+    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
+
+    if (arg) {
+        const familyName = getFamilyName(argName);
+        const allowedValues = arg.split(',');
+        for (const allowedValue of allowedValues) {
+            if (allowedValue === "all") {
+                exports[`allow_all_${familyName}${rankedUnrankedUnderscored}`] = true;
+            } else {
+                exports[`allowed_${familyName}${rankedUnrankedUnderscored}`][allowedValue] = true;
+            }
+        }
+    } 
 }
 
 function testExportsWarnings() {
