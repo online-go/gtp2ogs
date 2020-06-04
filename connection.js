@@ -269,11 +269,10 @@ class Connection {
         .catch(conn_log);
     }
 
-    // Check challenge mandatory conditions
+    // Check challenge user is acceptable, else don't mislead user
     //
-    checkChallengeMandatory(notification) {
+    checkChallengeUser(notification) {
 
-        // check user is acceptable first, else don't mislead user (is professional is in booleans below, not here)
         for (const uid of ["username", "id"]) {
             if (config.banned_users[notification.user[uid]]) {
                 return getRejectBanned(notification.user.username, "");
@@ -285,14 +284,29 @@ class Connection {
                 return getRejectBanned(notification.user.username, "unranked");
             }
         }
+
+        if (!notification.user.professional) {
+            const beginning = "Games against non-professionals are";
+            const ending    = "";
+            const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
+            if (resultProonly) return resultProonly;
+        }
+
         const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
         if (resultRank) return resultRank;
 
-        // check bot is available, else don't mislead user
+        return { reject: false }; // OK !
+
+    }
+    // Check bot is available, else don't mislead user
+    //
+    checkChallengeBot(notification) {
+
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }
+
         if (this.connected_games) {
             const number_connected_games = Object.keys(this.connected_games).length;
             if (config.DEBUG) console.log(`# of connected games = ${number_connected_games}`);
@@ -310,6 +324,7 @@ class Connection {
         } else if (config.DEBUG) {
             console.log("There are no connected games");
         }
+
         const connected_games_per_user = this.countGamesForPlayer(notification.user.id);
         if (connected_games_per_user >= config.maxconnectedgamesperuser) {
             conn_log("Too many connected games for this user.");
@@ -347,7 +362,7 @@ class Connection {
         return { reject: false }; // OK !
 
     }
-    // Check challenge booleans allow a game ("nopause" is in game.js, not here)
+    // Check some booleans allow a game ("nopause" is in game.js, not here)
     //
     checkChallengeBooleans(notification) {
 
@@ -357,21 +372,12 @@ class Connection {
         if (config.unrankedonly && notification.ranked) {
             return getBooleansGeneralReject("Ranked games are");
         }
-        
-        // noautohandicap is tested in checkChallengeHandicap, not here.
-        
-        if (!notification.user.professional) {
-            const beginning = "Games against non-professionals are";
-            const ending    = "";
-            const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
-            if (resultProonly) return resultProonly;
-        }
 
         if (notification.pause_on_weekends) {
             const beginning = "Pause on week-ends is";
             const ending    = "";
-            const resultProonly = getBooleansGRURejectResult("nopauseonweekends", notification.ranked, beginning, ending);
-            if (resultProonly) return resultProonly;
+            const resultNoPauseWeekends = getBooleansGRURejectResult("nopauseonweekends", notification.ranked, beginning, ending);
+            if (resultNoPauseWeekends) return resultNoPauseWeekends;
         }
 
         return { reject: false }; // OK !
@@ -459,7 +465,8 @@ class Connection {
     //
     checkChallenge(notification) {
 
-        for (const test of [this.checkChallengeMandatory,
+        for (const test of [this.checkChallengeUser,
+                           this.checkChallengeBot,
                            this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
                            this.checkChallengeAllowedFamilies,

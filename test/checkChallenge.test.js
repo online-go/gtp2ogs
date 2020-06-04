@@ -75,7 +75,7 @@ describe('Challenges', () => {
 
       config.banned_users[notification.user.username] = true;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedName) are not allowed to play games against this bot.' }));
     });
@@ -85,7 +85,7 @@ describe('Challenges', () => {
 
       config.banned_users[notification.user.id] = true;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedName) are not allowed to play games against this bot.' }));
     });
@@ -95,7 +95,7 @@ describe('Challenges', () => {
 
       config.banned_users_ranked[notification.user.username] = true;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedRankedName) are not allowed to play ranked games against this bot.' }));
     });
@@ -105,7 +105,7 @@ describe('Challenges', () => {
 
       config.banned_users_ranked[notification.user.id] = true;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedRankedName) are not allowed to play ranked games against this bot.' }));
     });
@@ -115,7 +115,7 @@ describe('Challenges', () => {
 
       config.banned_users_unranked[notification.user.username] = true;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
     });
@@ -125,7 +125,7 @@ describe('Challenges', () => {
 
       config.banned_users_unranked[notification.user.id] = true;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
     });
@@ -221,7 +221,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
 
@@ -234,7 +234,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -247,7 +247,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -259,7 +259,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -272,7 +272,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
 
@@ -285,7 +285,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
 
@@ -298,7 +298,7 @@ describe('Challenges', () => {
       config.minrank = 17;
       config.maxrank = 32;
       
-      const result = conn.checkChallengeMandatory(notification);
+      const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
    });
