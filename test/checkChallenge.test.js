@@ -301,7 +301,7 @@ describe('Challenges', () => {
       const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
-   });
+    });
    
   });
 
