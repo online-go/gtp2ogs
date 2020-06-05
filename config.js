@@ -272,10 +272,12 @@ exports.updateFromArgv = function() {
     // Setting minimum handicap higher than -1 has the consequence of disabling
     // automatic handicap (notification.handicap === -1).
     //
-    // Except if --fakerank is used: then we leave that choice to bot admin
-    // whether he wants to accept automatic handicap (-1) and use fakerank to
-    // calculate automatic handicap stones based on rank difference between
-    // bot's fakerank and user's ranking.
+    // Except if --fakerank is used: then we leave that choice to bot admin:
+    // - either he wants to accept automatic handicap (-1) and use fakerank to
+    //   calculate automatic handicap stones based on rank difference between
+    //   bot's fakerank and user's ranking.
+    // - or as was done previously bot admin can use the noautohandicap options
+    //   to reject automatic handicap challenges
     //
     if (argv.fakerank) {
         exports.fakerank = parseRank(argv.fakerank);
