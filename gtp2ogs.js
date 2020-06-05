@@ -26,4 +26,4 @@ process.on('uncaughtException', function (er) {
   }
 })
 
-let conn = new Connection();
+let conn = new Connection(io, config);
