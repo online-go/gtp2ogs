@@ -1,5 +1,9 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
+// see: https://github.com/online-go/gtp2ogs/blob/devel/docs/DEV.md#about-no-console-eslint-rule-in-configjs
+/* eslint-disable no-console */
+console.log('test');
+
 const fs = require('fs');
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
