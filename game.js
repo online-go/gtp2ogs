@@ -1,10 +1,11 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
+const console = require('./console').console;
+
 const Bot = require('./bot').Bot;
+const config = require('./config');
 const decodeMoves = require('./bot').decodeMoves;
 const move2gtpvertex = require('./bot').move2gtpvertex;
-const console = require('./console').console;
-const config = require('./config');
 
 /**********/
 /** Game **/

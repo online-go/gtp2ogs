@@ -1,15 +1,16 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-const fs = require('fs')
+const fs = require('fs');
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
+const { getFamilyName } = require('./utils/getFamilyName');
 const { getRankedUnranked } = require('./utils/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
-const { getFamilyName } = require('./utils/getFamilyName');
 
-const console = require('console');
+const console = require('console'); // should it be const console = require('./console.console'); as in connection.js and game.js?
 
 exports.check_rejectnew = function() {};
+
 exports.banned_users = {};
 exports.banned_users_ranked = {};
 exports.banned_users_unranked = {};

@@ -1,21 +1,21 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-const querystring = require('querystring');
-
+const console = require('./console').console;
 const http = require('http');
 const https = require('https');
+const querystring = require('querystring');
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
 const { getArgNamesUnderscoredGRU } = require('./utils/getArgNamesUnderscoredGRU');
 const { getRankedUnranked } = require('./utils/getRankedUnranked');
 
-const console = require('./console').console;
-const Game = require('./game').Game;
 let config;
+const Game = require('./game').Game;
 
 /****************/
 /** Connection **/
 /****************/
+
 const ignorable_notifications = {
     'delete': true,
     'gameStarted': true,

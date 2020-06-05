@@ -7,8 +7,8 @@
 process.title = 'gtp2ogs';
 
 // Do this before importing anything else in case the other modules use config.
-const config = require('./config');
 const io = require('socket.io-client');
+const config = require('./config');
 config.updateFromArgv();
 
 process.title = `gtp2ogs ${config.bot_command.join(' ')}`;
