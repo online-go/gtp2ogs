@@ -20,10 +20,14 @@ process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
   console.error(`ERROR: ${er.stack}`);
   if (!conn || !conn.socket) {
-    conn = new Connection(io, config);
+    conn = getNewConnection();
   } else {
     //conn.connection_reset();
   }
 })
 
-let conn = new Connection(io, config);
+let conn = getNewConnection();
+
+function getNewConnection() {
+  return new Connection(io, config);
+}
