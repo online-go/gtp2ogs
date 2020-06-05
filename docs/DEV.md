@@ -11,14 +11,14 @@ It is good practice to commit package-lock.json, so this is what we do here in g
  we use. That way we can test the same packages as they use, and avoid unexpected
  incompatibilities.
 
-## About no-console ESLint rule in config.js
+## no-console ESLint rule in config.js
 
 Since we use console for displaying information to our user (the botadmin), it is a valid
 case where we should disable the no-console rule of ESLint.
 
 details [here](https://eslint.org/docs/rules/no-console#when-not-to-use-it).
 
-## About no console import in config.js
+## no console import in config.js
 
 In config.js the purpose of console logging is different, we warn bot admin of any error
 in argv and values, and if any is found (ex: --minrank 157f), it is best to `throw` an error
