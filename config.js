@@ -7,8 +7,6 @@ const { getFamilyName } = require('./utils/getFamilyName');
 const { getRankedUnranked } = require('./utils/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
 
-const console = require('console'); // should it be const console = require('./console.console'); as in connection.js and game.js?
-
 exports.check_rejectnew = function() {};
 
 exports.banned_users = {};
