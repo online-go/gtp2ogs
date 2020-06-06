@@ -1,6 +1,5 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-const console = require('./console').console;
 const http = require('http');
 const https = require('https');
 const querystring = require('querystring');
@@ -10,6 +9,7 @@ const { getArgNamesUnderscoredGRU } = require('./utils/getArgNamesUnderscoredGRU
 const { getRankedUnranked } = require('./utils/getRankedUnranked');
 
 let config;
+const console = require('./console').console;
 const Game = require('./game').Game;
 
 /****************/
