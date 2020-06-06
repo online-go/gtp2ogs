@@ -260,6 +260,9 @@ exports.updateFromArgv = function() {
     if (argv.logfile && typeof argv.logfile === "boolean") {
         exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
     }
+    if (argv.rankedonly && argv.unrankedonly) {
+        throw `Please choose either --rankedonly or --unrankedonly, not both.`;
+    }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
             // Convert some times to microseconds once here so

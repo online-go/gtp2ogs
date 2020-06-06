@@ -175,6 +175,60 @@ describe('Challenges', () => {
 
   });
 
+  describe('Some Booleans', () => {
+
+    // user is professional and noautohandicap are in their respective checkChallenge functions, not here.
+
+    it('reject ranked games if unrankedonly', () => {
+
+      const notification = base_challenge({ ranked: true });
+
+      config.unrankedonly = true;
+
+      const result = conn.checkChallengeBooleans(notification);
+
+      assert.deepEqual(result, ({ reject: true,   msg: 'Ranked games are not allowed on this bot.' }));
+
+    });
+
+    it('reject unranked games if rankedonly', () => {
+
+      const notification = base_challenge({ ranked: false });
+
+      config.rankedonly = true;
+
+      const result = conn.checkChallengeBooleans(notification);
+
+      assert.deepEqual(result, ({ reject: true,   msg: 'Unranked games are not allowed on this bot.' }));
+
+    });
+
+    it('accept ranked games if rankedonly', () => {
+
+      const notification = base_challenge({ ranked: true });
+
+      config.rankedonly = true;
+
+      const result = conn.checkChallengeBooleans(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept unranked games if unrankedonly', () => {
+
+      const notification = base_challenge({ ranked: false });
+
+      config.unrankedonly = true;
+
+      const result = conn.checkChallengeBooleans(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+  });
+
   describe('Allowed Boardsizes', () => {
     it('reject boardsize not in allowed boardsizes', () => {
 
