@@ -420,7 +420,7 @@ describe('Challenges', () => {
 
     });
 
-    it('accept speed not in allowed speeds', () => {
+    it('accept speed in allowed speeds', () => {
 
       const notification = base_challenge({ ranked: false, time_control: { speed: "live" } });
 
@@ -429,20 +429,6 @@ describe('Challenges', () => {
       config.allowed_speeds          = [];
       config.allowed_speeds["blitz"] = true;
       config.allowed_speeds["live"]  = true;
-
-      const result = conn.checkChallengeAllowedFamilies(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept speed not in allowed speeds if all', () => {
-
-      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence" } });
-
-      config.speeds                  = "all";
-      config.allow_all_speeds        = true;
-      config.allowed_speeds          = [];
 
       const result = conn.checkChallengeAllowedFamilies(notification);
 
