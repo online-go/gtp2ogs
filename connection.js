@@ -344,6 +344,7 @@ class Connection {
 
         // TODO: add all sanity checks here of all unhandled notifications
 
+        // unknown speed "turbo" makes --minmaintimeturbo uncheckable.
         const knownSpeeds = ["blitz", "live", "correspondence"];
         if (!knownSpeeds.includes(notification.time_control.speed)) {
             const msg = `Unknown speed ${notification.time_control.speed}`
@@ -351,6 +352,7 @@ class Connection {
             return { reject: true, msg };
         }
 
+        // unknown time control "penalty" is undefined in timesObj["penalty"].maintime, uncheckable.
         const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
             const msg = `Unknown time control ${notification.time_control.time_control}`
