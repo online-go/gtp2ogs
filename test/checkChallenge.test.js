@@ -59,12 +59,42 @@ describe('Challenges', () => {
   });
   
   describe('General rules', () => {
-    it('Almost empty config containing only defaults from test.js accepts challenge', () => {
+
+    it('accept default notification from base_challenge in test.js, with almost empty config', () => {
       const notification = base_challenge();
       
       const result = conn.checkChallenge(notification);
       
       assert.deepEqual(result, ({ reject: false }));
+    });
+
+  });
+
+  describe('Sanity Checks', () => {
+
+    it('accept real notification challenge with almost empty config (except defaults from base_challenge in test.js)', () => {
+      const notificationSample = {"id":"785246:6c6a506f-3af8-4e5d-afca-1dc8d592b7a8","type":"challenge","player_id":1,
+      "timestamp":1590353535,"read_timestamp":0,"read":0, "aux_delivered":0,"game_id":1,"challenge_id":1,
+      "user":{"id":1,"country":"un","username":"Some User",
+      "icon_url":"https://secure.gravatar.com/avatar/ed9162b40504d7f64cfe3547c232c665?s=32&d=retro",
+      "ratings":{"overall":{"rating":2451.209718473043,"deviation":118.76556422774001,"volatility":0.06297489852992705,"games_played":613}},
+      "ui_class":"timeout","professional":false,"rating":"1009.541","ranking":33.096893588618975},
+      "rules":"chinese","ranked":true,"aga_rated":false,"disable_analysis":false,"handicap":0,"komi":null,
+      "time_control":{"system":"byoyomi","time_control":"byoyomi","speed":"live","pause_on_weekends":false,"main_time":1200,"period_time":30,"periods":5},
+      "challenger_color":"automatic","width":19,"height":19};
+      const notification = base_challenge(notificationSample);
+      
+      const result = conn.checkChallenge(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('reject empty notification challenge', () => {
+    const notification = {};
+    
+    const result = conn.checkChallenge(notification);
+    
+    assert.deepEqual(result, ({ reject: true, msg: 'Missing key user, cannot check challenge, please contact my bot admin.' }));
     });
 
   });
@@ -130,6 +160,99 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true,   msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
     });
 
+  });
+
+  describe('Min Max Rank', () => {
+
+    it('reject user ranking too low', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 10 } }); // "20k"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
+
+    });
+
+    it('accept user ranking edge min', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 17 } }); // "13k"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept user ranking between min and max', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 25 } }); // "5k"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept user ranking edge max', () => {
+      const notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('reject user ranking too high', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 35 } }); // "6d"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+
+    });
+
+    it('reject user ranking too high (9d+)', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 41 } }); // "12d"
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+
+    });
+
+    it('reject user ranking too high (pro)', () => {
+
+      const notification = base_challenge({ ranked: false, user: { ranking: 37 } }); // "1p" (1p" = "8d")
+
+      config.minrank = 17;
+      config.maxrank = 32;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+    });
+   
   });
 
   describe('Non-square boardsizes', () => {
@@ -264,99 +387,182 @@ describe('Challenges', () => {
 
     });
 
+    it('accept boardsize not in allowed boardsizes if all', () => {
+
+      const notification = base_challenge({ ranked: false, width: 18, height: 18 });
+
+      config.boardsizes             = "all";
+      config.allow_all_boardsizes   = true;
+      config.allowed_boardsizes     = [];
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
   });
 
-  describe('Min Max Rank', () => {
+  describe('Allowed Speeds', () => {
+    it('reject speed not in allowed speeds', () => {
 
-    it('reject user ranking too low', () => {
+      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence" } });
 
-      const notification = base_challenge({ ranked: false, user: { ranking: 10 } }); // "20k"
+      config.speeds                  = "blitz, live";
+      config.allow_all_speeds        = false;
+      config.allowed_speeds          = [];
+      config.allowed_speeds["blitz"] = true;
+      config.allowed_speeds["live"]  = true;
 
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: true,   msg: 'Speed correspondence is not allowed on this bot, please choose one of these allowed Speeds:\nblitz, live.' }));
 
     });
 
-    it('accept user ranking edge min', () => {
+    it('accept speed not in allowed speeds', () => {
 
-      const notification = base_challenge({ ranked: false, user: { ranking: 17 } }); // "13k"
+      const notification = base_challenge({ ranked: false, time_control: { speed: "live" } });
 
-      config.minrank = 17;
-      config.maxrank = 32;
+      config.speeds                  = "blitz, live";
+      config.allow_all_speeds        = false;
+      config.allowed_speeds          = [];
+      config.allowed_speeds["blitz"] = true;
+      config.allowed_speeds["live"]  = true;
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept speed not in allowed speeds if all', () => {
+
+      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence" } });
+
+      config.speeds                  = "all";
+      config.allow_all_speeds        = true;
+      config.allowed_speeds          = [];
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept speed not in allowed speeds if all', () => {
+
+      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence" } });
+
+      config.speeds                  = "all";
+      config.allow_all_speeds        = true;
+      config.allowed_speeds          = [];
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+  });
+
+  describe('Allowed Families General Ranked Unranked precdecence rules', () => {
+
+    // We already tested extensively how the allowed families args work, so now we just want to
+    // make sure the general / ranked / unranked priority order is respected.
+    // speeds is a good and simple example
+
+    it('reject speed based on ranked arg if ranked arg is used and game is ranked', () => {
+
+      const notification = base_challenge({ ranked: true, time_control: { speed: "live" } });
+
+      config.speeds                                   = "all";
+      config.allow_all_speeds                         = true;
+      config.allowed_speeds                           = [];
+      config.speedsranked                             = "blitz,correspondence";
+      config.allow_all_speeds_ranked                  = false;
+      config.allowed_speeds_ranked                    = [];
+      config.allowed_speeds_ranked["blitz"]           = true;
+      config.allowed_speeds_ranked["correspondence"]  = true;
+      config.speedsunranked                           = "live";
+      config.allow_all_speeds_unranked                = false;
+      config.allowed_speeds_unranked                  = [];
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
       
-      const result = conn.checkChallengeUser(notification);
+      assert.deepEqual(result, ({ reject: true,   msg: 'Speed live is not allowed on this bot for ranked games, please choose one of these allowed Speeds for ranked games:\nblitz,correspondence.' }));
+
+    });
+
+    it('accept speed based on ranked arg if ranked arg is used and game is ranked', () => {
+
+      const notification = base_challenge({ ranked: true, time_control: { speed: "blitz" } });
+
+      config.speeds                                   = "all";
+      config.allow_all_speeds                         = true;
+      config.allowed_speeds                           = [];
+      config.speedsranked                             = "blitz,correspondence";
+      config.allow_all_speeds_ranked                  = false;
+      config.allowed_speeds_ranked                    = [];
+      config.allowed_speeds_ranked["blitz"]           = true;
+      config.allowed_speeds_ranked["correspondence"]  = true;
+      config.speedsunranked                           = "live";
+      config.allow_all_speeds_unranked                = false;
+      config.allowed_speeds_unranked                  = [];
+      config.allowed_speeds_unranked["live"]          = true;
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
     });
 
-    it('accept user ranking between min and max', () => {
+    it('reject speed based on unranked arg if unranked arg is used and game is unranked', () => {
 
-      const notification = base_challenge({ ranked: false, user: { ranking: 25 } }); // "5k"
+      const notification = base_challenge({ ranked: false, time_control: { speed: "blitz" } });
 
-      config.minrank = 17;
-      config.maxrank = 32;
+      config.speeds                                   = "all";
+      config.allow_all_speeds                         = true;
+      config.allowed_speeds                           = [];
+      config.speedsranked                             = "blitz,correspondence";
+      config.allow_all_speeds_ranked                  = false;
+      config.allowed_speeds_ranked                    = [];
+      config.allowed_speeds_ranked["blitz"]           = true;
+      config.allowed_speeds_ranked["correspondence"]  = true;
+      config.speedsunranked                           = "live";
+      config.allow_all_speeds_unranked                = false;
+      config.allowed_speeds_unranked                  = [];
+      config.allowed_speeds_unranked["live"]          = true;
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
       
-      const result = conn.checkChallengeUser(notification);
+      assert.deepEqual(result, ({ reject: true,   msg: 'Speed blitz is not allowed on this bot for unranked games, please choose one of these allowed Speeds for unranked games:\nlive.' }));
+
+    });
+
+    it('accept speed based on unranked arg if unranked arg is used and game is unranked', () => {
+
+      const notification = base_challenge({ ranked: false, time_control: { speed: "live" } });
+
+      config.speeds                                   = "all";
+      config.allow_all_speeds                         = true;
+      config.allowed_speeds                           = [];
+      config.speedsranked                             = "blitz,correspondence";
+      config.allow_all_speeds_ranked                  = false;
+      config.allowed_speeds_ranked                    = [];
+      config.allowed_speeds_ranked["blitz"]           = true;
+      config.allowed_speeds_ranked["correspondence"]  = true;
+      config.speedsunranked                           = "live";
+      config.allow_all_speeds_unranked                = false;
+      config.allowed_speeds_unranked                  = [];
+      config.allowed_speeds_unranked["live"]          = true;
+
+      const result = conn.checkChallengeAllowedFamilies(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
     });
 
-    it('accept user ranking edge max', () => {
-      const notification = base_challenge({ ranked: false, user: { ranking: 32 } }); // "3d"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('reject user ranking too high', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 35 } }); // "6d"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
-
-    });
-
-    it('reject user ranking too high (9d+)', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 41 } }); // "12d"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
-
-    });
-
-    it('reject user ranking too high (pro)', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 37 } }); // "1p" (1p" = "8d")
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
-    });
-   
   });
 
   describe('Automatic Handicap and Fakerank', () => {
@@ -1659,6 +1865,7 @@ describe('Challenges', () => {
       config.maxhandicapranked      = 6;
       config.minhandicapunranked    = 8;
       config.maxhandicapunranked    = 10;
+
       const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Maximum number of handicap stones for ranked games is 6, please reduce the number of handicap stones.\nYou may try unranked.' }));
@@ -1678,6 +1885,7 @@ describe('Challenges', () => {
       config.maxhandicapranked   = 6;
       config.minhandicapunranked = 8;
       config.maxhandicapunranked = 10;
+
       const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));
@@ -1697,6 +1905,7 @@ describe('Challenges', () => {
       config.maxhandicapranked   = 6;
       config.minhandicapunranked = 8;
       config.maxhandicapunranked = 10;
+
       const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones for unranked games is 8, please increase the number of handicap stones.\nYou may try ranked.' }));
@@ -1716,6 +1925,7 @@ describe('Challenges', () => {
       config.maxhandicapranked   = 6;
       config.minhandicapunranked = 8;
       config.maxhandicapunranked = 10;
+
       const result = conn.checkChallengeHandicap(notification);
       
       assert.deepEqual(result, ({ reject: false }));

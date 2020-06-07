@@ -269,6 +269,72 @@ class Connection {
         .catch(conn_log);
     }
 
+    // Make sure challenge is checkable, else don't check it.
+    //
+    checkChallengeSanityChecks(notification) {
+
+        // TODO: add all sanity checks here of all unhandled notifications
+
+        // notification sample as of may 2020
+        //{"id":"785246:6c6a506f-3af8-4e5d-afca-1dc8d592b7a8","type":"challenge","player_id":1,
+        //"timestamp":1590353535,"read_timestamp":0,"read":0, "aux_delivered":0,"game_id":1,"challenge_id":1,
+        //"user":{"id":1,"country":"un","username":"Some User",
+        //"icon_url":"https://secure.gravatar.com/avatar/ed9162b40504d7f64cfe3547c232c665?s=32&d=retro",
+        //"ratings":{"overall":{"rating":2451.209718473043,"deviation":118.76556422774001,"volatility":0.06297489852992705,"games_played":613}},
+        //"ui_class":"timeout","professional":false,"rating":"1009.541","ranking":33.096893588618975},
+        //"rules":"chinese","ranked":true,"aga_rated":false,"disable_analysis":false,"handicap":0,"komi":null,
+        //"time_control":{"system":"byoyomi","time_control":"byoyomi","speed":"live","pause_on_weekends":false,"main_time":1200,"period_time":30,"periods":5},
+        //"challenger_color":"automatic","width":19,"height":19};*/
+
+        // do not check everything, only the keys we need.
+        const notificationKeys = ["user", "rules", "ranked", "handicap", "komi", "time_control", "width", "height"];
+        const resultNotificationKeys = getCheckedKeysInObjRejectResult(notificationKeys, notification);
+        if (resultNotificationKeys) return resultNotificationKeys;
+
+        const notificationKeysUser = ["id", "username", "professional", "ranking"];
+        const resultNotificationKeysUser = getCheckedKeysInObjRejectResult(notificationKeysUser, notification.user);
+        if (resultNotificationKeysUser) return resultNotificationKeysUser;
+
+        const notificationKeysTimecontrol = ["time_control", "speed", "pause_on_weekends"];
+        const resultNotificationKeysTimecontrol = getCheckedKeysInObjRejectResult(notificationKeysTimecontrol, notification.time_control);
+        if (resultNotificationKeysTimecontrol) return resultNotificationKeysTimecontrol;
+
+        processCheckedTimeSettingsKeysRejectResult("byoyomi"  , ["main_time", "periods", "period_time"], notification.time_control);
+        processCheckedTimeSettingsKeysRejectResult("canadian" , ["main_time", "stones_per_period", "period_time"], notification.time_control);
+        processCheckedTimeSettingsKeysRejectResult("fischer"  , ["initial_time", "max_time", "time_increment"], notification.time_control);
+        processCheckedTimeSettingsKeysRejectResult("simple"   , ["per_move"], notification.time_control);
+        processCheckedTimeSettingsKeysRejectResult("absolute" , ["total_time"], notification.time_control);
+        // time control "none" has no time settings key, no need to check it.
+
+        // unknown speed "turbo" makes --minmaintimeturbo uncheckable.
+        const knownSpeeds = ["blitz", "live", "correspondence"];
+        if (!knownSpeeds.includes(notification.time_control.speed)) {
+            this.err(`Unknown speed ${notification.time_control.speed}.`);
+            const msg = `Unknown speed ${notification.time_control.speed}`
+                        + `, cannot check challenge, please contact my bot admin.`;
+            return { reject: true, msg };
+        }
+
+        // unknown time control "penalty" is undefined in timesObj["penalty"].maintime, uncheckable.
+        const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
+        if (!knownTimecontrols.includes(notification.time_control.time_control)) {
+            this.err(`Unknown time control ${notification.time_control.time_control}.`);
+            const msg = `Unknown time control ${notification.time_control.time_control}`
+                        + `, cannot check challenge, please contact my bot admin.`;
+            return { reject: true, msg };
+        }
+
+        // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
+        if (!notification.rules.includes("chinese")) {
+            this.err(`Unhandled rules: ${notification.rules}`);
+            const msg = `The ${notification.rules} rules are not allowed on this bot, `
+                        + `please choose allowed rules, for example chinese rules.`;
+            return { reject: true, msg };
+        }
+
+        return { reject: false }; // OK !
+
+    }
     // Check challenge user is acceptable, else don't mislead user
     //
     checkChallengeUser(notification) {
@@ -332,39 +398,6 @@ class Connection {
                         + `against this bot ${config.maxconnectedgamesperuser}, `
                         + `please reduce your number of simultaneous games against `
                         + `this bot, and try again`;
-            return { reject: true, msg };
-        }
-
-        return { reject: false }; // OK !
-
-    }
-    // Check challenge sanity checks
-    //
-    checkChallengeSanityChecks(notification) {
-
-        // TODO: add all sanity checks here of all unhandled notifications
-
-        // unknown speed "turbo" makes --minmaintimeturbo uncheckable.
-        const knownSpeeds = ["blitz", "live", "correspondence"];
-        if (!knownSpeeds.includes(notification.time_control.speed)) {
-            const msg = `Unknown speed ${notification.time_control.speed}`
-                        + `, cannot check challenge, please contact my bot admin.`;
-            return { reject: true, msg };
-        }
-
-        // unknown time control "penalty" is undefined in timesObj["penalty"].maintime, uncheckable.
-        const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
-        if (!knownTimecontrols.includes(notification.time_control.time_control)) {
-            const msg = `Unknown time control ${notification.time_control.time_control}`
-                        + `, cannot check challenge, please contact my bot admin.`;
-            return { reject: true, msg };
-        }
-
-        // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
-        if (!notification.rules.includes("chinese")) {
-            conn_log(`Unhandled rules: ${notification.rules}`);
-            const msg = `The ${notification.rules} rules are not allowed on this bot, `
-                        + `please choose allowed rules, for example chinese rules.`;
             return { reject: true, msg };
         }
 
@@ -474,9 +507,9 @@ class Connection {
     //
     checkChallenge(notification) {
 
-        for (const test of [this.checkChallengeUser,
+        for (const test of [this.checkChallengeSanityChecks,
+                           this.checkChallengeUser,
                            this.checkChallengeBot,
-                           this.checkChallengeSanityChecks,
                            this.checkChallengeBooleans,
                            this.checkChallengeAllowedFamilies,
                            this.checkChallengeHandicap,
@@ -550,12 +583,6 @@ class Connection {
     countGamesForPlayer(player) {
         if (!this.games_by_player[player])  return 0;
         return this.games_by_player[player].length;
-    }
-    ok (str) {
-        conn_log(str); 
-    }
-    err (str) {
-        conn_log("ERROR: ", str); 
     }
     ping() {
         this.socket.emit('net/ping', {client: (new Date()).getTime()});
@@ -683,6 +710,10 @@ function conn_log() {
     }
 }
 
+function err(str) {
+    conn_log("ERROR: ", str); 
+}
+
 function getRankedUnrankedGames(argName) {
     const rankedUnranked = getRankedUnranked(argName);
     return `${rankedUnranked} games`.trim();
@@ -727,6 +758,27 @@ function getRejectBanned(username, ranked) {
 function getReject(reason) {
     conn_log(reason);
     return { reject: true, msg: reason};
+}
+
+function getCheckedKeyInObjReject(k) {
+    err(`Missing key ${k}.`);
+    const msg = `Missing key ${k}, cannot check challenge, please contact my bot admin.`;
+    return { reject: true, msg };
+}
+
+function getCheckedKeysInObjRejectResult(keys, obj) {
+    for (const k of keys) {
+        if (!(k in obj)) {
+            return getCheckedKeyInObjReject(k);
+        }
+    }
+}
+
+function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
+    if (notif.time_control === timecontrol) {
+        const resultNotificationKeysTimeSettings = getCheckedKeysInObjRejectResult(keys, notif);
+        if (resultNotificationKeysTimeSettings) return resultNotificationKeysTimeSettings;
+    }
 }
 
 function getBooleansGeneralReject(nameF) {
