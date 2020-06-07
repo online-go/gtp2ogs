@@ -38,6 +38,12 @@ With visual studio code, the following extensions can be downloaded here:
 - ESLint: <https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint>
 - markdownlint: <https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint>
 
+These additional visual studio code extensions are also convenient for testing:
+
+- Test Explorer UI: <https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer>
+- Mocha Test Explorer: <https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-mocha-test-adapter>
+- Code Coverage Highlighter: <https://marketplace.visualstudio.com/items?itemName=brainfit.vscode-coverage-highlighter>
+
 ## Doc
 
 You can find information about the OGS API here:
