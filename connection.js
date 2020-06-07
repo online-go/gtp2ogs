@@ -344,10 +344,17 @@ class Connection {
 
         // TODO: add all sanity checks here of all unhandled notifications
 
+        const knownSpeeds = ["blitz", "live", "correspondence"];
+        if (!knownSpeeds.includes(notification.time_control.speed)) {
+            const msg = `Unknown speed ${notification.time_control.speed}`
+                        + `, cannot check challenge, please contact my bot admin.`;
+            return { reject: true, msg };
+        }
+
         const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
-            const msg = `Unknown time control ${notification.time_control.time_control},`
-                        + ` cannot check challenge, please contact my bot admin.`;
+            const msg = `Unknown time control ${notification.time_control.time_control}`
+                        + `, cannot check challenge, please contact my bot admin.`;
             return { reject: true, msg };
         }
 
