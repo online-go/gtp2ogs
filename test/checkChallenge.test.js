@@ -669,20 +669,6 @@ describe('Challenges', () => {
 
   describe('Handicap', () => {
 
-    it('reject handicap too low (handicap games only)', () => {
-
-      const notification = base_challenge({ ranked: false, handicap: 0 });
-
-      config.noautohandicap = true;
-      config.minhandicap = 2;
-      config.maxhandicap = 6;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones (handicap games only).' }));
-
-    });
-
     it('accept handicap edge min', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 0 });
@@ -725,7 +711,7 @@ describe('Challenges', () => {
 
     });
 
-    it('reject handicap too high (even games only) ', () => {
+    it('reject handicap too high (no handicap games) ', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 1 });
 

@@ -980,9 +980,6 @@ function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
 }
 
 function getHandicapMiddleSentence(isMin, notif, arg) {
-    if (isMin && notif === 0 && arg > 0) {
-        return " (handicap games only)";
-    }
     if (!isMin && notif > 0 && arg === 0) {
         return " (no handicap games)";
     } else {
