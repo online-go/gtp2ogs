@@ -309,7 +309,7 @@ class Connection {
         // unknown speed "turbo" makes --minmaintimeturbo uncheckable.
         const knownSpeeds = ["blitz", "live", "correspondence"];
         if (!knownSpeeds.includes(notification.time_control.speed)) {
-            this.err(`Unknown speed ${notification.time_control.speed}.`);
+            err(`Unknown speed ${notification.time_control.speed}.`);
             const msg = `Unknown speed ${notification.time_control.speed}`
                         + `, cannot check challenge, please contact my bot admin.`;
             return { reject: true, msg };
@@ -318,7 +318,7 @@ class Connection {
         // unknown time control "penalty" is undefined in timesObj["penalty"].maintime, uncheckable.
         const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
-            this.err(`Unknown time control ${notification.time_control.time_control}.`);
+            err(`Unknown time control ${notification.time_control.time_control}.`);
             const msg = `Unknown time control ${notification.time_control.time_control}`
                         + `, cannot check challenge, please contact my bot admin.`;
             return { reject: true, msg };
@@ -326,7 +326,7 @@ class Connection {
 
         // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
         if (!notification.rules.includes("chinese")) {
-            this.err(`Unhandled rules: ${notification.rules}`);
+            err(`Unhandled rules: ${notification.rules}`);
             const msg = `The ${notification.rules} rules are not allowed on this bot, `
                         + `please choose allowed rules, for example chinese rules.`;
             return { reject: true, msg };
@@ -831,7 +831,7 @@ function getAllowedFamilyReject(argName, nameF, notif) {
     const argToString = (argName.includes("boardsizes") ? boardsizeSquareToDisplayString(arg) : arg);
     const notifToString = getAllowedFamiliesNotifToString(argName, notif);
 
-    conn_log(`${nameF} ${forRankedUnrankedGames} is ${notifToString}, not in ${argToString}.`);
+    conn_log(`${nameF} ${forRankedUnrankedGames}is ${notifToString}, not in ${argToString} (${argName}).`);
     const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}`
                 + `, please choose one of these allowed ${nameF}s${forRankedUnrankedGames}:\n${argToString}.`;
     return { reject: true, msg };
@@ -884,15 +884,10 @@ function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
 
 function getMIBL(isMin) {
     if (isMin) {
-        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below", weakStro: "stronger" };
+        return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below" };
     } else {
-        return { miniMaxi: "Maximum", incDec: "reduce",   belAbo: "above", weakStro: "weaker" };
+        return { miniMaxi: "Maximum", incDec: "reduce",   belAbo: "above" };
     }
-}
-
-function getMinMaxRankMsg(argName, argToString, MIBL, endingSentence) {
-    const rankedUnrankedGames = getRankedUnrankedGames(argName);
-    return `This bot only accepts ${rankedUnrankedGames} from ${argToString} players or ${MIBL.weakStro} ranking${endingSentence}.`;  
 }
 
 function getFixedFirstNameS(nameS, timeControlSentence) {
@@ -908,11 +903,10 @@ function getFixedFirstNameS(nameS, timeControlSentence) {
     }
 }
 
-function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence) {
+function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString) {
     const fixedFirstNameS = getFixedFirstNameS(nameS, timeControlSentence);
 
-    return `${MIBL.miniMaxi} ${fixedFirstNameS}${forRankedUnranked}${timeControlSentence} is ${argToString}`
-           + `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
+    return `${MIBL.miniMaxi} ${fixedFirstNameS}${forRankedUnranked}${timeControlSentence} is ${argToString}`;
 }
 
 function getMinMaxReject(argToString, notifToString, isMin,
@@ -924,12 +918,12 @@ function getMinMaxReject(argToString, notifToString, isMin,
 
     conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
 
-    let msg = "";
+    let msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString);
     const familyNameIsRank = (argName.includes("minrank") || argName.includes("maxrank"));
     if (familyNameIsRank) {
-        msg = getMinMaxRankMsg(argName, argToString, MIBL, endingSentence);
+        msg += ".";
     } else {
-        msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString, middleSentence, endingSentence);
+        msg += `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
     }
 
     return { reject : true, msg };

@@ -173,7 +173,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 13k players or stronger ranking.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'Minimum rank is 13k.' }));
 
     });
 
@@ -224,7 +224,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum rank is 3d.' }));
 
     });
 
@@ -237,7 +237,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum rank is 3d.' }));
 
     });
 
@@ -250,7 +250,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification);
       
-      assert.deepEqual(result, ({ reject: true,   msg: 'This bot only accepts games from 3d players or weaker ranking.' }));
+      assert.deepEqual(result, ({ reject: true,   msg: 'Maximum rank is 3d.' }));
     });
    
   });
