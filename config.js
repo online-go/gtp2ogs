@@ -235,33 +235,40 @@ exports.updateFromArgv = function() {
     }
 
     // console messages
-    // A- greeting and debug status //
+    // A- greeting and debug status
+
     const debugStatus = argv.debug ? "ON" : "OFF";
     console.log(`\ngtp2ogs version 6.0`
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, `
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}`);
-    // B - test unsupported argv //
+
+    // B - test unsupported argv
+
+    if (argv.rankedonly && argv.unrankedonly) {
+        throw `Please choose either --rankedonly or --unrankedonly, not both.`;
+    }
+
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
 
-    /* EXPORTS FROM ARGV */
-    /* 0) root exports*/
+    // EXPORTS FROM ARGV
+
+    // 0) root exports
+
     for (const k in argv) {
         // export everything first, then modify/adjust later
         exports[k] = argv[k];
     }
 
-    /* Add and Modify exports*/
+    // 1) Add and Modify exports
+
     if (argv.debug) {
         exports.DEBUG = true;
     }
     if (argv.logfile && typeof argv.logfile === "boolean") {
         exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
-    }
-    if (argv.rankedonly && argv.unrankedonly) {
-        throw `Please choose either --rankedonly or --unrankedonly, not both.`;
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -313,7 +320,8 @@ exports.updateFromArgv = function() {
     };
     exports.bot_command = argv._;
 
-    /* 2) specifc r_u cases :*/
+    // 2) specifc ranked/unranked families exports
+
     processRankExport("minrank", argv);
     processRankExport("minrankranked", argv);
     processRankExport("minrankunranked", argv);
@@ -343,7 +351,9 @@ exports.updateFromArgv = function() {
     processAllowedFamilyExport("timecontrolsunranked", argv);
 
     // console messages
+    
     // C - test exports warnings
+
     testExportsWarnings();
 
 }
