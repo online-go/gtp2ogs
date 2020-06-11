@@ -233,7 +233,7 @@ exports.updateFromArgv = function() {
         { name: "komis", default: "automatic" },
         { name: "speeds", default: "all" },
         { name: "timecontrols", default: "fischer,byoyomi,simple,canadian" },
-        { name: "proonly"},
+        { name: "proonly" },
         { name: "nopause" },
         { name: "nopauseonweekends" },
         { name: "noautohandicap" },
@@ -480,7 +480,9 @@ function setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv) {
         
         // check undefined specifically to handle valid values such as 0 or null tested false
         if ((argv[general] === undefined) && (argv[ranked] === undefined) && (argv[unranked] === undefined)) {
-            argv[general] = family.default;
+            if (family.default !== undefined) {
+                argv[general] = family.default;
+            }
         }
     }
 }
