@@ -100,24 +100,20 @@ exports.updateFromArgv = function() {
         //         2B1) ALLOWED FAMILIES
         .describe('boardsizes', 'Board size(s) to accept')
         .string('boardsizes')
-        .default('boardsizes', '9,13,19')
         .describe('boardsizesranked', 'Board size(s) to accept for ranked games')
         .string('boardsizesranked')
         .describe('boardsizesunranked', 'Board size(s) to accept for unranked games')
         .string('boardsizesunranked')
         .describe('komis', 'Allowed komi values')
         .string('komis')
-        .default('komis', 'automatic')
         .describe('komisranked', 'Allowed komi values for ranked games')
         .string('komisranked')
         .describe('komisunranked', 'Allowed komi values for unranked games')
         .string('komisunranked')
         .describe('speeds', 'Game speed(s) to accept')
-        .default('speeds', 'blitz,live,correspondence')
         .describe('speedsranked', 'Game speed(s) to accept for ranked games')
         .describe('speedsunranked', 'Game speed(s) to accept for unranked games')
         .describe('timecontrols', 'Time control(s) to accept')
-        .default('timecontrols', 'fischer,byoyomi,simple,canadian')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
         //         2B2) GENERIC GENERAL/RANKED/UNRANKED OPTIONS
@@ -155,73 +151,55 @@ exports.updateFromArgv = function() {
         .describe('minhandicapunranked', 'Minimum handicap to accept for unranked games')
         .describe('maxhandicapunranked', 'Maximum handicap to accept for unranked games')
         .describe('minmaintimeblitz', 'Minimum seconds of main time for blitz games')
-        .default('minmaintimeblitz', 15) // 15 seconds
         .describe('maxmaintimeblitz', 'Maximum seconds of main time for blitz games')
-        .default('maxmaintimeblitz', 300) // 5 minutes 
         .describe('minmaintimeblitzranked', 'Minimum seconds of main time for blitz ranked games')
         .describe('maxmaintimeblitzranked', 'Maximum seconds of main time for blitz ranked games')
         .describe('minmaintimeblitzunranked', 'Minimum seconds of main time for blitz unranked games')
         .describe('maxmaintimeblitzunranked', 'Maximum seconds of main time for blitz unranked games')
         .describe('minmaintimelive', 'Minimum seconds of main time for live games')
-        .default('minmaintimelive', 60) // 1 minute
         .describe('maxmaintimelive', 'Maximum seconds of main time for live ranked games')
-        .default('maxmaintimelive', 7200) // 2 hours
         .describe('minmaintimeliveranked', 'Minimum seconds of main time for live ranked games')
         .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live ranked games')
         .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live unranked games')
         .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live unranked games')
         .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence games')
-        .default('minmaintimecorr', 259200) // 3 days
         .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence games')
-        .default('maxmaintimecorr', 604800) // 7 days
         .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games ')
         .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games ')
         .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games ')
         .describe('maxmaintimecorrunranked', 'Maximum seconds of main time for correspondence unranked games ')
         .describe('minperiodsblitz', 'Minimum number of periods for blitz games')
-        .default('minperiodsblitz', 3)
         .describe('minperiodsblitzranked', 'Minimum number of periods for blitz ranked games')
         .describe('minperiodsblitzunranked', 'Minimum number of periods for blitz unranked games')
         .describe('maxperiodsblitz', 'Maximum number of periods for blitz games')
-        .default('maxperiodsblitz', 20)
         .describe('maxperiodsblitzranked', 'Maximum number of periods for blitz ranked games')
         .describe('maxperiodsblitzunranked', 'Maximum number of periods for blitz unranked games')
         .describe('minperiodslive', 'Minimum number of periods for live games')
-        .default('minperiodslive', 3)
         .describe('minperiodsliveranked', 'Minimum number of periods for live ranked games')
         .describe('minperiodsliveunranked', 'Minimum number of periods for live unranked games')
         .describe('maxperiodslive', 'Maximum number of periods for live games')
-        .default('maxperiodslive', 20)
         .describe('maxperiodsliveranked', 'Maximum number of periods for live ranked games')
         .describe('maxperiodsliveunranked', 'Maximum number of periods for live unranked games')
         .describe('minperiodscorr', 'Minimum number of periods for correspondence games')
-        .default('minperiodscorr', 3)
         .describe('minperiodscorrranked', 'Minimum number of periods for correspondence ranked games')
         .describe('minperiodscorrunranked', 'Minimum number of periods for correspondence unranked games')
         .describe('maxperiodscorr', 'Maximum number of periods for correspondence games')
-        .default('maxperiodscorr', 10)
         .describe('maxperiodscorrranked', 'Maximum number of periods for correspondence ranked games')
         .describe('maxperiodscorrunranked', 'Maximum number of periods for correspondence unranked games')
         .describe('minperiodtimeblitz', 'Minimum seconds of period time for blitz games')
-        .default('minperiodtimeblitz', 5) // 5 seconds
         .describe('maxperiodtimeblitz', 'Maximum seconds of period time for blitz games')
-        .default('maxperiodtimeblitz', 10) // 10 seconds
         .describe('minperiodtimeblitzranked', 'Minimum seconds of period time for blitz ranked games')
         .describe('maxperiodtimeblitzranked', 'Maximum seconds of period time for blitz ranked games')
         .describe('minperiodtimeblitzunranked', 'Minimum seconds of period time for blitz unranked games')
         .describe('maxperiodtimeblitzunranked', 'Maximum seconds of period time for blitz unranked games')
         .describe('minperiodtimelive', 'Minimum seconds of period time for live games')
-        .default('minperiodtimelive', 10) // 10 seconds
         .describe('maxperiodtimelive', 'Maximum seconds of period time for live games')
-        .default('maxperiodtimelive', 120) // 2 minutes
         .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games')
         .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games')
         .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
         .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
         .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
-        .default('minperiodtimecorr', 14400) // 4 hours
         .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
-        .default('maxperiodtimecorr', 259200) // 3 days
         .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games')
         .describe('maxperiodtimecorrranked', 'Maximum seconds of period time for correspondence ranked games')
         .describe('minperiodtimecorrunranked', 'Minimum seconds of period time for correspondence unranked games')
@@ -282,12 +260,20 @@ exports.updateFromArgv = function() {
         { name: "maxperiodtimelive", default: 120 }, // 2 minutes
         { name: "maxperiodtimecorr", default: 259200 } // 3 days
     ];
+
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedFamilies(rankedUnrankedFamilies, argv);
 
-    // EXPORTS FROM ARGV
+    // C - set general/ranked/unranked families defaults
+    
+    // For general/ranked/unranked families, do not add a default using .default of optimist, add it later in the
+    // code if no ranked arg nor unranked arg are used, else we would be force using the general arg regardless of
+    // botadmin using the ranked and/or unranked arg(s), triggering the no 3 args at the same time error.
 
+    setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv);
+
+    // EXPORTS FROM ARGV
     // 0) root exports
 
     for (const k in argv) {
@@ -384,7 +370,6 @@ exports.updateFromArgv = function() {
     processAllowedFamilyExport("timecontrolsunranked", argv);
 
     // console messages
-
     // C - test exports warnings
 
     testExportsWarnings();
@@ -398,7 +383,6 @@ function testRankedUnrankedFamilies(rankedUnrankedFamilies, argv) {
         
         // check undefined specifically to handle valid values such as 0 tested false
         if ((argv[general] !== undefined) && (argv[ranked] !== undefined) && (argv[unranked] !== undefined)) {
-            console.log(argv[general]);
             throw `Cannot use --${general} and --${ranked} and --${unranked} all 3 at the same time.`
                   + ` Use either:\n- for ranked games: --${general} or --${ranked} or no option if you allow all values.`
                   + `\n- for unranked games: --${general} or --${unranked} or no option if you allow all values.`;
@@ -487,6 +471,17 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     if (!upperCaseAIs.includes(upperCaseOgsPv)) {
         throw `Unsupported --ogspv option ${ogspv}.`
               + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+    }
+}
+
+function setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv) {
+    for (const family of rankedUnrankedFamilies) {
+        const [general, ranked, unranked] = getArgNamesGRU(family.name);
+        
+        // check undefined specifically to handle valid values such as 0 or null tested false
+        if ((argv[general] === undefined) && (argv[ranked] === undefined) && (argv[unranked] === undefined)) {
+            argv[general] = family.default;
+        }
     }
 }
 
