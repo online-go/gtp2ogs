@@ -165,7 +165,7 @@ exports.updateFromArgv = function() {
         .describe('minmaintimelive', 'Minimum seconds of main time for live games')
         .default('minmaintimelive', 60) // 1 minute
         .describe('maxmaintimelive', 'Maximum seconds of main time for live ranked games')
-        .default('maxmaintimelive', 7200) // 2 hours 
+        .default('maxmaintimelive', 7200) // 2 hours
         .describe('minmaintimeliveranked', 'Minimum seconds of main time for live ranked games')
         .describe('maxmaintimeliveranked', 'Maximum seconds of main time for live ranked games')
         .describe('minmaintimeliveunranked', 'Minimum seconds of main time for live unranked games')
@@ -250,8 +250,41 @@ exports.updateFromArgv = function() {
         throw `Please choose either --rankedonly or --unrankedonly, not both.`;
     }
 
+    const rankedUnrankedFamilies = [{ name: "bans" },
+        { name: "boardsizes", default: "9,13,19" },
+        { name: "komis", default: "automatic" },
+        { name: "speeds", default: "all" },
+        { name: "timecontrols", default: "fischer,byoyomi,simple,canadian" },
+        { name: "proonly"},
+        { name: "nopause" },
+        { name: "nopauseonweekends" },
+        { name: "noautohandicap" },
+        { name: "minrank" },
+        { name: "maxrank" },
+        { name: "minhandicap" },
+        { name: "maxhandicap" },
+        { name: "minmaintimeblitz", default: 15 }, // 15 seconds
+        { name: "minmaintimelive", default: 60 }, // 1 minutes
+        { name: "minmaintimecorr", default: 259200 }, // 3 days
+        { name: "minperiodsblitz", default: 3 },
+        { name: "minperiodslive", default: 3 },
+        { name: "minperiodscorr", default: 3 },
+        { name: "minperiodtimeblitz", default: 5 }, // 5 seconds
+        { name: "minperiodtimelive", default: 10 }, // 10 seconds
+        { name: "minperiodtimecorr", default: 14400 }, // 4 hours
+        { name: "maxmaintimeblitz", default: 300 }, // 5 minutes
+        { name: "maxmaintimelive", default: 7200 }, // 2 hours
+        { name: "maxmaintimecorr", default: 604800 }, // 7 days
+        { name: "maxperiodsblitz", default: 20 },
+        { name: "maxperiodslive", default: 20 },
+        { name: "maxperiodscorr", default: 10 },
+        { name: "maxperiodtimeblitz", default: 10 }, // 10 seconds
+        { name: "maxperiodtimelive", default: 120 }, // 2 minutes
+        { name: "maxperiodtimecorr", default: 259200 } // 3 days
+    ];
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
+    testRankedUnrankedFamilies(rankedUnrankedFamilies, argv);
 
     // EXPORTS FROM ARGV
 
@@ -351,11 +384,26 @@ exports.updateFromArgv = function() {
     processAllowedFamilyExport("timecontrolsunranked", argv);
 
     // console messages
-    
+
     // C - test exports warnings
 
     testExportsWarnings();
 
+}
+
+function testRankedUnrankedFamilies(rankedUnrankedFamilies, argv) {
+
+    for (const family of rankedUnrankedFamilies) {
+        const [general, ranked, unranked] = getArgNamesGRU(family.name);
+        
+        // check undefined specifically to handle valid values such as 0 tested false
+        if ((argv[general] !== undefined) && (argv[ranked] !== undefined) && (argv[unranked] !== undefined)) {
+            console.log(argv[general]);
+            throw `Cannot use --${general} and --${ranked} and --${unranked} all 3 at the same time.`
+                  + ` Use either:\n- for ranked games: --${general} or --${ranked} or no option if you allow all values.`
+                  + `\n- for unranked games: --${general} or --${unranked} or no option if you allow all values.`;
+        }
+    }
 }
 
 function getBLCString(familyName, rankedUnranked) {
