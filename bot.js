@@ -1,12 +1,12 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
+const child_process = require('child_process');
 const split2 = require('split2');
 
 const { decodeMoves } = require("./utils/decodeMoves");
 const { gtpchar2num } = require("./utils/gtpchar2num");
 const { move2gtpvertex } = require("./utils/move2gtpvertex");
 
-const child_process = require('child_process');
 const console = require('./console').console;
 const config = require('./config');
 const { Pv } = require('./pv');
