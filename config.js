@@ -274,14 +274,13 @@ exports.updateFromArgv = function() {
     setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv);
 
     // EXPORTS FROM ARGV
-    // 0) root exports
+    // 0) Export everything in argv first
 
     for (const k in argv) {
-        // export everything first, then modify/adjust later
         exports[k] = argv[k];
     }
 
-    // 1) Add and Modify exports
+    // 1) Add and Modify/Adjust exports
 
     if (argv.debug) {
         exports.DEBUG = true;
