@@ -452,7 +452,7 @@ describe('Challenges', () => {
 
   });
 
-  describe('Allowed Families General Ranked Unranked precdecence rules', () => {
+  describe('Allowed Families General Ranked Unranked precedence rules', () => {
 
     // We already tested extensively how the allowed families args work, so now we just want to
     // make sure the general / ranked / unranked priority order is respected.
@@ -462,9 +462,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, time_control: { speed: "live" } });
 
-      config.speeds = "all";
-      config.allow_all_speeds = true;
-      config.allowed_speeds = [];
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
       config.allowed_speeds_ranked = [];
@@ -484,9 +481,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, time_control: { speed: "blitz" } });
 
-      config.speeds = "all";
-      config.allow_all_speeds = true;
-      config.allowed_speeds = [];
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
       config.allowed_speeds_ranked = [];
@@ -507,9 +501,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, time_control: { speed: "blitz" } });
 
-      config.speeds = "all";
-      config.allow_all_speeds = true;
-      config.allowed_speeds = [];
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
       config.allowed_speeds_ranked = [];
@@ -530,9 +521,6 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, time_control: { speed: "live" } });
 
-      config.speeds = "all";
-      config.allow_all_speeds = true;
-      config.allowed_speeds = [];
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
       config.allowed_speeds_ranked = [];
@@ -1818,7 +1806,7 @@ describe('Challenges', () => {
 
   });
 
-  describe('Min Max General Ranked Unranked precdecence rules', () => {
+  describe('Min Max General Ranked Unranked precedence rules', () => {
 
     // We already tested extensively how the min max args work, so now we just want to
     // make sure the general / ranked / unranked priority order is respected.
@@ -1828,11 +1816,8 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, handicap: 8 });
 
-      config.noautohandicap = true;
       config.noautohandicapranked = true;
       config.noautohandicapunranked = true;
-      config.minhandicap = 0;
-      config.maxhandicap = 2;
       config.minhandicapranked = 4;
       config.maxhandicapranked = 6;
       config.minhandicapunranked = 8;
@@ -1848,11 +1833,8 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, handicap: 5 });
 
-      config.noautohandicap = true;
       config.noautohandicapranked = true;
       config.noautohandicapunranked = true;
-      config.minhandicap = 0;
-      config.maxhandicap = 2;
       config.minhandicapranked = 4;
       config.maxhandicapranked = 6;
       config.minhandicapunranked = 8;
@@ -1868,11 +1850,8 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 7 });
 
-      config.noautohandicap = true;
       config.noautohandicapranked = true;
       config.noautohandicapunranked = true;
-      config.minhandicap = 0;
-      config.maxhandicap = 2;
       config.minhandicapranked = 4;
       config.maxhandicapranked = 6;
       config.minhandicapunranked = 8;
@@ -1888,11 +1867,8 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, handicap: 9 });
 
-      config.noautohandicap = true;
       config.noautohandicapranked = true;
       config.noautohandicapunranked = true;
-      config.minhandicap = 0;
-      config.maxhandicap = 2;
       config.minhandicapranked = 4;
       config.maxhandicapranked = 6;
       config.minhandicapunranked = 8;
