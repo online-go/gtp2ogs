@@ -338,7 +338,7 @@ exports.updateFromArgv = function() {
     };
     exports.bot_command = argv._;
 
-    // 2) specifc ranked/unranked families exports
+    // 2) specific ranked/unranked families exports
 
     processRankExport("minrank", argv);
     processRankExport("minrankranked", argv);
