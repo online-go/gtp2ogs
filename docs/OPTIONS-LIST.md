@@ -1,4 +1,4 @@
-# Option list
+# Options list
 
 Below is a list of all available options.
 
@@ -28,7 +28,7 @@ currently provides:
 --rejectnewmsg "Currently, this bot is not accepting games, try again later "
 --boardsizes 9,13,19
 --komis automatic
---speeds blitz,live,correspondence
+--speeds all
 --timecontrols fischer,byoyomi,simple,canadian
 --minmaintimeblitz 15
 --maxmaintimeblitz 300

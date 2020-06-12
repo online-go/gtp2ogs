@@ -381,7 +381,7 @@ function testRankedUnrankedFamilies(rankedUnrankedFamilies, argv) {
     for (const family of rankedUnrankedFamilies) {
         const [general, ranked, unranked] = getArgNamesGRU(family.name);
         
-        // check undefined specifically to handle valid values such as 0 tested false
+        // check undefined specifically to handle valid values such as 0 or null which are tested false
         if ((argv[general] !== undefined) && (argv[ranked] !== undefined) && (argv[unranked] !== undefined)) {
             throw `Cannot use --${general} and --${ranked} and --${unranked} all 3 at the same time.`
                   + ` Use either:\n- for ranked games: --${general} or --${ranked} or no option if you allow all values.`
@@ -478,7 +478,7 @@ function setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv) {
     for (const family of rankedUnrankedFamilies) {
         const [general, ranked, unranked] = getArgNamesGRU(family.name);
         
-        // check undefined specifically to handle valid values such as 0 or null tested false
+        // check undefined specifically to handle valid values such as 0 or null which are tested false
         if ((argv[general] === undefined) && (argv[ranked] === undefined) && (argv[unranked] === undefined)) {
             if (family.default !== undefined) {
                 argv[general] = family.default;
