@@ -384,11 +384,11 @@ function testRankedUnrankedFamilies(rankedUnrankedFamilies, argv) {
         if (argv[general] !== undefined) {
             if (argv[ranked] !== undefined) {
                 throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, `
-                      + `use either --${general} or --${ranked} or no option if you allow all values.`;
+                      + `use either --${general} or --${ranked} or no option if you want to allow all values.`;
             }
             if (argv[unranked] !== undefined) {
                 throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, `
-                      + `use either --${general} or --${unranked} or no option if you allow all values.`;
+                      + `use either --${general} or --${unranked} or no option if you want to allow all values.`;
             }
         }
     }
