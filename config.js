@@ -478,13 +478,19 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
-    for (const option of rankedUnrankedOptions) {
-        const [general, ranked, unranked] = getArgNamesGRU(option.name);
+function setRankedUnrankedOptionsDefaults(rankedUnrankedFamilies, argv) {
+    for (const option of rankedUnrankedFamilies) {
+        if (!("default" in option)) continue;
         
-        if ((argv[general] === undefined) && (argv[ranked] === undefined) && (argv[unranked] === undefined)) {
-            if ("default" in option) {
+        const [general, ranked, unranked] = getArgNamesGRU(option.name);
+
+        if ((argv[general] === undefined)) {
+            if ((argv[ranked] === undefined) && (argv[unranked] === undefined)) {                
                 argv[general] = option.default;
+            } else if (argv[unranked] === undefined) {
+                argv[ranked] = option.default;
+            } else if (argv[ranked] === undefined) {
+                argv[unranked] = option.default;
             }
         }
     }
