@@ -263,8 +263,6 @@ connected games per user against this bot
 
 ### rankedonly unrankedonly
 
-Below are the options of the "only" family.
-
 `--rankedonly` Only accept ranked matches
 
 `--unrankedonly`  Only accept unranked matches
@@ -283,7 +281,7 @@ see [notes F](/docs/NOTES.md#f) for details
 Options in this category allow us to accept or reject
 a challenge based on the notification (challenge settings)
 
-### 2A) ALL/RANKED/UNRANKED FAMILIES
+### 2A) ALL/RANKED/UNRANKED
 
 Here the general option (ex: bans) does not confict with
 the ranked and unranked options for accepting/rejecting matches.
@@ -307,7 +305,7 @@ are banned from ranked games
 `--bansunranked` Comma separated list of user names or IDs who
 are banned from unranked games
 
-### 2B) GENERAL/RANKED/UNRANKED FAMILIES
+### 2B) GENERAL/RANKED/UNRANKED
 
 Here you can either use:
 
@@ -320,20 +318,17 @@ and in that case, the general option will be ignored
 and instead the ranked and unranked will be used depending
 on whether the game is ranked or unranked.
 
-### 2B1) ALLOWED FAMILIES
+### 2B1) ALLOWED GROUP
 
-For the allowed families arguments, you can either use the value:
+For the allowed groups arguments, you can either use the value:
 
 - `all`: will allow ALL possible values
-- for text-only families ("blitz", "fischer", "white", etc.),
+- for text-only groups (ex: speeds ("blitz", "fischer", "white", etc.)),
 comma-separated values (without space) will allow every value inputted,
 every other value will be rejected
-- for numbers +/- text families (5.5,6.5,7.5 (komis), 9,13,19
- (boardsizes)), it is possible to use as well the "range"
-operator `:` to navigate one by one from min to max (ex:
- `5.5:7.5` is `5.5,6.5,7.5` and `13:17` is `13,14,15,16,17`),
- as well as the "increment" operator (ex: `13:19:2` is `13,15,17,19`,
-see [notes A-](/docs/NOTES.md#a) for details.
+- for numbers groups +/- text groups (ex: komis contain comma-separated numbers
+(5.5,6.5,7.5) or text ("automatic"), (ex: boardsizes contain only comma-separated
+numbers (9,13,19).
 
 example: `--speeds blitz,live`
 example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
@@ -349,7 +344,7 @@ example 3: `--komis 0.5,5.5,7.5,automatic`
 
 Possible boardsize width value(s):
 
-- `all` (allows all board size widths)
+- `all` (allows all board sizes)
 - comma separated and `:` separated values, for example
  `25` (allows 25x25), or `9,13,15:17,19` (allows
  9x9, 13x13, 15x15, 16x16, 17x17, 19x19)

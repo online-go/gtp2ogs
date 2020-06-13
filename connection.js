@@ -425,9 +425,9 @@ class Connection {
         return { reject: false }; // OK !
 
     }
-    // Check challenge allowed families settings are allowed
+    // Check challenge allowed group options are allowed
     //
-    checkChallengeAllowedFamilies(notification) {
+    checkChallengeAllowedGroup(notification) {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
@@ -443,16 +443,16 @@ class Connection {
         }
         
         // if square, check if square board size is allowed
-        const resultBoardsizes = getAllowedFamilyRejectResult("boardsizes", "Board size", notification.width, notification.ranked);
+        const resultBoardsizes = getAllowedGroupRejectResult("boardsizes", "Board size", notification.width, notification.ranked);
         if (resultBoardsizes) return resultBoardsizes;
 
-        const resultKomis = getAllowedFamilyRejectResult("komis", "Komi", notification.komi, notification.ranked);
+        const resultKomis = getAllowedGroupRejectResult("komis", "Komi", notification.komi, notification.ranked);
         if (resultKomis) return resultKomis;
 
-        const resultSpeeds = getAllowedFamilyRejectResult("speeds", "Speed", notification.time_control.speed, notification.ranked);
+        const resultSpeeds = getAllowedGroupRejectResult("speeds", "Speed", notification.time_control.speed, notification.ranked);
         if (resultSpeeds) return resultSpeeds;
 
-        const resultTimecontrols = getAllowedFamilyRejectResult("timecontrols", "Time control", notification.time_control.time_control, notification.ranked);
+        const resultTimecontrols = getAllowedGroupRejectResult("timecontrols", "Time control", notification.time_control.time_control, notification.ranked);
         if (resultTimecontrols) return resultTimecontrols;
 
         return { reject: false }; // OK !
@@ -511,7 +511,7 @@ class Connection {
                            this.checkChallengeUser,
                            this.checkChallengeBot,
                            this.checkChallengeBooleans,
-                           this.checkChallengeAllowedFamilies,
+                           this.checkChallengeAllowedGroup,
                            this.checkChallengeHandicap,
                            this.checkChallengeTimeSettings]) {
             const result = test.bind(this)(notification);
@@ -813,7 +813,7 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function getAllowedFamiliesNotifToString(argName, notif) {
+function getAllowedGroupNotifToString(argName, notif) {
     if (argName.includes("boardsizes")) {
         return boardsizeSquareToDisplayString(notif);
     }
@@ -824,12 +824,12 @@ function getAllowedFamiliesNotifToString(argName, notif) {
     }
 }
 
-function getAllowedFamilyReject(argName, nameF, notif) {
+function getAllowedGroupReject(argName, nameF, notif) {
     const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
 
     const arg = config[argName];
     const argToString = (argName.includes("boardsizes") ? boardsizeSquareToDisplayString(arg) : arg);
-    const notifToString = getAllowedFamiliesNotifToString(argName, notif);
+    const notifToString = getAllowedGroupNotifToString(argName, notif);
 
     conn_log(`${nameF} ${forRankedUnrankedGames}is ${notifToString}, not in ${argToString} (${argName}).`);
     const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}`
@@ -837,24 +837,24 @@ function getAllowedFamilyReject(argName, nameF, notif) {
     return { reject: true, msg };
 }
 
-function getAllowedFamilyRejectResult(familyName, nameF, notif, notificationRanked) {
-    const argNames = getArgNamesGRU(familyName);
+function getAllowedGroupRejectResult(optionName, nameF, notif, notificationRanked) {
+    const argNames = getArgNamesGRU(optionName);
     const [general, ranked, unranked] = argNames;
-    const [general_underscored, ranked_underscored, unranked_underscored] = getArgNamesUnderscoredGRU(familyName);
+    const [general_underscored, ranked_underscored, unranked_underscored] = getArgNamesUnderscoredGRU(optionName);
 
     if (config[general] && !config[ranked] && !config[unranked] && !config[`allow_all_${general_underscored}`] && !config[`allowed_${general_underscored}`][notif]) {
-        return getAllowedFamilyReject(general, nameF, notif);
+        return getAllowedGroupReject(general, nameF, notif);
     }
     if (config[ranked] && notificationRanked && !config[`allow_all_${ranked_underscored}`] && !config[`allowed_${ranked_underscored}`][notif]) {
-        return getAllowedFamilyReject(ranked, nameF, notif);
+        return getAllowedGroupReject(ranked, nameF, notif);
     }
     if (config[unranked] && !notificationRanked && !config[`allow_all_${unranked_underscored}`] && !config[`allowed_${unranked_underscored}`][notif]) {
-        return getAllowedFamilyReject(unranked, nameF, notif);
+        return getAllowedGroupReject(unranked, nameF, notif);
     }
 }
 
-function getCheckedArgName(familyName, notificationRanked) {
-    const argNames = getArgNamesGRU(familyName);
+function getCheckedArgName(optionName, notificationRanked) {
+    const argNames = getArgNamesGRU(optionName);
     const [general, ranked, unranked] = argNames;
 
     // for numbers, check for undefined: 0 is checked false but is a valid arg number to test against notif
@@ -919,8 +919,8 @@ function getMinMaxReject(argToString, notifToString, isMin,
     conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
 
     let msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString);
-    const familyNameIsRank = (argName.includes("minrank") || argName.includes("maxrank"));
-    if (familyNameIsRank) {
+    const optionNameIsRank = (argName.includes("minrank") || argName.includes("maxrank"));
+    if (optionNameIsRank) {
         msg += ".";
     } else {
         msg += `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;

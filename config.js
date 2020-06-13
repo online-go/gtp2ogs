@@ -6,7 +6,7 @@
 const fs = require('fs');
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-const { getFamilyName } = require('./utils/getFamilyName');
+const { getOptionName } = require('./utils/getOptionName');
 const { getRankedUnranked } = require('./utils/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
 
@@ -89,15 +89,15 @@ exports.updateFromArgv = function() {
         .describe('unrankedonly', 'Only accept unranked matches')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
-        //     2A) ALL/RANKED/UNRANKED FAMILIES
+        //     2A) ALL/RANKED/UNRANKED
         .describe('bans', 'Comma separated list of usernames or IDs')
         .string('bans')
         .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
         .string('bansranked')
         .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
         .string('bansunranked')
-        //     2B) GENERAL/RANKED/UNRANKED FAMILIES
-        //         2B1) ALLOWED FAMILIES
+        //     2B) GENERAL/RANKED/UNRANKED
+        //         2B1) ALLOWED GROUP
         .describe('boardsizes', 'Board size(s) to accept')
         .string('boardsizes')
         .describe('boardsizesranked', 'Board size(s) to accept for ranked games')
@@ -116,7 +116,7 @@ exports.updateFromArgv = function() {
         .describe('timecontrols', 'Time control(s) to accept')
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
-        //         2B2) GENERIC GENERAL/RANKED/UNRANKED OPTIONS
+        //         2B2) GENERIC GENERAL/RANKED/UNRANKED
         .describe('proonly', 'For all games, only accept those from professionals')
         .describe('proonlyranked', 'For ranked games, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
@@ -228,7 +228,7 @@ exports.updateFromArgv = function() {
         throw `Please choose either --rankedonly or --unrankedonly, not both.`;
     }
 
-    const rankedUnrankedFamilies = [{ name: "bans" },
+    const rankedUnrankedOptions = [{ name: "bans" },
         { name: "boardsizes", default: "9,13,19" },
         { name: "komis", default: "automatic" },
         { name: "speeds", default: "all" },
@@ -263,15 +263,15 @@ exports.updateFromArgv = function() {
 
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
-    testRankedUnrankedFamilies(rankedUnrankedFamilies, argv);
+    testRankedUnrankedOptions(rankedUnrankedOptions, argv);
 
-    // C - set general/ranked/unranked families defaults
+    // C - set general/ranked/unranked options defaults
     
-    // For general/ranked/unranked families, do not add a default using .default of optimist, add it later in the
+    // For general/ranked/unranked options, do not add a default using .default of optimist, add it later in the
     // code if no ranked arg nor unranked arg are used, else we would be force using the general arg regardless of
     // botadmin using the ranked and/or unranked arg(s), triggering the no 3 args at the same time error.
 
-    setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv);
+    setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv);
 
     // EXPORTS FROM ARGV
     // 0) Export everything in argv first
@@ -338,7 +338,7 @@ exports.updateFromArgv = function() {
     };
     exports.bot_command = argv._;
 
-    // 2) specific ranked/unranked families exports
+    // 2) specific ranked/unranked options exports
 
     processRankExport("minrank", argv);
     processRankExport("minrankranked", argv);
@@ -360,13 +360,13 @@ exports.updateFromArgv = function() {
     processKomisExport("komisranked", argv);
     processKomisExport("komisunranked", argv);
 
-    processAllowedFamilyExport("speeds", argv);
-    processAllowedFamilyExport("speedsranked", argv);
-    processAllowedFamilyExport("speedsunranked", argv);
+    processAllowedGroupExport("speeds", argv);
+    processAllowedGroupExport("speedsranked", argv);
+    processAllowedGroupExport("speedsunranked", argv);
 
-    processAllowedFamilyExport("timecontrols", argv);
-    processAllowedFamilyExport("timecontrolsranked", argv);
-    processAllowedFamilyExport("timecontrolsunranked", argv);
+    processAllowedGroupExport("timecontrols", argv);
+    processAllowedGroupExport("timecontrolsranked", argv);
+    processAllowedGroupExport("timecontrolsunranked", argv);
 
     // console messages
     // C - test exports warnings
@@ -375,10 +375,10 @@ exports.updateFromArgv = function() {
 
 }
 
-function testRankedUnrankedFamilies(rankedUnrankedFamilies, argv) {
+function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
 
-    for (const family of rankedUnrankedFamilies) {
-        const [general, ranked, unranked] = getArgNamesGRU(family.name);
+    for (const option of rankedUnrankedOptions) {
+        const [general, ranked, unranked] = getArgNamesGRU(option.name);
         
         // check undefined specifically to handle valid values such as 0 or null which are tested false
         if (argv[general] !== undefined) {
@@ -394,9 +394,9 @@ function testRankedUnrankedFamilies(rankedUnrankedFamilies, argv) {
     }
 }
 
-function getBLCString(familyName, rankedUnranked) {
-    return `${familyName}blitz${rankedUnranked}, --${familyName}live${rankedUnranked} `
-           + `and/or --${familyName}corr${rankedUnranked}`;
+function getBLCString(optionName, rankedUnranked) {
+    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} `
+           + `and/or --${optionName}corr${rankedUnranked}`;
 }
 
 // console messages
@@ -478,19 +478,19 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-function setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv) {
-    for (const family of rankedUnrankedFamilies) {
-        if (!("default" in family)) continue;
+function setRankedUnrankedOptionsDefaults(rankedUnrankedFamilies, argv) {
+    for (const option of rankedUnrankedFamilies) {
+        if (!("default" in option)) continue;
         
-        const [general, ranked, unranked] = getArgNamesGRU(family.name);
+        const [general, ranked, unranked] = getArgNamesGRU(option.name);
 
         if ((argv[general] === undefined)) {
             if ((argv[ranked] === undefined) && (argv[unranked] === undefined)) {                
-                argv[general] = family.default;
+                argv[general] = option.default;
             } else if (argv[unranked] === undefined) {
-                argv[ranked] = family.default;
+                argv[ranked] = option.default;
             } else if (argv[ranked] === undefined) {
-                argv[unranked] = family.default;
+                argv[unranked] = option.default;
             }
         }
     }
@@ -570,19 +570,19 @@ function processKomisExport(argName, argv) {
     } 
 }
 
-function processAllowedFamilyExport(argName, argv) {
+function processAllowedGroupExport(argName, argv) {
     const arg = argv[argName];
 
     if (arg) {
-        const familyName = getFamilyName(argName);
+        const optionName = getOptionName(argName);
         const rankedUnranked = getRankedUnranked(argName);
         const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const allowedValues = arg.split(',');
         for (const allowedValue of allowedValues) {
             if (allowedValue === "all") {
-                exports[`allow_all_${familyName}${rankedUnrankedUnderscored}`] = true;
+                exports[`allow_all_${optionName}${rankedUnrankedUnderscored}`] = true;
             } else {
-                exports[`allowed_${familyName}${rankedUnrankedUnderscored}`][allowedValue] = true;
+                exports[`allowed_${optionName}${rankedUnrankedUnderscored}`][allowedValue] = true;
             }
         }
     } 
