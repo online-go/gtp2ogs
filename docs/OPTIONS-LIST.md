@@ -392,6 +392,7 @@ accept for unranked games
 
 Possible speed value(s):
 
+- `all` (allows all speeds)
 - comma separated values, for example `blitz`, or `live, correspondence`
 
 Full list of possible values:  `blitz`,  `live`, `correspondence`.
@@ -408,6 +409,7 @@ games
 
 Possible timecontrol value(s):
 
+- `all` (allows all timecontrols)
 - comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
 Full list of possible values:  `fischer`,  `byoyomi`, `canadian`,
