@@ -480,11 +480,17 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
 
 function setRankedUnrankedFamiliesDefaults(rankedUnrankedFamilies, argv) {
     for (const family of rankedUnrankedFamilies) {
-        const [general, ranked, unranked] = getArgNamesGRU(family.name);
+        if (!("default" in family)) continue;
         
-        if ((argv[general] === undefined) && (argv[ranked] === undefined) && (argv[unranked] === undefined)) {
-            if ("default" in family) {
+        const [general, ranked, unranked] = getArgNamesGRU(family.name);
+
+        if ((argv[general] === undefined)) {
+            if ((argv[ranked] === undefined) && (argv[unranked] === undefined)) {                
                 argv[general] = family.default;
+            } else if (argv[unranked] === undefined) {
+                argv[ranked] = family.default;
+            } else if (argv[ranked] === undefined) {
+                argv[unranked] = family.default;
             }
         }
     }
