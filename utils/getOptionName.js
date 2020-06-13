@@ -1,6 +1,6 @@
-function getFamilyName(argName) {
+function getOptionName(argName) {
     return argName.split("unranked")[0]
                   .split("ranked")[0];
 }
 
-exports.getFamilyName = getFamilyName;
+exports.getOptionName = getOptionName;

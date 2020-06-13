@@ -1,5 +1,5 @@
-function getArgNamesGRU(familyName) {
-    return ["", "ranked", "unranked"].map( e => `${familyName}${e}` );
+function getArgNamesGRU(optionName) {
+    return ["", "ranked", "unranked"].map( e => `${optionName}${e}` );
 }
 
 exports.getArgNamesGRU = getArgNamesGRU;

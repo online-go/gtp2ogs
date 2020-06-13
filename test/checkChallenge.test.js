@@ -262,7 +262,7 @@ describe('Challenges', () => {
 
       config.boardsizes = "9,13,18,19";
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example try 9x9 or 19x19.' }));
 
@@ -277,7 +277,7 @@ describe('Challenges', () => {
       config.allowed_boardsizes = [];
 
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -290,7 +290,7 @@ describe('Challenges', () => {
       config.allow_all_boardsizes = false;
       config.allowed_boardsizes = [];
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -364,7 +364,7 @@ describe('Challenges', () => {
       config.allowed_boardsizes[13] = true;
       config.allowed_boardsizes[19] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: true, msg: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed Board sizes:\n9x9, 13x13, 19x19.' }));
 
@@ -381,7 +381,7 @@ describe('Challenges', () => {
       config.allowed_boardsizes[13] = true;
       config.allowed_boardsizes[19] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -395,7 +395,7 @@ describe('Challenges', () => {
       config.allow_all_boardsizes = true;
       config.allowed_boardsizes = [];
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -414,7 +414,7 @@ describe('Challenges', () => {
       config.allowed_speeds["blitz"] = true;
       config.allowed_speeds["live"] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: true, msg: 'Speed correspondence is not allowed on this bot, please choose one of these allowed Speeds:\nblitz, live.' }));
 
@@ -430,7 +430,7 @@ describe('Challenges', () => {
       config.allowed_speeds["blitz"] = true;
       config.allowed_speeds["live"] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -444,7 +444,7 @@ describe('Challenges', () => {
       config.allow_all_speeds = true;
       config.allowed_speeds = [];
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -452,9 +452,9 @@ describe('Challenges', () => {
 
   });
 
-  describe('Allowed Families General Ranked Unranked precedence rules', () => {
+  describe('Allowed Group General Ranked Unranked precedence rules', () => {
 
-    // We already tested extensively how the allowed families args work, so now we just want to
+    // We already tested extensively how the allowed groups options work, so now we just want to
     // make sure the general / ranked / unranked priority order is respected.
     // speeds is a good and simple example
 
@@ -471,7 +471,7 @@ describe('Challenges', () => {
       config.allow_all_speeds_unranked = false;
       config.allowed_speeds_unranked = [];
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
       
       assert.deepEqual(result, ({ reject: true, msg: 'Speed live is not allowed on this bot for ranked games, please choose one of these allowed Speeds for ranked games:\nblitz,correspondence.' }));
 
@@ -491,7 +491,7 @@ describe('Challenges', () => {
       config.allowed_speeds_unranked = [];
       config.allowed_speeds_unranked["live"] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -511,7 +511,7 @@ describe('Challenges', () => {
       config.allowed_speeds_unranked = [];
       config.allowed_speeds_unranked["live"] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
       
       assert.deepEqual(result, ({ reject: true, msg: 'Speed blitz is not allowed on this bot for unranked games, please choose one of these allowed Speeds for unranked games:\nlive.' }));
 
@@ -531,7 +531,7 @@ describe('Challenges', () => {
       config.allowed_speeds_unranked = [];
       config.allowed_speeds_unranked["live"] = true;
 
-      const result = conn.checkChallengeAllowedFamilies(notification);
+      const result = conn.checkChallengeAllowedGroup(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
