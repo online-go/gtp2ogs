@@ -207,11 +207,6 @@ exports.updateFromArgv = function() {
     ;
     const argv = optimist.argv;
 
-    if (!argv._ || argv._.length === 0) {
-        optimist.showHelp();
-        process.exit();
-    }
-
     // console messages
     // A- greeting and debug status
 
@@ -261,6 +256,7 @@ exports.updateFromArgv = function() {
         { name: "maxperiodtimecorr", default: 259200 } // 3 days
     ];
 
+    testBotCommandArgvIsValid(argv);
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedOptions(rankedUnrankedOptions, argv);
@@ -400,6 +396,28 @@ function getBLCString(optionName, rankedUnranked) {
 }
 
 // console messages
+
+function testBotCommandArgvIsValid(argv) {
+    if (argv._ === undefined) {
+        throw "Missing bot command.";
+    }
+
+    const parsedBotCommand = JSON.stringify(argv._);
+    
+    if (!Array.isArray(argv._)) {
+        throw `Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters`
+              + `, please check your syntax ( -- ).`;
+    }
+    if (argv._.length === 0) {
+        throw `Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element`
+              + ` in your bot command which should be the AI executable (ex: lz.exe).`;
+    }
+    if (argv.debug) {
+        console.log(`\nBot command was successfully parsed as an array: ${parsedBotCommand}`);
+    }
+}
+
+
 function testDroppedArgv(argv) {
     const droppedArgv = [
          [["botid", "bot", "id"], "username"],
