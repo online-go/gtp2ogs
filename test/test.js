@@ -168,7 +168,14 @@ function base_challenge(overrides) {
         user: {
             id: 2,
             username: 'human',
-            rating: 1000.0,
+            ratings: {
+                overall: {
+                    deviation: 150.0,
+                    rating: 1000.0,
+                    games_played: 5,
+                    volatility: 0.25
+                }
+            },
             ranking: 10.0,
             professional: false,
         },
