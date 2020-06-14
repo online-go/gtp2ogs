@@ -478,8 +478,8 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-function setRankedUnrankedOptionsDefaults(rankedUnrankedFamilies, argv) {
-    for (const option of rankedUnrankedFamilies) {
+function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
+    for (const option of rankedUnrankedOptions) {
         if (!("default" in option)) continue;
         
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
