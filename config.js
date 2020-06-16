@@ -345,12 +345,12 @@ exports.updateFromArgv = function() {
 }
 
 function getInitialConfigRankedUnranked() {
-    return { bannedusernames: { banned: {}, argv: undefined },
-             bannedids:       { banned: {}, argv: undefined },
-             boardsizes:      { allow_all: false, allowed: [], argv: undefined },
-             komis:           { allow_all: false, allowed: [], argv: undefined },
-             speeds:          { allow_all: false, allowed: {}, argv: undefined },
-             timecontrols:    { allow_all: false, allowed: {}, argv: undefined }
+    return { bannedusernames: { banned: {} },
+             bannedids:       { banned: {} },
+             boardsizes:      { allow_all: false, allowed: [] },
+             komis:           { allow_all: false, allowed: [] },
+             speeds:          { allow_all: false, allowed: {} },
+             timecontrols:    { allow_all: false, allowed: {} }
            };
 }
 
