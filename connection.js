@@ -345,17 +345,11 @@ class Connection {
     //
     checkChallengeUser(notification, r_u_sentences, config_r_u) {
 
-        for (const uid of ["username", "id"]) {
-            if (config.banned_users[notification.user[uid]]) {
-                return getRejectBanned(notification.user.username, "");
-            }
-            if (notification.ranked && config.banned_users_ranked[notification.user[uid]]) {
-                return getRejectBanned(notification.user.username, "ranked");
-            }
-            if (!notification.ranked && config.banned_users_unranked[notification.user[uid]]) {
-                return getRejectBanned(notification.user.username, "unranked");
-            }
-        }
+        const resultBannedUsernames = getBannedGroupRejectResult("bannedusernames", notification.user.username, r_u_sentences, config_r_u);
+        if (resultBannedUsernames) return resultBannedUsernames;
+
+        const resultBannedUserIds = getBannedGroupRejectResult("banneduserids", notification.user.username, r_u_sentences, config_r_u);
+        if (resultBannedUserIds) return resultBannedUserIds;
 
         if (!notification.user.professional) {
             const beginning = "Games against non-professionals are";
@@ -763,13 +757,21 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function getRejectBanned(username, ranked) {
-    return getReject(`You (${username}) are not allowed to play ${ranked}${ranked ? " " : ""}games against this bot.`)
+function checkRankedUnrankedOrAll(optionName, r_u_sentences) {
+    if (["bannedusernames", "banneduserids"]) {
+        //
+    } else if (["boardsizes", "komis", "speeds", "timecontrols"]) {
+        //return ();
+    }
 }
 
 function getReject(reason) {
     conn_log(reason);
     return { reject: true, msg: reason};
+}
+
+function getRejectBanned(username, ranked, r_u_sentences) {
+    return getReject(`You (${username}) are not allowed to play ${ranked}${ranked ? " " : ""}games against this bot.`);
 }
 
 function getCheckedKeyInObjReject(k) {

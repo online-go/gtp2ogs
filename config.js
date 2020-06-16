@@ -692,22 +692,25 @@ function processRankedUnrankedExport(optionName, argv) {
         const argForRankedGames = getCheckedGeneralRankedArg(optionName, argv);
         const argForUnrankedGames = getCheckedGeneralUnrankedArg(optionName, argv);
 
-        if (["boardsizes", "komis", "speeds", "timecontrols"].includes(optionName)) {
+        if (optionName === "boardsizes") {
             processBoardsizesGroupExport("ranked", argForRankedGames);
             processBoardsizesGroupExport("unranked", argForUnrankedGames);
-
+            return;
+        }
+        if (optionName === "komis") {
             processKomisGroupExport("ranked", argForRankedGames);
             processKomisGroupExport("unranked", argForUnrankedGames);
-            
-            processAllowedGroupExport("speeds", "ranked", argForRankedGames);
-            processAllowedGroupExport("speeds", "unranked", argForUnrankedGames);
-
-            processAllowedGroupExport("timecontrols", "ranked", argForRankedGames);
-            processAllowedGroupExport("timecontrols", "unranked", argForUnrankedGames);
-
-        } else if (["minrank", "maxrank"].includes(optionName)) {
+            return;
+        }
+        if (["speeds", "timecontrols"].includes(optionName)) {          
+            processAllowedGroupExport(optionName, "ranked", argForRankedGames);
+            processAllowedGroupExport(optionName, "unranked", argForUnrankedGames);
+            return;
+        }
+        if (["minrank", "maxrank"].includes(optionName)) {
             exports.ranked[optionName] = (argForRankedGames ? parseRank(argForRankedGames) : undefined);
             exports.unranked[optionName] = (argForUnrankedGames ? parseRank(argForUnrankedGames) : undefined);
+            return;
         } else {
             exports.ranked[optionName] = argForRankedGames;
             exports.unranked[optionName] = argForUnrankedGames;
