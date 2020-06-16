@@ -5,7 +5,6 @@ const https = require('https');
 const querystring = require('querystring');
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-const { getArgNamesUnderscoredGRU } = require('./utils/getArgNamesUnderscoredGRU');
 const { getRankedUnranked } = require('./utils/getRankedUnranked');
 
 let config;

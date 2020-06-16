@@ -6,33 +6,11 @@
 const fs = require('fs');
 
 const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-const { getOptionName } = require('./utils/getOptionName');
-const { getRankedUnranked } = require('./utils/getRankedUnranked');
-const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
 
 exports.check_rejectnew = function() {};
 
-exports.banned_users = {};
-exports.banned_users_ranked = {};
-exports.banned_users_unranked = {};
-exports.allowed_boardsizes = [];
-exports.allow_all_boardsizes = false;
-exports.allowed_boardsizes_ranked = [];
-exports.allow_all_boardsizes_ranked = false;
-exports.allowed_boardsizes_unranked = [];
-exports.allow_all_boardsizes_unranked = false;
-exports.allow_all_komis = false;
-exports.allowed_komis = [];
-exports.allow_all_komis_ranked = false;
-exports.allowed_komis_ranked = [];
-exports.allow_all_komis_unranked = false;
-exports.allowed_komis_unranked = [];
-exports.allowed_speeds = {};
-exports.allowed_speeds_ranked = {};
-exports.allowed_speeds_unranked = {};
-exports.allowed_timecontrols = {};
-exports.allowed_timecontrols_ranked = {};
-exports.allowed_timecontrols_unranked = {};
+exports.ranked = getInitialConfigRankedUnranked();
+exports.unranked = getInitialConfigRankedUnranked();
 
 exports.updateFromArgv = function() {
     const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
@@ -90,12 +68,18 @@ exports.updateFromArgv = function() {
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
         //     2A) ALL/RANKED/UNRANKED
-        .describe('bans', 'Comma separated list of usernames or IDs')
-        .string('bans')
-        .describe('bansranked', 'Comma separated list of usernames or IDs who are banned from ranked games')
-        .string('bansranked')
-        .describe('bansunranked', 'Comma separated list of usernames or IDs who are banned from unranked games')
-        .string('bansunranked')
+        .describe('bannedusernames', 'Comma separated list of user names who are banned')
+        .string('bannedusernames')
+        .describe('bannedusernamesranked', 'Comma separated list of user names who are banned from ranked games')
+        .string('bannedusernamesranked')
+        .describe('bannedusernamesunranked', 'Comma separated list of user names who are banned from unranked games')
+        .string('bannedusernamesunranked')
+        .describe('bannedids', 'Comma separated list of user IDs who are banned')
+        .string('bannedids')
+        .describe('bannedidsranked', 'Comma separated list of user IDs who are banned from ranked games')
+        .string('bannedidsranked')
+        .describe('bannedidsunranked', 'Comma separated list of user IDs who are banned from unranked games')
+        .string('bannedidsunranked')
         //     2B) GENERAL/RANKED/UNRANKED
         //         2B1) ALLOWED GROUP
         .describe('boardsizes', 'Board size(s) to accept')
@@ -231,7 +215,13 @@ exports.updateFromArgv = function() {
         throw `Please choose either --rankedonly or --unrankedonly, not both.`;
     }
 
-    const rankedUnrankedOptions = [{ name: "bans" },
+    testForbiddenOptionNameArgv("ranked", argv);
+    testForbiddenOptionNameArgv("unranked", argv);
+    testDroppedArgv(argv);
+    ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
+
+    const rankedUnrankedOptions = [{ name: "bannedusernames" },
+        { name: "bannedids" },
         { name: "boardsizes", default: "9,13,19" },
         { name: "komis", default: "automatic" },
         { name: "speeds", default: "all" },
@@ -265,9 +255,9 @@ exports.updateFromArgv = function() {
         { name: "maxperiodtimecorr", default: 259200 } // 3 days
     ];
 
-    testDroppedArgv(argv);
-    ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
-    testRankedUnrankedOptions(rankedUnrankedOptions, argv);
+    testGeneralRankedUnrankedOptionsNotOverlapping(rankedUnrankedOptions, argv);
+    testGroupOptionsValidSyntax(argv);
+    warnIfNoPauseArgvIsMissing(argv);
 
     // C - set general/ranked/unranked options defaults
     
@@ -278,13 +268,26 @@ exports.updateFromArgv = function() {
     setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv);
 
     // EXPORTS FROM ARGV
-    // 0) Export everything in argv first
+
+    const rankedUnrankedAllOptionNames = rankedUnrankedOptions.reduce( (e) => e.name );
+
+    // 0) Export everything in argv first, except ranked/unranked options (these need to
+    //    be filtered before exporting).
 
     for (const k in argv) {
-        exports[k] = argv[k];
+        if (!rankedUnrankedAllOptionNames.includes(k)) {
+            exports[k] = argv[k];
+        }
     }
 
-    // 1) Add and Modify/Adjust exports
+    // 1) For ranked unranked options, filter based on general ranked unranked precedence
+    //    before exporting:
+
+    for (const optionName of rankedUnrankedAllOptionNames) {
+        processRankedUnrankedExport(optionName, argv);
+    }
+
+    // 2) Add and Modify/Adjust exports
 
     if (argv.debug) {
         exports.DEBUG = true;
@@ -302,6 +305,9 @@ exports.updateFromArgv = function() {
     if (argv.beta) {
         exports.host = 'beta.online-go.com';
     }
+    if (argv.ogspv) {
+        exports.ogspv = argv.ogspv.toUpperCase();
+    }
 
     // Setting minimum handicap higher than -1 has the consequence of disabling
     // automatic handicap (notification.handicap === -1).
@@ -316,20 +322,16 @@ exports.updateFromArgv = function() {
     if (argv.fakerank) {
         exports.fakerank = parseRank(argv.fakerank);
     } else {
-        if (argv.minhandicap > -1) {
-            exports.noautohandicap = true;
+        // exports.minhandicap.ranked could be argv.minhandicap or argv.minhandicapranked or undefined,
+        // so we test against exports, not against argv.
+        if (exports.ranked.minhandicap !== undefined && exports.ranked.minhandicap > -1) {
+            exports.ranked.noautohandicap = true;
         }
-        if (argv.minhandicapranked > -1) {
-            exports.noautohandicapranked = true;
-        }
-        if (argv.noautohandicapunranked > -1) {
-            exports.noautohandicapunranked = true;
+        if (exports.unranked.minhandicap !== undefined && exports.unranked.minhandicap > -1) {
+            exports.unranked.noautohandicap = true;
         }
     }
 
-    if (argv.ogspv) {
-        exports.ogspv = argv.ogspv.toUpperCase();
-    }
     if (argv.rejectnew) {
         // A bot never accepting new games shouldn't be appearing in the dropdown, polite to our users.
         exports.hidden = true;
@@ -342,59 +344,35 @@ exports.updateFromArgv = function() {
     };
     exports.bot_command = argv._;
 
-    // 2) specific ranked/unranked options exports
-
-    processRankExport("minrank", argv);
-    processRankExport("minrankranked", argv);
-    processRankExport("minrankunranked", argv);
-
-    processRankExport("maxrank", argv);
-    processRankExport("maxrankranked", argv);
-    processRankExport("maxrankunranked", argv);
-
-    processBansExport("bans", argv);
-    processBansExport("bansranked", argv);
-    processBansExport("bansunranked", argv);
-
-    processBoardsizesExport("boardsizes", argv);
-    processBoardsizesExport("boardsizesranked", argv);
-    processBoardsizesExport("boardsizesunranked", argv);
-
-    processKomisExport("komis", argv);
-    processKomisExport("komisranked", argv);
-    processKomisExport("komisunranked", argv);
-
-    processAllowedGroupExport("speeds", argv);
-    processAllowedGroupExport("speedsranked", argv);
-    processAllowedGroupExport("speedsunranked", argv);
-
-    processAllowedGroupExport("timecontrols", argv);
-    processAllowedGroupExport("timecontrolsranked", argv);
-    processAllowedGroupExport("timecontrolsunranked", argv);
-
-    // console messages
-    // C - test exports warnings
-
-    testExportsWarnings();
+    for (const rankedUnranked of ["ranked", "unranked"]) {
+        processRankExport("minrank", rankedUnranked, argv);
+        processRankExport("maxrank", rankedUnranked, argv);
+    
+        processBannedUsersExport("bannedusernames", rankedUnranked, argv);
+        processBannedUsersExport("banneduserids", rankedUnranked, argv);
+        processBoardsizesExport(rankedUnranked, argv);
+        processKomisExport(rankedUnranked, argv);
+        
+        processAllowedGroupExport("speeds", rankedUnranked, argv);
+        processAllowedGroupExport("timecontrols", rankedUnranked, argv);
+    }
 
 }
 
-function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
+function getInitialConfigRankedUnranked() {
+    return { bannedusernames: { banned: {}, argv: undefined },
+             bannedids:       { banned: {}, argv: undefined },
+             boardsizes:      { allow_all: false, allowed: [], argv: undefined },
+             komis:           { allow_all: false, allowed: [], argv: undefined },
+             speeds:          { allow_all: false, allowed: {}, argv: undefined },
+             timecontrols:    { allow_all: false, allowed: {}, argv: undefined }
+           };
+}
 
-    for (const option of rankedUnrankedOptions) {
-        const [general, ranked, unranked] = getArgNamesGRU(option.name);
-        
-        // check undefined specifically to handle valid values such as 0 or null which are tested false
-        if (argv[general] !== undefined) {
-            if (argv[ranked] !== undefined) {
-                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, `
-                      + `use either --${general} or --${ranked} or no option if you want to allow all values.`;
-            }
-            if (argv[unranked] !== undefined) {
-                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, `
-                      + `use either --${general} or --${unranked} or no option if you want to allow all values.`;
-            }
-        }
+function testForbiddenOptionNameArgv(forbiddenOptionName, argv) {
+    if (argv[forbiddenOptionName] !== undefined) {
+        throw `Error: --${forbiddenOptionName} is already used by gtp2ogs for its internal properties`
+              + `, it cannot be used as an option. Please choose another option name.`;
     }
 }
 
@@ -403,7 +381,6 @@ function getBLCString(optionName, rankedUnranked) {
            + `and/or --${optionName}corr${rankedUnranked}`;
 }
 
-// console messages
 function testDroppedArgv(argv) {
     const droppedArgv = [
          [["botid", "bot", "id"], "username"],
@@ -431,9 +408,9 @@ function testDroppedArgv(argv) {
          [["minperiods"], getBLCString("minperiods", "")],
          [["minperiodsranked"], getBLCString("minperiods", "ranked")],
          [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
-         [["ban"], "bans"],
-         [["banranked"], "bansranked"],
-         [["banunranked"], "bansunranked"],
+         [["ban", "bans"], "bannedusernames and/or --bannedids"],
+         [["banranked", "bansranked"], "bannedusernamesranked and/or --bannedidsranked"],
+         [["banunranked", "bansunranked"], "bannedusernamesunranked and/or --bannedidsunranked"],
          [["boardsize"], "boardsizes"],
          [["boardsizeranked"], "boardsizesranked"],
          [["boardsizeunranked"], "boardsizesunranked"],
@@ -482,8 +459,61 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     }
 }
 
-function setRankedUnrankedOptionsDefaults(rankedUnrankedFamilies, argv) {
-    for (const option of rankedUnrankedFamilies) {
+function testGeneralRankedUnrankedOptionsNotOverlapping(rankedUnrankedOptions, argv) {
+
+    for (const option of rankedUnrankedOptions) {
+        const [general, ranked, unranked] = getArgNamesGRU(option.name);
+        
+        // check undefined specifically to handle valid values such as 0 or null which are tested false
+        if (argv[general] !== undefined) {
+            if (argv[ranked] !== undefined) {
+                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, `
+                      + `use either --${general} or --${ranked} or no option if you want to allow all values.`;
+            }
+            if (argv[unranked] !== undefined) {
+                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, `
+                      + `use either --${general} or --${unranked} or no option if you want to allow all values.`;
+            }
+        }
+    }
+}
+
+function testGroupOptionsValidSyntax(argv) {
+    // groups options are the options that can take a comma-separated string input
+
+    const groupsOptionNames = ["bans", "boardsizes", "komis", "speeds", "timecontrols"];
+
+    for (const optionName of groupsOptionNames) {
+        const argNames = getArgNamesGRU(optionName);
+
+        for (const argName of argNames) {
+            // 19 is a string same as "9,13,19", not a number
+            const arg = String(argv[argName]);
+
+            const lastChar = arg.slice(-1);
+            if (lastChar === ",") {
+                throw `Error: --${argName} cannot end with a comma, please check your input in ${arg}`;
+            }
+            if (arg.includes(",,")) {
+                throw `Error: --${argName} cannot contain two or more consecutive commas (",,"), please`
+                      + ` check your input in ${arg}`;
+            }
+        }
+    }
+}
+
+function warnIfNoPauseArgvIsMissing(argv) {
+    for (const rankedUnranked of ["ranked", "unranked"]) {
+        // avoid infinite games
+        if (!argv.nopause && !argv[`nopause${rankedUnranked}`]) {
+            console.log(`Warning: No --nopause nor --nopause${rankedUnranked}`
+                        + `, ${rankedUnranked} games are likely to last forever.`); 
+        }
+    }
+}
+
+function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
+    for (const option of rankedUnrankedOptions) {
         if (!("default" in option)) continue;
         
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
@@ -500,112 +530,191 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedFamilies, argv) {
     }
 }
 
-function parseRank(arg) {
-    if (arg) {
-        const re = /(\d+)([kdp])/;
-        const results = arg.toLowerCase().match(re);
+function getCommaSeparatedArgsStringConcated(...args) {
+    return args.join(',');
+}
 
-        if (results) {
-            if (results[2] === "k") {
-                return (30 - parseInt(results[1]));
-            } else if (results[2] === "d") {
-                return (30 - 1 + parseInt(results[1]));
-            } else if (results[2] === "p") {
-                return (36 + parseInt(results[1]));
-            }
+function getCheckedAllRankedArg(optionName, argv) {
+    const [general, ranked, ] = getArgNamesGRU(optionName);
+
+    // so far the only all/ranked/unranked option is "bans", which is inputted as
+    // string of comma-separated values, so we don't need to check for undefined
+    // against a string.
+
+    if (argv[general] && argv[ranked]) {
+        return getCommaSeparatedArgsStringConcated(argv[general], argv[ranked]);
+    }
+    if (argv[general]) {
+        return argv[general];
+    }
+    if (argv[ranked]) {
+        return argv[ranked];
+    } else {
+        return undefined;
+    }
+}
+
+function getCheckedAllUnrankedArg(optionName, argv) {
+    const [general, , unranked] = getArgNamesGRU(optionName);
+
+    // so far the only all/ranked/unranked option is "bans", which is inputted as
+    // string of comma-separated values, so we don't need to check for undefined
+    // against a string.
+
+    if (argv[general] && argv[unranked]) {
+        return getCommaSeparatedArgsStringConcated(argv[general], argv[unranked]);
+    }
+    if (argv[general]) {
+        return argv[general];
+    }
+    if (argv[unranked]) {
+        return argv[unranked];
+    } else {
+        return undefined;
+    }
+}
+
+function getCheckedGeneralRankedArg(optionName, argv) {
+    const [general, ranked, ] = getArgNamesGRU(optionName);
+
+    // explicitly check for undefined to make sure we test valid arg values
+    // such as 0 and null non strictly tested false.
+
+    if (argv[general] !== undefined) {
+        return argv[general];
+    }
+    if (argv[ranked] !== undefined) {
+        return argv[ranked]
+    } else {
+        return undefined;
+    }
+}
+
+function getCheckedGeneralUnrankedArg(optionName, argv) {
+    const [general, , unranked] = getArgNamesGRU(optionName);
+
+    // explicitly check for undefined to make sure we test valid arg values
+    // such as 0 and null non strictly tested false.
+
+    if (argv[general] !== undefined) {
+        return argv[general];
+    }
+    if (argv[unranked] !== undefined) {
+        return argv[unranked]
+    } else {
+        return undefined;
+    }
+}
+
+function processRankedUnrankedExport(optionName, argv) {
+    if (["bannedusernames", "banneduserids"].includes(optionName)) {
+        // all/ranked/unranked options have their generalArg not conflicting
+        // with the rankedArg and/or unrankedArg:
+
+        // - generalArg AND rankedArg combined -> ranked export
+        // - generalArg AND unrankedArg combinaed -> unranked export
+
+        const argForRankedGames = getCheckedAllRankedArg(optionName, argv);
+        const argForUnrankedGames = getCheckedAllUnrankedArg(optionName, argv);
+
+        exports.ranked[optionName].argv = argForRankedGames;
+        exports.unranked[optionName].argv = argForUnrankedGames;
+    } else {
+        // general/ranked/unranked options have their generalArg conflict
+        // with the ranked Arg and/or unrankedArg
+        // - generalArg VS rankedArg -> ranked export
+        // - generalArg VS unrankedArg -> unranked export
+
+        const argForRankedGames = getCheckedGeneralRankedArg(optionName, argv);
+        const argForUnrankedGames = getCheckedGeneralUnrankedArg(optionName, argv);
+
+        if (["boardsizes", "komis", "speeds", "timecontrols"].includes(optionName)) {
+            exports.ranked[optionName].argv = argForRankedGames;
+            exports.unranked[optionName].argv = argForUnrankedGames;
         } else {
-            throw `error: could not parse rank -${arg}-`;
+            exports.ranked[optionName] = argForRankedGames;
+            exports.unranked[optionName] = argForUnrankedGames;
         }
     }
 }
 
-function processRankExport(argName, argv) {
-    const arg = argv[argName];
-    if (arg) {
-        exports[argName] = parseRank(arg);
+function parseRank(arg) {
+    const re = /(\d+)([kdp])/;
+    const results = arg.toLowerCase().match(re);
+
+    if (results) {
+        if (results[2] === "k") {
+            return (30 - parseInt(results[1]));
+        } else if (results[2] === "d") {
+            return (30 - 1 + parseInt(results[1]));
+        } else if (results[2] === "p") {
+            return (36 + parseInt(results[1]));
+        }
+    } else {
+        throw `error: could not parse rank -${arg}-`;
     }
 }
 
-function processBansExport(argName, argv) {
-    const arg = argv[argName];
-    const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
+function processRankExport(optionName, rankedUnranked, argv) {
+    const arg = argv[rankedUnranked][optionName];
+    if (arg) {
+        exports[rankedUnranked][optionName] = parseRank(arg);
+    }
+}
+
+function processBannedUsersExport(optionName, rankedUnranked, argv) {
+    const arg = argv[rankedUnranked][optionName].argv;
 
     if (arg) {
-        const bans = arg.split(',');
-        for (const bannedUser of bans) {
-            exports[`banned_users${rankedUnrankedUnderscored}`][bannedUser] = true;
+        const bannedUsers = arg.split(',');
+        for (const bannedUser of bannedUsers) {
+            exports[rankedUnranked][optionName].banned[bannedUser] = true;
         }
     }
 }
 
-function processBoardsizesExport(argName, argv) {
-    const arg = argv[argName];
+function processBoardsizesExport(rankedUnranked, argv) {
+    const arg = argv[rankedUnranked].boardsizes.argv;
 
     if (arg) {
-        const rankedUnranked = getRankedUnranked(argName);
-        const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const boardsizes = arg.split(',');
         for (const boardsize of boardsizes) {
             if (boardsize === "all") {
-                exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = true;
+                exports[rankedUnranked].boardsizes.allow_all = true;
             } else {
-                exports[`allowed_boardsizes${rankedUnrankedUnderscored}`][boardsize] = true;
+                exports[rankedUnranked].boardsizes.allowed[boardsize] = true;
             }
         }
     }
 }
 
-function processKomisExport(argName, argv) {
-    const arg = argv[argName];
+function processKomisExport(rankedUnranked, argv) {
+    const arg = argv.komis[rankedUnranked];
 
     if (arg) {
-        const rankedUnranked = getRankedUnranked(argName);
-        const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const komis = arg.split(',');
         for (const komi of komis) {
             if (komi === "all") {
-                exports[`allow_all_komis${rankedUnrankedUnderscored}`] = true;
-            } else if (komi === "automatic") {
-                exports[`allowed_komis${rankedUnrankedUnderscored}`][null] = true;
+                exports[rankedUnranked].komis.allow_all = true;
             } else {
-                exports[`allowed_komis${rankedUnrankedUnderscored}`][komi] = true;
+                const komiExport = (komi === "automatic" ? null : komi);
+                exports[rankedUnranked].komis.allowed[komiExport] = true;
             }
         }
-    } 
+    }
 }
 
-function processAllowedGroupExport(argName, argv) {
-    const arg = argv[argName];
+function processAllowedGroupExport(optionName, rankedUnranked, argv) {
+    const arg = argv[optionName][rankedUnranked];
 
     if (arg) {
-        const optionName = getOptionName(argName);
-        const rankedUnranked = getRankedUnranked(argName);
-        const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(rankedUnranked);
         const allowedValues = arg.split(',');
         for (const allowedValue of allowedValues) {
             if (allowedValue === "all") {
-                exports[`allow_all_${optionName}${rankedUnrankedUnderscored}`] = true;
+                exports[rankedUnranked][optionName].allow_all = true;
             } else {
-                exports[`allowed_${optionName}${rankedUnrankedUnderscored}`][allowedValue] = true;
+                exports[rankedUnranked][optionName].allowed[allowedValue] = true;
             }
         }
-    } 
-}
-
-function testExportsWarnings() {
-    console.log("TESTING WARNINGS:\n-------------------------------------------------------");
-    let isWarning = false;
-
-    for (const r_u of ["ranked", "unranked"]) {
-        // avoid infinite games
-        // TODO: whenever --maxpausetime gets implemented, remove this
-        if (!exports.nopause && !exports[`nopause${r_u}`]) {
-            isWarning = true;
-            console.log(`    Warning: No --nopause nor --nopause${r_u}, `
-                        + `${r_u} games are likely to last forever`); 
-        }
     }
-
-    if (isWarning) console.log("[ WARNINGS ! ]\n");
-    else console.log("[ SUCCESS ]\n");
 }

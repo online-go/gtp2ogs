@@ -283,39 +283,48 @@ a challenge based on the notification (challenge settings)
 
 ### 2A) ALL/RANKED/UNRANKED
 
-Here the general option (ex: bans) does not confict with
-the ranked and unranked options for accepting/rejecting matches.
+Here the general argument of an option (ex: --bannedusernames) does not confict
+with the ranked and/or unranked argument of this option.
 
 example:
-`--bans A,B --bansranked X,Y --bansunranked Z`
+`--bannedusernames A,B --bannedusernamesranked X,Y --bannedusernamesunranked Z`
 
-result of these bans arguments:
+result of these bannedusernames arguments:
 
-- banned users for ranked games: A,B,X,Y
-- banned users for unranked games: A,B,Z
+- banned usernames for ranked games: A,B,X,Y
+- banned usernames for unranked games: A,B,Z
 
-#### bans
+#### bannedusernames
 
-`--bans` Comma separated list of user names or IDs who
-are banned from ranked and unranked games
+`--bannedusernames` Comma separated list of user names who are banned
 
-`--bansranked` Comma separated list of user names or IDs who
-are banned from ranked games
+`--bannedusernamesranked` Comma separated list of user names who are banned
+from ranked games
 
-`--bansunranked` Comma separated list of user names or IDs who
-are banned from unranked games
+`--bannedusernamesunranked` Comma separated list of user names who are banned
+from unranked games
+
+#### bannedids
+
+`--bannedids` Comma separated list of user names who are banned
+
+`--bannedidsranked` Comma separated list of user names who are banned
+from ranked games
+
+`--bannedidsunranked` Comma separated list of user names who are banned
+from unranked games
 
 ### 2B) GENERAL/RANKED/UNRANKED
 
 Here you can either use:
 
-- only the general option (ex: `--maxhandicap 2`), the same setting
-will be used for ranked and unranked games
+- only the general argument of an option (ex: `--maxhandicap 2`), then
+the same setting will be used for ranked and unranked games.
 
-- OR both the ranked AND the unranked option
+- OR both the ranked AND the unranked argument of this option
 (ex: `--maxhandicapranked 0 --maxhandicapunranked 9`),
-and in that case, the general option will be ignored
-and instead the ranked and unranked will be used depending
+and in that case the general argument will be ignored
+and instead the ranked and/or unranked arguments will be used depending
 on whether the game is ranked or unranked.
 
 ### 2B1) ALLOWED GROUP
@@ -323,12 +332,7 @@ on whether the game is ranked or unranked.
 For the allowed groups arguments, you can either use the value:
 
 - `all`: will allow ALL possible values
-- for text-only groups (ex: speeds ("blitz", "fischer", "white", etc.)),
-comma-separated values (without space) will allow every value inputted,
-every other value will be rejected
-- for numbers groups +/- text groups (ex: komis contain comma-separated numbers
-(5.5,6.5,7.5) or text ("automatic"), (ex: boardsizes contain only comma-separated
-numbers (9,13,19).
+- comma-separated allowed values
 
 example: `--speeds blitz,live`
 example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
