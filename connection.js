@@ -291,9 +291,17 @@ class Connection {
         const resultNotificationKeys = getCheckedKeysInObjRejectResult(notificationKeys, notification);
         if (resultNotificationKeys) return resultNotificationKeys;
 
-        const notificationKeysUser = ["id", "username", "professional", "ranking"];
+        const notificationKeysUser = ["id", "username", "professional", "ratings", "ranking"];
         const resultNotificationKeysUser = getCheckedKeysInObjRejectResult(notificationKeysUser, notification.user);
         if (resultNotificationKeysUser) return resultNotificationKeysUser;
+
+        const notificationKeysUserRatings = ["overall"];
+        const resultNotificationKeysUserRatings = getCheckedKeysInObjRejectResult(notificationKeysUserRatings, notification.user.ratings);
+        if (resultNotificationKeysUserRatings) return resultNotificationKeysUserRatings;
+
+        const notificationKeysUserRatingsOverall = ["games_played"];
+        const resultNotificationKeysUserRatingsOverall = getCheckedKeysInObjRejectResult(notificationKeysUserRatingsOverall, notification.user.ratings.overall);
+        if (resultNotificationKeysUserRatingsOverall) return resultNotificationKeysUserRatingsOverall;
 
         const notificationKeysTimecontrol = ["time_control", "speed", "pause_on_weekends"];
         const resultNotificationKeysTimecontrol = getCheckedKeysInObjRejectResult(notificationKeysTimecontrol, notification.time_control);
@@ -357,6 +365,9 @@ class Connection {
             const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
             if (resultProonly) return resultProonly;
         }
+
+        const resultMinGamesPlayed = getMinGamesPlayedRejectResult(notification.user.ratings.overall.games_played, notification.ranked);
+        if (resultMinGamesPlayed) return resultMinGamesPlayed;
 
         const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
         if (resultRank) return resultRank;
@@ -781,6 +792,41 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
     }
 }
 
+function getCheckedArgName(optionName, notificationRanked) {
+    const argNames = getArgNamesGRU(optionName);
+    const [general, ranked, unranked] = argNames;
+
+    // for numbers, check for undefined: 0 or null are checked false but are a valid arg to test against notif
+    //
+    if (config[unranked] !== undefined && !notificationRanked) {
+        return unranked;
+    }
+    if (config[ranked] !== undefined && notificationRanked) {
+        return ranked;
+    }
+    if (config[general] !== undefined) {
+        return general;
+    }
+    // no valid arg to test, this happens when bot admin inputs no value and we
+    // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
+    return undefined;
+}
+
+function getMinGamesPlayedRejectResult(notif, notificationRanked) {
+    const argName = getCheckedArgName("mingamesplayed", notificationRanked);
+    if (argName) {
+        const arg = config[argName];
+        if (notif < arg) {
+            const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
+            conn_log(`Number of ranked games played by this user is ${notif}, it is below minimum`
+                     + `${forRankedUnrankedGames} ${arg}, user is too new (${argName})`);
+            const msg = `It looks like your account is still new on OGS, this bot will be open to`
+                        + ` your user account${forRankedUnrankedGames} after you play more games.`;
+            return { reject: true, msg };
+        }
+    }
+}
+
 function getBooleansGeneralReject(nameF) {
     const msg = `${nameF} not allowed on this bot.`;
     conn_log(msg);
@@ -852,27 +898,6 @@ function getAllowedGroupRejectResult(optionName, nameF, notif, notificationRanke
         return getAllowedGroupReject(unranked, nameF, notif);
     }
 }
-
-function getCheckedArgName(optionName, notificationRanked) {
-    const argNames = getArgNamesGRU(optionName);
-    const [general, ranked, unranked] = argNames;
-
-    // for numbers, check for undefined: 0 is checked false but is a valid arg number to test against notif
-    //
-    if (config[unranked] !== undefined && !notificationRanked) {
-        return unranked;
-    }
-    if (config[ranked] !== undefined && notificationRanked) {
-        return ranked;
-    }
-    if (config[general] !== undefined) {
-        return general;
-    }
-    // no valid arg to test, this happens when bot admin inputs no value and we
-    // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
-    return undefined;
-}
-
 
 function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     if (isMin) {

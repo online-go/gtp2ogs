@@ -479,6 +479,26 @@ max:
 
 **important note**: see [fakerank](#fakerank).
 
+#### mingamesplayed
+
+This option can be useful to avoid spammers and bot abusers, who generally
+create new accounts to repeat their abuse.
+
+`games played` is the number of RANKED games played, so a new user could still
+abuse your bot by playing enough fair ranked games, then spamming unranked challenges
+where he uses a bot, but in this case no harm is done to our bot so it should be fine.
+
+A reasonable value seems to be something between 10 and 20.
+
+  `--mingamesplayed` Do not accept challenges from players who played less
+ranked games than specified minimum number (too new players)
+
+  `--mingamesplayedranked` Do not accept ranked challenges from players who
+played less ranked games than specified minimum number (too new players)
+
+  `--mingamesplayed` Do not accept unranked challenges from players who
+played less ranked games than specified minimum number (too new players)
+
 #### min/max rank
 
 min:

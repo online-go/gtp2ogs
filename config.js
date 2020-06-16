@@ -132,6 +132,9 @@ exports.updateFromArgv = function() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
+        .describe('mingamesplayed', 'Do not accept challenges from players who played less ranked games than specified minimum number (too new players)')
+        .describe('mingamesplayedranked', 'Do not accept ranked challenges from players who played less ranked games than specified minimum number (too new players)')
+        .describe('mingamesplayedunranked', 'Do not accept unranked challenges from players who played less ranked games than specified minimum number (too new players)')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
@@ -237,6 +240,7 @@ exports.updateFromArgv = function() {
         { name: "nopause" },
         { name: "nopauseonweekends" },
         { name: "noautohandicap" },
+        { name: "mingamesplayed" },
         { name: "minrank" },
         { name: "maxrank" },
         { name: "minhandicap" },
