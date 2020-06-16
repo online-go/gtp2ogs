@@ -567,7 +567,7 @@ function getCheckedGeneralRankedArg(optionName, argv) {
     const [general, ranked, ] = getArgNamesGRU(optionName);
 
     // explicitly check for undefined to make sure we test valid arg values
-    // such as 0 and null non strictly tested false.
+    // such as 0 and null which are non strictly tested false.
 
     if (argv[general] !== undefined) {
         return argv[general];
@@ -575,6 +575,8 @@ function getCheckedGeneralRankedArg(optionName, argv) {
     if (argv[ranked] !== undefined) {
         return argv[ranked]
     } else {
+        // no valid arg to test, this happens when bot admin inputs no value and we
+        // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
         return undefined;
     }
 }
@@ -583,7 +585,7 @@ function getCheckedGeneralUnrankedArg(optionName, argv) {
     const [general, , unranked] = getArgNamesGRU(optionName);
 
     // explicitly check for undefined to make sure we test valid arg values
-    // such as 0 and null non strictly tested false.
+    // such as 0 and null which are non strictly tested false.
 
     if (argv[general] !== undefined) {
         return argv[general];

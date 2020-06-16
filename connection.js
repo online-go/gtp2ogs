@@ -720,49 +720,26 @@ function err(str) {
     conn_log("ERROR: ", str); 
 }
 
-function getRankedUnrankedGames(argName) {
-    const rankedUnranked = getRankedUnranked(argName);
-    return `${rankedUnranked} games`.trim();
-}
-
-function getForFromBLCRankedUnrankedGames(forFrom, BLC, argName, all) {
-    const rankedUnrankedGames = getRankedUnrankedGames(argName);
-
-    if (BLC !== "") {
-        return ` ${forFrom}${BLC}${rankedUnrankedGames}`; // ex: "for blitz ranked games"
-                                                          // ex: "for correspondence games"          
-    }
-    if (all === "all") {
-        return `${forFrom}${all} games`;                  // ex: "from all games"
-    } else {
-        if (argName.includes("ranked")) {
-            return ` ${forFrom}${rankedUnrankedGames}`;  // ex: "for ranked games"       
-        } else {
-            return "";                                   // no need to say explicitly "for all games"
-        }                                                // "for ranked games and for unranked games": general argument)   
-    }
-}
-
-function getSuggestionSentence(argName) {
-    if (argName.includes("ranked")) {
-        return `.\nYou may try ${argName.includes("unranked") ? "ranked" : "unranked"}`;
-    } else {
-        return "";
-    }
-}
-
 function rankToString(r) {
     const R = Math.floor(r);
     if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function checkRankedUnrankedOrAll(optionName, r_u_sentences) {
-    if (["bannedusernames", "banneduserids"]) {
-        //
-    } else if (["boardsizes", "komis", "speeds", "timecontrols"]) {
-        //return ();
-    }
+function checkRankedEqualsUnrankedBannedGroup(optionName, arg, r_u_sentences) {
+    return (config[r_u_sentences.r_u][optionName].banned[arg] === config[r_u_sentences.r_u_opposite][optionName].banned[arg]);
+}
+
+function checkRankedEqualsUnrankedGenericOption(optionName, r_u_sentences) {
+    return (config[r_u_sentences.r_u][optionName] === config[r_u_sentences.r_u_opposite][optionName]);
+}
+
+function checkRankedEqualsUnrankedAllowedGroup(optionName, arg, r_u_sentences) {
+    return (config[r_u_sentences.r_u][optionName].allowed[arg] === config[r_u_sentences.r_u_opposite][optionName].allowed[arg]);
+}
+
+function getSuggestionSentences() {
+    //
 }
 
 function getReject(reason) {
@@ -793,26 +770,6 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
         const resultNotificationKeysTimeSettings = getCheckedKeysInObjRejectResult(keys, notif);
         if (resultNotificationKeysTimeSettings) return resultNotificationKeysTimeSettings;
     }
-}
-
-function getCheckedArgName(optionName, notificationRanked) {
-    const argNames = getArgNamesGRU(optionName);
-    const [general, ranked, unranked] = argNames;
-
-    // for numbers, check for undefined: 0 or null are checked false but are a valid arg to test against notif
-    //
-    if (config[unranked] !== undefined && !notificationRanked) {
-        return unranked;
-    }
-    if (config[ranked] !== undefined && notificationRanked) {
-        return ranked;
-    }
-    if (config[general] !== undefined) {
-        return general;
-    }
-    // no valid arg to test, this happens when bot admin inputs no value and we
-    // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
-    return undefined;
 }
 
 function getMinGamesPlayedRejectResult(notif, notificationRanked) {
