@@ -5,8 +5,6 @@
 
 const fs = require('fs');
 
-const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-
 exports.check_rejectnew = function() {};
 
 exports.ranked = getInitialConfigRankedUnranked();
@@ -344,19 +342,6 @@ exports.updateFromArgv = function() {
     };
     exports.bot_command = argv._;
 
-    for (const rankedUnranked of ["ranked", "unranked"]) {
-        processRankExport("minrank", rankedUnranked, argv);
-        processRankExport("maxrank", rankedUnranked, argv);
-    
-        processBannedUsersExport("bannedusernames", rankedUnranked, argv);
-        processBannedUsersExport("banneduserids", rankedUnranked, argv);
-        processBoardsizesExport(rankedUnranked, argv);
-        processKomisExport(rankedUnranked, argv);
-        
-        processAllowedGroupExport("speeds", rankedUnranked, argv);
-        processAllowedGroupExport("timecontrols", rankedUnranked, argv);
-    }
-
 }
 
 function getInitialConfigRankedUnranked() {
@@ -374,6 +359,10 @@ function testForbiddenOptionNameArgv(forbiddenOptionName, argv) {
         throw `Error: --${forbiddenOptionName} is already used by gtp2ogs for its internal properties`
               + `, it cannot be used as an option. Please choose another option name.`;
     }
+}
+
+function getArgNamesGRU(optionName) {
+    return ["", "ranked", "unranked"].map( e => `${optionName}${e}` );
 }
 
 function getBLCString(optionName, rankedUnranked) {
@@ -606,36 +595,61 @@ function getCheckedGeneralUnrankedArg(optionName, argv) {
     }
 }
 
-function processRankedUnrankedExport(optionName, argv) {
-    if (["bannedusernames", "banneduserids"].includes(optionName)) {
-        // all/ranked/unranked options have their generalArg not conflicting
-        // with the rankedArg and/or unrankedArg:
-
-        // - generalArg AND rankedArg combined -> ranked export
-        // - generalArg AND unrankedArg combinaed -> unranked export
-
-        const argForRankedGames = getCheckedAllRankedArg(optionName, argv);
-        const argForUnrankedGames = getCheckedAllUnrankedArg(optionName, argv);
-
-        exports.ranked[optionName].argv = argForRankedGames;
-        exports.unranked[optionName].argv = argForUnrankedGames;
-    } else {
-        // general/ranked/unranked options have their generalArg conflict
-        // with the ranked Arg and/or unrankedArg
-        // - generalArg VS rankedArg -> ranked export
-        // - generalArg VS unrankedArg -> unranked export
-
-        const argForRankedGames = getCheckedGeneralRankedArg(optionName, argv);
-        const argForUnrankedGames = getCheckedGeneralUnrankedArg(optionName, argv);
-
-        if (["boardsizes", "komis", "speeds", "timecontrols"].includes(optionName)) {
-            exports.ranked[optionName].argv = argForRankedGames;
-            exports.unranked[optionName].argv = argForUnrankedGames;
-        } else {
-            exports.ranked[optionName] = argForRankedGames;
-            exports.unranked[optionName] = argForUnrankedGames;
+function processBannedGroupExport(optionName, rankedUnranked, arg) {
+    if (arg) {
+        const bannedUsers = arg.split(',');
+        for (const bannedUser of bannedUsers) {
+            exports[rankedUnranked][optionName].banned[bannedUser] = true;
         }
     }
+    // else .banned is already initialized to {},
+    // no need to export empty or undefined as in processRankExport
+}
+
+function processBoardsizesGroupExport(rankedUnranked, arg) {
+    if (arg) {
+        const boardsizes = arg.split(',');
+        for (const boardsize of boardsizes) {
+            if (boardsize === "all") {
+                exports[rankedUnranked].boardsizes.allow_all = true;
+            } else {
+                exports[rankedUnranked].boardsizes.allowed[boardsize] = true;
+            }
+        }
+    }
+    // else .allowed and .allow_all are already initialized to {} and false,
+    // no need to export empty or undefined as in processRankExport
+}
+
+function processKomisGroupExport(rankedUnranked, arg) {
+    if (arg) {
+        const komis = arg.split(',');
+        for (const komi of komis) {
+            if (komi === "all") {
+                exports[rankedUnranked].komis.allow_all = true;
+            } else {
+                const komiExport = (komi === "automatic" ? null : komi);
+                exports[rankedUnranked].komis.allowed[komiExport] = true;
+            }
+        }
+    }
+    // else .allowed and .allow_all are already initialized to {} and false,
+    // no need to export empty or undefined as in processRankExport
+}
+
+function processAllowedGroupExport(optionName, rankedUnranked, arg) {
+    if (arg) {
+        const allowedValues = arg.split(',');
+        for (const allowedValue of allowedValues) {
+            if (allowedValue === "all") {
+                exports[rankedUnranked][optionName].allow_all = true;
+            } else {
+                exports[rankedUnranked][optionName].allowed[allowedValue] = true;
+            }
+        }
+    }
+    // else .allowed and .allow_all are already initialized to {} and false,
+    // no need to export empty or undefined as in processRankExport
 }
 
 function parseRank(arg) {
@@ -655,66 +669,48 @@ function parseRank(arg) {
     }
 }
 
-function processRankExport(optionName, rankedUnranked, argv) {
-    const arg = argv[rankedUnranked][optionName];
-    if (arg) {
-        exports[rankedUnranked][optionName] = parseRank(arg);
-    }
-}
+function processRankedUnrankedExport(optionName, argv) {
+    if (["bannedusernames", "banneduserids"].includes(optionName)) {
+        // all/ranked/unranked options have their generalArg not conflicting
+        // with the rankedArg and/or unrankedArg:
 
-function processBannedUsersExport(optionName, rankedUnranked, argv) {
-    const arg = argv[rankedUnranked][optionName].argv;
+        // - generalArg AND rankedArg combined -> ranked export
+        // - generalArg AND unrankedArg combinaed -> unranked export
 
-    if (arg) {
-        const bannedUsers = arg.split(',');
-        for (const bannedUser of bannedUsers) {
-            exports[rankedUnranked][optionName].banned[bannedUser] = true;
-        }
-    }
-}
+        const argForRankedGames = getCheckedAllRankedArg(optionName, argv);
+        const argForUnrankedGames = getCheckedAllUnrankedArg(optionName, argv);
 
-function processBoardsizesExport(rankedUnranked, argv) {
-    const arg = argv[rankedUnranked].boardsizes.argv;
+        processBannedGroupExport(optionName, "ranked", argForRankedGames);
+        processBannedGroupExport(optionName, "unranked", argForUnrankedGames);
 
-    if (arg) {
-        const boardsizes = arg.split(',');
-        for (const boardsize of boardsizes) {
-            if (boardsize === "all") {
-                exports[rankedUnranked].boardsizes.allow_all = true;
-            } else {
-                exports[rankedUnranked].boardsizes.allowed[boardsize] = true;
-            }
-        }
-    }
-}
+    } else {
+        // general/ranked/unranked options have their generalArg conflict
+        // with the ranked Arg and/or unrankedArg
+        // - generalArg VS rankedArg -> ranked export
+        // - generalArg VS unrankedArg -> unranked export
 
-function processKomisExport(rankedUnranked, argv) {
-    const arg = argv.komis[rankedUnranked];
+        const argForRankedGames = getCheckedGeneralRankedArg(optionName, argv);
+        const argForUnrankedGames = getCheckedGeneralUnrankedArg(optionName, argv);
 
-    if (arg) {
-        const komis = arg.split(',');
-        for (const komi of komis) {
-            if (komi === "all") {
-                exports[rankedUnranked].komis.allow_all = true;
-            } else {
-                const komiExport = (komi === "automatic" ? null : komi);
-                exports[rankedUnranked].komis.allowed[komiExport] = true;
-            }
-        }
-    }
-}
+        if (["boardsizes", "komis", "speeds", "timecontrols"].includes(optionName)) {
+            processBoardsizesGroupExport("ranked", argForRankedGames);
+            processBoardsizesGroupExport("unranked", argForUnrankedGames);
 
-function processAllowedGroupExport(optionName, rankedUnranked, argv) {
-    const arg = argv[optionName][rankedUnranked];
+            processKomisGroupExport("ranked", argForRankedGames);
+            processKomisGroupExport("unranked", argForUnrankedGames);
+            
+            processAllowedGroupExport("speeds", "ranked", argForRankedGames);
+            processAllowedGroupExport("speeds", "unranked", argForUnrankedGames);
 
-    if (arg) {
-        const allowedValues = arg.split(',');
-        for (const allowedValue of allowedValues) {
-            if (allowedValue === "all") {
-                exports[rankedUnranked][optionName].allow_all = true;
-            } else {
-                exports[rankedUnranked][optionName].allowed[allowedValue] = true;
-            }
+            processAllowedGroupExport("timecontrols", "ranked", argForRankedGames);
+            processAllowedGroupExport("timecontrols", "unranked", argForUnrankedGames);
+
+        } else if (["minrank", "maxrank"].includes(optionName)) {
+            exports.ranked[optionName] = (argForRankedGames ? parseRank(argForRankedGames) : undefined);
+            exports.unranked[optionName] = (argForUnrankedGames ? parseRank(argForUnrankedGames) : undefined);
+        } else {
+            exports.ranked[optionName] = argForRankedGames;
+            exports.unranked[optionName] = argForUnrankedGames;
         }
     }
 }

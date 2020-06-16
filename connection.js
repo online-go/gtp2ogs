@@ -4,8 +4,7 @@ const http = require('http');
 const https = require('https');
 const querystring = require('querystring');
 
-const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-const { getRankedUnranked } = require('./utils/getRankedUnranked');
+const { getRankedUnrankedSentences } = require('./utils/getRankedUnrankedSentences');
 
 let config;
 const console = require('./console').console;
@@ -344,7 +343,7 @@ class Connection {
     }
     // Check challenge user is acceptable, else don't mislead user
     //
-    checkChallengeUser(notification) {
+    checkChallengeUser(notification, r_u_sentences, config_r_u) {
 
         for (const uid of ["username", "id"]) {
             if (config.banned_users[notification.user[uid]]) {
@@ -416,7 +415,7 @@ class Connection {
     }
     // Check some booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification) {
+    checkChallengeBooleans(notification, r_u_sentences, config_r_u) {
 
         if (config.rankedonly && !notification.ranked) {
             return getBooleansGeneralReject("Unranked games are");
@@ -437,7 +436,7 @@ class Connection {
     }
     // Check challenge allowed group options are allowed
     //
-    checkChallengeAllowedGroup(notification) {
+    checkChallengeAllowedGroup(notification, r_u_sentences, config_r_u) {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
@@ -471,7 +470,7 @@ class Connection {
 
     // Check challenge handicap is allowed
     //
-    checkChallengeHandicap(notification) {
+    checkChallengeHandicap(notification, r_u_sentences, config_r_u) {
 
         if (notification.handicap === -1) {
             const beginning = "-Automatic- handicap is";
@@ -488,7 +487,7 @@ class Connection {
     }
     // Check challenge time settings are allowed
     //
-    checkChallengeTimeSettings(notification) {
+    checkChallengeTimeSettings(notification, r_u_sentences, config_r_u) {
 
 
         // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
@@ -517,6 +516,9 @@ class Connection {
     //
     checkChallenge(notification) {
 
+        const r_u_sentences = getRankedUnrankedSentences(notification.ranked, notification.time_control.speed);
+        const config_r_u = config[r_u_sentences.r_u];
+
         for (const test of [this.checkChallengeSanityChecks,
                            this.checkChallengeUser,
                            this.checkChallengeBot,
@@ -524,7 +526,7 @@ class Connection {
                            this.checkChallengeAllowedGroup,
                            this.checkChallengeHandicap,
                            this.checkChallengeTimeSettings]) {
-            const result = test.bind(this)(notification);
+            const result = test.bind(this)(notification, r_u_sentences, config_r_u);
             if (result.reject) return result;
         }
 
