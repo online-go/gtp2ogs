@@ -821,7 +821,8 @@ function getMinGamesPlayedRejectResult(notif, notificationRanked) {
             conn_log(`Number of ranked games played by this user is ${notif}, it is below minimum`
                      + `${forRankedUnrankedGames} ${arg}, user is too new (${argName})`);
             const msg = `It looks like your account is still new on OGS, this bot will be open to`
-                        + ` your user account${forRankedUnrankedGames} after you play more games.`;
+                        + ` your user account${forRankedUnrankedGames} after you play more games.`
+                        + ` You need ${ arg - notif } more ranked ${arg - notif === 1 ? 'game'  : 'games'}.`;
             return { reject: true, msg };
         }
     }

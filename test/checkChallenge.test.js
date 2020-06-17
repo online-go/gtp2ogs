@@ -174,7 +174,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games.' }));
+      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games. You need 10 more ranked games.' }));
 
     });
     it ('reject min games played too low', () => {
@@ -186,7 +186,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games.' }));
+      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games. You need 1 more ranked game.' }));
 
     });
 
@@ -231,7 +231,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games.' }));
+      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games. You need 20 more ranked games.' }));
 
     });
 
@@ -244,7 +244,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games.' }));
+      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games. You need 5 more ranked games.' }));
 
     });
 
@@ -258,7 +258,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games.' }));
+      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games. You need 1 more ranked game.' }));
 
     });
 
@@ -272,7 +272,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games.' }));
+      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games. You need 1 more ranked game.' }));
 
     });
 
