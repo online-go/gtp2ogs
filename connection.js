@@ -4,7 +4,8 @@ const http = require('http');
 const https = require('https');
 const querystring = require('querystring');
 
-const { getRankedUnrankedSentences } = require('./utils/getRankedUnrankedSentences');
+const { get_r_u } = require('./utils/get_r_u');
+const { get_r_u_sentences } = require('./utils/get_r_u_sentences');
 
 let config;
 const console = require('./console').console;
@@ -343,12 +344,12 @@ class Connection {
     }
     // Check challenge user is acceptable, else don't mislead user
     //
-    checkChallengeUser(notification, r_u_sentences, config_r_u) {
+    checkChallengeUser(notification, r_u, config_r_u) {
 
-        const resultBannedUsernames = getBannedGroupRejectResult("bannedusernames", notification.user.username, r_u_sentences, config_r_u);
+        const resultBannedUsernames = getBannedGroupRejectResult("bannedusernames", notification.user.username, r_u, config_r_u);
         if (resultBannedUsernames) return resultBannedUsernames;
 
-        const resultBannedUserIds = getBannedGroupRejectResult("banneduserids", notification.user.username, r_u_sentences, config_r_u);
+        const resultBannedUserIds = getBannedGroupRejectResult("banneduserids", notification.user.id, r_u, config_r_u);
         if (resultBannedUserIds) return resultBannedUserIds;
 
         if (!notification.user.professional) {
@@ -409,7 +410,7 @@ class Connection {
     }
     // Check some booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification, r_u_sentences, config_r_u) {
+    checkChallengeBooleans(notification, r_u, config_r_u) {
 
         if (config.rankedonly && !notification.ranked) {
             return getBooleansGeneralReject("Unranked games are");
@@ -430,7 +431,7 @@ class Connection {
     }
     // Check challenge allowed group options are allowed
     //
-    checkChallengeAllowedGroup(notification, r_u_sentences, config_r_u) {
+    checkChallengeAllowedGroup(notification, r_u, config_r_u) {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
@@ -464,7 +465,7 @@ class Connection {
 
     // Check challenge handicap is allowed
     //
-    checkChallengeHandicap(notification, r_u_sentences, config_r_u) {
+    checkChallengeHandicap(notification, r_u, config_r_u) {
 
         if (notification.handicap === -1) {
             const beginning = "-Automatic- handicap is";
@@ -481,7 +482,7 @@ class Connection {
     }
     // Check challenge time settings are allowed
     //
-    checkChallengeTimeSettings(notification, r_u_sentences, config_r_u) {
+    checkChallengeTimeSettings(notification, r_u, config_r_u) {
 
 
         // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
@@ -510,8 +511,8 @@ class Connection {
     //
     checkChallenge(notification) {
 
-        const r_u_sentences = getRankedUnrankedSentences(notification.ranked, notification.time_control.speed);
-        const config_r_u = config[r_u_sentences.r_u];
+        const r_u = get_r_u(notification.ranked);
+        const config_r_u = config[r_u];
 
         for (const test of [this.checkChallengeSanityChecks,
                            this.checkChallengeUser,
@@ -520,7 +521,7 @@ class Connection {
                            this.checkChallengeAllowedGroup,
                            this.checkChallengeHandicap,
                            this.checkChallengeTimeSettings]) {
-            const result = test.bind(this)(notification, r_u_sentences, config_r_u);
+            const result = test.bind(this)(notification, r_u, config_r_u);
             if (result.reject) return result;
         }
 
@@ -726,29 +727,39 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function checkRankedEqualsUnrankedBannedGroup(optionName, arg, r_u_sentences) {
-    return (config[r_u_sentences.r_u][optionName].banned[arg] === config[r_u_sentences.r_u_opposite][optionName].banned[arg]);
+function checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif) {
+    return (config.ranked[optionName].banned[notif] === config.unranked[optionName].banned[notif]);
 }
 
-function checkRankedEqualsUnrankedGenericOption(optionName, r_u_sentences) {
-    return (config[r_u_sentences.r_u][optionName] === config[r_u_sentences.r_u_opposite][optionName]);
+function checkRankedArgEqualsUnrankedArgGenericOption(optionName) {
+    return (config.ranked[optionName] === config.unranked[optionName]);
 }
 
-function checkRankedEqualsUnrankedAllowedGroup(optionName, arg, r_u_sentences) {
-    return (config[r_u_sentences.r_u][optionName].allowed[arg] === config[r_u_sentences.r_u_opposite][optionName].allowed[arg]);
+function checkRankedArgEqualsUnrankedArgAllowedGroup(optionName, notif) {
+    return (config.ranked[optionName].allowed[notif] === config.unranked[optionName].allowed[notif]);
 }
 
-function getSuggestionSentences() {
-    //
+function get_r_u_or_all_sentences(rankedArgEqualsUnrankedArg, r_u_sentences) {
+    return (rankedArgEqualsUnrankedArg ? r_u_sentences.all : r_u_sentences.r_or_u);
 }
 
 function getReject(reason) {
-    conn_log(reason);
-    return { reject: true, msg: reason};
+    return { reject: true, reason};
 }
 
-function getRejectBanned(username, ranked, r_u_sentences) {
-    return getReject(`You (${username}) are not allowed to play ${ranked}${ranked ? " " : ""}games against this bot.`);
+function getBannedGroupReject(optionName, notif, r_u) {
+    const banType = optionName.split("banneduser")[1].slice(0, -1);
+    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif);
+    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+
+    conn_log(`user ${banType} ${notif} is banned${r_u_sentences.from_r_u_games}.`);
+    return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot.`);
+}
+
+function getBannedGroupRejectResult(optionName, notif, r_u, config_r_u) {
+    if (config_r_u[optionName].banned[notif]) {
+        return getBannedGroupReject(optionName, notif, r_u);
+    }
 }
 
 function getCheckedKeyInObjReject(k) {

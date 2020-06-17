@@ -103,7 +103,7 @@ describe('Challenges', () => {
     it('should reject banned users', () => {
       const notification = base_challenge({ user: { username: 'bannedName', id: 5 } });
 
-      config.banned_users[notification.user.username] = true;
+      config.ranked.bannedusernames.banned[notification.user.username] = true;
       
       const result = conn.checkChallengeUser(notification);
       

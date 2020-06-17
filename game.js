@@ -1,7 +1,7 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const { decodeMoves } = require("./utils/decodeMoves");
-const { getRankedUnrankedSentences } = require('./utils/getRankedUnrankedSentences');
+const { getRankedUnrankedSentences } = require('./utils/get_r_u_sentences');
 const { move2gtpvertex } = require("./utils/move2gtpvertex");
 
 const Bot = require('./bot').Bot;
