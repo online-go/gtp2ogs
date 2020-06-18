@@ -460,13 +460,24 @@ class Game {
             'game_id': this.game_id
         }));
     }
+    exportTimeouterInfoToConfig() {
+        if (config.bantimeouterssession || config.bantimeouterssessionranked || config.bantimeouterssessionunranked) {
+            // keep track of this player's last timeout if we want to add further bantimeout options in the future
+            const player = this.getOpponent();
+
+            config.timeouters_in_this_session[player.id] = new Date().getTime();
+        }
+    }
     getRes(result) {
         const m = this.state.outcome.match(/(.*) points/);
         if (m)  return m[1];
 
         if (result === 'Resignation')  return 'R';
         if (result === 'Cancellation') return 'Can';
-        if (result === 'Timeout')      return 'Time';
+        if (result === 'Timeout') {
+            this.exportTimeouterInfoToConfig();
+            return 'Time';
+        }
     }
     gameOver()
     {
@@ -541,8 +552,7 @@ class Game {
         }));
     }    
     getOpponent() {
-        const player = (this.state.players.white.id === this.conn.bot_id ? 
-                        this.state.players.black : this.state.players.white);
+        const player = (this.state.players.white.id === this.conn.bot_id ? this.state.players.black : this.state.players.white);
         return player;
     }
 }

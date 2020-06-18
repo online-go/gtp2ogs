@@ -12,6 +12,7 @@ const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnder
 
 exports.check_rejectnew = function() {};
 
+exports.timeouters_in_this_session = {};
 exports.banned_users = {};
 exports.banned_users_ranked = {};
 exports.banned_users_unranked = {};
@@ -117,6 +118,9 @@ exports.updateFromArgv = function() {
         .describe('timecontrolsranked', 'Time control(s) to accept for ranked games')
         .describe('timecontrolsunranked', 'Time control(s) to accept for unranked games')
         //         2B2) GENERIC GENERAL/RANKED/UNRANKED
+        .describe('bantimeouterssession', 'Listens to all game results that end during this session, and if a player is spotted to have timed out in any game, bans this player from all games until next session')
+        .describe('bantimeouterssessionranked', 'Listens to all game results that end during this session,, and if a player is spotted to have timed out in any game, bans this player from ranked games until next session')
+        .describe('bantimeouterssessionunranked', 'Listens to all game results that end during this session, and if a player is spotted to have timed out in any game, bans this player from unranked games until next session')
         .describe('proonly', 'For all games, only accept those from professionals')
         .describe('proonlyranked', 'For ranked games, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
@@ -231,7 +235,8 @@ exports.updateFromArgv = function() {
         throw `Please choose either --rankedonly or --unrankedonly, not both.`;
     }
 
-    const rankedUnrankedOptions = [{ name: "bans" },
+    const rankedUnrankedOptions = [{ name: "bantimeouterssession" },
+        { name: "bans" },
         { name: "boardsizes", default: "9,13,19" },
         { name: "komis", default: "automatic" },
         { name: "speeds", default: "all" },

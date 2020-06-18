@@ -347,6 +347,18 @@ class Connection {
     //
     checkChallengeUser(notification) {
 
+        if (config.timeouters_in_this_session[notification.user.id]) {
+            if (config.bantimeouterssession && !config.bantimeouterssessionranked && !config.bantimeouterssessionunranked) {
+                return getBannedTimeouterReject("bantimeouterssession", notification.user);
+            }
+            if (notification.ranked && config.bantimeouterssessionranked) {
+                return getBannedTimeouterReject("bantimeouterssessionranked", notification.user);
+            }
+            if (!notification.ranked && config.bantimeouterssessionunranked) {
+                return getBannedTimeouterReject("bantimeouterssessionunranked", notification.user);
+            }
+        }
+
         for (const uid of ["username", "id"]) {
             if (config.banned_users[notification.user[uid]]) {
                 return getRejectBanned(notification.user.username, "");
@@ -760,6 +772,17 @@ function rankToString(r) {
     const R = Math.floor(r);
     if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
+}
+
+function getBannedTimeouterReject(argName, notifUser) {
+    const ranked = argName.split("bantimeouterssession")[1];
+    const suggestionSentence = getSuggestionSentence(argName);
+
+    conn_log(`user ${notifUser.username} id ${notifUser.id} is banned due to a timeout in this session (${argName})`);
+    const msg = `You timed out recently. This bot will not accept any ${ranked}${ranked ? " " : ""}`
+                + `game from you until next bot restart, which is generally done every few days`
+                + `${suggestionSentence}.`;
+    return { reject: true, msg };
 }
 
 function getRejectBanned(username, ranked) {

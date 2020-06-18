@@ -418,6 +418,20 @@ Arguments in this category are not comma-separated, they are either
 booleans (enabled just from enabling the option, nothing else to specify,
 for example `--noautohandicap`), or single values (for example `--maxhandicap 9`)
 
+#### bantimeoutersuntilnextsession
+
+`--bantimeoutersuntilnextsession` Listens to all game results that end during this session
+, and if any player is spotted to have timed out, until next session they are banned
+from all games
+
+`--bantimeoutersuntilnextsessionranked` Listens to all game results that end during this session
+, and if any player is spotted to have timed out, until next session they are banned
+from ranked games
+
+`--bantimeoutersuntilnextsessionunranked` Listens to all game results that end during this session
+, and if any player is spotted to have timed out, until next session they are banned
+from unranked games
+
 #### proonly
 
 `--proonly` For all games, only accept those from professionals
