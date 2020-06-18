@@ -49,23 +49,14 @@ bot will timeout in just a few moves)
 ## F
 
 Currently, when handicap is automatic, ogs does not inform us
-what the handicap is before accepting the challange.
-Also, challange notifications do not contain our rank.
-With fakerank we can estimate the handicap based on the oponent
-ranking and our (fake) rank.
+what the handicap is before accepting the challenge.
 
-Example use case:
-`--fakerank 6d --maxhandicap 4` and user ranking `2k`:
-Expected handicap is 6d-2k = 8 ranks. 8 ranks > 4 max handicap
-=> Challenge rejected.
+We always get notification.handicap equal to `-1` if handicap is
+automatic, regardless of actual number of handicap stones in the game.
 
-**important note**: until the min/maxhandicap bypass issue
-is fixed (at the server level), it is recommended for botadmin
-(at the gtp2ogs level) to use the `--fakerank` option, or
-`--noautohandicapranked`, see for details:
-[#165](https://github.com/online-go/gtp2ogs/pull/165),
-[#207](https://github.com/online-go/gtp2ogs/pull/207),
-[#28](https://github.com/online-go/gtp2ogs/issues/28).
+That's why gtp2ogs automatically enables noautohandicap (or ranked unranked)
+option if minhandicap (or ranked unranked) is used and higher than -1
+(ex: `--minhandicap 0` or `--minhandicap 2` for example)
 
 ## G
 
