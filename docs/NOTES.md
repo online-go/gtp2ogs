@@ -140,4 +140,4 @@ If the abuser only plays unranked, it is still minimum number of ranked games th
 
 In case this user abuses our bot in unranked, no harm is done to our bot's rank so it should
 be fine, especially considering most abusers only play ranked, so you may use different ranked
-and unranked values, for example --mingamesplayedranked 20 --mingamesplayedunranked 5
+and unranked values, for example --mingamesplayedranked 10 --mingamesplayedunranked 5
