@@ -332,6 +332,116 @@ describe('Challenges', () => {
 
   });
 
+  describe('Ban Timeouters Session', () => {
+
+    //general
+    
+    it('reject timeouter if --bantimeouterssession is used', () => {
+      const notification = base_challenge();
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "bannedTimeouterName";
+      notification.user.id = 5;
+
+      config.bantimeouterssession = true;
+      config.timeouters_in_this_session["5"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'You timed out recently. This bot will not accept any game from you until next bot restart, which is generally done every few days.' }));
+    });
+
+    it('accept geniune user who is not a timeouter', () => {
+      const notification = base_challenge();
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "bannedTimeouterName";
+      notification.user.id = 5;
+
+      config.bantimeouterssession = true;
+      config.timeouters_in_this_session["6"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept geniune user who is not a timeouter and has its username equal to a banned id', () => {
+      const notification = base_challenge();
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "6";
+      notification.user.id = 5;
+
+      config.bantimeouterssession = true;
+      config.timeouters_in_this_session["6"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    // for ranked unranked we don't retest exhaustively, just making sure the ranked / unanked precedence is respected:
+    // ranked arg handles ranked games, unranked arg handles unranked games
+
+    // ranked
+
+    it('reject timeouter based on ranked arg and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "bannedTimeouterName";
+      notification.user.id = 5;
+
+      config.bantimeouterssessionranked = true;
+      config.timeouters_in_this_session["5"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'You timed out recently. This bot will not accept any ranked game from you until next bot restart, which is generally done every few days.\nYou may try unranked.' }));
+    });
+
+    it('accept timeouter based on ranked arg and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "bannedTimeouterName";
+      notification.user.id = 5;
+
+      config.bantimeouterssessionranked = true;
+      config.timeouters_in_this_session["5"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    // unranked 
+    it('reject timeouter based on unranked arg and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "bannedTimeouterName";
+      notification.user.id = 5;
+
+      config.bantimeouterssessionunranked = true;
+      config.timeouters_in_this_session["5"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'You timed out recently. This bot will not accept any unranked game from you until next bot restart, which is generally done every few days.\nYou may try ranked.' }));
+    });
+
+    it('accept timeouter based on unranked arg and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete required property notification.user.ratings
+      notification.user.username = "bannedTimeouterName";
+      notification.user.id = 5;
+
+      config.bantimeouterssessionunranked = true;
+      config.timeouters_in_this_session["5"] = 100000;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+  });
+
   describe('Min Max Rank', () => {
 
     it('reject user ranking too low', () => {
