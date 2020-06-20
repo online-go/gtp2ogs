@@ -796,7 +796,7 @@ function getMingamesplayedReject(notif, r_u) {
              + `${r_u_sentences.for_r_u_games} ${arg}, user is too new (${optionName})`);
     const reason = `It looks like your account is still new on OGS, this bot will be open to`
                 + ` your user account${r_u_sentences.for_r_u_games} after you play more games.`
-                + ` You need ${arg - notif} more ranked ${(arg - notif) === 1 ? 'game'  : 'games'}.`;
+                + ` You need ${arg - notif} more ranked ${(arg - notif) === 1 ? 'game'  : 'games'}${r_u_sentences.suggestion}.`;
     return getReject(reason);
 }
 
