@@ -153,7 +153,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from ranked games on this bot.\nUnranked is accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from ranked games on this bot.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
     });
 
     it('reject banned usernames for unranked games', () => {
@@ -165,7 +165,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from unranked games on this bot.\nRanked is accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from unranked games on this bot.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
     });
 
     it('accept unranked banned usernames users for ranked games', () => {
@@ -230,7 +230,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from ranked games on this bot.\nUnranked is accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from ranked games on this bot.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
     });
 
     it('reject banned ids for unranked games', () => {
@@ -242,7 +242,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from unranked games on this bot.\nRanked is accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from unranked games on this bot.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
     });
   
     it('accept unranked banned ids users for ranked games', () => {
@@ -301,7 +301,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for ranked games.\nUnranked is accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
     });
 
     it('reject user not professional for unranked games', () => {
@@ -311,7 +311,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for unranked games.\nRanked is accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for unranked games.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
     });
 
     it('accept user not professional for ranked games and game is unranked', () => {
@@ -462,7 +462,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games. You need 7 more ranked games.\nYou can change the ranked setting, or try again in unranked and it will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games. You need 7 more ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
 
     });
 
@@ -475,7 +475,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games. You need 7 more ranked games.\nYou can change the unranked setting, or try again in ranked and it will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games. You need 7 more ranked games.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
 
     });
 

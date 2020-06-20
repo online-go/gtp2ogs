@@ -346,10 +346,10 @@ exports.updateFromArgv = function() {
     // make sure we still have config.ranked and config.unranked and/or
     // we didn't accidentally erase them in our code
 
-    if (typeof config.ranked !== "object") {
+    if (typeof argv.ranked !== "object") {
         throw `Error: Config.ranked is not an object, cannot export config.`
     }
-    if (typeof config.unranked !== "object") {
+    if (typeof argv.unranked !== "object") {
         throw `Error: Config.unranked is not an object, cannot export config.`
     }
 

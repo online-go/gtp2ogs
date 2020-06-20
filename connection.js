@@ -359,7 +359,7 @@ class Connection {
         }
 
         const notifGamesPlayed = notification.user.ratings.overall.games_played;
-        if (config[r_u].mingamesplayed !== undefined && notifGamesPlayed < config[r_u].mingamesplayed) {
+        if (config[r_u].mingamesplayed !== undefined && !checkNotifIsInMinMaxArgRange(config[r_u].mingamesplayed, notifGamesPlayed, true)) {
             return getMingamesplayedReject(notifGamesPlayed, r_u);
         }
 
@@ -749,16 +749,37 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
     }
 }
 
-function checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif) {
-    return (config.ranked[optionName].banned[notif] === config.unranked[optionName].banned[notif]);
+function checkRankedArgSameRuleAsUnrankedArgBannedGroup(optionName, notif) {
+    const rankedArg = config.ranked[optionName].banned[notif];
+    const unrankedArg = config.unranked[optionName].banned[notif];
+
+    return (rankedArg === unrankedArg);
 }
 
-function checkRankedArgEqualsUnrankedArgGenericOption(optionName) {
-    return (config.ranked[optionName] === config.unranked[optionName]);
+function checkRankedArgSameRuleAsUnrankedArgGenericOption(optionName) {
+    const rankedArg = config.ranked[optionName];
+    const unrankedArg = config.unranked[optionName];
+
+    return (rankedArg === unrankedArg);
 }
 
-/*function checkRankedArgEqualsUnrankedArgAllowedGroup(optionName, notif) {
-    return (config.ranked[optionName].allowed[notif] === config.unranked[optionName].allowed[notif]);
+function checkRankedArgSameRuleAsUnrankedArgMinMaxOption(optionName, notif, isMin) {
+    const rankedArg = config.ranked[optionName];
+    const unrankedArg = config.unranked[optionName];
+
+    // undefined or other invalid values are tested false against any number comparison
+    if (!isFinite(rankedArg) || !isFinite(unrankedArg)) {
+        return false;
+    }
+
+    return (!checkNotifIsInMinMaxArgRange(rankedArg, notif, isMin) === !checkNotifIsInMinMaxArgRange(unrankedArg, notif, isMin));
+}
+
+/*function checkRankedArgSameRuleAsUnrankedArgAllowedGroup(optionName, notif) {
+    const rankedArg = config.ranked[optionName].allowed[notif];
+    const unrankedArg = config.unranked[optionName].allowed[notif];
+
+    return (rankedArg === unrankedArg);
 }*/
 
 function getReject(reason) {
@@ -767,16 +788,16 @@ function getReject(reason) {
 
 function getBannedGroupReject(optionName, notif, r_u) {
     const banType = optionName.split("banneduser")[1].slice(0, -1);
-    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif);
-    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+    const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgBannedGroup(optionName, notif);
+    const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
 
     conn_log(`user ${banType} ${notif} is banned${r_u_sentences.from_r_u_games}.`);
     return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot${r_u_sentences.alternative}.`);
 }
 
 function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
-    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgGenericOption(optionName);
-    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+    const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgGenericOption(optionName);
+    const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
     
     const suggestion = (rejectIsImmutable ? r_u_sentences.alternative : r_u_sentences.alternative);
 
@@ -787,8 +808,10 @@ function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
 
 function getMingamesplayedReject(notif, r_u) {
     const optionName = "mingamesplayed";
-    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgGenericOption(optionName);
-    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+    const isMin = true;
+
+    const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgMinMaxOption(optionName,  notif, isMin);
+    const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
 
     const arg = config[r_u].mingamesplayed;
 
@@ -796,7 +819,7 @@ function getMingamesplayedReject(notif, r_u) {
              + `${r_u_sentences.for_r_u_games} ${arg}, user is too new (${optionName})`);
     const reason = `It looks like your account is still new on OGS, this bot will be open to`
                 + ` your user account${r_u_sentences.for_r_u_games} after you play more games.`
-                + ` You need ${arg - notif} more ranked ${(arg - notif) === 1 ? 'game'  : 'games'}${r_u_sentences.suggestion}.`;
+                + ` You need ${arg - notif} more ranked ${(arg - notif) === 1 ? 'game'  : 'games'}${r_u_sentences.alternative}.`;
     return getReject(reason);
 }
 
@@ -863,7 +886,7 @@ function getAllowedGroupRejectResult(optionName, nameF, notif, notificationRanke
     if (config[unranked] && !notificationRanked && !config[`allow_all_${unranked_underscored}`] && !config[`allowed_${unranked_underscored}`][notif]) {
         return getAllowedGroupReject(unranked, nameF, notif);
     }
-}
+}*/
 
 function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     if (isMin) {
@@ -873,7 +896,7 @@ function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     }
 }
 
-function getMIBL(isMin) {
+/*function getMIBL(isMin) {
     if (isMin) {
         return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below" };
     } else {
