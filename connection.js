@@ -344,16 +344,16 @@ class Connection {
     }
     // Check challenge user is acceptable, else don't mislead user
     //
-    checkChallengeUser(notification, r_u, config_r_u) {
+    checkChallengeUser(notification, r_u) {
 
-        if (config_r_u.bannedusernames.banned[notification.user.username]) {
+        if (config[r_u].bannedusernames.banned[notification.user.username]) {
             return getBannedGroupReject("bannedusernames", notification.user.username, r_u);
         }
-        if (config_r_u.banneduserids.banned[notification.user.id]) {
+        if (config[r_u].banneduserids.banned[notification.user.id]) {
             return getBannedGroupReject("banneduserids", notification.user.id, r_u);
         }
 
-        if (!notification.user.professional) {
+        /*if (!notification.user.professional) {
             const beginning = "Games against non-professionals are";
             const ending    = "";
             const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
@@ -364,14 +364,14 @@ class Connection {
         if (resultMinGamesPlayed) return resultMinGamesPlayed;
 
         const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
-        if (resultRank) return resultRank;
+        if (resultRank) return resultRank;*/
 
         return { reject: false }; // OK !
 
     }
     // Check bot is available, else don't mislead user
     //
-    checkChallengeBot(notification) {
+    /*checkChallengeBot(notification) {
 
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
@@ -411,7 +411,7 @@ class Connection {
     }
     // Check some booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification, r_u, config_r_u) {
+    checkChallengeBooleans(notification, r_u) {
 
         if (config.rankedonly && !notification.ranked) {
             return getBooleansGeneralReject("Unranked games are");
@@ -432,7 +432,7 @@ class Connection {
     }
     // Check challenge allowed group options are allowed
     //
-    checkChallengeAllowedGroup(notification, r_u, config_r_u) {
+    checkChallengeAllowedGroup(notification, r_u) {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
@@ -466,7 +466,7 @@ class Connection {
 
     // Check challenge handicap is allowed
     //
-    checkChallengeHandicap(notification, r_u, config_r_u) {
+    checkChallengeHandicap(notification, r_u) {
 
         if (notification.handicap === -1) {
             const beginning = "-Automatic- handicap is";
@@ -483,7 +483,7 @@ class Connection {
     }
     // Check challenge time settings are allowed
     //
-    checkChallengeTimeSettings(notification, r_u, config_r_u) {
+    checkChallengeTimeSettings(notification, r_u) {
 
 
         // time control "none" has no maintime, no periods number, no periodtime, no need to check reject.
@@ -507,13 +507,12 @@ class Connection {
 
         return { reject: false };  // Ok !
 
-    }
+    }*/
     // Check challenge entirely, and return reject status + optional error msg.
     //
     checkChallenge(notification) {
 
         const r_u = get_r_u(notification.ranked);
-        const config_r_u = config[r_u];
 
         for (const test of [this.checkChallengeSanityChecks,
                            this.checkChallengeUser,
@@ -523,7 +522,7 @@ class Connection {
                            //this.checkChallengeHandicap,
                            //this.checkChallengeTimeSettings
                            ]) {
-            const result = test.bind(this)(notification, r_u, config_r_u);
+            const result = test.bind(this)(notification, r_u);
             if (result.reject) return result;
         }
 
@@ -733,16 +732,16 @@ function checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif) {
     return (config.ranked[optionName].banned[notif] === config.unranked[optionName].banned[notif]);
 }
 
-function checkRankedArgEqualsUnrankedArgGenericOption(optionName) {
+/*function checkRankedArgEqualsUnrankedArgGenericOption(optionName) {
     return (config.ranked[optionName] === config.unranked[optionName]);
 }
 
 function checkRankedArgEqualsUnrankedArgAllowedGroup(optionName, notif) {
     return (config.ranked[optionName].allowed[notif] === config.unranked[optionName].allowed[notif]);
-}
+}*/
 
 function getReject(reason) {
-    return { reject: true, reason};
+    return { reject: true, reason };
 }
 
 function getBannedGroupReject(optionName, notif, r_u) {
@@ -751,7 +750,7 @@ function getBannedGroupReject(optionName, notif, r_u) {
     const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
 
     conn_log(`user ${banType} ${notif} is banned${r_u_sentences.from_r_u_games}.`);
-    return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot.`);
+    return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot${r_u_sentences.alternative}.`);
 }
 
 function getCheckedKeyInObjReject(k) {
@@ -775,7 +774,7 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
     }
 }
 
-function getMinGamesPlayedRejectResult(notif, notificationRanked) {
+/*function getMinGamesPlayedRejectResult(notif, notificationRanked) {
     const argName = getCheckedArgName("mingamesplayed", notificationRanked);
     if (argName) {
         const arg = config[argName];
@@ -1071,5 +1070,6 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, noti
         }
     }
 }
+*/
 
 exports.Connection = Connection;

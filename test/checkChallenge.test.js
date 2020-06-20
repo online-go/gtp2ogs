@@ -100,64 +100,43 @@ describe('Challenges', () => {
   });
 
   describe('Bans', () => {
-    it('should reject banned users', () => {
-      const notification = base_challenge({ user: { username: 'bannedName', id: 5 } });
+    it('reject banned users for all games', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete required property notification.user.ranking
+      notification.user.username = "bannedName";
+      notification.user.id = 5;
+
+      config.ranked.bannedusernames.banned[notification.user.username] = true;
+      config.unranked.bannedusernames.banned[notification.user.username] = true;
+      
+      const result = conn.checkChallengeUser(notification, "ranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned on this bot.' }));
+    });
+    
+    it('reject banned users for ranked games', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete required property notification.user.ranking
+      notification.user.username = "bannedName";
+      notification.user.id = 5;
 
       config.ranked.bannedusernames.banned[notification.user.username] = true;
       
-      const result = conn.checkChallengeUser(notification);
+      const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, msg: 'You (bannedName) are not allowed to play games against this bot.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from ranked games on this bot.\nUnranked is accepted.' }));
     });
-    
-    it('should reject banned users by id', () => {
-      const notification = base_challenge({ user: { username: 'bannedName', id: 5 } });
+    it('reject banned users for unranked games', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete required property notification.user.ranking
+      notification.user.username = "bannedName";
+      notification.user.id = 5;
 
-      config.banned_users[notification.user.id] = true;
+      config.unranked.bannedusernames.banned[notification.user.username] = true;
       
-      const result = conn.checkChallengeUser(notification);
+      const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, msg: 'You (bannedName) are not allowed to play games against this bot.' }));
-    });
-      
-    it('should reject banned ranked users', () => {
-      const notification = base_challenge({ ranked: true, user: { username: 'bannedRankedName', id: 6 } });
-
-      config.banned_users_ranked[notification.user.username] = true;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'You (bannedRankedName) are not allowed to play ranked games against this bot.' }));
-    });
-      
-    it('should reject banned ranked users by id', () => {
-      const notification = base_challenge({ ranked: true, user: { username: 'bannedRankedName', id: 6 } });
-
-      config.banned_users_ranked[notification.user.id] = true;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'You (bannedRankedName) are not allowed to play ranked games against this bot.' }));
-    });
-    
-    it('should reject banned unranked users', () => {
-      const notification = base_challenge({ ranked: false, user: { username: 'bannedUnrankedName', id: 7 } });
-
-      config.banned_users_unranked[notification.user.username] = true;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
-    });
-    
-    it('should reject banned unranked users by id', () => {
-      const notification = base_challenge({ ranked: false, user: { username: 'bannedUnrankedName', id: 7 } });
-
-      config.banned_users_unranked[notification.user.id] = true;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from unranked games on this bot.\nRanked is accepted.' }));
     });
 
   });
