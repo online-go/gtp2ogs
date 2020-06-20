@@ -99,8 +99,8 @@ describe('Challenges', () => {
 
   });
 
-  describe('Banned users', () => {
-    it('reject banned usernames for all games', () => {
+  describe('Banned usernames', () => {
+    it('reject banned usernames for all games and game is ranked', () => {
       const notification = base_challenge({ ranked: true });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
       notification.user.username = "bannedName";
@@ -113,6 +113,19 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned on this bot.' }));
     });
     
+    it('reject banned usernames for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      notification.user.username = "bannedName";
+
+      config.ranked.bannedusernames.banned[notification.user.username] = true;
+      config.unranked.bannedusernames.banned[notification.user.username] = true;
+      
+      const result = conn.checkChallengeUser(notification, "unranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned on this bot.' }));
+    });
+
     it('reject banned usernames for ranked games', () => {
       const notification = base_challenge({ ranked: true });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
@@ -124,6 +137,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from ranked games on this bot.\nUnranked is accepted.' }));
     });
+
     it('reject banned usernames for unranked games', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
@@ -147,6 +161,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
     });
+
     it('accept ranked banned usernames for unranked games', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
@@ -158,8 +173,11 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
     });
+  });
 
-    it('reject banned ids for all games', () => {
+  describe('Banned userids', () => {
+
+    it('reject banned ids for all games and game is ranked', () => {
       const notification = base_challenge({ ranked: true });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
       notification.user.id = "bannedId";
@@ -168,6 +186,19 @@ describe('Challenges', () => {
       config.unranked.banneduserids.banned[notification.user.id] = true;
       
       const result = conn.checkChallengeUser(notification, "ranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned on this bot.' }));
+    });
+
+    it('reject banned ids for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      notification.user.id = "bannedId";
+  
+      config.ranked.banneduserids.banned[notification.user.id] = true;
+      config.unranked.banneduserids.banned[notification.user.id] = true;
+      
+      const result = conn.checkChallengeUser(notification, "unranked");
       
       assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned on this bot.' }));
     });
@@ -183,6 +214,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from ranked games on this bot.\nUnranked is accepted.' }));
     });
+
     it('reject banned ids for unranked games', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
@@ -206,6 +238,7 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: false }));
     });
+
     it('accept ranked banned ids for unranked games', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
@@ -220,10 +253,74 @@ describe('Challenges', () => {
 
   });
 
+  describe('User is professional', () => {
+    it('reject user not professional for all games and game is ranked', () => {
+      const notification = base_challenge({ professional: false, ranked: true });
+
+      config.ranked.proonly = true;
+      config.unranked.proonly = true;
+      
+      const result = conn.checkChallengeUser(notification, "ranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot.' }));
+    });
+
+    it('reject user not professional for all games and game is unranked', () => {
+      const notification = base_challenge({ professional: false, ranked: false });
+
+      config.ranked.proonly = true;
+      config.unranked.proonly = true;
+      
+      const result = conn.checkChallengeUser(notification, "unranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot.' }));
+    });
+    
+    it('reject user not professional for ranked games', () => {
+      const notification = base_challenge({ professional: false, ranked: true });
+
+      config.ranked.proonly = true;
+      
+      const result = conn.checkChallengeUser(notification, "ranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for ranked games.\nUnranked is accepted.' }));
+    });
+
+    it('reject user not professional for unranked games', () => {
+      const notification = base_challenge({ professional: false, ranked: false });
+
+      config.unranked.proonly = true;
+      
+      const result = conn.checkChallengeUser(notification, "unranked");
+      
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for unranked games.\nRanked is accepted.' }));
+    });
+
+    it('accept user not professional for ranked games and game is unranked', () => {
+      const notification = base_challenge({ professional: false, ranked: false });
+
+      config.ranked.proonly = true;
+      
+      const result = conn.checkChallengeUser(notification, "unranked");
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept user not professional for unranked games and game is ranked', () => {
+      const notification = base_challenge({ professional: false, ranked: true });
+
+      config.unranked.proonly = true;
+      
+      const result = conn.checkChallengeUser(notification, "ranked");
+      
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+  });
+
   describe('Min games played', () => {
 
-
-    it ('reject min games played too low (0)', () => {
+    it ('reject min games played too low (0) for all games', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete required property notification.user.ranking
       notification.user.ratings.overall.games_played = 0;
@@ -235,6 +332,7 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games.' }));
 
     });
+
     it ('reject min games played too low', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete required property notification.user.ranking

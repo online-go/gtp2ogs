@@ -29,7 +29,7 @@ function get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u, speed) {
             from_r_u_games: ` from ${r_u} games`,
             for_blc_r_u_games: ` for ${speed} ${r_u} games`,
             // if user can change the ranked/unranked value to be accepted
-            suggestion: `.\nOr ${r_u_opposite} is also accepted`,
+            suggestion: `.\nYou can change the ${r_u} setting, or try again in ${r_u_opposite} and it will be accepted`,
             // if user can never be accepted in ranked/ranked but can in unranked/ranked
             alternative: `.\n${prettier_r_u_opposite} is accepted`                                               
         });

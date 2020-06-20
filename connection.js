@@ -353,14 +353,12 @@ class Connection {
             return getBannedGroupReject("banneduserids", notification.user.id, r_u);
         }
 
-        /*if (!notification.user.professional) {
+        if (!notification.user.professional && config[r_u].proonly) {
             const beginning = "Games against non-professionals are";
-            const ending    = "";
-            const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
-            if (resultProonly) return resultProonly;
+            return getBooleansRUReject("proonly", r_u, beginning, true);
         }
 
-        const resultMinGamesPlayed = getMinGamesPlayedRejectResult(notification.user.ratings.overall.games_played, notification.ranked);
+        /*const resultMinGamesPlayed = getMinGamesPlayedRejectResult(notification.user.ratings.overall.games_played, notification.ranked);
         if (resultMinGamesPlayed) return resultMinGamesPlayed;
 
         const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
@@ -728,31 +726,6 @@ function rankToString(r) {
     else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
 }
 
-function checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif) {
-    return (config.ranked[optionName].banned[notif] === config.unranked[optionName].banned[notif]);
-}
-
-/*function checkRankedArgEqualsUnrankedArgGenericOption(optionName) {
-    return (config.ranked[optionName] === config.unranked[optionName]);
-}
-
-function checkRankedArgEqualsUnrankedArgAllowedGroup(optionName, notif) {
-    return (config.ranked[optionName].allowed[notif] === config.unranked[optionName].allowed[notif]);
-}*/
-
-function getReject(reason) {
-    return { reject: true, reason };
-}
-
-function getBannedGroupReject(optionName, notif, r_u) {
-    const banType = optionName.split("banneduser")[1].slice(0, -1);
-    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif);
-    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
-
-    conn_log(`user ${banType} ${notif} is banned${r_u_sentences.from_r_u_games}.`);
-    return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot${r_u_sentences.alternative}.`);
-}
-
 function getCheckedKeyInObjReject(k) {
     err(`Missing key ${k}.`);
     const msg = `Missing key ${k}, cannot check challenge, please contact my bot admin.`;
@@ -774,6 +747,42 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
     }
 }
 
+function checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif) {
+    return (config.ranked[optionName].banned[notif] === config.unranked[optionName].banned[notif]);
+}
+
+function checkRankedArgEqualsUnrankedArgGenericOption(optionName) {
+    return (config.ranked[optionName] === config.unranked[optionName]);
+}
+
+/*function checkRankedArgEqualsUnrankedArgAllowedGroup(optionName, notif) {
+    return (config.ranked[optionName].allowed[notif] === config.unranked[optionName].allowed[notif]);
+}*/
+
+function getReject(reason) {
+    return { reject: true, reason };
+}
+
+function getBannedGroupReject(optionName, notif, r_u) {
+    const banType = optionName.split("banneduser")[1].slice(0, -1);
+    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgBannedGroup(optionName, notif);
+    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+
+    conn_log(`user ${banType} ${notif} is banned${r_u_sentences.from_r_u_games}.`);
+    return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot${r_u_sentences.alternative}.`);
+}
+
+function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
+    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgGenericOption(optionName);
+    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+    
+    const suggestion = (rejectIsImmutable ? r_u_sentences.alternative : r_u_sentences.alternative);
+
+    const reason = `${beginning} not allowed on this bot${r_u_sentences.for_r_u_games}${suggestion}.`;
+    conn_log(`${beginning} not allowed on this bot${r_u_sentences.for_r_u_games} (${optionName})`);
+    return getReject(reason);
+}
+
 /*function getMinGamesPlayedRejectResult(notif, notificationRanked) {
     const argName = getCheckedArgName("mingamesplayed", notificationRanked);
     if (argName) {
@@ -791,13 +800,6 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
 
 function getBooleansGeneralReject(nameF) {
     const msg = `${nameF} not allowed on this bot.`;
-    conn_log(msg);
-    return { reject: true, msg };
-}
-
-function getBooleansGRUReject(argName, nameF, ending) {
-    const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-    const msg = `${nameF} not allowed on this bot${rankedUnranked}${ending}.`;
     conn_log(msg);
     return { reject: true, msg };
 }
