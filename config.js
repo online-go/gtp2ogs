@@ -412,9 +412,6 @@ function testBotCommandArgvIsValid(argv) {
         throw `Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element`
               + ` in your bot command which should be the AI executable (ex: lz.exe).`;
     }
-    if (argv.debug) {
-        console.log(`\nBot command was successfully parsed as an array: ${parsedBotCommand}`);
-    }
 }
 
 
