@@ -363,8 +363,8 @@ class Connection {
             return getMingamesplayedReject(notifGamesPlayed, r_u);
         }
 
-        /*const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
-        if (resultRank) return resultRank;*/
+        const resultRank = getMinMaxRankRejectResult(notification.user.ranking, r_u);
+        if (resultRank) return resultRank;
 
         return { reject: false }; // OK !
 
@@ -896,7 +896,7 @@ function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     }
 }
 
-/*function getMIBL(isMin) {
+function getMIBL(isMin) {
     if (isMin) {
         return { miniMaxi: "Minimum", incDec: "increase", belAbo: "below" };
     } else {
@@ -957,7 +957,7 @@ function getMinMaxRankRejectResult(notif, notificationRanked) {
     }
 }
 
-function getBooleansGRURejectResult(argName, notificationRanked, beginning, ending) {
+/*function getBooleansGRURejectResult(argName, notificationRanked, beginning, ending) {
     const [general, ranked, unranked] = getArgNamesGRU(argName);
 
     if (config[general] && !config[ranked] && !config[unranked]) {
@@ -971,22 +971,6 @@ function getBooleansGRURejectResult(argName, notificationRanked, beginning, endi
     }
 }
 
-function getCorrectedHandicapNotif(notifHandicap, notifUserRanking) {
-    if (notifHandicap === -1 && config.fakerank) {
-        // TODO: modify or remove fakerank code whenever server sends us automatic handicap
-        //       notification.handicap different from -1.
-        // adding a .floor: 5.9k (6k) vs 6.1k (7k) is 0.2 rank difference,
-        // but it is still a 6k vs 7k = 1 rank difference = 1 automatic handicap stone
-
-        const notifHandicapCorrected = Math.abs(Math.floor(notifUserRanking) - Math.floor(config.fakerank));
-        conn_log(`notification.handicap corrected from -1 (automatic) to ${notifHandicapCorrected}`
-                 +` (fakerank handicap stones estimation).`);
-        return notifHandicapCorrected;
-    } else {
-        return notifHandicap;
-    }
-}
-
 function getHandicapMiddleSentence(isMin, notif, arg) {
     if (!isMin && notif > 0 && arg === 0) {
         return " (no handicap games)";
@@ -995,16 +979,15 @@ function getHandicapMiddleSentence(isMin, notif, arg) {
     }
 }
 
-function getMinMaxHandicapRejectResult(notif, notifUserRanking, notificationRanked) {
-    const notifCorrected = getCorrectedHandicapNotif(notif, notifUserRanking);
+function getMinMaxHandicapRejectResult(notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
         const argName = getCheckedArgName(`${minMax}handicap`, notificationRanked);
         if (argName) {
             const arg = config[argName];
-            if (!checkNotifIsInMinMaxArgRange(arg, notifCorrected, isMin)) {
-                const middleSentence = getHandicapMiddleSentence(isMin, notifCorrected, arg);
-                return getMinMaxReject(arg, notifCorrected, isMin,
+            if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
+                const middleSentence = getHandicapMiddleSentence(isMin, notif, arg);
+                return getMinMaxReject(arg, notif, isMin,
                                        "", "", argName, "the number of handicap stones", middleSentence);
             }
         }

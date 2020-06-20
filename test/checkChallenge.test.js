@@ -120,7 +120,7 @@ describe('Challenges', () => {
   describe('Banned usernames', () => {
     it('reject banned usernames for all games and game is ranked', () => {
       const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.username = "bannedName";
 
       config.ranked.bannedusernames.banned[notification.user.username] = true;
@@ -133,7 +133,7 @@ describe('Challenges', () => {
     
     it('reject banned usernames for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.username = "bannedName";
 
       config.ranked.bannedusernames.banned[notification.user.username] = true;
@@ -146,7 +146,7 @@ describe('Challenges', () => {
 
     it('reject banned usernames for ranked games', () => {
       const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.username = "bannedName";
 
       config.ranked.bannedusernames.banned[notification.user.username] = true;
@@ -158,7 +158,7 @@ describe('Challenges', () => {
 
     it('reject banned usernames for unranked games', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.username = "bannedName";
 
       config.unranked.bannedusernames.banned[notification.user.username] = true;
@@ -170,7 +170,7 @@ describe('Challenges', () => {
 
     it('accept unranked banned usernames users for ranked games', () => {
       const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.username = "bannedName";
 
       config.unranked.bannedusernames.banned[notification.user.username] = true;
@@ -182,7 +182,7 @@ describe('Challenges', () => {
 
     it('accept ranked banned usernames for unranked games', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.username = "bannedName";
 
       config.ranked.bannedusernames.banned[notification.user.username] = true;
@@ -197,7 +197,7 @@ describe('Challenges', () => {
 
     it('reject banned ids for all games and game is ranked', () => {
       const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.id = "bannedId";
   
       config.ranked.banneduserids.banned[notification.user.id] = true;
@@ -210,7 +210,7 @@ describe('Challenges', () => {
 
     it('reject banned ids for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.id = "bannedId";
   
       config.ranked.banneduserids.banned[notification.user.id] = true;
@@ -223,7 +223,7 @@ describe('Challenges', () => {
     
     it('reject banned ids for ranked games', () => {
       const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.id = "bannedId";
   
       config.ranked.banneduserids.banned[notification.user.id] = true;
@@ -235,7 +235,7 @@ describe('Challenges', () => {
 
     it('reject banned ids for unranked games', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.id = "bannedId";
   
       config.unranked.banneduserids.banned[notification.user.id] = true;
@@ -247,7 +247,7 @@ describe('Challenges', () => {
   
     it('accept unranked banned ids users for ranked games', () => {
       const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.id = "bannedId";
   
       config.unranked.banneduserids.banned[notification.user.id] = true;
@@ -259,7 +259,7 @@ describe('Challenges', () => {
 
     it('accept ranked banned ids for unranked games', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking for the entire checkChallenge
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.id = "bannedId";
   
       config.ranked.banneduserids.banned[notification.user.id] = true;
@@ -514,7 +514,7 @@ describe('Challenges', () => {
     it('reject user ranking too low', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 10; // "20k"
 
       config.minrank = 17;
@@ -529,7 +529,7 @@ describe('Challenges', () => {
     it('accept user ranking edge min', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 17; // "13k"
 
       config.minrank = 17;
@@ -544,7 +544,7 @@ describe('Challenges', () => {
     it('accept user ranking between min and max', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 25; // "5k"
 
       config.minrank = 17;
@@ -558,7 +558,7 @@ describe('Challenges', () => {
 
     it('accept user ranking edge max', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 32; // "3d"
 
       config.minrank = 17;
@@ -573,7 +573,7 @@ describe('Challenges', () => {
     it('reject user ranking too high', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 35; // "6d"
 
       config.minrank = 17;
@@ -588,7 +588,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (9d+)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 41; // "12d"
 
       config.minrank = 17;
@@ -603,7 +603,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (pro)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 37; // "1p" (1p" = "8d")
 
       config.minrank = 17;
@@ -895,122 +895,6 @@ describe('Challenges', () => {
       const result = conn.checkChallengeAllowedGroup(notification);
       
       assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-  });
-
-  describe('Automatic Handicap and Fakerank', () => {
-
-    it('reject automatic handicap (-1) if noautohandicap and fakerank is not set', () => {
-
-      const notification = base_challenge({ ranked: false, handicap: -1 });
-
-      config.noautohandicap = true;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: '-Automatic- handicap is not allowed on this bot, please manually select the number of handicap stones in -custom- handicap.' }));
-
-    });
-
-    it('do not reject automatic handicap (-1) if fakerank is set', () => {
-
-      const notification = base_challenge({ ranked: false, handicap: -1 });
-
-      config.fakerank = 29; // "1k"
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('reject automatic handicap (-1) if both noautohandicap and fakerank are set', () => {
-
-      const notification = base_challenge({ ranked: false, handicap: -1 });
-
-      config.noautohandicap = true;
-      config.fakerank = 29; // "1k"
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: '-Automatic- handicap is not allowed on this bot, please manually select the number of handicap stones in -custom- handicap.' }));
-
-    });
-
-    it('reject automatic handicap (-1) if fakerank is set but estimated handicap stones are too low', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
-
-      config.fakerank = 29; // "1k"
-      // "1d" - "1k" = 30 - 29 = 1 automatic handicap stones
-      config.minhandicap = 2;
-      config.maxhandicap = 4;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'Minimum number of handicap stones is 2, please increase the number of handicap stones.' }));
-
-    });
-
-    it('accept automatic handicap (-1) if fakerank is set and estimated handicap stones are edge min', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 31 }, handicap: -1 }); // "2d"
-
-      config.fakerank = 29; // "1k"
-      // "2d" - "1k" = 31 - 29 = 2 automatic handicap stones
-      config.minhandicap = 2;
-      config.maxhandicap = 4;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept automatic handicap (-1) if fakerank is set and estimated handicap stones are between min and max', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 26 }, handicap: -1 }); // "4k"
-
-      config.fakerank = 29; // "1k"
-      // "4k" - "1k" = 26 - 29 = 3 automatic handicap stones
-      config.minhandicap = 2;
-      config.maxhandicap = 4;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept automatic handicap (-1) if fakerank is set and estimated handicap stones are edge max', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 25 }, handicap: -1 }); // "5k"
-
-      config.fakerank = 29; // "1k"
-      // "5k" - "1k" = 25 - 29 = 4 automatic handicap stones
-      config.minhandicap = 2;
-      config.maxhandicap = 4;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('reject automatic handicap (-1) if fakerank is set but estimated handicap stones are too high', () => {
-
-      const notification = base_challenge({ ranked: false, user: { ranking: 30 }, handicap: -1 }); // "1d"
-
-      config.fakerank = 20; // "10k"
-      // "10k" - "1d" = 30 - 20 = 10 automatic handicap stones
-      config.minhandicap = 2;
-      config.maxhandicap = 4;
-      
-      const result = conn.checkChallengeHandicap(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'Maximum number of handicap stones is 4, please reduce the number of handicap stones.' }));
 
     });
 

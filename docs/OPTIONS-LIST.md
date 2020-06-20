@@ -267,15 +267,6 @@ connected games per user against this bot
 
 `--unrankedonly`  Only accept unranked matches
 
-### fakerank
-
-`--fakerank` Fake bot ranking to calculate automatic handicap
-stones number in autohandicap (-1) based on rankDifference between
-fakerank and user ranking, to fix the bypass minhandicap maxhandicap
-issue if handicap is -automatic
-
-see [notes F](/docs/NOTES.md#f) for details
-
 ## 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
 
 Options in this category allow us to accept or reject
@@ -463,6 +454,8 @@ come with the option -pauses on weekends- (specific to correspondence games)
 `--noautohandicapunranked` Do not allow handicap to be set to
 -automatic- for unranked games
 
+**important note**: see [notes F](/docs/NOTES.md#f) for details
+
 #### min/max handicap
 
 min:
@@ -481,7 +474,7 @@ max:
 
 `--maxhandicapunranked` Maximum handicap to accept for unranked games
 
-**important note**: see [fakerank](#fakerank).
+**important note**: see [notes F](/docs/NOTES.md#f) for details
 
 #### mingamesplayed
 

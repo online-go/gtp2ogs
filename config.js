@@ -63,7 +63,6 @@ exports.updateFromArgv = function() {
         .default('maxconnectedgamesperuser', 3)
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
-        .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
         //     2A) ALL/RANKED/UNRANKED
         .describe('bannedusernames', 'Comma separated list of user names who are banned')
@@ -310,24 +309,13 @@ exports.updateFromArgv = function() {
     // Setting minimum handicap higher than -1 has the consequence of disabling
     // automatic handicap (notification.handicap === -1).
     //
-    // Except if --fakerank is used: then we leave that choice to bot admin:
-    // - either he wants to accept automatic handicap (-1) and use fakerank to
-    //   calculate automatic handicap stones based on rank difference between
-    //   bot's fakerank and user's ranking.
-    // - or as was done previously bot admin can use the noautohandicap options
-    //   to reject automatic handicap challenges
-    //
-    if (argv.fakerank) {
-        exports.fakerank = parseRank(argv.fakerank);
-    } else {
-        // exports.minhandicap.ranked could be argv.minhandicap or argv.minhandicapranked or undefined,
-        // so we test against exports, not against argv.
-        if (exports.ranked.minhandicap !== undefined && exports.ranked.minhandicap > -1) {
-            exports.ranked.noautohandicap = true;
-        }
-        if (exports.unranked.minhandicap !== undefined && exports.unranked.minhandicap > -1) {
-            exports.unranked.noautohandicap = true;
-        }
+    // exports.minhandicap.ranked could be argv.minhandicap or argv.minhandicapranked or undefined,
+    // so we test against exports, not against argv.
+    if (exports.ranked.minhandicap !== undefined && exports.ranked.minhandicap > -1) {
+        exports.ranked.noautohandicap = true;
+    }
+    if (exports.unranked.minhandicap !== undefined && exports.unranked.minhandicap > -1) {
+        exports.unranked.noautohandicap = true;
     }
 
     if (argv.rejectnew) {
@@ -384,6 +372,7 @@ function getBLCString(optionName, rankedUnranked) {
 function testDroppedArgv(argv) {
     const droppedArgv = [
          [["botid", "bot", "id"], "username"],
+         [["fakerank"], undefined],
          [["minrankedhandicap"], "minhandicapranked"],
          [["minunrankedhandicap"], "minhandicapunranked"],
          [["maxrankedhandicap"], "maxhandicapranked"],
@@ -429,8 +418,8 @@ function testDroppedArgv(argv) {
     for (const [oldNames, newName] of droppedArgv) {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
-                console.log(`Dropped: --${oldName} is no longer `
-                            + `supported, use --${newName} instead.`);
+                if (newName) console.log(`Dropped: --${oldName} is no longer supported, use --${newName} instead.`);
+                else console.log(`Dropped: --${oldName} is no longer supported.`);
             }
         }
     }
