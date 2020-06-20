@@ -346,11 +346,12 @@ class Connection {
     //
     checkChallengeUser(notification, r_u, config_r_u) {
 
-        const resultBannedUsernames = getBannedGroupRejectResult("bannedusernames", notification.user.username, r_u, config_r_u);
-        if (resultBannedUsernames) return resultBannedUsernames;
-
-        const resultBannedUserIds = getBannedGroupRejectResult("banneduserids", notification.user.id, r_u, config_r_u);
-        if (resultBannedUserIds) return resultBannedUserIds;
+        if (config_r_u.bannedusernames.banned[notification.user.username]) {
+            return getBannedGroupReject("bannedusernames", notification.user.username, r_u);
+        }
+        if (config_r_u.banneduserids.banned[notification.user.id]) {
+            return getBannedGroupReject("banneduserids", notification.user.id, r_u);
+        }
 
         if (!notification.user.professional) {
             const beginning = "Games against non-professionals are";
@@ -516,11 +517,12 @@ class Connection {
 
         for (const test of [this.checkChallengeSanityChecks,
                            this.checkChallengeUser,
-                           this.checkChallengeBot,
-                           this.checkChallengeBooleans,
-                           this.checkChallengeAllowedGroup,
-                           this.checkChallengeHandicap,
-                           this.checkChallengeTimeSettings]) {
+                           //this.checkChallengeBot,
+                           //this.checkChallengeBooleans,
+                           //this.checkChallengeAllowedGroup,
+                           //this.checkChallengeHandicap,
+                           //this.checkChallengeTimeSettings
+                           ]) {
             const result = test.bind(this)(notification, r_u, config_r_u);
             if (result.reject) return result;
         }
@@ -739,10 +741,6 @@ function checkRankedArgEqualsUnrankedArgAllowedGroup(optionName, notif) {
     return (config.ranked[optionName].allowed[notif] === config.unranked[optionName].allowed[notif]);
 }
 
-function get_r_u_or_all_sentences(rankedArgEqualsUnrankedArg, r_u_sentences) {
-    return (rankedArgEqualsUnrankedArg ? r_u_sentences.all : r_u_sentences.r_or_u);
-}
-
 function getReject(reason) {
     return { reject: true, reason};
 }
@@ -754,12 +752,6 @@ function getBannedGroupReject(optionName, notif, r_u) {
 
     conn_log(`user ${banType} ${notif} is banned${r_u_sentences.from_r_u_games}.`);
     return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot.`);
-}
-
-function getBannedGroupRejectResult(optionName, notif, r_u, config_r_u) {
-    if (config_r_u[optionName].banned[notif]) {
-        return getBannedGroupReject(optionName, notif, r_u);
-    }
 }
 
 function getCheckedKeyInObjReject(k) {

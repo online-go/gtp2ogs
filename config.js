@@ -346,7 +346,7 @@ exports.updateFromArgv = function() {
 
 function getInitialConfigRankedUnranked() {
     return { bannedusernames: { banned: {} },
-             bannedids:       { banned: {} },
+             banneduserids:   { banned: {} },
              boardsizes:      { allow_all: false, allowed: {} },
              komis:           { allow_all: false, allowed: {} },
              speeds:          { allow_all: false, allowed: {} },
