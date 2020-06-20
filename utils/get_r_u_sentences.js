@@ -27,7 +27,7 @@ function get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u, speed) {
             from_r_u_games: ` from ${r_u} games`,
             for_blc_r_u_games: ` for ${speed} ${r_u} games`,
             suggestion: `.\nYou can change the ${r_u} setting, or use the same setting in an ${r_u_opposite} and it will be accepted`,
-            alternative: `.\nYou cannot change the ${r_u} setting, but the same setting in an ${r_u_opposite} unranked game will be accepted`                                               
+            alternative: `.\nYou cannot change the ${r_u} setting, but the same setting in an ${r_u_opposite} game will be accepted`                                               
         });
     }
 }

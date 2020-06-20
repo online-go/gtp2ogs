@@ -363,8 +363,11 @@ class Connection {
             return getMingamesplayedReject(notifGamesPlayed, r_u);
         }
 
-        const resultRank = getMinMaxRankRejectResult(notification.user.ranking, r_u);
-        if (resultRank) return resultRank;
+        const resultMinRank = getMinMaxRankRejectResult("minrank", notification.user.ranking, r_u);
+        if (resultMinRank) return resultMinRank;
+
+        const resultMaxRank = getMinMaxRankRejectResult("maxrank", notification.user.ranking, r_u);
+        if (resultMaxRank) return resultMaxRank;
 
         return { reject: false }; // OK !
 
@@ -724,8 +727,9 @@ function err(str) {
 
 function rankToString(r) {
     const R = Math.floor(r);
-    if (R >= 30)  return `${R - 30 + 1}d`; // R >= 30: 1 dan or stronger
-    else          return `${30 - R}k`;     // R < 30:  1 kyu or weaker
+    if (R >= 37) return `${R - 30 + 1}d/${R - 37 + 1}p`; // (8 dan / 1 pro) or stronger
+    if (R >= 30) return `${R - 30 + 1}d`; // 1 dan to 7d
+    else         return `${30 - R}k`;     // 1 kyu or weaker
 }
 
 function getCheckedKeyInObjReject(k) {
@@ -888,6 +892,10 @@ function getAllowedGroupRejectResult(optionName, nameF, notif, notificationRanke
     }
 }*/
 
+function checkIsMin(optionName) {
+    return (optionName.slice(0,3) === "min");
+}
+
 function checkNotifIsInMinMaxArgRange(arg, notif, isMin) {
     if (isMin) {
         return notif >= arg;
@@ -908,7 +916,7 @@ function getFixedFirstNameS(nameS, timeControlSentence) {
     if (timeControlSentence.includes("canadian")) {
         return nameS;
     }
-    if (nameS.includes("the")) {
+    if (nameS.includes("the ")) {
         return nameS.split(" ")
                     .filter( (e) => (e !== "the" ) )
                     .join(" ");
@@ -917,42 +925,41 @@ function getFixedFirstNameS(nameS, timeControlSentence) {
     }
 }
 
-function getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString) {
+function getMinMaxGenericMsg(MIBL, nameS, for_r_u_games, timeControlSentence, argToString) {
     const fixedFirstNameS = getFixedFirstNameS(nameS, timeControlSentence);
 
-    return `${MIBL.miniMaxi} ${fixedFirstNameS}${forRankedUnranked}${timeControlSentence} is ${argToString}`;
+    return `${MIBL.miniMaxi} ${fixedFirstNameS}${for_r_u_games}${timeControlSentence} is ${argToString}`;
 }
 
-function getMinMaxReject(argToString, notifToString, isMin,
-                         speed, timeControlSentence, argName, nameS, middleSentence) {
+function getMinMaxReject(argToString, notifToString, notif, isMin, r_u,
+                         timeControlSentence, optionName, nameS, middleSentence) {
+    const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgMinMaxOption(optionName, notif, isMin);
+    const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
+
     const MIBL = getMIBL(isMin);
 
-    const forRankedUnranked = getForFromBLCRankedUnrankedGames("for ", speed, argName, "");
-    const endingSentence = getSuggestionSentence(argName);
+    conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${r_u_sentences.for_r_u_games}${timeControlSentence} ${argToString} (${optionName}).`);
 
-    conn_log(`${notifToString} is ${MIBL.belAbo} ${MIBL.miniMaxi} ${nameS}${forRankedUnranked}${timeControlSentence} ${argToString} (${argName}).`);
-
-    let msg = getMinMaxGenericMsg(MIBL, nameS, forRankedUnranked, timeControlSentence, argToString);
-    const optionNameIsRank = (argName.includes("minrank") || argName.includes("maxrank"));
+    let reason = getMinMaxGenericMsg(MIBL, nameS, r_u_sentences.for_r_u_games, timeControlSentence, argToString);
+    const optionNameIsRank = (optionName.slice(3) === "rank");
     if (optionNameIsRank) {
-        msg += ".";
+        reason += `${r_u_sentences.alternative}.`;
     } else {
-        msg += `, please ${MIBL.incDec} ${nameS}${middleSentence}${endingSentence}.`;
+        reason += `, please ${MIBL.incDec} ${nameS}${middleSentence}${r_u_sentences.suggestion}.`;
     }
 
-    return { reject : true, msg };
+    return getReject(reason);
 }
 
-function getMinMaxRankRejectResult(notif, notificationRanked) {
-    for (const minMax of ["min", "max"]) {
-        const isMin = (minMax === "min");
-        const argName = getCheckedArgName(`${minMax}rank`, notificationRanked);
-        if (argName) {
-            const arg = config[argName];
-            if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                return getMinMaxReject(rankToString(arg), rankToString(notif), isMin,
-                                       "", "", argName, "rank", "");
-            }
+function getMinMaxRankRejectResult(optionName, notif, r_u) {
+    const isMin = checkIsMin(optionName);
+    const arg = config[r_u][optionName];
+
+    // check undefined specifically to avoid testing false valid args such as 0 to test against notif
+    if (arg !== undefined) {
+        if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
+            return getMinMaxReject(rankToString(arg), rankToString(notif), notif, isMin, r_u,
+                                   "", optionName, "rank", "");
         }
     }
 }
@@ -982,13 +989,13 @@ function getHandicapMiddleSentence(isMin, notif, arg) {
 function getMinMaxHandicapRejectResult(notif, notificationRanked) {
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const argName = getCheckedArgName(`${minMax}handicap`, notificationRanked);
+
         if (argName) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
                 const middleSentence = getHandicapMiddleSentence(isMin, notif, arg);
-                return getMinMaxReject(arg, notif, isMin,
-                                       "", "", argName, "the number of handicap stones", middleSentence);
+                return getMinMaxReject(arg, notif, isMin, r_u
+                                       "", argName, "the number of handicap stones", middleSentence);
             }
         }
     }
@@ -1006,12 +1013,12 @@ function getMinMaxPeriodsRejectResult(periodsName, notificationT, notificationRa
     const notif         = notificationT.periods;
     for (const minMax of ["min", "max"]) {
         const isMin = (minMax === "min");
-        const argName = getCheckedArgName(`${minMax}periods${blitzLiveCorr}`, notificationRanked);
+
         if (argName) {
             const arg = config[argName];
             if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                return getMinMaxReject(arg, notif, isMin,
-                                       `${notificationT.speed} `, ` in ${notificationT.time_control}`, argName, "the number of periods", "");
+                return getMinMaxReject(arg, notif, isMin, r_u,
+                                       ` in ${notificationT.time_control}`, argName, "the number of periods", "");
             }
         }
     }
@@ -1057,7 +1064,7 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, noti
     if (timecontrolObjs) {
         for (const minMax of ["min", "max"]) {
             const isMin = (minMax === "min");
-            const argName = getCheckedArgName(`${minMax}${mainPeriodTime}${blitzLiveCorr}`, notificationRanked);
+
             if (argName) {
                 let arg = config[argName];
                 let middleSentence = "";
@@ -1072,8 +1079,8 @@ function getMinMaxMainPeriodTimeRejectResult(mainPeriodTime, notificationT, noti
                 for (const timecontrolObj of timecontrolObjs) {
                     const notif = timecontrolObj.notif;
                     if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-                        return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin,
-                                               `${notificationT.speed} `, ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
+                        return getMinMaxReject(timespanToDisplayString(arg), timespanToDisplayString(notif), isMin, r_u,
+                                               ` in ${notificationT.time_control}`, argName, timecontrolObj.name, middleSentence);
                     }
                 }
             }

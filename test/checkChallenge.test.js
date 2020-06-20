@@ -153,7 +153,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from ranked games on this bot.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from ranked games on this bot.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
     });
 
     it('reject banned usernames for unranked games', () => {
@@ -165,7 +165,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from unranked games on this bot.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user name bannedName) are banned from unranked games on this bot.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
     });
 
     it('accept unranked banned usernames users for ranked games', () => {
@@ -230,7 +230,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from ranked games on this bot.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from ranked games on this bot.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
     });
 
     it('reject banned ids for unranked games', () => {
@@ -242,7 +242,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from unranked games on this bot.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'You (user id bannedId) are banned from unranked games on this bot.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
     });
   
     it('accept unranked banned ids users for ranked games', () => {
@@ -301,7 +301,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "ranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
     });
 
     it('reject user not professional for unranked games', () => {
@@ -311,7 +311,7 @@ describe('Challenges', () => {
       
       const result = conn.checkChallengeUser(notification, "unranked");
       
-      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for unranked games.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Games against non-professionals are not allowed on this bot for unranked games.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
     });
 
     it('accept user not professional for ranked games and game is unranked', () => {
@@ -462,7 +462,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games. You need 7 more ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games. You need 7 more ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
 
     });
 
@@ -475,7 +475,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeUser(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games. You need 7 more ranked games.\nYou cannot change the unranked setting, but the same setting in an ranked unranked game will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games. You need 7 more ranked games.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
 
     });
 
@@ -509,7 +509,235 @@ describe('Challenges', () => {
 
   });
 
-  describe('Min Max Rank', () => {
+  describe('Min rank', () => {
+
+    it ('reject min rank too low (0) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 0; // "30k"
+
+      config.ranked.minrank = 17; // "13k"
+      config.unranked.minrank = 17; // "13k"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank is 13k.' }));
+
+    });
+
+    it ('reject min rank too low (0) for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 0; // "30k"
+
+      config.ranked.minrank = 17; // "13k"
+      config.unranked.minrank = 17; // "13k"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank is 13k.' }));
+
+    });
+
+    it ('reject min rank too low for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 29; // "1k"
+
+      config.ranked.minrank = 30; // "1d" or "0k"
+      config.unranked.minrank = 30; // "1d" or "0k"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank is 1d.' }));
+
+    });
+
+    it ('reject min rank too low for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 5; // "25k"
+
+      config.ranked.minrank = 30; // 1d" or "0k"
+      config.unranked.minrank = 30; // "1d" or "0k"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank is 1d.' }));
+
+    });
+
+    it ('reject min rank too low (8d+/pro) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 36; // "7d"
+
+      config.ranked.minrank = 37; // "1p" or "8d"
+      config.unranked.minrank = 37; // "1p" or "8d"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank is 8d/1p.' }));
+
+    });
+
+    it ('reject min rank too low (8d+/pro) for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 36; // "7d"
+
+      config.ranked.minrank = 37; // "1p" or "8d"
+      config.unranked.minrank = 37; // "1p" or "8d"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank is 8d/1p.' }));
+
+    });
+
+    it ('accept min rank edge min for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+
+      config.ranked.minrank = 17; // "13k"
+      config.unranked.minrank = 17; // "13k"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept min rank edge min for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+
+      config.ranked.minrank = 17; // "13k"
+      config.unranked.minrank = 17; // "13k"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept min rank high enough for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 18; // "12k"
+
+      config.ranked.minrank = 17; // "13k"
+      config.unranked.minrank = 17; // "13k"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept min rank high enough for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 18; // "12k"
+
+      config.ranked.minrank = 17; // "13k"
+      config.unranked.minrank = 17; // "13k"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept min rank high enough (8d+/pro) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 38; // "9d/2p"
+
+      config.ranked.minrank = 37; // "1p" or "8d"
+      config.unranked.minrank = 37; // "1p" or "8d"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept min rank high enough (8d+/pro) for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 38; // "9d/2p"
+
+      config.ranked.minrank = 37; // "8d/1p"
+      config.unranked.minrank = 37; // "8d/1p"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    // for ranked unranked specific args, do not exhaustively retest everything,
+    // just making sure the ranked unranked args are specifically tested
+
+    it ('reject min rank too low for ranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 5; // "25k"
+
+      config.ranked.minrank = 32; // "3d"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank for ranked games is 3d.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
+
+    });
+
+    it ('reject min rank too low for unranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 5; // "25k"
+
+      config.unranked.minrank = 30; // "1d"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Minimum rank for unranked games is 1d.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
+
+    });
+
+    it ('accept min rank too low for unranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+
+      config.ranked.minrank = 10; // "20k"
+      config.unranked.minrank = 25; // "5k"
+
+      const result = conn.checkChallengeUser(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept min rank too low for ranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+
+      config.ranked.minrank = 25; // "5k"
+      config.unranked.minrank = 10; // "20k"
+
+      const result = conn.checkChallengeUser(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+  });
+
+  describe('Max Rank', () => {
 
     it('reject user ranking too low', () => {
 
