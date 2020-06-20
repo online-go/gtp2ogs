@@ -488,31 +488,19 @@ max:
 This option can be useful to avoid spammers and bot abusers, who generally
 create new accounts to repeat their abuse.
 
-`games played` is the number of RANKED games played by a user.
+If you want to use this option, a reasonable value seems to be something
+between 5 and 10.
 
-If a user plays more than specified min number of ranked games (ex: minimum 10),
-and still did not get banned, this user is more likely to be reliable
+see [notes I](/docs/NOTES.md#i) for details
 
-Or, if this user has a bad intent, he or she will get bored of having to playing minimum 10
-fair ranked games before being able to abuse the bot again.
-
-If the abuser only plays unranked, it is still minimum number of ranked games that
-is tested, because playing 10 fake unranked games would be too easy.
-
-In case he or she abuses our bot in unranked, no harm is done to our bot's rank so it should be
-fine, especially considering most abusers only play ranked, so you may use different ranked
-and unranked values, for example `--mingamesplayedranked 20 --mingamesplayedunranked 5`
-
-A reasonable value seems to be something between 5 and 20.
-
-  `--mingamesplayed` Do not accept challenges from players who played less
+`--mingamesplayed` Do not accept challenges from players who played less
 ranked games than specified minimum number (too new players)
 
-  `--mingamesplayedranked` Do not accept ranked challenges from players who
-played less ranked games than specified minimum number (too new players)
+--mingamesplayedranked Do not accept ranked challenges from players
+who played less ranked games than specified minimum number (too new players)
 
-  `--mingamesplayed` Do not accept unranked challenges from players who
-played less ranked games than specified minimum number (too new players)
+--mingamesplayedunranked Do not accept unranked challenges from players
+who played less ranked games than specified minimum number (too new players)
 
 #### min/max rank
 

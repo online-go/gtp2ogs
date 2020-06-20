@@ -358,10 +358,12 @@ class Connection {
             return getBooleansRUReject("proonly", r_u, beginning, true);
         }
 
-        /*const resultMinGamesPlayed = getMinGamesPlayedRejectResult(notification.user.ratings.overall.games_played, notification.ranked);
-        if (resultMinGamesPlayed) return resultMinGamesPlayed;
+        const notifGamesPlayed = notification.user.ratings.overall.games_played;
+        if (config[r_u].mingamesplayed !== undefined && notifGamesPlayed < config[r_u].mingamesplayed) {
+            return getMingamesplayedReject(notifGamesPlayed, r_u);
+        }
 
-        const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
+        /*const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
         if (resultRank) return resultRank;*/
 
         return { reject: false }; // OK !
@@ -783,22 +785,22 @@ function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
     return getReject(reason);
 }
 
-/*function getMinGamesPlayedRejectResult(notif, notificationRanked) {
-    const argName = getCheckedArgName("mingamesplayed", notificationRanked);
-    if (argName) {
-        const arg = config[argName];
-        if (notif < arg) {
-            const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-            conn_log(`Number of ranked games played by this user is ${notif}, it is below minimum`
-                     + `${forRankedUnrankedGames} ${arg}, user is too new (${argName})`);
-            const msg = `It looks like your account is still new on OGS, this bot will be open to`
-                        + ` your user account${forRankedUnrankedGames} after you play more games.`;
-            return { reject: true, msg };
-        }
-    }
+function getMingamesplayedReject(notif, r_u) {
+    const optionName = "mingamesplayed";
+    const rankedArgEqualsUnrankedArg = checkRankedArgEqualsUnrankedArgGenericOption(optionName);
+    const r_u_sentences = get_r_u_sentences(rankedArgEqualsUnrankedArg, r_u);
+
+    const arg = config[r_u].mingamesplayed;
+
+    conn_log(`Number of ranked games played by this user is ${notif}, it is below minimum`
+             + `${r_u_sentences.for_r_u_games} ${arg}, user is too new (${optionName})`);
+    const reason = `It looks like your account is still new on OGS, this bot will be open to`
+                + ` your user account${r_u_sentences.for_r_u_games} after you play more games.`
+                + ` You need ${arg - notif} more ranked ${(arg - notif) === 1 ? 'game'  : 'games'}.`;
+    return getReject(reason);
 }
 
-function getBooleansGeneralReject(nameF) {
+/*function getBooleansNonRUReject(nameF) {
     const msg = `${nameF} not allowed on this bot.`;
     conn_log(msg);
     return { reject: true, msg };
