@@ -4,7 +4,6 @@
 /* eslint-disable no-console */
 
 const fs = require('fs');
-const { config } = require('process');
 
 exports.check_rejectnew = function() {};
 
