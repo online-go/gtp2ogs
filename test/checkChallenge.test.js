@@ -600,11 +600,11 @@ describe('Challenges', () => {
     it ('reject min rank too low (pro) for all games and game is ranked', () => {
       const notification = base_challenge({ ranked: true });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 37; // "1p"
+      notification.user.ranking = 37; // "1p/8d"
       notification.user.professional = true;
 
-      config.ranked.minrank = 38; // "2p"
-      config.unranked.minrank = 38; // "2p"
+      config.ranked.minrank = 38; // "2p/9d"
+      config.unranked.minrank = 38; // "2p/9d"
 
       const result = conn.checkChallengeUser(notification, "ranked");
 
@@ -615,11 +615,11 @@ describe('Challenges', () => {
     it ('reject min rank too low (pro) for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 37; // "1p"
+      notification.user.ranking = 37; // "1p/8d"
       notification.user.professional = true;
 
-      config.ranked.minrank = 38; // "2p"
-      config.unranked.minrank = 38; // "2p"
+      config.ranked.minrank = 38; // "2p/9d"
+      config.unranked.minrank = 38; // "2p/9d"
 
       const result = conn.checkChallengeUser(notification, "unranked");
 
@@ -716,11 +716,11 @@ describe('Challenges', () => {
     it ('accept min rank high enough (pro) for all games and game is ranked', () => {
       const notification = base_challenge({ ranked: true });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 38; // "2p"
+      notification.user.ranking = 38; // "2p/9d"
       notification.user.professional = true;
   
-      config.ranked.minrank = 37; // "1p"
-      config.unranked.minrank = 37; // "1p"
+      config.ranked.minrank = 37; // "1p/8d"
+      config.unranked.minrank = 37; // "1p/8d"
 
       const result = conn.checkChallengeUser(notification, "ranked");
 
@@ -731,11 +731,11 @@ describe('Challenges', () => {
     it ('accept min rank high enough (pro) for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 38; // "2p"
+      notification.user.ranking = 38; // "2p/9d"
       notification.user.professional = true;
   
-      config.ranked.minrank = 37; // "1p"
-      config.unranked.minrank = 37; // "1p"
+      config.ranked.minrank = 37; // "1p/8d"
+      config.unranked.minrank = 37; // "1p/8d"
 
       const result = conn.checkChallengeUser(notification, "unranked");
 
@@ -803,109 +803,295 @@ describe('Challenges', () => {
 
   describe('Max Rank', () => {
 
-    it('reject user ranking too low', () => {
-
+    it ('reject max rank too high (0) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 0; // "30k"
+    
+      config.ranked.maxrank = -1; // "31k"
+      config.unranked.maxrank = -1; // "31k"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is 31k.' }));
+    
+    });
+    
+    it ('reject max rank too high (0) for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 10; // "20k"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'Minimum rank is 13k.' }));
-
+      notification.user.ranking = 0; // "30k"
+    
+      config.ranked.maxrank = -1; // "31k"
+      config.unranked.maxrank = -1; // "31k"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is 31k.' }));
+    
     });
-
-    it('accept user ranking edge min', () => {
-
+    
+    it ('reject max rank too high for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 31; // "2d"
+    
+      config.ranked.maxrank = 30; // "1d" or "0k"
+      config.unranked.maxrank = 30; // "1d" or "0k"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is 1d.' }));
+    
+    });
+    
+    it ('reject max rank too high for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 31; // "2d"
+    
+      config.ranked.maxrank = 30; // 1d" or "0k"
+      config.unranked.maxrank = 30; // "1d" or "0k"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is 1d.' }));
+    
+    });
+    
+    it ('reject max rank too high (8d+) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 39; // "10d"
+      notification.user.professional = false;
+    
+      config.ranked.maxrank = 38; // "9d"
+      config.unranked.maxrank = 38; // "9d"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is 9d.' }));
+    
+    });
+    
+    it ('reject max rank too high (8d+) for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 39; // "10d"
+      notification.user.professional = false;
+    
+      config.ranked.maxrank = 38; // "9d"
+      config.unranked.maxrank = 38; // "9d"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is 9d.' }));
+    
+    });
+    
+    it ('reject max rank too high (pro) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 37; // "1p"
+      notification.user.professional = true;
+    
+      config.ranked.maxrank = 35; // "-1p/6d"
+      config.unranked.maxrank = 35; // "-1p/6d"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is -1p=6d.' }));
+    
+    });
+    
+    it ('reject max rank too high (pro) for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 37; // "1p"
+      notification.user.professional = true;
+    
+      config.ranked.maxrank = 35; // "-1p/6d"
+      config.unranked.maxrank = 35; // "-1p/6d"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank is -1p=6d.' }));
+    
+    });
+    
+    it ('accept max rank edge max for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+    
+      config.ranked.maxrank = 17; // "13k"
+      config.unranked.maxrank = 17; // "13k"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
+    });
+    
+    it ('accept max rank edge max for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 17; // "13k"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
+    
+      config.ranked.maxrank = 17; // "13k"
+      config.unranked.maxrank = 17; // "13k"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
       assert.deepEqual(result, ({ reject: false }));
-
+    
     });
-
-    it('accept user ranking between min and max', () => {
-
-      const notification = base_challenge({ ranked: false });
+    
+    it ('accept max rank low enough for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 25; // "5k"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
+      notification.user.ranking = 19; // "11k"
+    
+      config.ranked.maxrank = 20; // "10k"
+      config.unranked.maxrank = 20; // "10k"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
       assert.deepEqual(result, ({ reject: false }));
-
+    
     });
-
-    it('accept user ranking edge max', () => {
+    
+    it ('accept max rank low enough for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 32; // "3d"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
+      notification.user.ranking = 19; // "11k"
+    
+      config.ranked.maxrank = 20; // "10k"
+      config.unranked.maxrank = 20; // "10k"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
       assert.deepEqual(result, ({ reject: false }));
-
+    
     });
-
-    it('reject user ranking too high', () => {
-
+    
+    it ('accept max rank low enough (8d+) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 36; // "7d"
+      notification.user.professional = false;
+    
+      config.ranked.maxrank = 37; // 8d"
+      config.unranked.maxrank = 37; // "8d"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
+    });
+    
+    it ('accept max rank low enough (8d+) for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 35; // "6d"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'Maximum rank is 3d.' }));
-
+      notification.user.ranking = 36; // "7d"
+      notification.user.professional = false;
+    
+      config.ranked.maxrank = 37; // "8d"
+      config.unranked.maxrank = 37; // "8d"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
     });
-
-    it('reject user ranking too high (9d+)', () => {
-
+    
+    it ('accept max rank low enough (pro) for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 37; // "1p/8d"
+      notification.user.professional = true;
+    
+      config.ranked.maxrank = 38; // "2p/9d"
+      config.unranked.maxrank = 38; // "2p/9d"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
+    });
+    
+    it ('accept max rank low enough (pro) for all games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 41; // "12d"
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'Maximum rank is 3d.' }));
-
+      notification.user.ranking = 37; // "1p/8d"
+      notification.user.professional = true;
+    
+      config.ranked.maxrank = 38; // "2p/9d"
+      config.unranked.maxrank = 38; // "2p/9d"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
     });
-
-    it('reject user ranking too high (pro)', () => {
-
+    
+    // for ranked unranked specific args, do not exhaustively retest everything,
+    // just making sure the ranked unranked args are specifically tested
+    
+    it ('reject max rank too high for ranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 30; // "1d"
+    
+      config.ranked.maxrank = 25; // "5k"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank for ranked games is 5k.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
+    
+    });
+    
+    it ('reject max rank too high for unranked games and game is unranked', () => {
       const notification = base_challenge({ ranked: false });
       // cannot override user directly: it would delete other required properties in notification.user
-      notification.user.ranking = 37; // "1p" (1p" = "8d")
-
-      config.minrank = 17;
-      config.maxrank = 32;
-      
-      const result = conn.checkChallengeUser(notification);
-      
-      assert.deepEqual(result, ({ reject: true, msg: 'Maximum rank is 3d.' }));
+      notification.user.ranking = 30; // "1d"
+    
+      config.unranked.maxrank = 25; // "5k"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: true, reason: 'Maximum rank for unranked games is 5k.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
+    
     });
-   
+    
+    it ('accept max rank too high for unranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+    
+      config.ranked.maxrank = 25; // "5k"
+      config.unranked.maxrank = 10; // "20k"
+    
+      const result = conn.checkChallengeUser(notification, "ranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
+    });
+    
+    it ('accept max rank too high for ranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ranking = 17; // "13k"
+    
+      config.ranked.maxrank = 10; // "20k"
+      config.unranked.maxrank = 25; // "5k"
+    
+      const result = conn.checkChallengeUser(notification, "unranked");
+    
+      assert.deepEqual(result, ({ reject: false }));
+    
+    });
+
   });
 
   describe('Non-square boardsizes', () => {

@@ -728,12 +728,9 @@ function err(str) {
 function rankToString(r, userIsPro) {
     const R = Math.floor(r);
 
-    if (R >= 37) {
-        if (userIsPro) return `${R - 37 + 1}p=${R - 30 + 1}d`; // 1 pro or stronger = 8 dan or stronger
-        else return `${R - 30 + 1}d`; // 8 dan or stronger
-    }
-    if (R >= 30) return `${R - 30 + 1}d`; // 1 dan to 7d
-    else         return `${30 - R}k`;     // 1 kyu or weaker
+    if (userIsPro) return `${R - 37 + 1}p=${R - 30 + 1}d`; // pros on OGS start at 8d = 1p
+    if (R >= 30)   return `${R - 30 + 1}d`; // 1 dan or stronger
+    else           return `${30 - R}k`;     // 1 kyu or weaker
 }
 
 function getCheckedKeyInObjReject(k) {
