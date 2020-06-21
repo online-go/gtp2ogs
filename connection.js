@@ -374,7 +374,7 @@ class Connection {
     }
     // Check bot is available, else don't mislead user
     //
-    /*checkChallengeBot(notification) {
+    checkChallengeBot(notification) {
 
         if (config.check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
@@ -414,7 +414,7 @@ class Connection {
     }
     // Check some booleans allow a game ("nopause" is in game.js, not here)
     //
-    checkChallengeBooleans(notification, r_u) {
+    /*checkChallengeBooleans(notification, r_u) {
 
         if (config.rankedonly && !notification.ranked) {
             return getBooleansGeneralReject("Unranked games are");
@@ -519,7 +519,7 @@ class Connection {
 
         for (const test of [this.checkChallengeSanityChecks,
                            this.checkChallengeUser,
-                           //this.checkChallengeBot,
+                           this.checkChallengeBot,
                            //this.checkChallengeBooleans,
                            //this.checkChallengeAllowedGroup,
                            //this.checkChallengeHandicap,

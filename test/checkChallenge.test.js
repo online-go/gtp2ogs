@@ -1094,49 +1094,6 @@ describe('Challenges', () => {
 
   });
 
-  describe('Non-square boardsizes', () => {
-    it('reject non-square boardsizes if not boardsizes "all"', () => {
-
-      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
-
-      config.boardsizes = "9,13,18,19";
-
-      const result = conn.checkChallengeAllowedGroup(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example try 9x9 or 19x19.' }));
-
-    });
-
-    it('accept non-square boardsizes if boardsizes "all"', () => {
-
-      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
-
-      config.boardsizes = "all";
-      config.allow_all_boardsizes = true;
-      config.allowed_boardsizes = [];
-
-
-      const result = conn.checkChallengeAllowedGroup(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it('accept non-square boardsizes if no arg is specified', () => {
-
-      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
-
-      config.allow_all_boardsizes = false;
-      config.allowed_boardsizes = [];
-
-      const result = conn.checkChallengeAllowedGroup(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-  });
-
   describe('Some Booleans', () => {
 
     // user is professional and noautohandicap are in their respective checkChallenge functions, not here.
@@ -1184,6 +1141,49 @@ describe('Challenges', () => {
       config.unrankedonly = true;
 
       const result = conn.checkChallengeBooleans(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+  });
+
+  describe('Non-square boardsizes', () => {
+    it('reject non-square boardsizes if not boardsizes "all"', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
+
+      config.boardsizes = "9,13,18,19";
+
+      const result = conn.checkChallengeAllowedGroup(notification);
+
+      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example try 9x9 or 19x19.' }));
+
+    });
+
+    it('accept non-square boardsizes if boardsizes "all"', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
+
+      config.boardsizes = "all";
+      config.allow_all_boardsizes = true;
+      config.allowed_boardsizes = [];
+
+
+      const result = conn.checkChallengeAllowedGroup(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept non-square boardsizes if no arg is specified', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
+
+      config.allow_all_boardsizes = false;
+      config.allowed_boardsizes = [];
+
+      const result = conn.checkChallengeAllowedGroup(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
