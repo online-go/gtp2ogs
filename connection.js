@@ -363,10 +363,10 @@ class Connection {
             return getMingamesplayedReject(notifGamesPlayed, r_u);
         }
 
-        const resultMinRank = getMinMaxRankRejectResult("minrank", notification.user.ranking, r_u);
+        const resultMinRank = getMinMaxRankRejectResult("minrank", notification.user.ranking, notification.user.professional, r_u);
         if (resultMinRank) return resultMinRank;
 
-        const resultMaxRank = getMinMaxRankRejectResult("maxrank", notification.user.ranking, r_u);
+        const resultMaxRank = getMinMaxRankRejectResult("maxrank", notification.user.ranking, notification.user.professional, r_u);
         if (resultMaxRank) return resultMaxRank;
 
         return { reject: false }; // OK !
@@ -539,7 +539,7 @@ class Connection {
         const handi = (notification.handicap > 0 ? `H${notification.handicap}` : "");
         const accepting = (c0.reject ? "Rejecting" : "Accepting");
         conn_log(`${accepting} challenge from ${notification.user.username} `
-                 + `(${rankToString(notification.user.ranking)})  `
+                 + `(${rankToString(notification.user.ranking, notification.user.professional)})  `
                  + `[${notification.width}x${notification.height}] ${handi} `
                  + `id = ${notification.game_id}`);
 
@@ -729,7 +729,7 @@ function rankToString(r, userIsPro) {
     const R = Math.floor(r);
 
     if (R >= 37) {
-        if (userIsPro) return `${R - 37 + 1}p`; // 1 pro or stronger
+        if (userIsPro) return `${R - 37 + 1}p=${R - 30 + 1}d`; // 1 pro or stronger = 8 dan or stronger
         else return `${R - 30 + 1}d`; // 8 dan or stronger
     }
     if (R >= 30) return `${R - 30 + 1}d`; // 1 dan to 7d
@@ -955,14 +955,14 @@ function getMinMaxReject(argToString, notifToString, notif, isMin, r_u,
     return getReject(reason);
 }
 
-function getMinMaxRankRejectResult(optionName, notif, r_u) {
+function getMinMaxRankRejectResult(optionName, notif, userIsPro, r_u) {
     const isMin = checkIsMin(optionName);
     const arg = config[r_u][optionName];
 
     // check undefined specifically to avoid testing false valid args such as 0 to test against notif
     if (arg !== undefined) {
         if (!checkNotifIsInMinMaxArgRange(arg, notif, isMin)) {
-            return getMinMaxReject(rankToString(arg), rankToString(notif), notif, isMin, r_u,
+            return getMinMaxReject(rankToString(arg, userIsPro), rankToString(notif, userIsPro), notif, isMin, r_u,
                                    "", optionName, "rank", "");
         }
     }
