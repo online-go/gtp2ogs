@@ -275,33 +275,32 @@ class Connection {
 
         // TODO: add all sanity checks here of all unhandled notifications
 
-        // notification sample as of may 2020
-        //{"id":"785246:6c6a506f-3af8-4e5d-afca-1dc8d592b7a8","type":"challenge","player_id":1,
-        //"timestamp":1590353535,"read_timestamp":0,"read":0, "aux_delivered":0,"game_id":1,"challenge_id":1,
-        //"user":{"id":1,"country":"un","username":"Some User",
-        //"icon_url":"https://secure.gravatar.com/avatar/ed9162b40504d7f64cfe3547c232c665?s=32&d=retro",
-        //"ratings":{"overall":{"rating":2451.209718473043,"deviation":118.76556422774001,"volatility":0.06297489852992705,"games_played":613}},
-        //"ui_class":"timeout","professional":false,"rating":"1009.541","ranking":33.096893588618975},
-        //"rules":"chinese","ranked":true,"aga_rated":false,"disable_analysis":false,"handicap":0,"komi":null,
-        //"time_control":{"system":"byoyomi","time_control":"byoyomi","speed":"live","pause_on_weekends":false,"main_time":1200,"period_time":30,"periods":5},
-        //"challenger_color":"automatic","width":19,"height":19};*/
+        // notification sample as of 24 june 2020
+        // recent change in rating system in https://forums.online-go.com/t/2020-rating-and-rank-tweaks-and-analysis/28649
+        // notification.user.ratings.overall.games_played key was removed
+        // possibly other changes might be made in the future, keeping a sample as a reference
+        // {"id":"787:118a6213-4371-4fbf-9574-11c8016e86d8","type":"challenge","player_id":787,
+        // "timestamp":1593029394,"read_timestamp":0,"read":0,"aux_delivered":0,
+        // "game_id":8374,"challenge_id":4878,
+        // "user":{"id":786,"country":"un","username":"testuser",
+        // "icon_url":"https://b0c2ddc39d13e1c0ddad-93a52a5bc9e7cc06050c1a999beb3694.ssl.cf1.rackcdn.com/6c89b5fd5c1965608d50d4f9b4829078-32.png",
+        // "ratings":{"overall":{"rating":1190.1419101664915,"deviation":147.528546071068,"volatility":0.06006990721444128}},
+        // "ui_class":"","professional":false,"rating":"1190.142","ranking":10.51848380474934},
+        // "rules":"chinese","ranked":false,"aga_rated":false,"disable_analysis":false,
+        // "handicap":0,"komi":null,
+        // "time_control":{"system":"fischer","time_control":"fischer","speed":"live",
+        // "pause_on_weekends":false,
+        // "time_increment":30,"initial_time":120,"max_time":300},
+        // "challenger_color":"automatic","width":19,"height":19}
 
         // do not check everything, only the keys we need.
         const notificationKeys = ["user", "rules", "ranked", "handicap", "komi", "time_control", "width", "height"];
         const resultNotificationKeys = getCheckedKeysInObjRejectResult(notificationKeys, notification);
         if (resultNotificationKeys) return resultNotificationKeys;
 
-        const notificationKeysUser = ["id", "username", "professional", "ratings", "ranking"];
+        const notificationKeysUser = ["id", "username", "professional", "ranking"];
         const resultNotificationKeysUser = getCheckedKeysInObjRejectResult(notificationKeysUser, notification.user);
         if (resultNotificationKeysUser) return resultNotificationKeysUser;
-
-        const notificationKeysUserRatings = ["overall"];
-        const resultNotificationKeysUserRatings = getCheckedKeysInObjRejectResult(notificationKeysUserRatings, notification.user.ratings);
-        if (resultNotificationKeysUserRatings) return resultNotificationKeysUserRatings;
-
-        const notificationKeysUserRatingsOverall = ["games_played"];
-        const resultNotificationKeysUserRatingsOverall = getCheckedKeysInObjRejectResult(notificationKeysUserRatingsOverall, notification.user.ratings.overall);
-        if (resultNotificationKeysUserRatingsOverall) return resultNotificationKeysUserRatingsOverall;
 
         const notificationKeysTimecontrol = ["time_control", "speed", "pause_on_weekends"];
         const resultNotificationKeysTimecontrol = getCheckedKeysInObjRejectResult(notificationKeysTimecontrol, notification.time_control);
@@ -365,9 +364,6 @@ class Connection {
             const resultProonly = getBooleansGRURejectResult("proonly", notification.ranked, beginning, ending);
             if (resultProonly) return resultProonly;
         }
-
-        const resultMinGamesPlayed = getMinGamesPlayedRejectResult(notification.user.ratings.overall.games_played, notification.ranked);
-        if (resultMinGamesPlayed) return resultMinGamesPlayed;
 
         const resultRank = getMinMaxRankRejectResult(notification.user.ranking, notification.ranked);
         if (resultRank) return resultRank;
@@ -810,21 +806,6 @@ function getCheckedArgName(optionName, notificationRanked) {
     // no valid arg to test, this happens when bot admin inputs no value and we
     // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
     return undefined;
-}
-
-function getMinGamesPlayedRejectResult(notif, notificationRanked) {
-    const argName = getCheckedArgName("mingamesplayed", notificationRanked);
-    if (argName) {
-        const arg = config[argName];
-        if (notif < arg) {
-            const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-            conn_log(`Number of ranked games played by this user is ${notif}, it is below minimum`
-                     + `${forRankedUnrankedGames} ${arg}, user is too new (${argName})`);
-            const msg = `It looks like your account is still new on OGS, this bot will be open to`
-                        + ` your user account${forRankedUnrankedGames} after you play more games.`;
-            return { reject: true, msg };
-        }
-    }
 }
 
 function getBooleansGeneralReject(nameF) {

@@ -131,9 +131,6 @@ exports.updateFromArgv = function() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        .describe('mingamesplayed', 'Do not accept challenges from players who played less ranked games than specified minimum number (too new players)')
-        .describe('mingamesplayedranked', 'Do not accept ranked challenges from players who played less ranked games than specified minimum number (too new players)')
-        .describe('mingamesplayedunranked', 'Do not accept unranked challenges from players who played less ranked games than specified minimum number (too new players)')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
@@ -222,7 +219,7 @@ exports.updateFromArgv = function() {
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, `
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
-                + `\nDebug status: ${debugStatus}`);
+                + `\nDebug status: ${debugStatus}\n`);
 
     // B - test unsupported argv
 
@@ -239,7 +236,6 @@ exports.updateFromArgv = function() {
         { name: "nopause" },
         { name: "nopauseonweekends" },
         { name: "noautohandicap" },
-        { name: "mingamesplayed" },
         { name: "minrank" },
         { name: "maxrank" },
         { name: "minhandicap" },
@@ -395,6 +391,7 @@ function getBLCString(optionName, rankedUnranked) {
 function testDroppedArgv(argv) {
     const droppedArgv = [
          [["botid", "bot", "id"], "username"],
+         [["mingamesplayed", "mingamesplayedranked", "mingamesplayedunranked"], undefined],
          [["fakerank"], undefined],
          [["minrankedhandicap"], "minhandicapranked"],
          [["minunrankedhandicap"], "minhandicapunranked"],
@@ -441,8 +438,8 @@ function testDroppedArgv(argv) {
     for (const [oldNames, newName] of droppedArgv) {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
-                if (newName) console.log(`Dropped: --${oldName} is no longer supported, use --${newName} instead.`);
-                else console.log(`Dropped: --${oldName} is no longer supported.`);
+                if (newName !== undefined) throw `Dropped: --${oldName} is no longer supported, use --${newName} instead.`;
+                throw `Dropped: --${oldName} is no longer supported.`;
             }
         }
     }
@@ -450,13 +447,12 @@ function testDroppedArgv(argv) {
         if (argv[argName]) {
             for (const komi of ["auto","null"]) {
                 if (argv[argName].split(",").includes(komi)) {
-                    console.log(`Dropped: --${argName} ${komi} is no longer `
-                                + `supported, use --${argName} automatic instead`);
+                    throw `Dropped: --${argName} ${komi} is no longer `
+                                + `supported, use --${argName} automatic instead`;
                 }
             }
         }
     }
-    console.log("\n");
 }
 
 function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {

@@ -73,15 +73,21 @@ describe('Challenges', () => {
   describe('Sanity Checks', () => {
 
     it('accept real notification challenge with almost empty config (except defaults from base_challenge in test.js)', () => {
-      const notificationSample = {"id":"785246:6c6a506f-3af8-4e5d-afca-1dc8d592b7a8","type":"challenge","player_id":1,
-      "timestamp":1590353535,"read_timestamp":0,"read":0, "aux_delivered":0,"game_id":1,"challenge_id":1,
-      "user":{"id":1,"country":"un","username":"Some User",
-      "icon_url":"https://secure.gravatar.com/avatar/ed9162b40504d7f64cfe3547c232c665?s=32&d=retro",
-      "ratings":{"overall":{"rating":2451.209718473043,"deviation":118.76556422774001,"volatility":0.06297489852992705,"games_played":613}},
-      "ui_class":"timeout","professional":false,"rating":"1009.541","ranking":33.096893588618975},
-      "rules":"chinese","ranked":true,"aga_rated":false,"disable_analysis":false,"handicap":0,"komi":null,
-      "time_control":{"system":"byoyomi","time_control":"byoyomi","speed":"live","pause_on_weekends":false,"main_time":1200,"period_time":30,"periods":5},
+      // notification sample as of 24 june 2020
+      const notificationSample = {"id":"787:118a6213-4371-4fbf-9574-11c8016e86d8","type":"challenge","player_id":787,
+      "timestamp":1593029394,"read_timestamp":0,"read":0,"aux_delivered":0,
+      "game_id":8374,"challenge_id":4878,
+      "user":{"id":786,"country":"un","username":"testuser",
+      "icon_url":"https://b0c2ddc39d13e1c0ddad-93a52a5bc9e7cc06050c1a999beb3694.ssl.cf1.rackcdn.com/6c89b5fd5c1965608d50d4f9b4829078-32.png",
+      "ratings":{"overall":{"rating":1190.1419101664915,"deviation":147.528546071068,"volatility":0.06006990721444128}},
+      "ui_class":"","professional":false,"rating":"1190.142","ranking":10.51848380474934},
+      "rules":"chinese","ranked":false,"aga_rated":false,"disable_analysis":false,
+      "handicap":0,"komi":null,
+      "time_control":{"system":"fischer","time_control":"fischer","speed":"live",
+      "pause_on_weekends":false,
+      "time_increment":30,"initial_time":120,"max_time":300},
       "challenger_color":"automatic","width":19,"height":19};
+
       const notification = base_challenge(notificationSample);
       
       const result = conn.checkChallenge(notification);
@@ -158,176 +164,6 @@ describe('Challenges', () => {
       const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true, msg: 'You (bannedUnrankedName) are not allowed to play unranked games against this bot.' }));
-    });
-
-  });
-
-  describe('Min games played', () => {
-
-
-    it ('reject min games played too low (0)', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 0;
-
-      config.mingamesplayed = 10;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games.' }));
-
-    });
-    it ('reject min games played too low', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 9;
-
-      config.mingamesplayed = 10;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account after you play more games.' }));
-
-    });
-
-    it ('accept min games played edge min', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 10;
-
-      config.mingamesplayed = 10;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it ('accept min games played high enough', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 11;
-
-      config.mingamesplayed = 10;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-  });
-
-  describe('General Ranked Unranked Min games played precedence rules', () => {
-
-    // do not exhaustively retest everything, just making sure the ranked unranked precedence is respected
-
-    it ('reject min games played based on ranked arg too low (no unranked arg)', () => {
-      const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 0;
-
-      config.mingamesplayedranked = 20;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games.' }));
-
-    });
-
-    it ('reject min games played based on unranked arg too low (no ranked arg)', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 0;
-
-      config.mingamesplayedunranked = 5;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games.' }));
-
-    });
-
-    it ('reject min games played based on ranked arg too low', () => {
-      const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 19;
-
-      config.mingamesplayedranked = 20;
-      config.mingamesplayedunranked = 5;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for ranked games after you play more games.' }));
-
-    });
-
-    it ('reject min games played based on unranked arg too low', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 4;
-
-      config.mingamesplayedranked = 20;
-      config.mingamesplayedunranked = 5;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: true, msg: 'It looks like your account is still new on OGS, this bot will be open to your user account for unranked games after you play more games.' }));
-
-    });
-
-    it ('accept min games played based on ranked arg (no unranked arg)', () => {
-      const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 20;
-
-      config.mingamesplayedranked = 20;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it ('accept min games played based on unranked arg (no ranked arg)', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 5;
-
-      config.mingamesplayedunranked = 5;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it ('accept min games played based on ranked arg', () => {
-      const notification = base_challenge({ ranked: true });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 20;
-
-      config.mingamesplayedranked = 20;
-      config.mingamesplayedunranked = 5;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
-    it ('accept min games played based on unranked arg', () => {
-      const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ranking
-      notification.user.ratings.overall.games_played = 5;
-
-      config.mingamesplayedranked = 20;
-      config.mingamesplayedunranked = 5;
-
-      const result = conn.checkChallengeUser(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
     });
 
   });
