@@ -624,6 +624,7 @@ function processBoardsizesGroupExport(rankedUnranked, arg) {
         for (const boardsize of boardsizes) {
             if (boardsize === "all") {
                 exports[rankedUnranked].boardsizes.allow_all = true;
+                return;
             } else {
                 exports[rankedUnranked].boardsizes.allowed[boardsize] = true;
             }
@@ -639,6 +640,7 @@ function processKomisGroupExport(rankedUnranked, arg) {
         for (const komi of komis) {
             if (komi === "all") {
                 exports[rankedUnranked].komis.allow_all = true;
+                return;
             } else {
                 const komiExport = (komi === "automatic" ? null : komi);
                 exports[rankedUnranked].komis.allowed[komiExport] = true;
@@ -655,6 +657,7 @@ function processAllowedGroupExport(optionName, rankedUnranked, arg) {
         for (const allowedValue of allowedValues) {
             if (allowedValue === "all") {
                 exports[rankedUnranked][optionName].allow_all = true;
+                return;
             } else {
                 exports[rankedUnranked][optionName].allowed[allowedValue] = true;
             }

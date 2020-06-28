@@ -427,22 +427,14 @@ class Connection {
     }
     // Check challenge allowed group options are allowed
     //
-    /*checkChallengeAllowedGroup(notification, r_u) {
+    checkChallengeAllowedGroup(notification, r_u) {
 
         // only square boardsizes, except if all is allowed
-        if (notification.width !== notification.height) {
-            if (config.boardsizes && !config.boardsizesranked && !config.boardsizesunranked && !config.allow_all_boardsizes) {
-                return getBoardsizeNotSquareReject("boardsizes", notification.width, notification.height);
-            }
-            if (config.boardsizesranked && notification.ranked && !config.allow_all_boardsizes_ranked) {
-                return getBoardsizeNotSquareReject("boardsizesranked", notification.width, notification.height);
-            }
-            if (config.boardsizesunranked && !notification.ranked && !config.allow_all_boardsizes_unranked) {
-                return getBoardsizeNotSquareReject("boardsizesunranked", notification.width, notification.height);
-            }
+        if ((notification.width !== notification.height) && !config[r_u].boardsizes.allow_all) {
+            return getBoardsizeNotSquareReject(notification.width, notification.height, r_u);
         }
         
-        // if square, check if square board size is allowed
+        /*// if square, check if square board size is allowed
         const resultBoardsizes = getAllowedGroupRejectResult("boardsizes", "Board size", notification.width, notification.ranked);
         if (resultBoardsizes) return resultBoardsizes;
 
@@ -453,7 +445,7 @@ class Connection {
         if (resultSpeeds) return resultSpeeds;
 
         const resultTimecontrols = getAllowedGroupRejectResult("timecontrols", "Time control", notification.time_control.time_control, notification.ranked);
-        if (resultTimecontrols) return resultTimecontrols;
+        if (resultTimecontrols) return resultTimecontrols;*/
 
         return { reject: false }; // OK !
 
@@ -461,7 +453,7 @@ class Connection {
 
     // Check challenge handicap is allowed
     //
-    checkChallengeHandicap(notification, r_u) {
+    /*checkChallengeHandicap(notification, r_u) {
 
         if (notification.handicap === -1) {
             const beginning = "-Automatic- handicap is";
@@ -513,7 +505,7 @@ class Connection {
                            this.checkChallengeUser,
                            this.checkChallengeBot,
                            this.checkChallengeBooleans,
-                           //this.checkChallengeAllowedGroup,
+                           this.checkChallengeAllowedGroup,
                            //this.checkChallengeHandicap,
                            //this.checkChallengeTimeSettings
                            ]) {
@@ -772,6 +764,13 @@ function checkRankedArgSameRuleAsUnrankedArgMinMaxOption(optionName, notif, isMi
     return (!checkNotifIsInMinMaxArgRange(rankedArg, notif, isMin) === !checkNotifIsInMinMaxArgRange(unrankedArg, notif, isMin));
 }
 
+function checkRankedArgSameRuleAsUnrankedArgAllowAllGroup(optionName) {
+    const rankedArg = config.ranked[optionName].allow_all;
+    const unrankedArg = config.unranked[optionName].allow_all;
+
+    return (rankedArg === unrankedArg);
+}
+
 /*function checkRankedArgSameRuleAsUnrankedArgAllowedGroup(optionName, notif) {
     const rankedArg = config.ranked[optionName].allowed[notif];
     const unrankedArg = config.unranked[optionName].allowed[notif];
@@ -802,20 +801,39 @@ function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
     const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgGenericOption(optionName);
     const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
     
-    const suggestion = (rejectIsImmutable ? r_u_sentences.alternative : r_u_sentences.alternative);
+    // ex: rank cannot be changed (proonly), handicap stones number can (noautohandicap).
+    const suggestion = (rejectIsImmutable ? r_u_sentences.alternative : r_u_sentences.suggestion);
 
     const reason = `${beginning} not allowed on this bot${r_u_sentences.for_r_u_games}${suggestion}.`;
     conn_log(`${beginning} not allowed on this bot${r_u_sentences.for_r_u_games} (${optionName})`);
     return getReject(reason);
 }
 
-/*function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHeight) {
-    const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-    conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
-             + `is not square, not allowed ${rankedUnranked}`);
-    const msg = `Board size ${notificationWidth}x${notificationHeight} is not square`
-                + `, not allowed${rankedUnranked}.\nPlease choose a SQUARE board size`
-                + ` (same width and height), for example try 9x9 or 19x19.`;
+function getAcceptedSquareBoardsizeSuggestion(r_u) {
+    const allowedBoardsizes = config[r_u].boardsizes.allowed;
+
+    for (const k in allowedBoardsizes) {
+        if (allowedBoardsizes[k]) {
+            const allowedBoardsizeToString = boardsizeSquareToDisplayString(k);
+            return `, for example ${allowedBoardsizeToString} will be accepted`;
+        }
+    }
+
+    return "";
+}
+
+function getBoardsizeNotSquareReject(notifWidth, notifHeight, r_u) {
+    const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgAllowAllGroup("boardsizes");
+    const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
+
+    const suggestion = r_u_sentences.suggestion;
+    const acceptedSquareSuggestion = getAcceptedSquareBoardsizeSuggestion(r_u);
+
+    conn_log(`Non-square boardsize ${notifWidth}x${notifHeight} not allowed`
+             + ` ${r_u_sentences.for_r_u_games}`);
+    const msg = `Board size ${notifWidth}x${notifHeight} is not square`
+                + `, not allowed${r_u_sentences.for_r_u_games}.\nPlease choose a SQUARE board size`
+                + ` (same width and height)${acceptedSquareSuggestion}${suggestion}.`;
     return { reject: true, msg };
 }
 
@@ -828,7 +846,7 @@ function boardsizeSquareToDisplayString(boardsizeSquare) {
     .join(', ');
 }
 
-function getAllowedGroupNotifToString(argName, notif) {
+/*function getAllowedGroupNotifToString(argName, notif) {
     if (argName.includes("boardsizes")) {
         return boardsizeSquareToDisplayString(notif);
     }
@@ -940,21 +958,7 @@ function getMinMaxRankRejectResult(optionName, notif, userIsPro, r_u) {
     }
 }
 
-/*function getBooleansGRURejectResult(argName, notificationRanked, beginning, ending) {
-    const [general, ranked, unranked] = getArgNamesGRU(argName);
-
-    if (config[general] && !config[ranked] && !config[unranked]) {
-        return getBooleansGRUReject("", beginning, ending);
-    }
-    if (config[ranked] && notificationRanked) {
-        return getBooleansGRUReject("ranked", beginning, ending);
-    }
-    if (config[unranked] && !notificationRanked) {
-        return getBooleansGRUReject("unranked", beginning, ending);
-    }
-}
-
-function getHandicapMiddleSentence(isMin, notif, arg) {
+/*function getHandicapMiddleSentence(isMin, notif, arg) {
     if (!isMin && notif > 0 && arg === 0) {
         return " (no handicap games)";
     } else {
