@@ -910,9 +910,106 @@ describe('Challenges', () => {
 
   });
 
-  describe('Some Booleans', () => {
+  describe('Non r_u Booleans', () => {
 
-    // user is professional and noautohandicap are in their respective checkChallenge functions, not here.
+    it ('reject pausing on weekends for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true, time_control: { pause_on_weekends: true } });
+
+      config.ranked.nopauseonweekends = true;
+      config.unranked.nopauseonweekends = true;
+
+      const result = conn.checkChallengeBooleans(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Pause on week-ends is not allowed on this bot.' }));
+
+    });
+
+    it ('reject pausing on weekends for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false, time_control: { pause_on_weekends: true } });
+
+      config.ranked.nopauseonweekends = true;
+      config.unranked.nopauseonweekends = true;
+
+      const result = conn.checkChallengeBooleans(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Pause on week-ends is not allowed on this bot.' }));
+
+    });
+
+    it ('accept pausing on weekends for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true, time_control: { pause_on_weekends: true } });
+
+      config.ranked.nopauseonweekends = undefined;
+      config.unranked.nopauseonweekends = undefined;
+
+      const result = conn.checkChallengeBooleans(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept pausing on weekends for all games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false, time_control: { pause_on_weekends: true } });
+
+      config.ranked.nopauseonweekends = undefined;
+      config.unranked.nopauseonweekends = undefined;
+
+      const result = conn.checkChallengeBooleans(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('reject pausing on weekends for ranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true, time_control: { pause_on_weekends: true } });
+
+      config.ranked.nopauseonweekends = true;
+
+      const result = conn.checkChallengeBooleans(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Pause on week-ends is not allowed on this bot for ranked games.\nYou cannot change the ranked setting, but the same setting in an unranked game will be accepted.' }));
+
+    });
+
+    it ('reject pausing on weekends for unranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false, time_control: { pause_on_weekends: true } });
+
+      config.unranked.nopauseonweekends = true;
+
+      const result = conn.checkChallengeBooleans(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: true, reason: 'Pause on week-ends is not allowed on this bot for unranked games.\nYou cannot change the unranked setting, but the same setting in an ranked game will be accepted.' }));
+
+    });
+
+    it ('accept pausing on weekends for ranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true, time_control: { pause_on_weekends: true } });
+
+      config.ranked.nopauseonweekends = undefined;
+
+      const result = conn.checkChallengeBooleans(notification, "ranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it ('accept pausing on weekends for unranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false, time_control: { pause_on_weekends: true } });
+
+      config.unranked.nopauseonweekends = undefined;
+
+      const result = conn.checkChallengeBooleans(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+  });
+
+  describe('r_u Booleans (those which are not in another specific test)', () => {
+
+    // ex: user is professional, noautohandicap, and some other r_u booleans are
+    // in their respectives tests, not here
 
     it('reject ranked games if unrankedonly', () => {
 
@@ -963,6 +1060,7 @@ describe('Challenges', () => {
     });
 
   });
+
 
   describe('Non-square boardsizes', () => {
     it('reject non-square boardsizes if not boardsizes "all"', () => {

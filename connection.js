@@ -408,20 +408,18 @@ class Connection {
     }
     // Check some booleans allow a game ("nopause" is in game.js, not here)
     //
-    /*checkChallengeBooleans(notification, r_u) {
+    checkChallengeBooleans(notification, r_u) {
 
         if (config.rankedonly && !notification.ranked) {
-            return getBooleansGeneralReject("Unranked games are");
+            return getBooleansNonRUReject("Unranked games are");
         }
         if (config.unrankedonly && notification.ranked) {
-            return getBooleansGeneralReject("Ranked games are");
+            return getBooleansNonRUReject("Ranked games are");
         }
 
-        if (notification.pause_on_weekends) {
+        if (notification.time_control.pause_on_weekends && config[r_u].nopauseonweekends) {
             const beginning = "Pause on week-ends is";
-            const ending    = "";
-            const resultNoPauseWeekends = getBooleansGRURejectResult("nopauseonweekends", notification.ranked, beginning, ending);
-            if (resultNoPauseWeekends) return resultNoPauseWeekends;
+            return getBooleansRUReject("nopauseonweekends", r_u, beginning, true);
         }
 
         return { reject: false }; // OK !
@@ -429,7 +427,7 @@ class Connection {
     }
     // Check challenge allowed group options are allowed
     //
-    checkChallengeAllowedGroup(notification, r_u) {
+    /*checkChallengeAllowedGroup(notification, r_u) {
 
         // only square boardsizes, except if all is allowed
         if (notification.width !== notification.height) {
@@ -514,7 +512,7 @@ class Connection {
         for (const test of [this.checkChallengeSanityChecks,
                            this.checkChallengeUser,
                            this.checkChallengeBot,
-                           //this.checkChallengeBooleans,
+                           this.checkChallengeBooleans,
                            //this.checkChallengeAllowedGroup,
                            //this.checkChallengeHandicap,
                            //this.checkChallengeTimeSettings
@@ -794,6 +792,12 @@ function getBannedGroupReject(optionName, notif, r_u) {
     return getReject(`You (user ${banType} ${notif}) are banned${r_u_sentences.from_r_u_games} on this bot${r_u_sentences.alternative}.`);
 }
 
+function getBooleansNonRUReject(nameF) {
+    const msg = `${nameF} not allowed on this bot.`;
+    conn_log(msg);
+    return { reject: true, msg };
+}
+
 function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
     const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgGenericOption(optionName);
     const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
@@ -805,13 +809,7 @@ function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
     return getReject(reason);
 }
 
-/*function getBooleansNonRUReject(nameF) {
-    const msg = `${nameF} not allowed on this bot.`;
-    conn_log(msg);
-    return { reject: true, msg };
-}
-
-function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHeight) {
+/*function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHeight) {
     const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
     conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
              + `is not square, not allowed ${rankedUnranked}`);
