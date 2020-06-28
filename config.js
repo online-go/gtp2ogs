@@ -113,9 +113,6 @@ exports.updateFromArgv = function() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        .describe('mingamesplayed', 'Do not accept challenges from players who played less ranked games than specified minimum number (too new players)')
-        .describe('mingamesplayedranked', 'Do not accept ranked challenges from players who played less ranked games than specified minimum number (too new players)')
-        .describe('mingamesplayedunranked', 'Do not accept unranked challenges from players who played less ranked games than specified minimum number (too new players)')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
@@ -191,11 +188,6 @@ exports.updateFromArgv = function() {
     ;
     const argv = optimist.argv;
 
-    if (!argv._ || argv._.length === 0) {
-        optimist.showHelp();
-        process.exit();
-    }
-
     // console messages
     // A- greeting and debug status
 
@@ -204,7 +196,7 @@ exports.updateFromArgv = function() {
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, `
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
-                + `\nDebug status: ${debugStatus}`);
+                + `\nDebug status: ${debugStatus}\n`);
 
     // B - test unsupported argv
 
@@ -214,6 +206,7 @@ exports.updateFromArgv = function() {
 
     testForbiddenOptionNameArgv("ranked", argv);
     testForbiddenOptionNameArgv("unranked", argv);
+    testBotCommandArgvIsValid(argv);
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
 
@@ -227,7 +220,6 @@ exports.updateFromArgv = function() {
         { name: "nopause" },
         { name: "nopauseonweekends" },
         { name: "noautohandicap" },
-        { name: "mingamesplayed" },
         { name: "minrank" },
         { name: "maxrank" },
         { name: "minhandicap" },
@@ -369,57 +361,76 @@ function getBLCString(optionName, rankedUnranked) {
            + `and/or --${optionName}corr${rankedUnranked}`;
 }
 
+function testBotCommandArgvIsValid(argv) {
+    if (argv._ === undefined) {
+        throw "Missing bot command.";
+    }
+
+    const parsedBotCommand = JSON.stringify(argv._);
+    
+    if (!Array.isArray(argv._)) {
+        throw `Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters`
+              + `, please check your syntax ( -- ).`;
+    }
+    if (argv._.length === 0) {
+        throw `Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element`
+              + ` in your bot command which should be the AI executable (ex: lz.exe).`;
+    }
+}
+
+
 function testDroppedArgv(argv) {
     const droppedArgv = [
-         [["botid", "bot", "id"], "username"],
-         [["fakerank"], undefined],
-         [["minrankedhandicap"], "minhandicapranked"],
-         [["minunrankedhandicap"], "minhandicapunranked"],
-         [["maxrankedhandicap"], "maxhandicapranked"],
-         [["maxunrankedhandicap"], "maxhandicapunranked"],
-         [["maxtotalgames"], "maxconnectedgames"],
-         [["maxactivegames"], "maxconnectedgamesperuser"],
-         [["maxmaintime"],  getBLCString("maxmaintime", "")],
-         [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
-         [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
-         [["minmaintime"], getBLCString("minmaintime", "")],
-         [["minmaintimeranked"], getBLCString("minmaintime", "ranked")],
-         [["minmaintimeunranked"], getBLCString("minmaintime", "unranked")],
-         [["maxperiodtime"], getBLCString("maxperiodtime", "")],
-         [["maxperiodtimeranked"], getBLCString("maxperiodtime", "ranked")],
-         [["maxperiodtimeunranked"], getBLCString("maxperiodtime", "unranked")],
-         [["minperiodtime"], getBLCString("minperiodtime", "")],
-         [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
-         [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
-         [["maxperiods"],  getBLCString("maxperiods", "")],
-         [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
-         [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
-         [["minperiods"], getBLCString("minperiods", "")],
-         [["minperiodsranked"], getBLCString("minperiods", "ranked")],
-         [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
-         [["ban", "bans"], "bannedusernames and/or --bannedids"],
-         [["banranked", "bansranked"], "bannedusernamesranked and/or --bannedidsranked"],
-         [["banunranked", "bansunranked"], "bannedusernamesunranked and/or --bannedidsunranked"],
-         [["boardsize"], "boardsizes"],
-         [["boardsizeranked"], "boardsizesranked"],
-         [["boardsizeunranked"], "boardsizesunranked"],
-         [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked",
-           "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
-         [["komi"], "komis"],
-         [["komiranked"], "komisranked"],
-         [["komiunranked"], "komisunranked"],
-         [["speed"], "speeds"],
-         [["speedranked"], "speedsranked"],
-         [["speedunranked"], "speedsunranked"],
-         [["timecontrol"], "timecontrols"],
-         [["timecontrolranked"], "timecontrolsranked"],
-         [["timecontrolunranked"], "timecontrolsunranked"]
+        [["ban", "bans"], "bannedusernames and/or --bannedids"],
+        [["banranked", "bansranked"], "bannedusernamesranked and/or --bannedidsranked"],
+        [["banunranked", "bansunranked"], "bannedusernamesunranked and/or --bannedidsunranked"],
+        [["botid", "bot", "id"], "username"],
+        [["mingamesplayed", "mingamesplayedranked", "mingamesplayedunranked"], undefined],
+        [["fakerank"], undefined],
+        [["minrankedhandicap"], "minhandicapranked"],
+        [["minunrankedhandicap"], "minhandicapunranked"],
+        [["maxrankedhandicap"], "maxhandicapranked"],
+        [["maxunrankedhandicap"], "maxhandicapunranked"],
+        [["maxtotalgames"], "maxconnectedgames"],
+        [["maxactivegames"], "maxconnectedgamesperuser"],
+        [["maxmaintime"],  getBLCString("maxmaintime", "")],
+        [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
+        [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
+        [["minmaintime"], getBLCString("minmaintime", "")],
+        [["minmaintimeranked"], getBLCString("minmaintime", "ranked")],
+        [["minmaintimeunranked"], getBLCString("minmaintime", "unranked")],
+        [["maxperiodtime"], getBLCString("maxperiodtime", "")],
+        [["maxperiodtimeranked"], getBLCString("maxperiodtime", "ranked")],
+        [["maxperiodtimeunranked"], getBLCString("maxperiodtime", "unranked")],
+        [["minperiodtime"], getBLCString("minperiodtime", "")],
+        [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
+        [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
+        [["maxperiods"],  getBLCString("maxperiods", "")],
+        [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
+        [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
+        [["minperiods"], getBLCString("minperiods", "")],
+        [["minperiodsranked"], getBLCString("minperiods", "ranked")],
+        [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
+        [["boardsize"], "boardsizes"],
+        [["boardsizeranked"], "boardsizesranked"],
+        [["boardsizeunranked"], "boardsizesunranked"],
+        [["boardsizewidthsranked", "boardsizewidthsunranked",
+          "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
+        [["komi"], "komis"],
+        [["komiranked"], "komisranked"],
+        [["komiunranked"], "komisunranked"],
+        [["speed"], "speeds"],
+        [["speedranked"], "speedsranked"],
+        [["speedunranked"], "speedsunranked"],
+        [["timecontrol"], "timecontrols"],
+        [["timecontrolranked"], "timecontrolsranked"],
+        [["timecontrolunranked"], "timecontrolsunranked"]
     ];
     for (const [oldNames, newName] of droppedArgv) {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
-                if (newName) console.log(`Dropped: --${oldName} is no longer supported, use --${newName} instead.`);
-                else console.log(`Dropped: --${oldName} is no longer supported.`);
+                if (newName !== undefined) throw `Dropped: --${oldName} is no longer supported, use --${newName} instead.`;
+                throw `Dropped: --${oldName} is no longer supported.`;
             }
         }
     }
@@ -427,13 +438,12 @@ function testDroppedArgv(argv) {
         if (argv[argName]) {
             for (const komi of ["auto","null"]) {
                 if (argv[argName].split(",").includes(komi)) {
-                    console.log(`Dropped: --${argName} ${komi} is no longer `
-                                + `supported, use --${argName} automatic instead`);
+                    throw `Dropped: --${argName} ${komi} is no longer `
+                                + `supported, use --${argName} automatic instead`;
                 }
             }
         }
     }
-    console.log("\n");
 }
 
 function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {

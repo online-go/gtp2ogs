@@ -46,7 +46,7 @@ class FakeSocket {
         if (config.DEBUG) {
             console.log('client: ' + ev);
         }
-        var ret;
+        let ret;
         if (this.emit_callbacks[ev]) {
             ret = this.emit_callbacks[ev](data);
         }
@@ -168,16 +168,8 @@ function base_challenge(overrides) {
         user: {
             id: 2,
             username: 'human',
-            ratings: {
-                overall: {
-                    deviation: 150.0,
-                    rating: 1000.0,
-                    games_played: 5,
-                    volatility: 0.25
-                }
-            },
-            ranking: 10.0,
             professional: false,
+            ranking: 10.0,
         },
         rules: 'chinese',
         ranked: true,
@@ -516,7 +508,7 @@ describe('Games do not hang', () => {
         }
 
         // Simulate time passing
-        for (var i = 0; i < 500; i++) {
+        for (let i = 0; i < 500; i++) {
             fakes.clock.tick(100);
         }
 
@@ -582,7 +574,7 @@ describe('Periodic actions', () => {
         fake_socket.inject('connect');
 
         // Create 10 games.
-        for (var i = 0; i < 10; i++) {
+        for (let i = 0; i < 10; i++) {
             fake_socket.inject('active_game', base_active_game({ id: i }));
         }
         assert.equal(Object.keys(conn.connected_games).length, 10, 'Did not connect to all 10 games');

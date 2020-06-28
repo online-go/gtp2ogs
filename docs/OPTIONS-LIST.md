@@ -476,25 +476,6 @@ max:
 
 **important note**: see [notes F](/docs/NOTES.md#f) for details
 
-#### mingamesplayed
-
-This option can be useful to avoid spammers and bot abusers, who generally
-create new accounts to repeat their abuse.
-
-If you want to use this option, a reasonable value seems to be something
-between 5 and 10.
-
-see [notes I](/docs/NOTES.md#i) for details
-
-`--mingamesplayed` Do not accept challenges from players who played less
-ranked games than specified minimum number (too new players)
-
---mingamesplayedranked Do not accept ranked challenges from players
-who played less ranked games than specified minimum number (too new players)
-
---mingamesplayedunranked Do not accept unranked challenges from players
-who played less ranked games than specified minimum number (too new players)
-
 #### min/max rank
 
 min:
