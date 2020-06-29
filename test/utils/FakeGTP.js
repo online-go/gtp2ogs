@@ -4,6 +4,8 @@ const stream = new require('stream');
 // Fake GTP child_process (spwan)
 class FakeGTP {
     constructor(configDEBUG) {
+        this.configDEBUG = configDEBUG;
+
         this.pid = 100;
         this.callbacks = {};
         this.cmd_callbacks = {};
@@ -19,7 +21,7 @@ class FakeGTP {
             },
             end: () => {},
             write: (data) => {
-                if (configDEBUG) {
+                if (this.configDEBUG) {
                     console.log('STDIN: ', data.trim());
                 }
                 let cmd = data.trim().split(' ')[0];

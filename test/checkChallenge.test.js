@@ -10,7 +10,9 @@ let connection;
 const { console } = require('../console');
 
 const { base_challenge } = require('./utils/base_challenge');
-const { FakeSocket, FakeAPI } = require('./test')
+
+const { FakeAPI } = require('./utils/FakeAPI');
+const { FakeSocket } = require('./utils/FakeSocket');
 
 function stub_console() {
     sinon.stub(console, 'log');
@@ -44,7 +46,7 @@ describe('Challenges', () => {
     fake_api.request({path: '/foo'}, () => {});
     sinon.stub(https, 'request').callsFake(fake_api.request);
     
-    const fake_socket = new FakeSocket();
+    const fake_socket = new FakeSocket(config.DEBUG);
     conn = new connection.Connection(() => { return fake_socket; }, config);
   });
   

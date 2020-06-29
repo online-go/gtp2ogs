@@ -17,85 +17,15 @@ const { base_active_game } = require('./utils/base_active_game');
 const { base_challenge } = require('./utils/base_challenge');
 const { base_gamedata } = require('./utils/base_gamedata');
 
+const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeGTP } = require('./utils/FakeGTP');
+const { FakeSocket } = require('./utils/FakeSocket');
+
 
 const { Bot } = require('../bot');
 
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
-
-// Fake a socket.io-client
-class FakeSocket {
-    constructor() {
-        this.on_callbacks = {};
-        this.emit_callbacks = {};
-    }
-
-    on(ev, cb) {
-        console.log('client subscribe: ' + ev)
-        this.on_callbacks[ev] = cb;
-    }
-
-    inject(ev, data) {
-        console.log('client on(' + ev + ')')
-        this.on_callbacks[ev](data);
-    }
-
-    emit(ev, data, cb) {
-        if (config.DEBUG) {
-            console.log('client: ' + ev);
-        }
-        let ret;
-        if (this.emit_callbacks[ev]) {
-            ret = this.emit_callbacks[ev](data);
-        }
-        if (cb) {
-            cb(ret);
-        }
-    }
-
-    on_emit(ev, cb) {
-        console.log('server subscribe: ' + ev);
-        this.emit_callbacks[ev] = cb;
-    }
-}
-
-// Fake http/https request 
-class FakeAPI {
-    constructor() {
-        this.callbacks = {};
-        this.request = this.request.bind(this);
-    }
-
-    on_path(path, cb) {
-        this.callbacks[path] = cb;
-    }
-
-    request(options, cb) {
-        let response = '';
-        console.log('api ' + options.path);
-        if (this.callbacks[options.path]) {
-            response = this.callbacks[options.path](options);
-        }
-        cb({
-            statusCode: 200,
-            setEncoding: () => {},
-            on: (ev, cb) => {
-                if (ev === 'data') {
-                    cb(response);
-                }
-                if (ev === 'end') {
-                    cb();
-                }
-            },
-        });
-        return {
-            on: () => {},
-            write: () => {},
-            end: () => {},
-        };
-    }
-}
 
 function stub_console() {
     sinon.stub(console, 'log');
@@ -112,7 +42,7 @@ describe('A single game', () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        let fake_socket = new FakeSocket(config.DEBUG);
         let fake_api = new FakeAPI();
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
@@ -203,7 +133,7 @@ describe('Games do not hang', () => {
         stub_console();
         let clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        let fake_socket = new FakeSocket(config.DEBUG);
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
         let fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
@@ -348,7 +278,7 @@ describe('Periodic actions', () => {
         sinon.stub(config, 'timeout').value(5000);
         let clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        let fake_socket = new FakeSocket(config.DEBUG);
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
         let fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
@@ -401,7 +331,7 @@ describe("Retrying bot failures", () => {
         sinon.stub(console, 'log');
         let fake_clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        let fake_socket = new FakeSocket(config.DEBUG);
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
 
         let retry = sinon.spy();
@@ -526,7 +456,7 @@ describe("Pv should work", () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        let fake_socket = new FakeSocket(config.DEBUG);
         let fake_api = new FakeAPI();
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
@@ -582,7 +512,7 @@ describe("Pv should work", () => {
     function testPv(pvCode, fileName, chatBody) {
         stub_console();
         sinon.useFakeTimers();
-        let fake_socket = new FakeSocket();
+        let fake_socket = new FakeSocket(config.DEBUG);
         let fake_api = new FakeAPI();
         fake_api.request({ path: '/foo' }, () => { });
         sinon.stub(https, 'request').callsFake(fake_api.request);
@@ -601,5 +531,3 @@ describe("Pv should work", () => {
         conn.terminate();
     }
 });
-
-module.exports = { FakeSocket, FakeAPI };
