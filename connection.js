@@ -435,10 +435,10 @@ class Connection {
         }
         
         // if square, check if square board size is allowed
-        /*const resultBoardsizes = getAllowedBoardsizesRejectResult("boardsizes", "Board size", notification.width, r_u);
+        const resultBoardsizes = getAllowedBoardsizesRejectResult("boardsizes", "Board size", notification.width, r_u);
         if (resultBoardsizes) return resultBoardsizes;
 
-        const resultKomis = getAllowedKomisRejectResult("komis", "Komi", notification.komi, r_u);
+        /*const resultKomis = getAllowedKomisRejectResult("komis", "Komi", notification.komi, r_u);
         if (resultKomis) return resultKomis;
 
         const resultSpeeds = getAllowedGroupRejectResult("speeds", "Speed", notification.time_control.speed, r_u);
@@ -810,9 +810,9 @@ function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
 }
 
 function boardsizesSquareToDisplayString(boardsizesSquare) {
-    return boardsizesSquare
+    return (boardsizesSquare
     .map(e => `${e}x${e}`)
-    .join(', ');
+    .join(', '));
 }
 
 function getAcceptedSquareBoardsizeSuggestion(r_u) {
@@ -844,27 +844,32 @@ function getBoardsizeNotSquareReject(notifWidth, notifHeight, r_u) {
     return getReject(reason);
 }
 
-function getAllowedGroupRejectReason(optionName, argToString, notifToString, nameF, r_u) {
+function getAllowedGroupRejectReason(optionName, argsToString, notifToString, nameF, r_u) {
     const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgAllowedGroup(optionName);
     const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
 
     const lowCaseNameF = nameF.toLowerCase();
     const suggestion = r_u_sentences.suggestion;
 
-    conn_log(`${nameF}${r_u_sentences.for_r_u_games} is ${notifToString}, not in ${argToString}.`);
+    conn_log(`${nameF}${r_u_sentences.for_r_u_games} is ${notifToString}, not in ${argsToString}.`);
     const reason = `${nameF} ${notifToString} is not allowed on this bot${r_u_sentences.for_r_u_games}`
                    + `, please choose one of these allowed ${lowCaseNameF}s${r_u_sentences.for_r_u_games}:`
-                   + `\n${argToString}${suggestion}.`;
+                   + `\n${argsToString}${suggestion}.`;
     return getReject(reason);
 }
 
 function getAllowedBoardsizesRejectResult(optionName, nameF, notif, r_u) {
-    const arg = config[r_u].boardsizes.allowed;
-    const allowedBoardsizes = Object.keys(arg);
-    const argToString = boardsizesSquareToDisplayString(allowedBoardsizes);
-    const notifToString = boardsizesSquareToDisplayString(notif);
+    const allow_all = config[r_u][optionName].allow_all;
+    const args = config[r_u][optionName].allowed;
 
-    return getAllowedGroupRejectReason(argToString, notifToString, nameF, r_u);
+    if (!allow_all && !args[notif]) {
+        const allowedBoardsizes = Object.keys(args);
+        const argsToString = boardsizesSquareToDisplayString(allowedBoardsizes);
+        const notifArr = [notif];
+        const notifToString = boardsizesSquareToDisplayString(notifArr);
+
+        return getAllowedGroupRejectReason(optionName, argsToString, notifToString, nameF, r_u);
+    }
 }
 
 function getAllowedValuesToString(allowedValues) {
@@ -877,20 +882,30 @@ function getKomisNotifToString(notif) {
 }
 
 function getAllowedKomisRejectResult(optionName, nameF, notif, r_u) {
-    const arg = config[r_u].komis.allowed;
-    const allowedKomis = Object.keys(arg);
-    const argToString = getAllowedValuesToString(allowedKomis); // key is already "automatic" in arg, not "null", all good
-    const notifToString = getKomisNotifToString(notif); // but we need to convert notification.komi "null" to "automatic"
+    const allow_all = config[r_u][optionName].allow_all;
+    const args = config[r_u][optionName].allowed;
 
-    return getAllowedGroupRejectReason(argToString, notifToString, nameF, r_u);
+    if (!allow_all && !args[notif]) {
+        const allowedKomis = Object.keys(args);
+        const argsToString = getAllowedValuesToString(allowedKomis); // key is already "automatic" in arg, not "null", all good
+        const notifArr = [notif];
+        const notifToString = getKomisNotifToString(notifArr); // but we need to convert notification.komi "null" to "automatic"
+
+        return getAllowedGroupRejectReason(optionName, argsToString, notifToString, nameF, r_u);
+    }
 }
 
 function getAllowedGroupRejectResult(optionName, nameF, notif, r_u) {
-    const arg = config[r_u].komis.allowed;
-    const allowedValues = Object.keys(arg);
-    const argToString = getAllowedValuesToString(allowedValues);
+    const allow_all = config[r_u][optionName].allow_all;
+    const args = config[r_u][optionName].allowed;
 
-    return getAllowedGroupRejectReason(argToString, notif, nameF, r_u);
+    if (!allow_all && !args[notif]) {
+        const allowedValues = Object.keys(args);
+        const argsToString = getAllowedValuesToString(allowedValues);
+
+
+        return getAllowedGroupRejectReason(optionName, argsToString, notif, nameF, r_u);
+    }
 }
 
 function checkIsMin(optionName) {

@@ -1,29 +1,23 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const assert = require('assert');
-const sinon = require('sinon');
-
-const connection = require('../connection');
-const config = require('../config');
-const { console } = require('../console');
-const { Bot } = require('../bot');
-
 const child_process = require('child_process');
+const fs = require('fs');
 const https = require('https');
-
-const fs = require('fs')
-
+const sinon = require('sinon');
 const stream = new require('stream');
 
-config.DEBUG = true;
-config.apikey = 'deadbeef';
-config.host = 'test';
-config.port = 80;
-config.username = 'testbot';
+const { testconfig } = require('../utils/testconfig.js');
+const config = require('../config');
+testconfig.assignNewConfig(config);
 
-config.bot_command = ['gtp-program', '--argument'];
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
+
+const connection = require('../connection');
+
+const { console } = require('../console');
+const { Bot } = require('../bot');
 
 // Fake a socket.io-client
 class FakeSocket {

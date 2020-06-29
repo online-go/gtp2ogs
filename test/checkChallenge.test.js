@@ -1,14 +1,15 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const assert = require('assert');
+const https = require('https');
+const sinon = require('sinon');
+
+const { testconfig } = require('../utils/testconfig.js');
 
 let config;
 let connection;
+
 const console = require('../console').console;
-
-const sinon = require('sinon');
-
-const https = require('https');
 
 const { FakeSocket, FakeAPI, base_challenge } = require('./test')
 
@@ -22,19 +23,6 @@ function requireUncached(module) {
   return require(module);
 }
 
-function getNewConfig() {
-  const config = requireUncached('../config');
-
-  config.DEBUG = true;
-  config.apikey = 'deadbeef';
-  config.host = 'test';
-  config.port = 80;
-  config.username = 'testbot';
-
-  config.bot_command = ['gtp-program', '--argument'];
-  return config; 
-}
-
 afterEach(function () {
     sinon.restore();
 });
@@ -44,7 +32,9 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
-    config = getNewConfig();
+    config = requireUncached('../config');
+    testconfig.assignNewConfig(config);
+
     connection = requireUncached('../connection');
 
     stub_console();
@@ -1082,7 +1072,11 @@ describe('Challenges', () => {
 
   describe('Non-square boardsizes', () => {
 
+    // if no value is used, defaults will be used unless we specifically undo them with config[r_u].boardsizes.allowed = {}; 
+
     it('reject non-square boardsizes for all games and game is ranked (no square suggestion)', () => {
+
+      config.ranked.boardsizes.allowed = undefined;
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
@@ -1094,6 +1088,8 @@ describe('Challenges', () => {
 
     it('reject non-square boardsizes for all games and game is unranked (no square suggestion)', () => {
 
+      config.unranked.boardsizes.allowed = undefined;
+
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
       const result = conn.checkChallengeAllowedGroups(notification, "unranked");
@@ -1104,14 +1100,11 @@ describe('Challenges', () => {
 
     it('reject non-square boardsizes for all games and game is ranked (with square suggestion)', () => {
 
-      config.ranked.boardsizes.allowed[19] = true;
-      config.unranked.boardsizes.allowed[19] = true;
-
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
       const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 9x9 will be accepted.' }));
 
     });
 
@@ -1124,7 +1117,7 @@ describe('Challenges', () => {
 
       const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 9x9 will be accepted.' }));
 
     });
 
@@ -1156,9 +1149,6 @@ describe('Challenges', () => {
 
     it('accept square boardsizes for all games and game is ranked', () => {
 
-      config.ranked.boardsizes.allowed[19] = true;
-      config.unranked.boardsizes.allowed[19] = true;
-
       const notification = base_challenge({ ranked: true, width: 19, height: 19 });
 
       const result = conn.checkChallengeAllowedGroups(notification, "ranked");
@@ -1168,9 +1158,6 @@ describe('Challenges', () => {
     });
 
     it('accept square boardsizes for all games and game is unranked', () => {
-
-      config.ranked.boardsizes.allowed[19] = true;
-      config.unranked.boardsizes.allowed[19] = true;
 
       const notification = base_challenge({ ranked: false, width: 19, height: 19 });
 
@@ -1184,27 +1171,25 @@ describe('Challenges', () => {
 
     it('reject non-square boardsizes for ranked games and game is ranked (with square suggestion)', () => {
 
-      config.ranked.boardsizes.allowed[19] = true;
       config.unranked.boardsizes.allow_all = true;
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
       const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed for ranked games.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.\nYou can change the ranked setting, or use the same setting in an unranked and it will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed for ranked games.\nPlease choose a SQUARE board size (same width and height), for example 9x9 will be accepted.\nYou can change the ranked setting, or use the same setting in an unranked and it will be accepted.' }));
 
     });
 
     it('reject non-square boardsizes for unranked games and game is unranked (with square suggestion)', () => {
 
       config.ranked.boardsizes.allow_all = true;
-      config.unranked.boardsizes.allowed[19] = true;
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
       const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed for unranked games.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.\nYou can change the unranked setting, or use the same setting in an ranked and it will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed for unranked games.\nPlease choose a SQUARE board size (same width and height), for example 9x9 will be accepted.\nYou can change the unranked setting, or use the same setting in an ranked and it will be accepted.' }));
 
     });
 
@@ -1265,16 +1250,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 18, height: 18 });
 
-      config.boardsizes = "9,13,19";
-      config.allow_all_boardsizes = false;
-      config.allowed_boardsizes = [];
-      config.allowed_boardsizes[9] = true;
-      config.allowed_boardsizes[13] = true;
-      config.allowed_boardsizes[19] = true;
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
-      const result = conn.checkChallengeAllowedGroups(notification);
-
-      assert.deepEqual(result, ({ reject: true, reason: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed Board sizes:\n9x9, 13x13, 19x19.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed board sizes:\n9x9, 13x13, 19x19.' }));
 
     });
 
@@ -1282,28 +1260,20 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 19 });
 
-      config.boardsizes = "9,13,19";
-      config.allow_all_boardsizes = false;
-      config.allowed_boardsizes = [];
-      config.allowed_boardsizes[9] = true;
-      config.allowed_boardsizes[13] = true;
-      config.allowed_boardsizes[19] = true;
-
-      const result = conn.checkChallengeAllowedGroups(notification);
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
     });
 
-    it('accept boardsize not in allowed boardsizes if all', () => {
+    it('accept boardsize not in allowed boardsizes if allow_all', () => {
 
       const notification = base_challenge({ ranked: false, width: 18, height: 18 });
 
-      config.boardsizes = "all";
-      config.allow_all_boardsizes = true;
-      config.allowed_boardsizes = [];
+      config.ranked.boardsizes.allow_all = true;
+      config.unranked.boardsizes.allow_all = true;
 
-      const result = conn.checkChallengeAllowedGroups(notification);
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
