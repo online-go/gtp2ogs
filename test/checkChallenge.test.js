@@ -4,14 +4,13 @@ const assert = require('assert');
 const https = require('https');
 const sinon = require('sinon');
 
-const { testconfig } = require('../utils/testconfig.js');
-
 let config;
 let connection;
 
 const console = require('../console').console;
 
-const { FakeSocket, FakeAPI, base_challenge } = require('./test')
+const { base_challenge } = require('./utils/base_challenge');
+const { FakeSocket, FakeAPI } = require('./test')
 
 function stub_console() {
     sinon.stub(console, 'log');
@@ -33,7 +32,8 @@ describe('Challenges', () => {
  
   beforeEach(function() {
     config = requireUncached('../config');
-    testconfig.assignNewConfig(config);
+    const { assignNewConfig } = require('./utils/assignNewConfig.js');
+    assignNewConfig(config);
 
     connection = requireUncached('../connection');
 
@@ -1269,6 +1269,19 @@ describe('Challenges', () => {
     it('accept boardsize not in allowed boardsizes if allow_all', () => {
 
       const notification = base_challenge({ ranked: false, width: 18, height: 18 });
+
+      config.ranked.boardsizes.allow_all = true;
+      config.unranked.boardsizes.allow_all = true;
+
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
+
+      assert.deepEqual(result, ({ reject: false }));
+
+    });
+
+    it('accept boardsize in allowed boardsizes if allow_all', () => {
+
+      const notification = base_challenge({ ranked: false, width: 19, height: 19 });
 
       config.ranked.boardsizes.allow_all = true;
       config.unranked.boardsizes.allow_all = true;

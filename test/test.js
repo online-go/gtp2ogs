@@ -7,11 +7,15 @@ const https = require('https');
 const sinon = require('sinon');
 const stream = new require('stream');
 
-const { testconfig } = require('../utils/testconfig.js');
 const config = require('../config');
-testconfig.assignNewConfig(config);
+const { assignNewConfig } = require('./utils/assignNewConfig.js');
+assignNewConfig(config);
 
 const connection = require('../connection');
+
+const { base_active_game } = require('./utils/base_active_game');
+const { base_challenge } = require('./utils/base_challenge');
+const { base_gamedata } = require('./utils/base_gamedata');
 
 const { console } = require('../console');
 const { Bot } = require('../bot');
@@ -149,153 +153,6 @@ class FakeGTP {
     kill() {
         this.exit(1);
     }
-}
-
-function base_challenge(overrides) {
-    let base = {
-        type: 'challenge',
-        challenge_id: 1,
-        player_id: 1,
-        game_id: 1,
-        id: '1', // GUID
-        challenger_color: 'white',
-        user: {
-            id: 2,
-            username: 'human',
-            professional: false,
-            ranking: 10.0,
-        },
-        rules: 'chinese',
-        ranked: true,
-        width: 19,
-        height: 19,
-        handicap: 0,
-        komi: 7.5,
-        time_control: {
-            speed: 'live',
-            system: 'fischer',
-            time_control: 'fischer',
-            initial_time: 120,
-            max_time: 300,
-            time_increment: 30,
-            pause_on_weekends: false,
-        },
-        disable_analysis: false,
-        aga_rated: false,
-        aux_delivered: 0,
-        read: 0,
-        timestamp: 0,
-        read_timestamp: 0,
-    }
-    return Object.assign({}, base, overrides);
-}
-
-function base_active_game(overrides) {
-    let base = {
-        id: 1,
-        phase: 'play',
-        name: 'Friendly Match',
-        player_to_move: 1,
-        time_per_move: 89280,
-        width: 19,
-        height: 19,
-        move_number: 0,
-        paused: 0,
-        private: false,
-        black: {
-            id: 1,
-            username: 'testbot',
-            rank: 10,
-            professional: false,
-            accepted: false,
-        },
-        white: {
-            id: 2,
-            username: 'human',
-            rank: 10,
-            professional: false,
-            accepted: false,
-        },
-    }
-    return Object.assign({}, base, overrides);
-}
-
-function base_gamedata(overrides) {
-    let base = {
-        game_id: 1,
-        game_name: 'Friendly Match',
-        phase: 'play',
-        komi: 7.5,
-        handicap: 0,
-        width: 19,
-        height: 19,
-        private: false,
-        ranked: false,
-        rules: 'chinese',
-        time_control: {
-            system: 'fischer',
-            pause_on_weekends: false,
-            time_control: 'fischer',
-            initial_time: 120,
-            max_time: 300,
-            time_increment: 30,
-            speed: 'live',
-        },
-        start_time: 0,
-        clock: {
-            game_id: 1,
-            current_player: 1,
-            black_player_id: 1,
-            white_player_id: 2,
-            title: 'Friendly Match',
-            last_move: 0,
-            expiration: 0, // TODO
-            black_time: { thinking_time: 30, skip_bonus: false },
-            white_time: { thinking_time: 30, skip_bonus: false },
-            start_mode: true,
-        },
-        initial_player: 'black',
-        black_player_id: 1,
-        white_player_id: 2,
-        players: {
-            black: {
-                id: 1,
-                username: 'testbot',
-                rank: 10,
-                professional: false,
-            },
-            white: {
-                id: 2,
-                username: 'human',
-                rank: 10,
-                professional: false,
-            },
-        },
-        moves: [],
-        meta_groups: [],
-        history: [],
-        initial_state: { black: '', white: '' },
-        pause_on_weekends: false,
-        disable_analysis: false,
-        allow_self_capture: false,
-        automatic_stone_removal: false,
-        free_handicap_placement: true,
-        aga_handicap_scoring: false,
-        allow_ko: false,
-        allow_superko: false,
-        superko_algorithm: 'ssk',
-        score_territory: true,
-        score_territory_in_seki: true,
-        score_stones: true,
-        score_handicap: true,
-        score_prisoners: false,
-        score_passes: true,
-        white_must_pass_last: false,
-        opponent_plays_first_after_resume: false,
-        strict_seki_mode: false,
-        original_disable_analysis: false,
-    };
-    return Object.assign({}, base, overrides);
 }
 
 function stub_console() {
@@ -803,4 +660,4 @@ describe("Pv should work", () => {
     }
 });
 
-module.exports = { FakeSocket, FakeAPI, base_challenge };
+module.exports = { FakeSocket, FakeAPI };

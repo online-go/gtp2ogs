@@ -27,4 +27,4 @@ function assignNewConfig(config) {
     config.bot_command = ['gtp-program', '--argument'];
 }
 
-exports.testconfig = { assignRankedUnrankedDefaults, assignNewConfig };
+exports.assignNewConfig = assignNewConfig;
