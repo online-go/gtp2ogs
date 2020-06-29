@@ -11,13 +11,13 @@ const { testconfig } = require('../utils/testconfig.js');
 const config = require('../config');
 testconfig.assignNewConfig(config);
 
-config.timeout = 0; // needed for test.js
-config.corrqueue = false; // needed for test.js
-
 const connection = require('../connection');
 
 const { console } = require('../console');
 const { Bot } = require('../bot');
+
+config.timeout = 0; // needed for test.js
+config.corrqueue = false; // needed for test.js
 
 // Fake a socket.io-client
 class FakeSocket {

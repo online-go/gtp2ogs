@@ -8,10 +8,10 @@ function assignRankedUnrankedDefaults(config, r_u) {
 
     config[r_u].speeds.allow_all = true;
 
-    config[r_u].timecontrols.allowed["byoyomi"];
-    config[r_u].timecontrols.allowed["fischer"];
-    config[r_u].timecontrols.allowed["canadian"];
-    config[r_u].timecontrols.allowed["simple"];
+    config[r_u].timecontrols.allowed["byoyomi"] = true;
+    config[r_u].timecontrols.allowed["fischer"] = true;
+    config[r_u].timecontrols.allowed["canadian"] = true;
+    config[r_u].timecontrols.allowed["simple"] = true;
 }
 
 function assignNewConfig(config) {
