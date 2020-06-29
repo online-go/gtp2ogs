@@ -7,7 +7,7 @@ const sinon = require('sinon');
 let config;
 let connection;
 
-const console = require('../console').console;
+const { console } = require('../console');
 
 const { base_challenge } = require('./utils/base_challenge');
 const { FakeSocket, FakeAPI } = require('./test')

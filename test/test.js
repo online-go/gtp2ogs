@@ -5,19 +5,20 @@ const child_process = require('child_process');
 const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
-const stream = new require('stream');
 
 const config = require('../config');
 const { assignNewConfig } = require('./utils/assignNewConfig.js');
 assignNewConfig(config);
 
 const connection = require('../connection');
+const { console } = require('../console');
 
 const { base_active_game } = require('./utils/base_active_game');
 const { base_challenge } = require('./utils/base_challenge');
 const { base_gamedata } = require('./utils/base_gamedata');
 
-const { console } = require('../console');
+const { FakeGTP } = require('./utils/FakeGTP');
+
 const { Bot } = require('../bot');
 
 config.timeout = 0; // needed for test.js
@@ -96,65 +97,6 @@ class FakeAPI {
     }
 }
 
-// Fake GTP child_process (spwan)
-class FakeGTP {
-    constructor() {
-        this.pid = 100;
-        this.callbacks = {};
-        this.cmd_callbacks = {};
-        this.stderr = new stream.Readable({ read: () => {}});
-        this.callbacks.stderr = (data) => this.stderr.emit('data', data);
-
-        this.stdout = { on: (_, cb) => {
-            this.callbacks.stdout = cb;
-        }};
-        this.stdin = {
-            on: (_, cb) => {
-                this.callbacks.stdin = cb;
-            },
-            end: () => {},
-            write: (data) => {
-                if (config.DEBUG) {
-                    console.log('STDIN: ', data.trim());
-                }
-                let cmd = data.trim().split(' ')[0];
-                if (this.cmd_callbacks[cmd]) {
-                    this.cmd_callbacks[cmd](data.trim());
-                } else {
-                    this.gtp_response('');
-                }
-            }
-        };
-    }
-
-    on(ev, cb) {
-        this.callbacks[ev] = cb;
-    }
-
-    on_cmd(cmd, cb) {
-        console.log('GTP: ', cmd);
-        this.cmd_callbacks[cmd] = cb;
-    }
-
-    gtp_response(data) {
-        this.callbacks.stdout('= ' + data + "\n\n");
-    }
-
-    gtp_error(data) {
-        this.callbacks.stdout('? ' + data + "\n\n");
-    }
-
-    exit(code) {
-        if (this.callbacks.exit) {
-            this.callbacks.exit({ code: code, signal: null });
-        }
-    }
-
-    kill() {
-        this.exit(1);
-    }
-}
-
 function stub_console() {
     sinon.stub(console, 'log');
     sinon.stub(console, 'debug');
@@ -175,7 +117,7 @@ describe('A single game', () => {
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP();
+        let fake_gtp = new FakeGTP(config.DEBUG);
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         let conn = new connection.Connection(() => { return fake_socket; }, config);
@@ -267,7 +209,7 @@ describe('Games do not hang', () => {
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
         sinon.stub(child_process, 'spawn').callsFake(() => {
-            let fake_gtp = new FakeGTP();
+            let fake_gtp = new FakeGTP(config.DEBUG);
             fake_gtp.on_cmd('genmove', () => {
                 // Takes 1 second to generate a move.
                 setTimeout(() => {
@@ -375,7 +317,7 @@ describe('Games do not hang', () => {
         let fakes = setupStubs();
 
         let genmove = sinon.spy();
-        let fake_gtp = new FakeGTP();
+        let fake_gtp = new FakeGTP(config.DEBUG);
         fake_gtp.on_cmd('genmove', () => {
             genmove();
             fake_gtp.gtp_response('Q4');
@@ -410,7 +352,7 @@ describe('Periodic actions', () => {
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
         let fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
-        let fake_gtp = new FakeGTP();
+        let fake_gtp = new FakeGTP(config.DEBUG);
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         fake_socket.on_emit('game/connect', (connect) => {
@@ -470,7 +412,7 @@ describe("Retrying bot failures", () => {
             }, 1000);
         });
 
-        let fake_gtp = new FakeGTP();
+        let fake_gtp = new FakeGTP(config.DEBUG);
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         return {
@@ -589,7 +531,7 @@ describe("Pv should work", () => {
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP();
+        let fake_gtp = new FakeGTP(config.DEBUG);
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         let conn = new connection.Connection(() => { return fake_socket; }, config);
@@ -644,7 +586,7 @@ describe("Pv should work", () => {
         let fake_api = new FakeAPI();
         fake_api.request({ path: '/foo' }, () => { });
         sinon.stub(https, 'request').callsFake(fake_api.request);
-        let fake_gtp = new FakeGTP();
+        let fake_gtp = new FakeGTP(config.DEBUG);
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
         let conn = new connection.Connection(() => { return fake_socket; }, config);
         const game = sinon.spy();
