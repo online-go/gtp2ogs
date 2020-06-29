@@ -1086,9 +1086,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height).' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height).' }));
 
     });
 
@@ -1096,9 +1096,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height).' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height).' }));
 
     });
 
@@ -1109,9 +1109,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.' }));
 
     });
 
@@ -1122,9 +1122,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.' }));
 
     });
 
@@ -1135,7 +1135,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1148,7 +1148,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1161,7 +1161,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 19 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1174,7 +1174,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 19 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1189,9 +1189,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed for ranked games.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.\nYou can change the ranked setting, or use the same setting in an unranked and it will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed for ranked games.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.\nYou can change the ranked setting, or use the same setting in an unranked and it will be accepted.' }));
 
     });
 
@@ -1202,9 +1202,9 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 19x18 is not square, not allowed for unranked games.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.\nYou can change the unranked setting, or use the same setting in an ranked and it will be accepted.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 19x18 is not square, not allowed for unranked games.\nPlease choose a SQUARE board size (same width and height), for example 19x19 will be accepted.\nYou can change the unranked setting, or use the same setting in an ranked and it will be accepted.' }));
 
     });
 
@@ -1214,7 +1214,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1226,7 +1226,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1239,7 +1239,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: true, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "ranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "ranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1252,7 +1252,7 @@ describe('Challenges', () => {
 
       const notification = base_challenge({ ranked: false, width: 19, height: 18 });
 
-      const result = conn.checkChallengeAllowedGroup(notification, "unranked");
+      const result = conn.checkChallengeAllowedGroups(notification, "unranked");
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1272,9 +1272,9 @@ describe('Challenges', () => {
       config.allowed_boardsizes[13] = true;
       config.allowed_boardsizes[19] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
 
-      assert.deepEqual(result, ({ reject: true, msg: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed Board sizes:\n9x9, 13x13, 19x19.' }));
+      assert.deepEqual(result, ({ reject: true, reason: 'Board size 18x18 is not allowed on this bot, please choose one of these allowed Board sizes:\n9x9, 13x13, 19x19.' }));
 
     });
 
@@ -1289,7 +1289,7 @@ describe('Challenges', () => {
       config.allowed_boardsizes[13] = true;
       config.allowed_boardsizes[19] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1303,7 +1303,7 @@ describe('Challenges', () => {
       config.allow_all_boardsizes = true;
       config.allowed_boardsizes = [];
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1322,7 +1322,7 @@ describe('Challenges', () => {
       config.allowed_speeds["blitz"] = true;
       config.allowed_speeds["live"] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
 
       assert.deepEqual(result, ({ reject: true, msg: 'Speed correspondence is not allowed on this bot, please choose one of these allowed Speeds:\nblitz, live.' }));
 
@@ -1338,7 +1338,7 @@ describe('Challenges', () => {
       config.allowed_speeds["blitz"] = true;
       config.allowed_speeds["live"] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1352,7 +1352,7 @@ describe('Challenges', () => {
       config.allow_all_speeds = true;
       config.allowed_speeds = [];
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
 
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1379,7 +1379,7 @@ describe('Challenges', () => {
       config.allow_all_speeds_unranked = false;
       config.allowed_speeds_unranked = [];
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
       
       assert.deepEqual(result, ({ reject: true, msg: 'Speed live is not allowed on this bot for ranked games, please choose one of these allowed Speeds for ranked games:\nblitz,correspondence.' }));
 
@@ -1399,7 +1399,7 @@ describe('Challenges', () => {
       config.allowed_speeds_unranked = [];
       config.allowed_speeds_unranked["live"] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 
@@ -1419,7 +1419,7 @@ describe('Challenges', () => {
       config.allowed_speeds_unranked = [];
       config.allowed_speeds_unranked["live"] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
       
       assert.deepEqual(result, ({ reject: true, msg: 'Speed blitz is not allowed on this bot for unranked games, please choose one of these allowed Speeds for unranked games:\nlive.' }));
 
@@ -1439,7 +1439,7 @@ describe('Challenges', () => {
       config.allowed_speeds_unranked = [];
       config.allowed_speeds_unranked["live"] = true;
 
-      const result = conn.checkChallengeAllowedGroup(notification);
+      const result = conn.checkChallengeAllowedGroups(notification);
       
       assert.deepEqual(result, ({ reject: false }));
 

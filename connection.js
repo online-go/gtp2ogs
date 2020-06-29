@@ -427,24 +427,24 @@ class Connection {
     }
     // Check challenge allowed group options are allowed
     //
-    checkChallengeAllowedGroup(notification, r_u) {
+    checkChallengeAllowedGroups(notification, r_u) {
 
         // only square boardsizes, except if all is allowed
         if ((notification.width !== notification.height) && !config[r_u].boardsizes.allow_all) {
             return getBoardsizeNotSquareReject(notification.width, notification.height, r_u);
         }
         
-        /*// if square, check if square board size is allowed
-        const resultBoardsizes = getAllowedGroupRejectResult("boardsizes", "Board size", notification.width, notification.ranked);
+        // if square, check if square board size is allowed
+        /*const resultBoardsizes = getAllowedBoardsizesRejectResult("boardsizes", "Board size", notification.width, r_u);
         if (resultBoardsizes) return resultBoardsizes;
 
-        const resultKomis = getAllowedGroupRejectResult("komis", "Komi", notification.komi, notification.ranked);
+        const resultKomis = getAllowedKomisRejectResult("komis", "Komi", notification.komi, r_u);
         if (resultKomis) return resultKomis;
 
-        const resultSpeeds = getAllowedGroupRejectResult("speeds", "Speed", notification.time_control.speed, notification.ranked);
+        const resultSpeeds = getAllowedGroupRejectResult("speeds", "Speed", notification.time_control.speed, r_u);
         if (resultSpeeds) return resultSpeeds;
 
-        const resultTimecontrols = getAllowedGroupRejectResult("timecontrols", "Time control", notification.time_control.time_control, notification.ranked);
+        const resultTimecontrols = getAllowedGroupRejectResult("timecontrols", "Time control", notification.time_control.time_control, r_u);
         if (resultTimecontrols) return resultTimecontrols;*/
 
         return { reject: false }; // OK !
@@ -505,7 +505,7 @@ class Connection {
                            this.checkChallengeUser,
                            this.checkChallengeBot,
                            this.checkChallengeBooleans,
-                           this.checkChallengeAllowedGroup,
+                           this.checkChallengeAllowedGroups,
                            //this.checkChallengeHandicap,
                            //this.checkChallengeTimeSettings
                            ]) {
@@ -771,12 +771,12 @@ function checkRankedArgSameRuleAsUnrankedArgAllowAllGroup(optionName) {
     return (rankedArg === unrankedArg);
 }
 
-/*function checkRankedArgSameRuleAsUnrankedArgAllowedGroup(optionName, notif) {
+function checkRankedArgSameRuleAsUnrankedArgAllowedGroup(optionName, notif) {
     const rankedArg = config.ranked[optionName].allowed[notif];
     const unrankedArg = config.unranked[optionName].allowed[notif];
 
     return (rankedArg === unrankedArg);
-}*/
+}
 
 function getReject(reason) {
     return { reject: true, reason };
@@ -809,12 +809,19 @@ function getBooleansRUReject(optionName, r_u, beginning, rejectIsImmutable) {
     return getReject(reason);
 }
 
-function getAcceptedSquareBoardsizeSuggestion(r_u) {
-    const allowedBoardsizes = config[r_u].boardsizes.allowed;
+function boardsizesSquareToDisplayString(boardsizesSquare) {
+    return boardsizesSquare
+    .map(e => `${e}x${e}`)
+    .join(', ');
+}
 
-    for (const k in allowedBoardsizes) {
-        if (allowedBoardsizes[k]) {
-            const allowedBoardsizeToString = boardsizeSquareToDisplayString(k);
+function getAcceptedSquareBoardsizeSuggestion(r_u) {
+    const arg = config[r_u].boardsizes.allowed;
+
+    for (const k in arg) {
+        if (arg[k]) {
+            const allowedBoardsizeArr = [k];
+            const allowedBoardsizeToString = boardsizesSquareToDisplayString(allowedBoardsizeArr);
             return `, for example ${allowedBoardsizeToString} will be accepted`;
         }
     }
@@ -831,60 +838,60 @@ function getBoardsizeNotSquareReject(notifWidth, notifHeight, r_u) {
 
     conn_log(`Non-square boardsize ${notifWidth}x${notifHeight} not allowed`
              + ` ${r_u_sentences.for_r_u_games}`);
-    const msg = `Board size ${notifWidth}x${notifHeight} is not square`
+    const reason = `Board size ${notifWidth}x${notifHeight} is not square`
                 + `, not allowed${r_u_sentences.for_r_u_games}.\nPlease choose a SQUARE board size`
                 + ` (same width and height)${acceptedSquareSuggestion}${suggestion}.`;
-    return { reject: true, msg };
+    return getReject(reason);
 }
 
-function boardsizeSquareToDisplayString(boardsizeSquare) {
-    return boardsizeSquare
-    .toString()
-    .split(',')
-    .map(e => e.trim())
-    .map(e => `${e}x${e}`)
-    .join(', ');
+function getAllowedGroupRejectReason(optionName, argToString, notifToString, nameF, r_u) {
+    const rankedArgSameRuleAsUnrankedArg = checkRankedArgSameRuleAsUnrankedArgAllowedGroup(optionName);
+    const r_u_sentences = get_r_u_sentences(rankedArgSameRuleAsUnrankedArg, r_u);
+
+    const lowCaseNameF = nameF.toLowerCase();
+    const suggestion = r_u_sentences.suggestion;
+
+    conn_log(`${nameF}${r_u_sentences.for_r_u_games} is ${notifToString}, not in ${argToString}.`);
+    const reason = `${nameF} ${notifToString} is not allowed on this bot${r_u_sentences.for_r_u_games}`
+                   + `, please choose one of these allowed ${lowCaseNameF}s${r_u_sentences.for_r_u_games}:`
+                   + `\n${argToString}${suggestion}.`;
+    return getReject(reason);
 }
 
-/*function getAllowedGroupNotifToString(argName, notif) {
-    if (argName.includes("boardsizes")) {
-        return boardsizeSquareToDisplayString(notif);
-    }
-    if (argName.includes("komis") && (notif === null)) {
-        return "automatic";
-    } else {
-        return notif;
-    }
+function getAllowedBoardsizesRejectResult(optionName, nameF, notif, r_u) {
+    const arg = config[r_u].boardsizes.allowed;
+    const allowedBoardsizes = Object.keys(arg);
+    const argToString = boardsizesSquareToDisplayString(allowedBoardsizes);
+    const notifToString = boardsizesSquareToDisplayString(notif);
+
+    return getAllowedGroupRejectReason(argToString, notifToString, nameF, r_u);
 }
 
-function getAllowedGroupReject(argName, nameF, notif) {
-    const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-
-    const arg = config[argName];
-    const argToString = (argName.includes("boardsizes") ? boardsizeSquareToDisplayString(arg) : arg);
-    const notifToString = getAllowedGroupNotifToString(argName, notif);
-
-    conn_log(`${nameF} ${forRankedUnrankedGames}is ${notifToString}, not in ${argToString} (${argName}).`);
-    const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}`
-                + `, please choose one of these allowed ${nameF}s${forRankedUnrankedGames}:\n${argToString}.`;
-    return { reject: true, msg };
+function getAllowedValuesToString(allowedValues) {
+    return allowedValues.join(', ');
 }
 
-function getAllowedGroupRejectResult(optionName, nameF, notif, notificationRanked) {
-    const argNames = getArgNamesGRU(optionName);
-    const [general, ranked, unranked] = argNames;
-    const [general_underscored, ranked_underscored, unranked_underscored] = getArgNamesUnderscoredGRU(optionName);
+function getKomisNotifToString(notif) {
+    if (notif === null) return "automatic";
+    return notif;
+}
 
-    if (config[general] && !config[ranked] && !config[unranked] && !config[`allow_all_${general_underscored}`] && !config[`allowed_${general_underscored}`][notif]) {
-        return getAllowedGroupReject(general, nameF, notif);
-    }
-    if (config[ranked] && notificationRanked && !config[`allow_all_${ranked_underscored}`] && !config[`allowed_${ranked_underscored}`][notif]) {
-        return getAllowedGroupReject(ranked, nameF, notif);
-    }
-    if (config[unranked] && !notificationRanked && !config[`allow_all_${unranked_underscored}`] && !config[`allowed_${unranked_underscored}`][notif]) {
-        return getAllowedGroupReject(unranked, nameF, notif);
-    }
-}*/
+function getAllowedKomisRejectResult(optionName, nameF, notif, r_u) {
+    const arg = config[r_u].komis.allowed;
+    const allowedKomis = Object.keys(arg);
+    const argToString = getAllowedValuesToString(allowedKomis); // key is already "automatic" in arg, not "null", all good
+    const notifToString = getKomisNotifToString(notif); // but we need to convert notification.komi "null" to "automatic"
+
+    return getAllowedGroupRejectReason(argToString, notifToString, nameF, r_u);
+}
+
+function getAllowedGroupRejectResult(optionName, nameF, notif, r_u) {
+    const arg = config[r_u].komis.allowed;
+    const allowedValues = Object.keys(arg);
+    const argToString = getAllowedValuesToString(allowedValues);
+
+    return getAllowedGroupRejectReason(argToString, notif, nameF, r_u);
+}
 
 function checkIsMin(optionName) {
     return (optionName.slice(0,3) === "min");

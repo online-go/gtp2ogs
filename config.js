@@ -210,7 +210,8 @@ exports.updateFromArgv = function() {
     testDroppedArgv(argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
 
-    const rankedUnrankedOptions = [{ name: "bannedusernames" },
+    const rankedUnrankedOptions = [
+        { name: "bannedusernames" },
         { name: "bannedids" },
         { name: "boardsizes", default: "9,13,19" },
         { name: "komis", default: "automatic" },
@@ -258,16 +259,20 @@ exports.updateFromArgv = function() {
 
     // EXPORTS FROM ARGV
 
-    const rankedUnrankedAllOptionNames = rankedUnrankedOptions.reduce( (e) => e.name );
+    const rankedUnrankedAllOptionNames = getRankedUnrankedAllOptionNames(rankedUnrankedOptions);
+    const rankedUnrankedAllArgNames = getRankedUnrankedAllArgNames(rankedUnrankedAllOptionNames);
 
     // 0) Export everything in argv first, except ranked/unranked options (these need to
     //    be filtered before exporting).
 
     for (const k in argv) {
-        if (!rankedUnrankedAllOptionNames.includes(k)) {
+        if (!rankedUnrankedAllArgNames.includes(k)) {
             exports[k] = argv[k];
         }
     }
+
+    // TODO remove debug line
+    console.log(JSON.stringify(exports));
 
     // 1) For ranked unranked options, filter based on general ranked unranked precedence
     //    before exporting:
@@ -323,13 +328,13 @@ exports.updateFromArgv = function() {
     exports.bot_command = argv._;
 
     // final sanity check before leaving config:
-    // make sure we still have config.ranked and config.unranked and/or
-    // we didn't accidentally erase them in our code
-
-    if (typeof argv.ranked !== "object") {
+    // make sure we still have config.ranked and config.unranked as objects
+    // and didn't accidentally overwrite it to another type
+    //
+    if (typeof exports.ranked !== "object") {
         throw `Error: Config.ranked is not an object, cannot export config.`
     }
-    if (typeof argv.unranked !== "object") {
+    if (typeof exports.unranked !== "object") {
         throw `Error: Config.unranked is not an object, cannot export config.`
     }
 
@@ -527,6 +532,23 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
             }
         }
     }
+}
+
+function getRankedUnrankedAllOptionNames(rankedUnrankedOptions) {
+    return rankedUnrankedOptions.map( (e) => e.name );
+}
+
+function getRankedUnrankedAllArgNames(rankedUnrankedAllOptionNames) {
+    let rankedUnrankedAllArgNames = [];
+
+    for (const optionName of rankedUnrankedAllOptionNames) {
+        const argNames = getArgNamesGRU(optionName);
+        for (const argName of argNames) {
+            rankedUnrankedAllArgNames.push(argName);
+        }
+    }
+
+    return rankedUnrankedAllArgNames;
 }
 
 function getCommaSeparatedArgsStringConcated(...args) {
