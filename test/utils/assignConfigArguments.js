@@ -1,4 +1,4 @@
-function assignNewConfig(config) {
+function assignConfigArguments(config) {
     config.DEBUG = true;
     config.apikey = 'deadbeef';
     config.host = 'test';
@@ -8,4 +8,4 @@ function assignNewConfig(config) {
     config.bot_command = ['gtp-program', '--argument'];
 }
 
-exports.assignNewConfig = assignNewConfig;
+exports.assignConfigArguments = assignConfigArguments;

@@ -25,8 +25,8 @@ config.corrqueue = false; // needed for test.js
 
 function getNewConfig() {
     const config = require('../config');
-    const { assignNewConfig } = require('./utils/assignNewConfig.js');
-    assignNewConfig(config);
+    const { assignConfigArguments } = require('./utils/assignConfigArguments.js');
+    assignConfigArguments(config);
 
     return config;
 }

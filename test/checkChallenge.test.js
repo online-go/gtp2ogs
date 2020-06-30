@@ -7,7 +7,7 @@ const sinon = require('sinon');
 let config;
 let connection;
 
-const { assignNewConfig } = require('./utils/assignNewConfig.js');
+const { assignConfigArguments } = require('./utils/assignConfigArguments.js');
 const { base_challenge } = require('./utils/base_challenge');
 const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeSocket } = require('./utils/FakeSocket');
@@ -16,7 +16,7 @@ const { stub_console } = require('./utils/stub_console');
 
 function updateNewConfig() {
   config = requireUncached('../../config');
-  assignNewConfig(config);
+  assignConfigArguments(config);
 }
 
 function updateNewConnection() {
