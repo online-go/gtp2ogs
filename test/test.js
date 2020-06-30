@@ -6,31 +6,29 @@ const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
-const config = require('../config');
-const { assignNewConfig } = require('./utils/assignNewConfig.js');
-assignNewConfig(config);
+const config = getNewConfig();
 
 const connection = require('../connection');
 const { console } = require('../console');
+const { Bot } = require('../bot');
 
 const { base_active_game } = require('./utils/base_active_game');
 const { base_challenge } = require('./utils/base_challenge');
 const { base_gamedata } = require('./utils/base_gamedata');
-
 const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeGTP } = require('./utils/FakeGTP');
 const { FakeSocket } = require('./utils/FakeSocket');
-
-
-const { Bot } = require('../bot');
+const { stub_console } = require('./utils/stub_console');
 
 config.timeout = 0; // needed for test.js
 config.corrqueue = false; // needed for test.js
 
-function stub_console() {
-    sinon.stub(console, 'log');
-    sinon.stub(console, 'debug');
-    sinon.stub(console, 'error');
+function getNewConfig() {
+    const config = require('../config');
+    const { assignNewConfig } = require('./utils/assignNewConfig.js');
+    assignNewConfig(config);
+
+    return config;
 }
 
 afterEach(function () {

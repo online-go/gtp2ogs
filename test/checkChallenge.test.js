@@ -7,21 +7,20 @@ const sinon = require('sinon');
 let config;
 let connection;
 
-const { console } = require('../console');
-
+const { assignNewConfig } = require('./utils/assignNewConfig.js');
 const { base_challenge } = require('./utils/base_challenge');
-
 const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeSocket } = require('./utils/FakeSocket');
+const { requireUncached } = require('./utils/requireUncached');
+const { stub_console } = require('./utils/stub_console');
 
-function stub_console() {
-    sinon.stub(console, 'log');
-    sinon.stub(console, 'debug');
+function updateNewConfig() {
+  config = requireUncached('../../config');
+  assignNewConfig(config);
 }
 
-function requireUncached(module) {
-  delete require.cache[require.resolve(module)];
-  return require(module);
+function updateNewConnection() {
+  connection = requireUncached('../../connection');
 }
 
 afterEach(function () {
@@ -33,11 +32,8 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
-    config = requireUncached('../config');
-    const { assignNewConfig } = require('./utils/assignNewConfig.js');
-    assignNewConfig(config);
-    
-    connection = requireUncached('../connection');
+    updateNewConfig();
+    updateNewConnection();
 
     stub_console();
     sinon.useFakeTimers();
