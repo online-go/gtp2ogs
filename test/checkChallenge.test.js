@@ -14,12 +14,12 @@ const { FakeSocket } = require('./utils/FakeSocket');
 const { requireUncached } = require('./utils/requireUncached');
 const { stub_console } = require('./utils/stub_console');
 
-function updateNewConfig() {
+function resetToNewConfig() {
   config = requireUncached('../../config');
   assignConfigArguments(config);
 }
 
-function updateNewConnection() {
+function resetToNewConnection() {
   connection = requireUncached('../../connection');
 }
 
@@ -32,8 +32,8 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
-    updateNewConfig();
-    updateNewConnection();
+    resetToNewConfig();
+    resetToNewConnection();
 
     stub_console();
     sinon.useFakeTimers();
