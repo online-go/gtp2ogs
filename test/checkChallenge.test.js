@@ -42,7 +42,7 @@ describe('Challenges', () => {
     fake_api.request({path: '/foo'}, () => {});
     sinon.stub(https, 'request').callsFake(fake_api.request);
     
-    const fake_socket = new FakeSocket(config.DEBUG);
+    const fake_socket = new FakeSocket();
     conn = new connection.Connection(() => { return fake_socket; }, config);
   });
   

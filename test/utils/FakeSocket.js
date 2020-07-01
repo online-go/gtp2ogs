@@ -2,10 +2,9 @@ const { console } = require('../../console');
 
 // Fake a socket.io-client
 class FakeSocket {
-    constructor(configDEBUG) {
+    constructor() {
         this.on_callbacks = {};
         this.emit_callbacks = {};
-        this.configDEBUG = configDEBUG;
     }
 
     on(ev, cb) {
@@ -19,9 +18,8 @@ class FakeSocket {
     }
 
     emit(ev, data, cb) {
-        if (this.configDEBUG) {
-            console.log('client: ' + ev);
-        }
+        console.log('client: ' + ev);
+
         let ret;
         if (this.emit_callbacks[ev]) {
             ret = this.emit_callbacks[ev](data);

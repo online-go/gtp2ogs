@@ -40,12 +40,12 @@ describe('A single game', () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket(config.DEBUG);
+        let fake_socket = new FakeSocket();
         let fake_api = new FakeAPI();
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP(config.DEBUG);
+        let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         let conn = new connection.Connection(() => { return fake_socket; }, config);
@@ -131,13 +131,13 @@ describe('Games do not hang', () => {
         stub_console();
         let clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket(config.DEBUG);
+        let fake_socket = new FakeSocket();
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
         let fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
         sinon.stub(child_process, 'spawn').callsFake(() => {
-            let fake_gtp = new FakeGTP(config.DEBUG);
+            let fake_gtp = new FakeGTP();
             fake_gtp.on_cmd('genmove', () => {
                 // Takes 1 second to generate a move.
                 setTimeout(() => {
@@ -245,7 +245,7 @@ describe('Games do not hang', () => {
         let fakes = setupStubs();
 
         let genmove = sinon.spy();
-        let fake_gtp = new FakeGTP(config.DEBUG);
+        let fake_gtp = new FakeGTP();
         fake_gtp.on_cmd('genmove', () => {
             genmove();
             fake_gtp.gtp_response('Q4');
@@ -276,11 +276,11 @@ describe('Periodic actions', () => {
         sinon.stub(config, 'timeout').value(5000);
         let clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket(config.DEBUG);
+        let fake_socket = new FakeSocket();
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
         let fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
-        let fake_gtp = new FakeGTP(config.DEBUG);
+        let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         fake_socket.on_emit('game/connect', (connect) => {
@@ -329,7 +329,7 @@ describe("Retrying bot failures", () => {
         sinon.stub(console, 'log');
         let fake_clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket(config.DEBUG);
+        let fake_socket = new FakeSocket();
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
 
         let retry = sinon.spy();
@@ -340,7 +340,7 @@ describe("Retrying bot failures", () => {
             }, 1000);
         });
 
-        let fake_gtp = new FakeGTP(config.DEBUG);
+        let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         return {
@@ -454,12 +454,12 @@ describe("Pv should work", () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket(config.DEBUG);
+        let fake_socket = new FakeSocket();
         let fake_api = new FakeAPI();
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP(config.DEBUG);
+        let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         let conn = new connection.Connection(() => { return fake_socket; }, config);
@@ -510,11 +510,11 @@ describe("Pv should work", () => {
     function testPv(pvCode, fileName, chatBody) {
         stub_console();
         sinon.useFakeTimers();
-        let fake_socket = new FakeSocket(config.DEBUG);
+        let fake_socket = new FakeSocket();
         let fake_api = new FakeAPI();
         fake_api.request({ path: '/foo' }, () => { });
         sinon.stub(https, 'request').callsFake(fake_api.request);
-        let fake_gtp = new FakeGTP(config.DEBUG);
+        let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
         let conn = new connection.Connection(() => { return fake_socket; }, config);
         const game = sinon.spy();
