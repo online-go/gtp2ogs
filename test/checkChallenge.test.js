@@ -4,24 +4,15 @@ const assert = require('assert');
 const https = require('https');
 const sinon = require('sinon');
 
-let config;
-let connection;
-
-const { assignConfigArguments } = require('./utils/assignConfigArguments.js');
 const { base_challenge } = require('./utils/base_challenge');
 const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeSocket } = require('./utils/FakeSocket');
-const { requireUncached } = require('./utils/requireUncached');
+const { getNewConfigUncached } = require('./utils/getNewConfigUncached');
+const { getNewConnectionUncached } = require('./utils/getNewConnectionUncached');
 const { stub_console } = require('./utils/stub_console');
 
-function resetToNewConfig() {
-  config = requireUncached('../../config');
-  assignConfigArguments(config);
-}
-
-function resetToNewConnection() {
-  connection = requireUncached('../../connection');
-}
+let config;
+let connection;
 
 afterEach(function () {
     sinon.restore();
@@ -32,8 +23,8 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
-    resetToNewConfig();
-    resetToNewConnection();
+    config = getNewConfigUncached();
+    connection = getNewConnectionUncached();
 
     stub_console();
     sinon.useFakeTimers();
