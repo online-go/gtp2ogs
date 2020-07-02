@@ -318,7 +318,7 @@ class Connection {
         if (!knownSpeeds.includes(notification.time_control.speed)) {
             err(`Unknown speed ${notification.time_control.speed}.`);
             const msg = `Unknown speed ${notification.time_control.speed}`
-                        + `, cannot check challenge, please contact my bot admin.`;
+                        + `, cannot check challenge, please try again.`;
             return { reject: true, msg };
         }
 
@@ -327,15 +327,23 @@ class Connection {
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
             err(`Unknown time control ${notification.time_control.time_control}.`);
             const msg = `Unknown time control ${notification.time_control.time_control}`
-                        + `, cannot check challenge, please contact my bot admin.`;
+                        + `, cannot check challenge, please try again.`;
             return { reject: true, msg };
         }
 
-        // Sanity check: OGS enforces rules to be chinese regardless of user's choice.
+        // Sometimes server sends us live challenges with pauses on weekends enabled.
+        if (notification.time_control.pause_on_weekends && notification.time_control.speed !== "correspondence") {
+            err(`Unhandled pause on weekends in non-correspondence challenge (${notification.time_control.speed}).`);
+            const msg = `There was an unexpected error: your ${notification.time_control.speed} challenge`
+                        + ` has pause on weekends, but this is only possible for correspondence games`
+                        + `, please try again.`;
+            return { reject: true, msg };
+        }
+
+        // OGS enforces rules to be chinese regardless of user's choice.
         if (!notification.rules.includes("chinese")) {
-            err(`Unhandled rules: ${notification.rules}`);
-            const msg = `The ${notification.rules} rules are not allowed on this bot, `
-                        + `please choose allowed rules, for example chinese rules.`;
+            err(`Unhandled rules: ${notification.rules}.`);
+            const msg = `Games against bots on OGS can only be chinese rules.`;
             return { reject: true, msg };
         }
 
@@ -769,7 +777,7 @@ function getReject(reason) {
 
 function getCheckedKeyInObjReject(k) {
     err(`Missing key ${k}.`);
-    const msg = `Missing key ${k}, cannot check challenge, please contact my bot admin.`;
+    const msg = `Missing key ${k}, cannot check challenge, please try again.`;
     return { reject: true, msg };
 }
 

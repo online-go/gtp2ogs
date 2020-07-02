@@ -79,7 +79,39 @@ describe('Challenges', () => {
     
     const result = conn.checkChallenge(notification);
     
-    assert.deepEqual(result, ({ reject: true, msg: 'Missing key user, cannot check challenge, please contact my bot admin.' }));
+    assert.deepEqual(result, ({ reject: true, msg: 'Missing key user, cannot check challenge, please try again.' }));
+    });
+
+    it('reject non-correspondence challenge that has pause on weekends', () => {
+      const notification = base_challenge({ time_control: { system: "fischer", time_control: "fischer", speed: "live", pause_on_weekends: true, time_increment: 1, initial_time: 59, max_time: 59 } });
+
+      const result = conn.checkChallengeSanityChecks(notification);
+
+      assert.deepEqual(result, ({ reject: true, msg: 'There was an unexpected error: your live challenge has pause on weekends, but this is only possible for correspondence games, please try again.' }));
+    });
+
+    it('accept non-correspondence challenge that does not have pause on weekends', () => {
+      const notification = base_challenge({ time_control: { system: "fischer", time_control: "fischer", speed: "live", pause_on_weekends: false, time_increment: 1, initial_time: 59, max_time: 59 } });
+
+      const result = conn.checkChallengeSanityChecks(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept correspondence challenge that has pause on weekends', () => {
+      const notification = base_challenge({ time_control: { system: "fischer", time_control: "fischer", speed: "correspondence", pause_on_weekends: true, time_increment: 1, initial_time: 59, max_time: 59 } });
+
+      const result = conn.checkChallengeSanityChecks(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept correspondence challenge that does not have pause on weekends', () => {
+      const notification = base_challenge({ time_control: { system: "fischer", time_control: "fischer", speed: "correspondence", pause_on_weekends: false, time_increment: 1, initial_time: 59, max_time: 59 } });
+
+      const result = conn.checkChallengeSanityChecks(notification);
+
+      assert.deepEqual(result, ({ reject: false }));
     });
 
   });
