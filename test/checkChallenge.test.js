@@ -1,39 +1,18 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const assert = require('assert');
+const https = require('https');
+const sinon = require('sinon');
+
+const { base_challenge } = require('./utils/base_challenge');
+const { FakeAPI } = require('./utils/FakeAPI');
+const { FakeSocket } = require('./utils/FakeSocket');
+const { getNewConfigUncached } = require('./utils/getNewConfigUncached');
+const { getNewConnectionUncached } = require('./utils/getNewConnectionUncached');
+const { stub_console } = require('./utils/stub_console');
 
 let config;
 let connection;
-const console = require('../console').console;
-
-const sinon = require('sinon');
-
-const https = require('https');
-
-const { FakeSocket, FakeAPI, base_challenge } = require('./test')
-
-function stub_console() {
-    sinon.stub(console, 'log');
-    sinon.stub(console, 'debug');
-}
-
-function requireUncached(module) {
-  delete require.cache[require.resolve(module)];
-  return require(module);
-}
-
-function getNewConfig() {
-  const config = requireUncached('../config');
-
-  config.DEBUG = true;
-  config.apikey = 'deadbeef';
-  config.host = 'test';
-  config.port = 80;
-  config.username = 'testbot';
-
-  config.bot_command = ['gtp-program', '--argument'];
-  return config; 
-}
 
 afterEach(function () {
     sinon.restore();
@@ -44,8 +23,8 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
-    config = getNewConfig();
-    connection = requireUncached('../connection');
+    config = getNewConfigUncached();
+    connection = getNewConnectionUncached();
 
     stub_console();
     sinon.useFakeTimers();
