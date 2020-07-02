@@ -802,7 +802,7 @@ describe("Pv should work", () => {
         game.state = { width: 19, moves: { length: 2 } };
         config.ogspv = pvCode;
         new Bot(conn, game, config.bot_command);
-        fake_gtp.stderr.emit('data', fs.readFileSync(`./test/${fileName}.txt`));
+        fake_gtp.stderr.emit('data', fs.readFileSync(`./test/pv_samples/${fileName}.txt`));
         assert.equal(game.sendChat.callCount, 1);
         assert.ok(game.sendChat.firstCall.calledWith(chatBody, 3, 'malkovich'));
         conn.terminate();
