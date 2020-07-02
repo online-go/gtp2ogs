@@ -789,22 +789,31 @@ describe("Pv should work", () => {
     function testPv(pvCode, fileName, chatBody) {
         stub_console();
         sinon.useFakeTimers();
+
         let fake_socket = new FakeSocket();
         let fake_api = new FakeAPI();
         fake_api.request({ path: '/foo' }, () => { });
         sinon.stub(https, 'request').callsFake(fake_api.request);
+
         let fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
+
         let conn = new connection.Connection(() => { return fake_socket; }, config);
+
         const game = sinon.spy();
         game.sendChat = sinon.spy();
         game.processing = true;
         game.state = { width: 19, moves: { length: 2 } };
+
         config.ogspv = pvCode;
+
         new Bot(conn, game, config.bot_command);
+
         fake_gtp.stderr.emit('data', fs.readFileSync(`./test/${fileName}.txt`));
+
         assert.equal(game.sendChat.callCount, 1);
         assert.ok(game.sendChat.firstCall.calledWith(chatBody, 3, 'malkovich'));
+        
         conn.terminate();
     }
 });
