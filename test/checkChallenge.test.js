@@ -79,7 +79,7 @@ describe('Challenges', () => {
     
     const result = conn.checkChallenge(notification);
     
-    assert.deepEqual(result, ({ reject: true, msg: 'Missing key user, cannot check challenge, please contact my bot admin.' }));
+    assert.deepEqual(result, ({ reject: true, msg: 'Missing key user, cannot check challenge, please try again.' }));
     });
 
     it('reject non-correspondence challenge that has pause on weekends', () => {

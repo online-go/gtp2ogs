@@ -318,7 +318,7 @@ class Connection {
         if (!knownSpeeds.includes(notification.time_control.speed)) {
             err(`Unknown speed ${notification.time_control.speed}.`);
             const msg = `Unknown speed ${notification.time_control.speed}`
-                        + `, cannot check challenge, please contact my bot admin.`;
+                        + `, cannot check challenge, please try again.`;
             return { reject: true, msg };
         }
 
@@ -327,7 +327,7 @@ class Connection {
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
             err(`Unknown time control ${notification.time_control.time_control}.`);
             const msg = `Unknown time control ${notification.time_control.time_control}`
-                        + `, cannot check challenge, please contact my bot admin.`;
+                        + `, cannot check challenge, please try again.`;
             return { reject: true, msg };
         }
 
@@ -777,7 +777,7 @@ function getReject(reason) {
 
 function getCheckedKeyInObjReject(k) {
     err(`Missing key ${k}.`);
-    const msg = `Missing key ${k}, cannot check challenge, please contact my bot admin.`;
+    const msg = `Missing key ${k}, cannot check challenge, please try again.`;
     return { reject: true, msg };
 }
 
