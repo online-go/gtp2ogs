@@ -10,7 +10,8 @@
     "console.js",
     "game.js",
     "gtp2ogs.js",
-    "pv.js"
+    "pv.js",
+    "/utils/**"
   ],
   "bin": {
     "gtp2ogs": "gtp2ogs.js"
