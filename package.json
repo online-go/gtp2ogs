@@ -9,7 +9,8 @@
     "connection.js",
     "console.js",
     "game.js",
-    "gtp2ogs.js"
+    "gtp2ogs.js",
+    "pv.js"
   ],
   "bin": {
     "gtp2ogs": "gtp2ogs.js"
