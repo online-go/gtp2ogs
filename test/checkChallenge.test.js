@@ -39,7 +39,7 @@ describe('Challenges', () => {
   
   describe('General rules', () => {
 
-    it('accept default notification from base_challenge in test.js, with almost empty config', () => {
+    it('accept default notification from base_challenge, with almost empty config', () => {
       const notification = base_challenge();
       
       const result = conn.checkChallenge(notification);
@@ -51,7 +51,7 @@ describe('Challenges', () => {
 
   describe('Sanity Checks', () => {
 
-    it('accept real notification challenge with almost empty config (except defaults from base_challenge in test.js)', () => {
+    it('accept real notification challenge with almost empty config (except defaults from base_challenge)', () => {
       // notification sample as of 24 june 2020
       const notificationSample = {"id":"787:118a6213-4371-4fbf-9574-11c8016e86d8","type":"challenge","player_id":787,
       "timestamp":1593029394,"read_timestamp":0,"read":0,"aux_delivered":0,
