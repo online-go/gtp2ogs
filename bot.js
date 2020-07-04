@@ -3,9 +3,9 @@
 const child_process = require('child_process');
 const split2 = require('split2');
 
-const { decodeMoves } = require("./utils/decodeMoves");
-const { gtpchar2num } = require("./utils/gtpchar2num");
-const { move2gtpvertex } = require("./utils/move2gtpvertex");
+const { decodeMoves } = require("./gtp_helpers/decodeMoves");
+const { gtpchar2num } = require("./gtp_helpers/gtpchar2num");
+const { move2gtpvertex } = require("./gtp_helpers/move2gtpvertex");
 
 const console = require('./console').console;
 const config = require('./config');
