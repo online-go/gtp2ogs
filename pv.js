@@ -1,6 +1,6 @@
-const { char2num } = require("./utils/char2num");
-const { gtpchar2num } = require("./utils/gtpchar2num");
-const { num2char } = require("./utils/num2char");
+const { char2num } = require("./gtp/char2num");
+const { gtpchar2num } = require("./gtp/gtpchar2num");
+const { num2char } = require("./gtp/num2char");
 
 class Pv {
     constructor(setting, game) {

@@ -4,9 +4,9 @@ const http = require('http');
 const https = require('https');
 const querystring = require('querystring');
 
-const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-const { getArgNamesUnderscoredGRU } = require('./utils/getArgNamesUnderscoredGRU');
-const { getRankedUnranked } = require('./utils/getRankedUnranked');
+const { getArgNamesGRU } = require('./options/getArgNamesGRU');
+const { getArgNamesUnderscoredGRU } = require('./options/getArgNamesUnderscoredGRU');
+const { getRankedUnranked } = require('./options/getRankedUnranked');
 
 let config;
 const console = require('./console').console;

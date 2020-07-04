@@ -5,10 +5,10 @@
 
 const fs = require('fs');
 
-const { getArgNamesGRU } = require('./utils/getArgNamesGRU');
-const { getOptionName } = require('./utils/getOptionName');
-const { getRankedUnranked } = require('./utils/getRankedUnranked');
-const { getRankedUnrankedUnderscored } = require('./utils/getRankedUnrankedUnderscored');
+const { getArgNamesGRU } = require('./options/getArgNamesGRU');
+const { getOptionName } = require('./options/getOptionName');
+const { getRankedUnranked } = require('./options/getRankedUnranked');
+const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
 exports.check_rejectnew = function() {};
 
@@ -210,7 +210,7 @@ exports.updateFromArgv = function() {
     // A- greeting and debug status
 
     const debugStatus = argv.debug ? "ON" : "OFF";
-    console.log(`\ngtp2ogs version 6.0`
+    console.log(`\ngtp2ogs version 6.0.1`
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, `
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`

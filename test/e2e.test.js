@@ -6,13 +6,13 @@ const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
-const { base_active_game } = require('./utils/base_active_game');
-const { base_challenge } = require('./utils/base_challenge');
-const { base_gamedata } = require('./utils/base_gamedata');
-const { FakeAPI } = require('./utils/FakeAPI');
-const { FakeGTP } = require('./utils/FakeGTP');
-const { FakeSocket } = require('./utils/FakeSocket');
-const { getNewConfig } = require('./utils/getNewConfig');
+const { base_active_game } = require('./base_server_packets/base_active_game');
+const { base_challenge } = require('./base_server_packets/base_challenge');
+const { base_gamedata } = require('./base_server_packets/base_gamedata');
+const { FakeAPI } = require('./fake_modules/FakeAPI');
+const { FakeGTP } = require('./fake_modules/FakeGTP');
+const { FakeSocket } = require('./fake_modules/FakeSocket');
+const { getNewConfig } = require('./module_loading/getNewConfig');
 const { stub_console } = require('./utils/stub_console');
 
 const { Bot } = require('../bot');
