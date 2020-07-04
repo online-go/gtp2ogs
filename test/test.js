@@ -6,9 +6,9 @@ const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
-const { base_active_game } = require('./utils/base_active_game');
-const { base_challenge } = require('./utils/base_challenge');
-const { base_gamedata } = require('./utils/base_gamedata');
+const { base_active_game } = require('./base_server_packets/base_active_game');
+const { base_challenge } = require('./base_server_packets/base_challenge');
+const { base_gamedata } = require('./base_server_packets/base_gamedata');
 const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeGTP } = require('./utils/FakeGTP');
 const { FakeSocket } = require('./utils/FakeSocket');

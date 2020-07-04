@@ -4,7 +4,7 @@ const assert = require('assert');
 const https = require('https');
 const sinon = require('sinon');
 
-const { base_challenge } = require('./utils/base_challenge');
+const { base_challenge } = require('./base_server_packets/base_challenge');
 const { FakeAPI } = require('./utils/FakeAPI');
 const { FakeSocket } = require('./utils/FakeSocket');
 const { getNewConfigUncached } = require('./utils/getNewConfigUncached');
