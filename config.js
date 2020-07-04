@@ -5,10 +5,10 @@
 
 const fs = require('fs');
 
-const { getArgNamesGRU } = require('./options_helpers/getArgNamesGRU');
-const { getOptionName } = require('./options_helpers/getOptionName');
-const { getRankedUnranked } = require('./options_helpers/getRankedUnranked');
-const { getRankedUnrankedUnderscored } = require('./options_helpers/getRankedUnrankedUnderscored');
+const { getArgNamesGRU } = require('./options/getArgNamesGRU');
+const { getOptionName } = require('./options/getOptionName');
+const { getRankedUnranked } = require('./options/getRankedUnranked');
+const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
 exports.check_rejectnew = function() {};
 

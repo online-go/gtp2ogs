@@ -12,7 +12,7 @@ const { base_gamedata } = require('./base_server_packets/base_gamedata');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
 const { FakeGTP } = require('./fake_modules/FakeGTP');
 const { FakeSocket } = require('./fake_modules/FakeSocket');
-const { getNewConfig } = require('./module_loading_helpers/getNewConfig');
+const { getNewConfig } = require('./module_loading/getNewConfig');
 const { stub_console } = require('./utils/stub_console');
 
 const { Bot } = require('../bot');
