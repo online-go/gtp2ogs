@@ -5,8 +5,8 @@ const https = require('https');
 const sinon = require('sinon');
 
 const { base_challenge } = require('./base_server_packets/base_challenge');
-const { FakeAPI } = require('./utils/FakeAPI');
-const { FakeSocket } = require('./utils/FakeSocket');
+const { FakeAPI } = require('./fake_modules/FakeAPI');
+const { FakeSocket } = require('./fake_modules/FakeSocket');
 const { getNewConfigUncached } = require('./module_loading_helpers/getNewConfigUncached');
 const { getNewConnectionUncached } = require('./module_loading_helpers/getNewConnectionUncached');
 const { stub_console } = require('./utils/stub_console');
