@@ -8,6 +8,7 @@
     "config.js",
     "connection.js",
     "console.js",
+    "constants.js",
     "game.js",
     "gtp2ogs.js",
     "pv.js",
