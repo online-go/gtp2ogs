@@ -1,3 +1,50 @@
+const droppedOptions = [
+    [["botid", "bot", "id"], "username"],
+    [["mingamesplayed", "mingamesplayedranked", "mingamesplayedunranked"], undefined],
+    [["fakerank"], undefined],
+    [["minrankedhandicap"], "minhandicapranked"],
+    [["minunrankedhandicap"], "minhandicapunranked"],
+    [["maxrankedhandicap"], "maxhandicapranked"],
+    [["maxunrankedhandicap"], "maxhandicapunranked"],
+    [["maxtotalgames"], "maxconnectedgames"],
+    [["maxactivegames"], "maxconnectedgamesperuser"],
+    [["maxmaintime"],  getBLCString("maxmaintime", "")],
+    [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
+    [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
+    [["minmaintime"], getBLCString("minmaintime", "")],
+    [["minmaintimeranked"], getBLCString("minmaintime", "ranked")],
+    [["minmaintimeunranked"], getBLCString("minmaintime", "unranked")],
+    [["maxperiodtime"], getBLCString("maxperiodtime", "")],
+    [["maxperiodtimeranked"], getBLCString("maxperiodtime", "ranked")],
+    [["maxperiodtimeunranked"], getBLCString("maxperiodtime", "unranked")],
+    [["minperiodtime"], getBLCString("minperiodtime", "")],
+    [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
+    [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
+    [["maxperiods"],  getBLCString("maxperiods", "")],
+    [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
+    [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
+    [["minperiods"], getBLCString("minperiods", "")],
+    [["minperiodsranked"], getBLCString("minperiods", "ranked")],
+    [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
+    [["ban"], "bans"],
+    [["banranked"], "bansranked"],
+    [["banunranked"], "bansunranked"],
+    [["boardsize"], "boardsizes"],
+    [["boardsizeranked"], "boardsizesranked"],
+    [["boardsizeunranked"], "boardsizesunranked"],
+    [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked",
+        "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
+    [["komi"], "komis"],
+    [["komiranked"], "komisranked"],
+    [["komiunranked"], "komisunranked"],
+    [["speed"], "speeds"],
+    [["speedranked"], "speedsranked"],
+    [["speedunranked"], "speedsunranked"],
+    [["timecontrol"], "timecontrols"],
+    [["timecontrolranked"], "timecontrolsranked"],
+    [["timecontrolunranked"], "timecontrolsunranked"]
+];
+
 const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
 const rankedUnrankedOptions = [
@@ -34,4 +81,9 @@ const rankedUnrankedOptions = [
     { name: "maxperiodtimecorr", default: 259200 } // 3 days
 ];
 
-exports.constants = { ogsPvAIs, rankedUnrankedOptions };
+function getBLCString(optionName, rankedUnranked) {
+    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} `
+           + `and/or --${optionName}corr${rankedUnranked}`;
+}
+
+exports.constants = { droppedOptions, ogsPvAIs, rankedUnrankedOptions };

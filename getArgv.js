@@ -1,4 +1,4 @@
-const ogsPvAIs = require('./constants').constants.ogsPvAIs;
+const { ogsPvAIs } = require('./constants').constants;
 
 function getArgv() {
 

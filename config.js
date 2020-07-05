@@ -10,7 +10,7 @@ const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
-const { ogsPvAIs, rankedUnrankedOptions } = require('./constants');
+const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants').constants;
 
 exports.check_rejectnew = function() {};
 
@@ -50,7 +50,7 @@ exports.updateFromArgv = function(argv) {
     // B - test unsupported argv
 
     testBotCommandArgvIsValid(argv);
-    testDroppedArgv(argv);
+    testDroppedArgv(droppedOptions, argv);
     testConflictingOptions("rankedonly", "unrankedonly", argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedOptions(rankedUnrankedOptions, argv);
@@ -155,7 +155,6 @@ exports.updateFromArgv = function(argv) {
 }
 
 function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
-
     for (const option of rankedUnrankedOptions) {
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
         
@@ -171,11 +170,6 @@ function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
             }
         }
     }
-}
-
-function getBLCString(optionName, rankedUnranked) {
-    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} `
-           + `and/or --${optionName}corr${rankedUnranked}`;
 }
 
 function testBotCommandArgvIsValid(argv) {
@@ -195,54 +189,8 @@ function testBotCommandArgvIsValid(argv) {
     }
 }
 
-function testDroppedArgv(argv) {
-    const droppedArgv = [
-         [["botid", "bot", "id"], "username"],
-         [["mingamesplayed", "mingamesplayedranked", "mingamesplayedunranked"], undefined],
-         [["fakerank"], undefined],
-         [["minrankedhandicap"], "minhandicapranked"],
-         [["minunrankedhandicap"], "minhandicapunranked"],
-         [["maxrankedhandicap"], "maxhandicapranked"],
-         [["maxunrankedhandicap"], "maxhandicapunranked"],
-         [["maxtotalgames"], "maxconnectedgames"],
-         [["maxactivegames"], "maxconnectedgamesperuser"],
-         [["maxmaintime"],  getBLCString("maxmaintime", "")],
-         [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
-         [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
-         [["minmaintime"], getBLCString("minmaintime", "")],
-         [["minmaintimeranked"], getBLCString("minmaintime", "ranked")],
-         [["minmaintimeunranked"], getBLCString("minmaintime", "unranked")],
-         [["maxperiodtime"], getBLCString("maxperiodtime", "")],
-         [["maxperiodtimeranked"], getBLCString("maxperiodtime", "ranked")],
-         [["maxperiodtimeunranked"], getBLCString("maxperiodtime", "unranked")],
-         [["minperiodtime"], getBLCString("minperiodtime", "")],
-         [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
-         [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
-         [["maxperiods"],  getBLCString("maxperiods", "")],
-         [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
-         [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
-         [["minperiods"], getBLCString("minperiods", "")],
-         [["minperiodsranked"], getBLCString("minperiods", "ranked")],
-         [["minperiodsunranked"], getBLCString("minperiods", "unranked")],
-         [["ban"], "bans"],
-         [["banranked"], "bansranked"],
-         [["banunranked"], "bansunranked"],
-         [["boardsize"], "boardsizes"],
-         [["boardsizeranked"], "boardsizesranked"],
-         [["boardsizeunranked"], "boardsizesunranked"],
-         [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked",
-           "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
-         [["komi"], "komis"],
-         [["komiranked"], "komisranked"],
-         [["komiunranked"], "komisunranked"],
-         [["speed"], "speeds"],
-         [["speedranked"], "speedsranked"],
-         [["speedunranked"], "speedsunranked"],
-         [["timecontrol"], "timecontrols"],
-         [["timecontrolranked"], "timecontrolsranked"],
-         [["timecontrolunranked"], "timecontrolsunranked"]
-    ];
-    for (const [oldNames, newName] of droppedArgv) {
+function testDroppedArgv(droppedOptions, argv) {
+    for (const [oldNames, newName] of droppedOptions) {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
                 if (newName !== undefined) throw `Dropped: --${oldName} is no longer supported, use --${newName} instead.`;
