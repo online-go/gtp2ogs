@@ -2,7 +2,7 @@ const { ogsPvAIs } = require('./constants');
 
 function getArgv() {
 
-    const optimist = require("optimist")
+    const yargs = require("yargs")
         // 1) ROOT OPTIONS
         .usage("Usage: $0 --username <bot-username> --apikey <apikey> [gtp2ogs arguments] -- botcommand [bot arguments]")
         .demand('username')
@@ -174,7 +174,7 @@ function getArgv() {
         .describe('maxperiodtimecorrunranked', 'Maximum seconds of period time for correspondence unranked games')
     ;
 
-    return optimist.argv;
+    return yargs.argv;
 }
 
 exports.getArgv = getArgv;
