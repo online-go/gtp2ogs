@@ -86,4 +86,4 @@ function getBLCString(optionName, rankedUnranked) {
            + `and/or --${optionName}corr${rankedUnranked}`;
 }
 
-exports.constants = { droppedOptions, ogsPvAIs, rankedUnrankedOptions };
+module.exports = { droppedOptions, ogsPvAIs, rankedUnrankedOptions };
