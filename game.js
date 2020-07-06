@@ -5,14 +5,15 @@ const { move2gtpvertex } = require("./gtp/move2gtpvertex");
 
 const Bot = require('./bot').Bot;
 const console = require('./console').console;
-const config = require('./config');
+let config;
 
 /**********/
 /** Game **/
 /**********/
 class Game {
-    constructor(conn, game_id) {
+    constructor(conn, game_id, myConfig) {
         this.conn = conn;
+        config = myConfig;
         this.game_id = game_id;
         this.socket = conn.socket;
         this.state = null;
