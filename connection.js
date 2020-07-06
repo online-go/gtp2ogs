@@ -197,7 +197,7 @@ class Connection {
             return this.connected_games[game_id];
         }
 
-        return this.connected_games[game_id] = new Game(this, game_id);
+        return this.connected_games[game_id] = new Game(this, game_id, config);
     }
     disconnectFromGame(game_id) {
         if (config.DEBUG) conn_log("disconnectFromGame", game_id);

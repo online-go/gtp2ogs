@@ -52,6 +52,7 @@ exports.updateFromArgv = function(argv) {
     testBotCommandArgvIsValid(argv);
     testDroppedArgv(droppedOptions, argv);
     testConflictingOptions("rankedonly", "unrankedonly", argv);
+    testConflictingOptions("persist", "persistnoncorr", argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedOptions(rankedUnrankedOptions, argv);
 

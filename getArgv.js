@@ -42,6 +42,7 @@ function getArgv() {
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
         .describe('persist', 'Bot process remains running between moves')
+        .describe('persistnoncorr', 'Bot process remains running between moves, except for correspondence games where bot is always killed')
         .describe('noclock', 'Do not send any clock/time data to the bot')
         .describe('corrqueue', 'Process correspondence games one at a time')
         /* note: for maxconnectedgames, correspondence games are currently included

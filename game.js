@@ -5,14 +5,15 @@ const { move2gtpvertex } = require("./gtp/move2gtpvertex");
 
 const Bot = require('./bot').Bot;
 const console = require('./console').console;
-const config = require('./config');
+let config;
 
 /**********/
 /** Game **/
 /**********/
 class Game {
-    constructor(conn, game_id) {
+    constructor(conn, game_id, myConfig) {
         this.conn = conn;
+        config = myConfig;
         this.game_id = game_id;
         this.socket = conn.socket;
         this.state = null;
@@ -300,6 +301,12 @@ class Game {
         }, eb);
     }
 
+    checkBotPersists() {
+        if (config.persist) return true;
+        if (config.persistnoncorr && this.state.time_control.speed !== "correspondence") return true;
+        return false;
+    }
+
     // Send @cmd to bot and call @cb with returned moves.
     //
     getBotMoves(cmd, cb, eb) {
@@ -341,9 +348,10 @@ class Game {
             doneProcessing();
             cb(moves)
 
-            if (!config.persist && this.bot !== null) {
+            if (!this.checkBotPersists()) {
                 this.ensureBotKilled();
             }
+
         }, botError);
     }
 
