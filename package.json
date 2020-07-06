@@ -28,9 +28,9 @@
     "eslint": "^7.4.0",
     "markdownlint": "^0.20.2",
     "markdownlint-cli": "^0.22.0",
-    "mocha": "^5.2.0",
+    "mocha": "^8.0.1",
     "nyc": "^15.0.1",
-    "sinon": "^7.2.3"
+    "sinon": "^9.0.2"
   },
   "scripts": {
     "test": "nyc mocha",
