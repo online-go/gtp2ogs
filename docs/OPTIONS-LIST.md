@@ -234,9 +234,14 @@ if supported
 
 So default is disabled
 
-### persist
+### persist persistnoncorr
+
+The below options cannot be both used at the same time.
 
 `--persist`  Bot process remains running between moves
+
+`--persistnoncorr` Bot process remains running between moves, except for
+correspondence games where bot is always killed
 
 ### noclock
 
@@ -262,6 +267,8 @@ and stability)
 connected games per user against this bot
 
 ### rankedonly unrankedonly
+
+The below options cannot be both used at the same time.
 
 `--rankedonly` Only accept ranked matches
 

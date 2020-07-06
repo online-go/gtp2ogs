@@ -300,6 +300,12 @@ class Game {
         }, eb);
     }
 
+    checkBotPersists() {
+        if (config.persist) return true;
+        if (config.persistnoncorr && this.state.time_control.speed !== "correspondence") return true;
+        return false;
+    }
+
     // Send @cmd to bot and call @cb with returned moves.
     //
     getBotMoves(cmd, cb, eb) {
@@ -341,9 +347,10 @@ class Game {
             doneProcessing();
             cb(moves)
 
-            if (!config.persist && this.bot !== null) {
+            if (!this.checkBotPersists()) {
                 this.ensureBotKilled();
             }
+
         }, botError);
     }
 
