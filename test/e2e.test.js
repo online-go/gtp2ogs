@@ -18,8 +18,8 @@ const config = getNewConfig();
 const connection = require('../connection');
 const { console } = require('../console');
 
-config.timeout = 0; // needed for test.js
-config.corrqueue = false; // needed for test.js
+config.timeout = 0;
+config.corrqueue = false;
 
 afterEach(function () {
     sinon.restore();

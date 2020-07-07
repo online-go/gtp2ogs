@@ -16,9 +16,6 @@ const { Bot } = require('../bot');
 const config = getNewConfig();
 const connection = require('../connection');
 
-config.timeout = 0; // needed for test.js
-config.corrqueue = false; // needed for test.js
-
 afterEach(function () {
     sinon.restore();
 });
