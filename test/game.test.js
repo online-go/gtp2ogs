@@ -5,13 +5,13 @@ const child_process = require('child_process');
 const https = require('https');
 const sinon = require('sinon');
 
+const { base_gamedata } = require('./base_server_packets/base_gamedata');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
+const { FakeGTP } = require('./fake_modules/FakeGTP');
 const { FakeSocket } = require('./fake_modules/FakeSocket');
 const { getNewConfigUncached } = require('./module_loading/getNewConfigUncached');
 const { getNewConnectionUncached } = require('./module_loading/getNewConnectionUncached');
 const { stub_console } = require('./utils/stub_console');
-const { base_gamedata } = require('./base_server_packets/base_gamedata');
-const { FakeGTP } = require('./fake_modules/FakeGTP');
 
 let config;
 let connection;
