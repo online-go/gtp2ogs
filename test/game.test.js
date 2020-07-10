@@ -22,80 +22,81 @@ afterEach(function () {
 
 describe('Game', () => {
   
-  let game;
- 
-  beforeEach(function() {
-    config = getNewConfigUncached();
-    connection = getNewConnectionUncached();
-
-    stub_console();
-    sinon.useFakeTimers();
+    let game;
     
-    const fake_api = new FakeAPI();
-    fake_api.request({path: '/foo'}, () => {});
-    sinon.stub(https, 'request').callsFake(fake_api.request);
-    
-    const fake_socket = new FakeSocket();
-    const conn = new connection.Connection(() => { return fake_socket; }, config);
-    
-    let fake_gtp = new FakeGTP();
-    sinon.stub(child_process, 'spawn').returns(fake_gtp);
-    conn.connectToGame(1);
-    game = conn.connected_games[1];
-
-  });
-  
-  describe('Persist', () => {
-
-    let fakeKill;
-
     beforeEach(function() {
-      fakeKill = sinon.spy();
-      game.ensureBotKilled = fakeKill;
+        config = getNewConfigUncached();
+        connection = getNewConnectionUncached();
+
+        stub_console();
+        sinon.useFakeTimers();
+        
+        const fake_api = new FakeAPI();
+        fake_api.request({path: '/foo'}, () => {});
+        sinon.stub(https, 'request').callsFake(fake_api.request);
+        
+        const fake_socket = new FakeSocket();
+        const conn = new connection.Connection(() => { return fake_socket; }, config);
+        
+        let fake_gtp = new FakeGTP();
+        sinon.stub(child_process, 'spawn').returns(fake_gtp);
+        conn.connectToGame(1);
+        game = conn.connected_games[1];
+    });
+  
+    describe('Persist', () => {
+
+        let fakeKill;
+
+        beforeEach(function() {
+            fakeKill = sinon.spy();
+            game.ensureBotKilled = fakeKill;
+        });
+
+        it('stops the bot if persist is off', () => {
+            game.state = base_gamedata({ game_id: game.game_id });
+
+            game.getBotMoves("genmove b", () => {});
+
+            assert(fakeKill.calledOnce);
+        });
+
+        it('does not stops the bot if persist is on', () => {
+            config.persist = true;
+            game.state = base_gamedata({ game_id: game.game_id });
+
+            game.getBotMoves("genmove b", () => {});
+
+            assert(fakeKill.notCalled);
+        });
+
+        it('does not stops the bot if persistnoncorr is on in blitz', () => {
+            config.persistnoncorr = true;
+            game.state = base_gamedata({ game_id: game.game_id, time_control: { speed: 'blitz' } });
+
+            game.getBotMoves("genmove b", () => {});
+
+            assert(fakeKill.notCalled);
+        });
+
+        it('does not stops the bot if persistnoncorr is on in live', () => {
+            config.persistnoncorr = true;
+            game.state = base_gamedata({ game_id: game.game_id, time_control: { speed: 'live' } });
+
+            game.getBotMoves("genmove b", () => {});
+
+            assert(fakeKill.notCalled);
+        });
+
+        it('stops the bot if persistnoncorr is on in correspondence', () => {
+            config.persistnoncorr = true;
+            game.state = base_gamedata({ game_id: game.game_id, time_control: { speed: 'correspondence' } });
+
+            game.getBotMoves("genmove b", () => {});
+
+            assert(fakeKill.calledOnce);
+        });
+
     });
 
-    it('stops the bot if persist is off', () => {
-      game.state = base_gamedata({ game_id: game.game_id });
-
-      game.getBotMoves("genmove b", () => {});
-
-      assert(fakeKill.calledOnce);
-    });
-
-    it('does not stops the bot if persist is on', () => {
-      config.persist = true;
-      game.state = base_gamedata({ game_id: game.game_id });
-
-      game.getBotMoves("genmove b", () => {});
-
-      assert(fakeKill.notCalled);
-    });
-
-    it('does not stops the bot if persistnoncorr is on in blitz', () => {
-      config.persistnoncorr = true;
-      game.state = base_gamedata({ game_id: game.game_id, time_control: { speed: 'blitz' } });
-
-      game.getBotMoves("genmove b", () => {});
-
-      assert(fakeKill.notCalled);
-    });
-
-    it('does not stops the bot if persistnoncorr is on in live', () => {
-      config.persistnoncorr = true;
-      game.state = base_gamedata({ game_id: game.game_id, time_control: { speed: 'live' } });
-
-      game.getBotMoves("genmove b", () => {});
-
-      assert(fakeKill.notCalled);
-    });
-
-    it('stops the bot if persistnoncorr is on in correspondence', () => {
-      config.persistnoncorr = true;
-      game.state = base_gamedata({ game_id: game.game_id, time_control: { speed: 'correspondence' } });
-
-      game.getBotMoves("genmove b", () => {});
-
-      assert(fakeKill.calledOnce);
-    });
-  });
 });
