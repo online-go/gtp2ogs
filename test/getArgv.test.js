@@ -17,7 +17,7 @@ describe('process.argv to yargs.argv', () => {
 
         removeProcessArgvIndexTwoAndHigherElements();
     });
-    
+
     it('get argv from process.argv in yargs.argv', () => {
         const args = ["--username", "testbot", "--apikey", "deadbeef", "--host", "80", "--debug",
         "--", "gtp-program", "--argument"];
@@ -72,7 +72,7 @@ describe('process.argv to yargs.argv', () => {
         ],
         beta: true,
         apikey: 'someapikey',
-        username: 'username',
+        username: 'someuser',
         persist: true,
         noclock: true,
         debug: true,
