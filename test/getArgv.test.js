@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 
-const { getNewArgvNoZero } = require('./module_loading/getNewArgvNoZero');
+const { getNewArgvWithoutKeyZero } = require('./module_loading/getNewArgvWithoutKeyZero');
 const { pushArgsInProcessArgv } = require('./module_loading/pushArgsInProcessArgv');
 const { removeProcessArgvIndexTwoAndHigherElements } = require('./module_loading/removeProcessArgvIndexTwoAndHigherElements');
 const { stub_console } = require('./utils/stub_console');
@@ -10,6 +10,39 @@ const { stub_console } = require('./utils/stub_console');
 let argv;
 
 describe('process.argv to yargs.argv', () => {
+
+    beforeEach(function() {
+        // stub console before logging anything else
+        stub_console();
+
+        removeProcessArgvIndexTwoAndHigherElements();
+    });
+    
+    it('get argv from process.argv in yargs.argv', () => {
+        const args = ["--username", "testbot", "--apikey", "deadbeef", "--host", "80", "--debug",
+        "--", "gtp-program", "--argument"];
+        pushArgsInProcessArgv(args);
+
+        argv = getNewArgvWithoutKeyZero();
+
+        const expectedYargsArgv = {
+            username: "testbot",
+            apikey: "deadbeef",
+            host: 80,
+            debug: true,
+            // defaults inputted in getArgv.js
+            maxconnectedgames: 20,
+            maxconnectedgamesperuser: 3,
+            port: 443,
+            rejectnewmsg: "Currently, this bot is not accepting games, try again later",
+            startupbuffer: 5,
+            timeout: 0,
+            // bot command
+            _: ["gtp-program", "--argument"]
+        };
+
+        assert.deepEqual(argv, expectedYargsArgv);
+    });
 
     /* process.argv sample as of july 2020
     ["/home/amd2020/.nvm/versions/node/v14.2.0/bin/node","/home/amd2020/gtp2ogs/gtp2ogs.js","--beta","--apikey",
@@ -57,38 +90,5 @@ describe('process.argv to yargs.argv', () => {
         '$0': 'gtp2ogs.js'
     }
     */
-
-    beforeEach(function() {
-        // stub console before logging anything else
-        stub_console();
-
-        removeProcessArgvIndexTwoAndHigherElements();
-    });
-    
-    it('get argv from process.argv in yargs.argv', () => {
-        const args = ["--username", "testbot", "--apikey", "deadbeef", "--host", "80", "--debug",
-        "--", "gtp-program", "--argument"];
-        pushArgsInProcessArgv(args);
-
-        argv = getNewArgvNoZero();
-
-        const expectedYargsArgv = {
-            username: "testbot",
-            apikey: "deadbeef",
-            host: 80,
-            debug: true,
-            // defaults inputted in getArgv.js
-            maxconnectedgames: 20,
-            maxconnectedgamesperuser: 3,
-            port: 443,
-            rejectnewmsg: "Currently, this bot is not accepting games, try again later",
-            startupbuffer: 5,
-            timeout: 0,
-            // bot command
-            _: ["gtp-program", "--argument"]
-        };
-
-        assert.deepEqual(argv, expectedYargsArgv);
-    });
 
 });

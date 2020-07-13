@@ -1,6 +1,6 @@
 const { requireUncached } = require('./requireUncached');
 
-function getNewArgvNoZero() {
+function getNewArgvWithoutKeyZero() {
     const argv = requireUncached('../../getArgv').getArgv();
 
     // do not compare $0 (main js executable file), mocha version always changes
@@ -12,4 +12,4 @@ function getNewArgvNoZero() {
     return argv;
 }
 
-exports.getNewArgvNoZero = getNewArgvNoZero;
+exports.getNewArgvWithoutKeyZero = getNewArgvWithoutKeyZero;
