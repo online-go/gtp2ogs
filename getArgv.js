@@ -17,7 +17,7 @@ function getArgv() {
         .describe('farewellscore', 'Send the score according to the bot at the end of the game')
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
-        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
+        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later')
         .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
