@@ -1,7 +1,5 @@
-const { requireUncached } = require('./requireUncached');
-
 function getNewArgvWithoutKeyZero() {
-    const argv = requireUncached('../../getArgv').getArgv();
+    const argv = require('../../getArgv').getArgv();
 
     // do not compare $0 (main js executable file), mocha version always changes
     // ('$0': '../.vscode/extensions/hbenl.vscode-mocha-test-adapter-2.6.2/out/worker/bundle.js')
