@@ -2,29 +2,75 @@
 
 const assert = require('assert');
 
-const { requireUncached } = require('./module_loading/requireUncached');
+const { getNewArgvNoZero } = require('./module_loading/getNewArgvNoZero');
+const { pushArgsInProcessArgv } = require('./module_loading/pushArgsInProcessArgv');
+const { removeProcessArgvIndexTwoAndHigherElements } = require('./module_loading/removeProcessArgvIndexTwoAndHigherElements');
 const { stub_console } = require('./utils/stub_console');
 
 let argv;
 
 describe('process.argv to yargs.argv', () => {
 
+    /* process.argv sample as of july 2020
+    ["/home/amd2020/.nvm/versions/node/v14.2.0/bin/node","/home/amd2020/gtp2ogs/gtp2ogs.js","--beta","--apikey",
+    "someapikey","--username","someuser","--persist","--noclock","--debug",
+    "--greetingbotcommand","--komis","7.5,automatic","--minmaintimeblitzranked","7","--rejectnew","--",
+    "/home/amd2020/sai/build/sai-0.17-d2c82fc0","--gtp","-w","/home/amd2020/networks/sai/9b/e1eab1d6_1913000.gz",
+    "--noponder","-v","400","--symm","-r","-1","--lambda","1.0","--mu","0"]
+    */
+
+    /* yargs.argv sample as of july 2020
+    {
+        _: [
+            '/home/amd2020/sai/build/sai-0.17-d2c82fc0',
+            '--gtp',
+            '-w',
+            '/home/amd2020/networks/sai/9b/e1eab1d6_1913000.gz',
+            '--noponder',
+            '-v',
+            '400',
+            '--symm',
+            '-r',
+            '-1',
+            '--lambda',
+            '1.0',
+            '--mu',
+            '0'
+        ],
+        beta: true,
+        apikey: 'someapikey',
+        username: 'username',
+        persist: true,
+        noclock: true,
+        debug: true,
+        greetingbotcommand: true,
+        komis: '7.5,automatic',
+        minmaintimeblitzranked: 7,
+        rejectnew: true,
+        rejectnewmsg: 'Currently, this bot is not accepting games, try again later',
+        host: 'online-go.com',
+        port: 443,
+        startupbuffer: 5,
+        timeout: 0,
+        maxconnectedgames: 20,
+        maxconnectedgamesperuser: 3,
+        '$0': 'gtp2ogs.js'
+    }
+    */
+
     beforeEach(function() {
         // stub console before logging anything else
         stub_console();
 
-        //remove extra object {} at index 2 (and more if there are any)
-        process.argv = process.argv.slice(0,2);
+        removeProcessArgvIndexTwoAndHigherElements();
     });
     
     it('get argv from process.argv in yargs.argv', () => {
         const args = ["--username", "testbot", "--apikey", "deadbeef", "--host", "80", "--debug",
         "--", "gtp-program", "--argument"];
-        for (const arg of args) {
-            process.argv.push(arg);
-        }
+        pushArgsInProcessArgv(args);
 
-        argv = requireUncached('../../getArgv').getArgv();
+        argv = getNewArgvNoZero();
 
         const expectedYargsArgv = {
             username: "testbot",
@@ -42,14 +88,7 @@ describe('process.argv to yargs.argv', () => {
             _: ["gtp-program", "--argument"]
         };
 
-        // do not compare $0 (main js executable file), mocha version always changes
-        // ('$0': '../.vscode/extensions/hbenl.vscode-mocha-test-adapter-2.6.2/out/worker/bundle.js')
-        // and it is always gtp2ogs.js in real gtp2ogs run.
-        // ('$0': 'gtp2ogs.js')
-        const noZeroArgv = { ...argv };
-        delete noZeroArgv["$0"];
-
-        assert.deepEqual(noZeroArgv, expectedYargsArgv);
+        assert.deepEqual(argv, expectedYargsArgv);
     });
 
 });
