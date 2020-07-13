@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 
-const { getNewArgvWithoutKeyZero } = require('./module_loading/getNewArgvWithoutKeyZero');
 const { pushArgsInProcessArgv } = require('./module_loading/pushArgsInProcessArgv');
 const { removeProcessArgvIndexTwoAndHigherElements } = require('./module_loading/removeProcessArgvIndexTwoAndHigherElements');
 const { stub_console } = require('./utils/stub_console');
@@ -21,7 +20,12 @@ describe('gtp2ogs string command to process.argv to yargs.argv', () => {
         const args = getArgs(gtp2ogs_command);
         pushArgsInProcessArgv(args);
 
-        const argv = getNewArgvWithoutKeyZero();
+        const argv = require('../getArgv').getArgv();
+        // do not compare $0 (main js executable file), mocha version number always changes
+        // ('$0': '../.vscode/extensions/hbenl.vscode-mocha-test-adapter-2.6.2/out/worker/bundle.js')
+        // and it is always gtp2ogs.js in real gtp2ogs run.
+        // ('$0': 'gtp2ogs.js')
+        delete argv["$0"];
 
         const expectedYargsArgv = {
             username: "testbot",
