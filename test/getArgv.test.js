@@ -7,7 +7,7 @@ const { pushArgsInProcessArgv } = require('./module_loading/pushArgsInProcessArg
 const { removeProcessArgvIndexTwoAndHigherElements } = require('./module_loading/removeProcessArgvIndexTwoAndHigherElements');
 const { stub_console } = require('./utils/stub_console');
 
-describe('process.argv to yargs.argv', () => {
+describe('gtp2ogs string command to process.argv to yargs.argv', () => {
 
     beforeEach(function() {
         // stub console before logging anything else
@@ -16,7 +16,7 @@ describe('process.argv to yargs.argv', () => {
         removeProcessArgvIndexTwoAndHigherElements();
     });
 
-    it('get argv from process.argv in yargs.argv', () => {
+    it('yargs.argv successfully parses gtp2ogs command from process.argv', () => {
         const gtp2ogs_command = "--username testbot --apikey deadbeef --host 80 --debug -- gtp-program --argument";
         const args = getArgs(gtp2ogs_command);
         pushArgsInProcessArgv(args);
