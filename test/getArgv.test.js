@@ -12,27 +12,17 @@ describe('process.argv to yargs.argv', () => {
     beforeEach(function() {
         // stub console before logging anything else
         stub_console();
+
+        //remove extra object {} at index 2 (and more if there are any)
+        process.argv = process.argv.slice(0,2);
     });
     
     it('get argv from process.argv in yargs.argv', () => {
-        // TODO fix why do we need to input --username twice, else it complains about:
-        /*
-        Usage: --username --username <bot-username> --apikey <apikey> [gtp2ogs
-               arguments] -- botcommand [bot arguments]
-        (then full yargs showHelp here), and then:
-        Missing required argument: username
-        */
         const args = ["--username", "testbot", "--apikey", "deadbeef", "--host", "80", "--debug",
         "--", "gtp-program", "--argument"];
-
-        //remove extra object {} at index 2
-        if (process.argv[2]) process.argv.pop();
-
         for (const arg of args) {
             process.argv.push(arg);
         }
-
-        console.log(JSON.stringify(process.argv));
 
         argv = requireUncached('../../getArgv').getArgv();
 
