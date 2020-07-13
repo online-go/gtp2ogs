@@ -10,6 +10,7 @@
     "console.js",
     "constants.js",
     "game.js",
+    "getArgv.js",
     "gtp2ogs.js",
     "pv.js",
     "gtp/**",
