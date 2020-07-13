@@ -47,9 +47,9 @@ describe('process.argv to yargs.argv', () => {
     }
 
     /* gtp2ogs command sample as of july 2020
-    --beta --apikey someapikey --username someuser --persist --noclock --debug --greetingbotcommand --komis 7.5,automatic
-     --minmaintimeblitzranked 7 --rejectnew -- ~/sai/build/sai-0.17-d2c82fc0 --gtp -w ~/networks/sai/9b/e1eab1d6_1913000.gz
-     --noponder -v 400 --symm -r -1 --lambda 1.0 --mu 0
+    "--beta --apikey someapikey --username someuser --persist --noclock --debug --greetingbotcommand --komis 7.5,automatic"
+    + " --minmaintimeblitzranked 7 --rejectnew -- ~/sai/build/sai-0.17-d2c82fc0 --gtp -w ~/networks/sai/9b/e1eab1d6_1913000.gz"
+    + " --noponder -v 400 --symm -r -1 --lambda 1.0 --mu 0"
     */
 
     /* process.argv sample as of july 2020
