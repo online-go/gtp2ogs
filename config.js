@@ -14,38 +14,20 @@ const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants
 
 exports.check_rejectnew = function() {};
 
-exports.banned_users = {};
-exports.banned_users_ranked = {};
-exports.banned_users_unranked = {};
-exports.allowed_boardsizes = [];
-exports.allow_all_boardsizes = false;
-exports.allowed_boardsizes_ranked = [];
-exports.allow_all_boardsizes_ranked = false;
-exports.allowed_boardsizes_unranked = [];
-exports.allow_all_boardsizes_unranked = false;
-exports.allow_all_komis = false;
-exports.allowed_komis = [];
-exports.allow_all_komis_ranked = false;
-exports.allowed_komis_ranked = [];
-exports.allow_all_komis_unranked = false;
-exports.allowed_komis_unranked = [];
-exports.allowed_speeds = {};
-exports.allowed_speeds_ranked = {};
-exports.allowed_speeds_unranked = {};
-exports.allowed_timecontrols = {};
-exports.allowed_timecontrols_ranked = {};
-exports.allowed_timecontrols_unranked = {};
+exportAllowedGroupInitialConfig("");
+exportAllowedGroupInitialConfig("_ranked");
+exportAllowedGroupInitialConfig("_unranked");
 
 exports.updateFromArgv = function(argv) {
     // console messages
     // A- greeting and debug status
 
-    const debugStatus = argv.debug ? "ON" : "OFF";
+    const debugStatus = argv.debug ? "DEBUG: ON\n" : "";
     console.log(`\ngtp2ogs version 6.0.1`
                 + `\n--------------------`
                 + `\n- For changelog or latest devel updates, `
-                + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
-                + `\nDebug status: ${debugStatus}\n`);
+                + `please visit https://github.com/online-go/gtp2ogs/tree/devel\n`
+                + `${debugStatus}`);
 
     // B - test unsupported argv
 
@@ -58,7 +40,7 @@ exports.updateFromArgv = function(argv) {
 
     // C - set general/ranked/unranked options defaults
     
-    // For general/ranked/unranked options, do not add a default using .default of optimist, add it later in the
+    // For general/ranked/unranked options, do not add a default using .default of yargs, add it later in the
     // code if no ranked arg nor unranked arg are used, else we would be force using the general arg regardless of
     // botadmin using the ranked and/or unranked arg(s), triggering the no 3 args at the same time error.
 
@@ -79,30 +61,17 @@ exports.updateFromArgv = function(argv) {
     if (argv.logfile && typeof argv.logfile === "boolean") {
         exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
     }
-    for (const k of ["timeout", "startupbuffer"]) {
-        if (argv[k]) {
-            // Convert some times to microseconds once here so
-            // we don't need to do it each time it is used later.
-            exports[k] = argv[k] * 1000;
-        }
-    }
+    exportMicroseconds("timeout", argv);
+    exportMicroseconds("startupbuffer", argv);
+
     if (argv.beta) {
         exports.host = 'beta.online-go.com';
     }
 
-    // Setting minimum handicap higher than -1 has the consequence of disabling
-    // automatic handicap (notification.handicap === -1).
-    //
-    if (argv.minhandicap > -1) {
-        exports.noautohandicap = true;
-    }
-    if (argv.minhandicapranked > -1) {
-        exports.noautohandicapranked = true;
-    }
-    if (argv.minhandicapunranked > -1) {
-        exports.noautohandicapunranked = true;
-    }
-
+    exportNoAutoHandicapIfMinHandicapIsPositive("minhandicap", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("minhandicapranked", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("minhandicapunranked", argv);
+    
     if (argv.ogspv) {
         exports.ogspv = argv.ogspv.toUpperCase();
     }
@@ -155,6 +124,18 @@ exports.updateFromArgv = function(argv) {
 
 }
 
+function exportAllowedGroupInitialConfig(rankedUnranked) {
+    exports[`banned_users${rankedUnranked}`] = {};
+    exports[`allow_all_boardsizes${rankedUnranked}`] = false;
+    exports[`allowed_boardsizes${rankedUnranked}`] = [];
+    exports[`allow_all_komis${rankedUnranked}`] = false;
+    exports[`allowed_komis${rankedUnranked}`] = [];
+    exports[`allowed_speeds${rankedUnranked}`] = {};
+    exports[`allow_all_speeds${rankedUnranked}`] = false;
+    exports[`allowed_timecontrols${rankedUnranked}`] = {};
+    exports[`allow_all_timecontrols${rankedUnranked}`] = false;
+}
+
 function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
     for (const option of rankedUnrankedOptions) {
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
@@ -179,7 +160,7 @@ function testBotCommandArgvIsValid(argv) {
     }
 
     const parsedBotCommand = JSON.stringify(argv._);
-    
+
     if (!Array.isArray(argv._)) {
         throw `Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters`
               + `, please check your syntax ( -- ).`;
@@ -244,6 +225,24 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
                 argv[unranked] = option.default;
             }
         }
+    }
+}
+
+function exportMicroseconds(optionName, argv) {
+    if (argv[optionName] !== undefined) {
+        // Convert some times to microseconds once here so
+        // we don't need to do it each time it is used later.
+        exports[optionName] = argv[optionName] * 1000;
+    }
+}
+
+function exportNoAutoHandicapIfMinHandicapIsPositive(optionName, argv){
+    // Setting minimum handicap higher than -1 has the consequence of rejecting
+    // challenge that have automatic handicap in connection.js (-1 lower than
+    // minimum handicap 0 or higher, rejecting challenge)
+
+    if (argv[optionName] > -1) {
+        exports[optionName] = true;
     }
 }
 
@@ -340,19 +339,12 @@ function processAllowedGroupExport(argName, argv) {
 }
 
 function testExportsWarnings() {
-    console.log("TESTING WARNINGS:\n-------------------------------------------------------");
-    let isWarning = false;
-
     for (const r_u of ["ranked", "unranked"]) {
         // avoid infinite games
         // TODO: whenever --maxpausetime gets implemented, remove this
         if (!exports.nopause && !exports[`nopause${r_u}`]) {
-            isWarning = true;
             console.log(`    Warning: No --nopause nor --nopause${r_u}, `
                         + `${r_u} games are likely to last forever`); 
         }
     }
-
-    if (isWarning) console.log("[ WARNINGS ! ]\n");
-    else console.log("[ SUCCESS ]\n");
 }

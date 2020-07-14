@@ -23,10 +23,11 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
+    stub_console();
+
     config = getNewConfigUncached();
     connection = getNewConnectionUncached();
 
-    stub_console();
     sinon.useFakeTimers();
     
     const fake_api = new FakeAPI();
