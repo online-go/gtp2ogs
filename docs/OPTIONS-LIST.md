@@ -126,6 +126,8 @@ save it locally.
 
 ### rejectnew options
 
+rejectnew and rejectnewfile cannot be both used at the same time.
+
 `--rejectnew` Reject all new challenges with the default
 reject message
 
@@ -133,10 +135,10 @@ reject message
 if you add the rejectnewmsg option, Reject all new challenges with a
 customized message instead of the default message.
 
-see for details [notes G](/docs/NOTES.md#g)
+`--rejectnewfile ~/rejectnew.status` Reject new challenges if file
+(ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location.
 
-`--rejectnewfile ~/rejectnew.status` Reject new challenges if
-file exists (checked each time, can use for load-balancing)
+Rejectnewfile is checked again at every challenge, can use for load-balancing)
 
 ### debug
 

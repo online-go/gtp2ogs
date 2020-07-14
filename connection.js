@@ -1,5 +1,6 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
+const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const querystring = require('querystring');
@@ -383,7 +384,7 @@ class Connection {
     //
     checkChallengeBot(notification) {
 
-        if (config.check_rejectnew()) {
+        if (check_rejectnew()) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }
@@ -794,6 +795,12 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
         const resultNotificationKeysTimeSettings = getCheckedKeysInObjRejectResult(keys, notif);
         if (resultNotificationKeysTimeSettings) return resultNotificationKeysTimeSettings;
     }
+}
+
+function check_rejectnew() {
+    if (config.rejectnew)  return true;
+    if (config.rejectnewfile && fs.existsSync(config.rejectnewfile))  return true;
+    return false;
 }
 
 function getCheckedArgName(optionName, notificationRanked) {

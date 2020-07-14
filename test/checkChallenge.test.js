@@ -286,6 +286,117 @@ describe('Challenges', () => {
    
   });
 
+  describe('Rejectnew', () => {
+
+    // rejectnew is ranked-unranked aspecific, so ranked unranked testing is minimal
+
+    it('reject all games if rejectnew is used with default rejectnewmsg', () => {
+
+      const notification = base_challenge({ ranked: false });
+
+      config.rejectnew = true;
+      
+      const result = conn.checkChallengeBot(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
+    });
+
+    it('also rejectnew in ranked games', () => {
+
+        const notification = base_challenge({ ranked: true });
+  
+        config.rejectnew = true;
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
+    });
+
+    it('reject all games if rejectnew is used with custom rejectnewmsg', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        config.rejectnew = true;
+        config.rejectnewmsg = 'Sorry, i am not available now.';
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'Sorry, i am not available now.' }));
+    });
+
+    it('do not reject game if rejectnew is not used, and rejectnewmsg is default', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        config.rejectnew = undefined;
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('also do not reject game in ranked games', () => {
+
+        const notification = base_challenge({ ranked: true });
+  
+        config.rejectnew = undefined;
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('do not reject game if rejectnew is not used, and rejectnewmsg is custom', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        config.rejectnew = undefined;
+        config.rejectnewmsg = 'Sorry, i am not available now.';
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('reject all games if rejectnewfile is used and a reject file exists', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        // relative path from where fs was required (in connection.js, so root of gtp2ogs)
+        config.rejectnewfile = "./test/rejectnew/rejectnew-file.txt";
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
+    });
+
+    it('reject all games if rejectnewfile is used but a reject file does not exist, and rejectnew msg is default', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        // relative path from where fs was required (in connection.js, so root of gtp2ogs)
+        config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('reject all games if rejectnewfile is used but a reject file does not exist, and rejectnew msg is custom', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        // relative path from where fs was required (in connection.js, so root of gtp2ogs)
+        config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
+        config.rejectnewmsg = 'Sorry, i am not available now.';
+        
+        const result = conn.checkChallengeBot(notification);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+   
+  });
+
   describe('Non-square boardsizes', () => {
     it('reject non-square boardsizes if not boardsizes "all"', () => {
 

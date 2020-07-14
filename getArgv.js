@@ -1,4 +1,4 @@
-const { ogsPvAIs } = require('./constants');
+const { ogsPvAIs, rootOptionsDefaults } = require('./constants');
 
 function getArgv() {
 
@@ -17,8 +17,8 @@ function getArgv() {
         .describe('farewellscore', 'Send the score according to the bot at the end of the game')
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
-        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-        .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
+        .default('rejectnewmsg', rootOptionsDefaults.rejectnewmsg)
+        .describe('rejectnewfile', 'Reject new challenges if file (ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location. Location can either be absolute (ex: ~/ or /home/myUsername/) or relative for relative paths, it is relative to your current shell path (ex: if your shell is in ~/ and your rejectnew file is in ~/gtp2ogs/rejectnewfiles, do ./rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs and your rejectnewfile is in ~/gtp2ogs_rejectnewfiles/, do ../gtp2ogs_logs/rejectnewfiles/rejectnew-file.txt')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
@@ -29,15 +29,15 @@ function getArgv() {
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
         .describe('host', 'OGS Host to connect to')
-        .default('host', 'online-go.com') // default to OGS. If --beta, host will switch to beta OGS automatically
+        .default('host', rootOptionsDefaults.host) // default to OGS. If --beta, host will switch to beta OGS automatically
         .describe('port', 'OGS Port to connect to')
-        .default('port', 443)
+        .default('port', rootOptionsDefaults.port)
         .describe('insecure', 'Do not use ssl to connect to the ggs/rest servers')
         .describe('hidden', 'Hides the botname from the OGS game -Play against computer- bot list (but it can still accept challenges)')
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
-        .default('startupbuffer', 5)
+        .default('startupbuffer', rootOptionsDefaults.startupbuffer)
         .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
-        .default('timeout', 0)
+        .default('timeout', rootOptionsDefaults.timeout)
         // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
@@ -48,9 +48,9 @@ function getArgv() {
         /* note: for maxconnectedgames, correspondence games are currently included
         /  in the maxconnectedgames count if you use `--persist` )*/
         .describe('maxconnectedgames', 'Maximum number of connected games for all users')
-        .default('maxconnectedgames', 20)
+        .default('maxconnectedgames', rootOptionsDefaults.maxconnectedgames)
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
-        .default('maxconnectedgamesperuser', 3)
+        .default('maxconnectedgamesperuser', rootOptionsDefaults.maxconnectedgamesperuser)
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
         .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
