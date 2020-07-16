@@ -362,7 +362,7 @@ describe('Challenges', () => {
 
         const notification = base_challenge({ ranked: false });
   
-        // relative path from where fs was required (in connection.js, so root of gtp2ogs)
+        // relative path from where shell is, so root of gtp2ogs)
         config.rejectnewfile = "./test/rejectnew/rejectnew-file.txt";
         
         const result = conn.checkChallengeBot(notification);
@@ -374,7 +374,7 @@ describe('Challenges', () => {
 
         const notification = base_challenge({ ranked: false });
   
-        // relative path from where fs was required (in connection.js, so root of gtp2ogs)
+        // relative path from where shell is, so root of gtp2ogs)
         config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
         
         const result = conn.checkChallengeBot(notification);
@@ -386,7 +386,7 @@ describe('Challenges', () => {
 
         const notification = base_challenge({ ranked: false });
   
-        // relative path from where fs was required (in connection.js, so root of gtp2ogs)
+        // relative path from where shell is, so root of gtp2ogs)
         config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
         config.rejectnewmsg = 'Sorry, i am not available now.';
         

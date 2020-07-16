@@ -135,10 +135,12 @@ reject message
 if you add the rejectnewmsg option, Reject all new challenges with a
 customized message instead of the default message.
 
-`--rejectnewfile ~/rejectnew.status` Reject new challenges if file
+`--rejectnewfile ~/rejectnew-file.txt` Reject new challenges if file
 (ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location.
 
 Rejectnewfile is checked again at every challenge, can use for load-balancing)
+
+see for details [notes G](/docs/NOTES.md#g)
 
 ### debug
 
