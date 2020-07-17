@@ -9,8 +9,8 @@ const { getArgNamesUnderscoredGRU } = require('./options/getArgNamesUnderscoredG
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 
 let config;
-const console = require('./console').console;
-const Game = require('./game').Game;
+const { console } = require('./console');
+const { Game } = require('./game');
 
 /****************/
 /** Connection **/

@@ -14,10 +14,10 @@ config.updateFromArgv(argv);
 
 process.title = `gtp2ogs ${config.bot_command.join(' ')}`;
 
-const console = require('./console').console;
+const { console } = require('./console');
 
 const io = require('socket.io-client');
-const Connection = require('./connection').Connection;
+const { Connection } = require('./connection');
 
 process.on('uncaughtException', function (er) {
     console.trace("ERROR: Uncaught exception");

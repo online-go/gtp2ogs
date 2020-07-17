@@ -3,8 +3,8 @@
 const { decodeMoves } = require("./gtp/decodeMoves");
 const { move2gtpvertex } = require("./gtp/move2gtpvertex");
 
-const Bot = require('./bot').Bot;
-const console = require('./console').console;
+const { Bot } = require('./bot');
+const { console } = require('./console');
 let config;
 
 /**********/
