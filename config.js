@@ -14,9 +14,9 @@ const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants
 
 exports.check_rejectnew = function() {};
 
-exportAllowedGroupInitialConfig("");
-exportAllowedGroupInitialConfig("_ranked");
-exportAllowedGroupInitialConfig("_unranked");
+exportInitialConfigRankedUnranked("");
+exportInitialConfigRankedUnranked("_ranked");
+exportInitialConfigRankedUnranked("_unranked");
 
 exports.updateFromArgv = function(argv) {
     // console messages
@@ -126,16 +126,16 @@ exports.updateFromArgv = function(argv) {
 
 }
 
-function exportAllowedGroupInitialConfig(rankedUnranked) {
-    exports[`banned_users${rankedUnranked}`] = {};
-    exports[`allow_all_boardsizes${rankedUnranked}`] = false;
-    exports[`allowed_boardsizes${rankedUnranked}`] = [];
-    exports[`allow_all_komis${rankedUnranked}`] = false;
-    exports[`allowed_komis${rankedUnranked}`] = [];
-    exports[`allowed_speeds${rankedUnranked}`] = {};
-    exports[`allow_all_speeds${rankedUnranked}`] = false;
-    exports[`allowed_timecontrols${rankedUnranked}`] = {};
-    exports[`allow_all_timecontrols${rankedUnranked}`] = false;
+function exportInitialConfigRankedUnranked(rankedUnrankedUnderscored) {
+    exports[`banned_users${rankedUnrankedUnderscored}`] = {};
+    exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = false;
+    exports[`allowed_boardsizes${rankedUnrankedUnderscored}`] = [];
+    exports[`allow_all_komis${rankedUnrankedUnderscored}`] = false;
+    exports[`allowed_komis${rankedUnrankedUnderscored}`] = [];
+    exports[`allowed_speeds${rankedUnrankedUnderscored}`] = {};
+    exports[`allow_all_speeds${rankedUnrankedUnderscored}`] = false;
+    exports[`allowed_timecontrols${rankedUnrankedUnderscored}`] = {};
+    exports[`allow_all_timecontrols${rankedUnrankedUnderscored}`] = false;
 }
 
 function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
