@@ -9,6 +9,9 @@ const { getArgNamesGRU } = require('./options/getArgNamesGRU');
 const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
+const { getValidFilename } = require('./utils/getValidFilename');
+
+exports.start_date = new Date();
 
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
@@ -76,8 +79,8 @@ exports.updateFromArgv = function(argv) {
     if (argv.debug) {
         exports.DEBUG = true;
     }
-    if (argv.logfile && typeof argv.logfile === "boolean") {
-        exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
+    if (argv.logfile) {
+        exportValidLogfileFilename(argv.logfile);
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -244,6 +247,26 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
                 argv[unranked] = option.default;
             }
         }
+    }
+}
+
+function exportValidLogfileFilename(argvLogfile) {
+    if (typeof argvLogfile === "string") {
+        const validFilename = getValidFilename(argvLogfile);
+        if (argvLogfile !== validFilename) {
+            console.log (`Invalid logfile name "${argvLogfile}" has been automatically renamed`
+                         + ` to "${validFilename}".\nValid logfile name can only be composed of`
+                         + ` upper case (ex: A), lower case (ex: a), numbers, hyphens (-).\n`);
+        }
+        exports.logfile = validFilename;
+
+    } else {
+        // provide default filename based on start_time date and time
+        //
+        const filenameDate = `gtp2ogs-logfile-${exports.start_date.toISOString()}`;
+        const validFilenameDate = getValidFilename(filenameDate);
+        exports.logfile = validFilenameDate;
+        console.log(`Non-string logfile filename was successfully exported as ${validFilenameDate}`)
     }
 }
 

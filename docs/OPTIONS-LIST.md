@@ -181,8 +181,21 @@ MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 ### logfile
 
 `--logfile` In addition to logging to the console, also log gtp2ogs
-output to a text file. Filename argument is optional (using only `--logfile`
-will use default filename, for example `gtp2ogs_logfile_2020-05-21T21:40:22.910Z`)
+output to a text file.
+
+Filename can only be composed of upper case, lower case, and figures characters.
+
+Filename argument is optional (using only `--logfile`
+will use default filename based on start date and time, for example
+`gtp2ogs-logfile-2020-05-21T21-40-22-910Z`)
+
+note: starting gtp2ogs from a different directory used specifically to store your
+logs will keep your gtp2ogs main directory clean.
+
+For example:
+`cd ~/gtp2ogs_logs && node ~/gtp2ogs/gtp2ogs.js --beta --apikey stubapikey --username testuserbot --persist --noclock --debug --logfile -- ~/sai/build/sai-0.17-d2c82fc0 --gtp -w ~/networks/sai/9b/e1eab1d6_1913000.gz --noponder -v 400 --symm -r -1 --lambda 1.0 --mu 0`
+
+will store all logfiles in `~/gtp2ogs_logs`.
 
 ### json
 

@@ -23,9 +23,7 @@ function getArgv() {
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
         .describe('aichat', 'Allow bots to send chat messages using `DISCUSSION:` `MALKOVICH:` in stderr')
-        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file.'
-                             + 'Filename argument is optional (using only --logfile will use default filename,'
-                             + 'for example gtp2ogs_logfile_2020-05-21T21:40:22.910Z)')
+        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file. Filename argument is optional (using only --logfile will use default filename based on start date and time, for example gtp2ogs-logfile-2020-05-21T21-40-22-910Z)')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
         .describe('host', 'OGS Host to connect to')
