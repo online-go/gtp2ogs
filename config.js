@@ -340,9 +340,9 @@ function processAllowedGroupExport(argName, argv) {
     } 
 }
 
-function warnIfNopauseIsMissing(r_u) {
+function warnIfNopauseIsMissing(rankedUnranked) {
     // avoid infinite games
-    if (!exports.nopause && !exports[`nopause${r_u}`]) {
-        console.log(`Warning: No --nopause nor --nopause${r_u}, ${r_u} games are likely to last forever`); 
+    if (!exports.nopause && !exports[`nopause${rankedUnranked}`]) {
+        console.log(`Warning: No --nopause nor --nopause${rankedUnranked}, ${rankedUnranked} games are likely to last forever`); 
     }
 }
