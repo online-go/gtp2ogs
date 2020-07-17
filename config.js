@@ -68,9 +68,9 @@ exports.updateFromArgv = function(argv) {
         exports.host = 'beta.online-go.com';
     }
 
-    exportNoAutoHandicapIfMinHandicapIsPositive("minhandicap", argv);
-    exportNoAutoHandicapIfMinHandicapIsPositive("minhandicapranked", argv);
-    exportNoAutoHandicapIfMinHandicapIsPositive("minhandicapunranked", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("ranked", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("unranked", argv);
     
     if (argv.ogspv) {
         exports.ogspv = argv.ogspv.toUpperCase();
@@ -238,13 +238,13 @@ function exportMicroseconds(optionName, argv) {
     }
 }
 
-function exportNoAutoHandicapIfMinHandicapIsPositive(optionName, argv){
+function exportNoAutoHandicapIfMinHandicapIsPositive(rankedUnranked, argv){
     // Setting minimum handicap higher than -1 has the consequence of rejecting
     // challenge that have automatic handicap in connection.js (-1 lower than
     // minimum handicap 0 or higher, rejecting challenge)
 
-    if (argv[optionName] > -1) {
-        exports[optionName] = true;
+    if (argv[`minhandicap${rankedUnranked}`] > -1) {
+        exports[`noautohandicap${rankedUnranked}`] = true;
     }
 }
 

@@ -25,7 +25,7 @@ currently provides:
 --timeout 0
 --maxconnectedgames 20
 --maxconnectedgamesperuser 3
---rejectnewmsg "Currently, this bot is not accepting games, try again later "
+--rejectnewmsg "Currently, this bot is not accepting games, try again later"
 --boardsizes 9,13,19
 --komis automatic
 --speeds all
