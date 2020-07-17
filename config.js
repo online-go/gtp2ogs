@@ -120,8 +120,8 @@ exports.updateFromArgv = function(argv) {
     // console messages
     // C - test exports warnings
 
-    warnIfMissingNoPause("ranked");
-    warnIfMissingNoPause("unranked");
+    warnIfNopauseIsMissing("ranked");
+    warnIfNopauseIsMissing("unranked");
     console.log("\n");
 
 }
@@ -340,7 +340,7 @@ function processAllowedGroupExport(argName, argv) {
     } 
 }
 
-function warnIfMissingNoPause(r_u) {
+function warnIfNopauseIsMissing(r_u) {
     // avoid infinite games
     if (!exports.nopause && !exports[`nopause${r_u}`]) {
         console.log(`Warning: No --nopause nor --nopause${r_u}, ${r_u} games are likely to last forever`); 
