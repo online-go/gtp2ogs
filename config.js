@@ -47,14 +47,31 @@ exports.updateFromArgv = function(argv) {
                 + `please visit https://github.com/online-go/gtp2ogs/tree/devel`
                 + `\nDebug status: ${debugStatus}\n`);
 
-    // B - test unsupported argv
+    // B - throw errors
+
+    // all errors should be tested and thrown before we start exporting.
+    // For example, if a minrank option is used we first export it like all other
+    // used argv options.
+    // but then when adjusting argv exports (ex: to parse rank), minrank arg value
+    // is tested false (ex: "", null) in processRankExport, so we don't enter the code
+    // that throws an error inside parseRank, thus exporting an invalid rank ""
+    // so throwing all errors before doing any export avoids to run in such a case, and
+    // is also perhaps easier to handle
 
     testBotCommandArgvIsValid(argv);
     testDroppedArgv(droppedOptions, argv);
     testConflictingOptions("rankedonly", "unrankedonly", argv);
     testConflictingOptions("persist", "persistnoncorr", argv);
+    testConflictingOptions("rejectnew", "rejectnewfile", argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedOptions(rankedUnrankedOptions, argv);
+
+    testMinMaxRankIsValid("minrank", argv);
+    testMinMaxRankIsValid("minrankranked", argv);
+    testMinMaxRankIsValid("minrankunranked", argv);
+    testMinMaxRankIsValid("maxrank", argv);
+    testMinMaxRankIsValid("maxrankranked", argv);
+    testMinMaxRankIsValid("maxrankunranked", argv);
 
     // C - set general/ranked/unranked options defaults
     
@@ -247,22 +264,37 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
     }
 }
 
-function parseRank(arg) {
-    if (arg) {
-        const re = /(\d+)([kdp])/;
-        const results = arg.toLowerCase().match(re);
+function getRankMatchResults(arg) {
+    const re = /(\d+)([kdp])/;
+    const results = arg.toLowerCase().match(re);	
 
-        if (results) {
-            if (results[2] === "k") {
-                return (30 - parseInt(results[1]));
-            } else if (results[2] === "d") {
-                return (30 - 1 + parseInt(results[1]));
-            } else if (results[2] === "p") {
-                return (36 + parseInt(results[1]));
-            }
-        } else {
-            throw `error: could not parse rank -${arg}-`;
+    return results;
+}
+
+function testMinMaxRankIsValid(optionName, argv) {
+    const arg = argv[optionName];
+  
+    if (arg !== undefined) {
+        if (typeof arg !== "string") {
+            throw new Error(`Error: ${arg} is of invalid type, should be string but is ${typeof arg}.`);
         }
+
+        const results = getRankMatchResults(arg);
+        if (!results) {
+            throw new Error(`Error: could not parse rank ${arg}.`);
+        }
+    }
+}
+
+function parseRank(arg) {
+    const results = getRankMatchResults(arg);
+
+    if (results[2] === "k") {
+        return (30 - parseInt(results[1]));
+    } else if (results[2] === "d") {
+        return (30 - 1 + parseInt(results[1]));
+    } else if (results[2] === "p") {
+        return (36 + parseInt(results[1]));
     }
 }
 
