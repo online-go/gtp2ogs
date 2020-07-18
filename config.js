@@ -235,13 +235,16 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
         
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
 
-        if ((argv[general] === undefined)) {
+        if (argv[general] === undefined) {
             if ((argv[ranked] === undefined) && (argv[unranked] === undefined)) {                
                 argv[general] = option.default;
-            } else if (argv[unranked] === undefined) {
-                argv[ranked] = option.default;
-            } else if (argv[ranked] === undefined) {
+            } else if (argv[ranked] !== undefined && argv[unranked] === undefined) {
+                // also set the opposite arg currently undefined to the default, more convenient for botadmin
                 argv[unranked] = option.default;
+
+            } else if (argv[ranked] === undefined && argv[unranked] !== undefined) {
+                // also set the opposite arg currently undefined to the default, more convenient for botadmin
+                argv[ranked] = option.default;
             }
         }
     }
