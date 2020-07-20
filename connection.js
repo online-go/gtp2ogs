@@ -382,9 +382,9 @@ class Connection {
     }
     // Check bot is available, else don't mislead user
     //
-    checkChallengeBot(notification) {
+    checkChallengeBot(notification, fs) {
 
-        if (check_rejectnew()) {
+        if (check_rejectnew(fs)) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }
@@ -519,18 +519,23 @@ class Connection {
         return { reject: false };  // Ok !
 
     }
+
     // Check challenge entirely, and return reject status + optional error msg.
     //
     checkChallenge(notification) {
 
-        for (const test of [this.checkChallengeSanityChecks,
-                           this.checkChallengeUser,
-                           this.checkChallengeBot,
-                           this.checkChallengeBooleans,
-                           this.checkChallengeAllowedGroup,
-                           this.checkChallengeHandicap,
-                           this.checkChallengeTimeSettings]) {
-            const result = test.bind(this)(notification);
+        const tests = [
+            [this.checkChallengeSanityChecks, notification],
+            [this.checkChallengeUser, notification],
+            [this.checkChallengeBot, notification, fs],
+            [this.checkChallengeBooleans, notification],
+            [this.checkChallengeAllowedGroup, notification],
+            [this.checkChallengeHandicap, notification],
+            [this.checkChallengeTimeSettings, notification]
+        ];
+
+        for (const [test, ...params] of tests) {
+            const result = test.bind(this)(...params);
             if (result.reject) return result;
         }
 
@@ -797,7 +802,7 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
     }
 }
 
-function check_rejectnew() {
+function check_rejectnew(fs) {
     if (config.rejectnew)  return true;
     if (config.rejectnewfile && fs.existsSync(config.rejectnewfile))  return true;
     return false;

@@ -1,6 +1,7 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const assert = require('assert');
+const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
@@ -293,8 +294,8 @@ describe('Challenges', () => {
       const notification = base_challenge({ ranked: false });
 
       config.rejectnew = true;
-      
-      const result = conn.checkChallengeBot(notification);
+
+      const result = conn.checkChallengeBot(notification, fs);
       
       assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
     });
@@ -306,7 +307,7 @@ describe('Challenges', () => {
   
         config.rejectnew = true;
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
     });
@@ -318,7 +319,7 @@ describe('Challenges', () => {
         config.rejectnew = true;
         config.rejectnewmsg = 'Sorry, i am not available now.';
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: true, msg: 'Sorry, i am not available now.' }));
     });
@@ -327,7 +328,7 @@ describe('Challenges', () => {
 
         const notification = base_challenge({ ranked: false });
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: false }));
     });
@@ -336,7 +337,7 @@ describe('Challenges', () => {
 
         const notification = base_challenge({ ranked: true });
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: false }));
     });
@@ -347,7 +348,7 @@ describe('Challenges', () => {
 
         config.rejectnewmsg = 'Sorry, i am not available now.';
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: false }));
     });
@@ -359,7 +360,7 @@ describe('Challenges', () => {
         // relative path from where shell is, so root of gtp2ogs
         config.rejectnewfile = "./test/rejectnew/rejectnew-file.txt";
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
     });
@@ -371,7 +372,7 @@ describe('Challenges', () => {
         // relative path from where shell is, so root of gtp2ogs
         config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: false }));
     });
@@ -384,7 +385,7 @@ describe('Challenges', () => {
         config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
         config.rejectnewmsg = 'Sorry, i am not available now.';
         
-        const result = conn.checkChallengeBot(notification);
+        const result = conn.checkChallengeBot(notification, fs);
         
         assert.deepEqual(result, ({ reject: false }));
     });
