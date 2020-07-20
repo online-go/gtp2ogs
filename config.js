@@ -9,7 +9,6 @@ const { getArgNamesGRU } = require('./options/getArgNamesGRU');
 const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
-const { getValidFilename } = require('./utils/getValidFilename');
 
 exports.start_date = new Date();
 
@@ -79,8 +78,8 @@ exports.updateFromArgv = function(argv) {
     if (argv.debug) {
         exports.DEBUG = true;
     }
-    if (argv.logfile) {
-        exportValidLogfileFilename(argv.logfile);
+    if (argv.logfile !== undefined) {
+        exportLogfileFilename(argv.logfile);
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -250,23 +249,27 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
     }
 }
 
-function exportValidLogfileFilename(argvLogfile) {
-    if (typeof argvLogfile === "string") {
-        const validFilename = getValidFilename(argvLogfile);
-        if (argvLogfile !== validFilename) {
-            console.log (`Invalid logfile name "${argvLogfile}" has been automatically renamed`
-                         + ` to "${validFilename}".\nValid logfile name can only be composed of`
-                         + ` upper case (ex: A), lower case (ex: a), numbers, hyphens (-).\n`);
-        }
-        exports.logfile = validFilename;
+function getValidFilename(filename) {
+    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_)
+    // to a hyphen (-)
+    return filename.replace(/[^\w]/g, "-");
+}
 
-    } else {
-        // provide default filename based on start_time date and time
+function exportLogfileFilename(argvLogfile) {
+    if (argvLogfile === "") {
+        // provide default filename based on start date and time
         //
         const filenameDate = `gtp2ogs-logfile-${exports.start_date.toISOString()}`;
         const validFilenameDate = getValidFilename(filenameDate);
         exports.logfile = validFilenameDate;
-        console.log(`Non-string logfile filename was successfully exported as ${validFilenameDate}`)
+    } else {
+        const validFilename = getValidFilename(argvLogfile);
+        if (argvLogfile !== validFilename) {
+            console.log (`Invalid logfile name "${argvLogfile}" has been automatically renamed`
+                         + ` to "${validFilename}".\nValid logfile name can only be composed of`
+                         + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_).\n`);
+        }
+        exports.logfile = validFilename;
     }
 }
 
