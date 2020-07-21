@@ -79,7 +79,8 @@ exports.updateFromArgv = function(argv) {
         exports.DEBUG = true;
     }
     if (argv.logfile !== undefined) {
-        exportLogfileFilename(argv.logfile);
+        const logfileFilename = getLogfileFilename(argv.logfile);
+        exportLogfileFilename(logfileFilename);
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -249,28 +250,27 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
     }
 }
 
-function getValidFilename(filename) {
-    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_)
-    // to a hyphen (-)
-    return filename.replace(/[^\w]/g, "-");
+function getLogfileFilename(argvLogfile) {
+    return (argvLogfile === "" ? `gtp2ogs-logfile-${exports.start_date.toISOString()}` : argvLogfile);
 }
 
-function exportLogfileFilename(argvLogfile) {
-    if (argvLogfile === "") {
-        // provide default filename based on start date and time
-        //
-        const filenameDate = `gtp2ogs-logfile-${exports.start_date.toISOString()}`;
-        const validFilenameDate = getValidFilename(filenameDate);
-        exports.logfile = validFilenameDate;
-    } else {
-        const validFilename = getValidFilename(argvLogfile);
-        if (argvLogfile !== validFilename) {
-            console.log (`Invalid logfile name "${argvLogfile}" has been automatically renamed`
-                         + ` to "${validFilename}".\nValid logfile name can only be composed of`
-                         + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_).\n`);
-        }
-        exports.logfile = validFilename;
+function getValidFilename(filename) {
+    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
+    // space ( ), dot (.) to a hyphen (-)
+    return filename.replace(/[^\w\-. ]/g, "-");
+}
+
+function exportLogfileFilename(filename) {
+    const validFilename = getValidFilename(filename);
+
+    if (filename !== validFilename) {
+        console.log (`Logfile name "${filename}" has been automatically renamed`
+                     + ` to "${validFilename}".\nValid logfile name can only be composed of`
+                     + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces`
+                     + ` ( ), dots (.).\n`);
     }
+
+    exports.logfile = validFilename;
 }
 
 function parseRank(arg) {

@@ -183,12 +183,12 @@ MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 `--logfile` In addition to logging to the console, also log gtp2ogs
 output to a text file.
 
-Filename can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), any other
-character will be replaced with a hyphen (-).
+Filename can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-),
+underscores (_), spaces ( ), dots (.), any other character will be replaced with
+a hyphen (-).
 
-Filename argument is optional (using only `--logfile`
-will use default filename based on start date and time, for example
-`gtp2ogs-logfile-2020-05-21T21-40-22-910Z`)
+Filename argument is optional (using only `--logfile` will use default filename
+based on start date and time, for example `gtp2ogs-logfile-2020-05-21T21-40-22-910Z`)
 
 note: starting gtp2ogs from a different directory used specifically to store your
 logs will keep your gtp2ogs main directory clean.
