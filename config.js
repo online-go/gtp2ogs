@@ -79,8 +79,7 @@ exports.updateFromArgv = function(argv) {
         exports.DEBUG = true;
     }
     if (argv.logfile !== undefined) {
-        const logfileFilename = getLogfileFilename(argv.logfile);
-        exportLogfileFilename(logfileFilename);
+        exportLogfileFilename(argv.logfile);
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -260,14 +259,15 @@ function getValidFilename(filename) {
     return filename.replace(/[^\w\-. ]/g, "-");
 }
 
-function exportLogfileFilename(filename) {
+function exportLogfileFilename(argvLogfile) {
+    const filename = getLogfileFilename(argvLogfile);
     const validFilename = getValidFilename(filename);
-
+    
     if (filename !== validFilename) {
-        console.log (`Logfile name "${filename}" has been automatically renamed`
-                     + ` to "${validFilename}".\nValid logfile name can only be composed of`
-                     + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces`
-                     + ` ( ), dots (.).\n`);
+        console.log (`Logfile name "${filename}" has been automatically renamed to`
+                        + ` "${validFilename}".\nValid logfile name can only be composed of`
+                        + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_)`
+                        + `, spaces ( ), dots (.).\n`);
     }
 
     exports.logfile = validFilename;
