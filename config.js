@@ -23,11 +23,7 @@ exports.updateFromArgv = function(argv) {
     // A- greeting and debug status
 
     const debugStatus = argv.debug ? "DEBUG: ON\n" : "";
-    console.log(`\ngtp2ogs version 6.0.1`
-                + `\n--------------------`
-                + `\n- For changelog or latest devel updates, `
-                + `please visit https://github.com/online-go/gtp2ogs/tree/devel\n`
-                + `${debugStatus}`);
+    console.log(`\ngtp2ogs version 6.0.1\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n${debugStatus}`);
 
     // B - test unsupported argv
 
@@ -145,12 +141,10 @@ function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
         // check undefined specifically to handle valid values such as 0 or null which are tested false
         if (argv[general] !== undefined) {
             if (argv[ranked] !== undefined) {
-                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, `
-                      + `use either --${general} or --${ranked} or no option if you want to allow all values.`;
+                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, use either --${general} or --${ranked} or no option if you want to allow all values.`;
             }
             if (argv[unranked] !== undefined) {
-                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, `
-                      + `use either --${general} or --${unranked} or no option if you want to allow all values.`;
+                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, use either --${general} or --${unranked} or no option if you want to allow all values.`;
             }
         }
     }
@@ -164,12 +158,10 @@ function testBotCommandArgvIsValid(argv) {
     const parsedBotCommand = JSON.stringify(argv._);
 
     if (!Array.isArray(argv._)) {
-        throw `Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters`
-              + `, please check your syntax ( -- ).`;
+        throw `Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters, please check your syntax ( -- ).`;
     }
     if (argv._.length === 0) {
-        throw `Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element`
-              + ` in your bot command which should be the AI executable (ex: lz.exe).`;
+        throw `Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element in your bot command which should be the AI executable (ex: lz.exe).`;
     }
 }
 
@@ -186,8 +178,7 @@ function testDroppedArgv(droppedOptions, argv) {
         if (argv[argName]) {
             for (const komi of ["auto","null"]) {
                 if (argv[argName].split(",").includes(komi)) {
-                    throw `Dropped: --${argName} ${komi} is no longer `
-                                + `supported, use --${argName} automatic instead`;
+                    throw `Dropped: --${argName} ${komi} is no longer supported, use --${argName} automatic instead`;
                 }
             }
         }
@@ -207,8 +198,7 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 
     if (!upperCaseAIs.includes(upperCaseOgsPv)) {
-        throw `Unsupported --ogspv option ${ogspv}.`
-              + `\nSupported options are ${ogsPvAIs.join(', ')}`;
+        throw `Unsupported --ogspv option ${ogspv}.\nSupported options are ${ogsPvAIs.join(', ')}`;
     }
 }
 

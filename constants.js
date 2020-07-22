@@ -82,8 +82,7 @@ const rankedUnrankedOptions = [
 ];
 
 function getBLCString(optionName, rankedUnranked) {
-    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} `
-           + `and/or --${optionName}corr${rankedUnranked}`;
+    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} and/or --${optionName}corr${rankedUnranked}`;
 }
 
 module.exports = { droppedOptions, ogsPvAIs, rankedUnrankedOptions };
