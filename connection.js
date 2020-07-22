@@ -298,7 +298,7 @@ class Connection {
         const resultNotificationKeys = getCheckedKeysInObjRejectResult(notificationKeys, notification);
         if (resultNotificationKeys) return resultNotificationKeys;
 
-        const notificationKeysUser = ["id", "username", "professional", "ranking"];
+        const notificationKeysUser = ["id", "username", "professional", "ranking", "ui_class"];
         const resultNotificationKeysUser = getCheckedKeysInObjRejectResult(notificationKeysUser, notification.user);
         if (resultNotificationKeysUser) return resultNotificationKeysUser;
 
@@ -365,6 +365,9 @@ class Connection {
                 return getRejectBanned(notification.user.username, "unranked");
             }
         }
+
+        const resultNoProvisional = getNoProvisionalRejectResult(notification.user.ui_class, notification.ranked);
+        if (resultNoProvisional) return resultNoProvisional;
 
         if (!notification.user.professional) {
             const beginning = "Games against non-professionals are";
@@ -814,6 +817,20 @@ function getCheckedArgName(optionName, notificationRanked) {
     // no valid arg to test, this happens when bot admin inputs no value and we
     // provide no default either (ex: minmaxrank, minmaxhandicap, etc.)
     return undefined;
+}
+
+function checkOptionIsInUiClass(notifUiClass, option) {
+    return notifUiClass.split(" ").includes(option);
+}
+
+function getNoProvisionalRejectResult(notif, notificationRanked) {
+    const argName = getCheckedArgName(`noprovisional`, notificationRanked);
+    if (argName && checkOptionIsInUiClass(notif, "provisional")) {
+        const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
+        const msg = `It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking${forRankedUnrankedGames}, you need to play a few more ranked games.`;
+        conn_log(`${argName}.`);
+        return { reject : true, msg };
+    }
 }
 
 function getBooleansGeneralReject(nameF) {
