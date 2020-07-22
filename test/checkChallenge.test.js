@@ -185,7 +185,7 @@ describe('Challenges', () => {
     it('reject user ranking too low', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 10; // "20k"
 
       config.minrank = 17;
@@ -200,7 +200,7 @@ describe('Challenges', () => {
     it('accept user ranking edge min', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 17; // "13k"
 
       config.minrank = 17;
@@ -215,7 +215,7 @@ describe('Challenges', () => {
     it('accept user ranking between min and max', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 25; // "5k"
 
       config.minrank = 17;
@@ -229,7 +229,7 @@ describe('Challenges', () => {
 
     it('accept user ranking edge max', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 32; // "3d"
 
       config.minrank = 17;
@@ -244,7 +244,7 @@ describe('Challenges', () => {
     it('reject user ranking too high', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 35; // "6d"
 
       config.minrank = 17;
@@ -259,7 +259,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (9d+)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 41; // "12d"
 
       config.minrank = 17;
@@ -274,7 +274,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (pro)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 37; // "1p" (1p" = "8d")
 
       config.minrank = 17;
