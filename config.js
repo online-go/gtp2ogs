@@ -8,6 +8,8 @@ const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
+exports.start_date = new Date();
+
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
 exports.banned_users = {};
@@ -73,8 +75,8 @@ exports.updateFromArgv = function(argv) {
     if (argv.debug) {
         exports.DEBUG = true;
     }
-    if (argv.logfile && typeof argv.logfile === "boolean") {
-        exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
+    if (argv.logfile !== undefined) {
+        exportLogfileFilename(argv.logfile);
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -239,6 +241,30 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
             }
         }
     }
+}
+
+function getLogfileFilename(argvLogfile) {
+    return (argvLogfile === "" ? `gtp2ogs-logfile-${exports.start_date.toISOString()}` : argvLogfile);
+}
+
+function getValidFilename(filename) {
+    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
+    // space ( ), dot (.) to a hyphen (-)
+    return filename.replace(/[^\w\-. ]/g, "-");
+}
+
+function exportLogfileFilename(argvLogfile) {
+    const filename = getLogfileFilename(argvLogfile);
+    const validFilename = getValidFilename(filename);
+    
+    if (filename !== validFilename) {
+        console.log (`Logfile name "${filename}" has been automatically renamed to`
+                        + ` "${validFilename}".\nValid logfile name can only be composed of`
+                        + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_)`
+                        + `, spaces ( ), dots (.).\n`);
+    }
+
+    exports.logfile = validFilename;
 }
 
 function parseRank(arg) {
