@@ -3,16 +3,12 @@
 // see: https://github.com/online-go/gtp2ogs/blob/devel/docs/DEV.md#no-console-eslint-rule-in-configjs
 /* eslint-disable no-console */
 
-const fs = require('fs');
-
 const { getArgNamesGRU } = require('./options/getArgNamesGRU');
 const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
-
-exports.check_rejectnew = function() {};
 
 exports.banned_users = {};
 exports.banned_users_ranked = {};
@@ -53,6 +49,7 @@ exports.updateFromArgv = function(argv) {
     testDroppedArgv(droppedOptions, argv);
     testConflictingOptions("rankedonly", "unrankedonly", argv);
     testConflictingOptions("persist", "persistnoncorr", argv);
+    testConflictingOptions("rejectnew", "rejectnewfile", argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedOptions(rankedUnrankedOptions, argv);
 
@@ -110,12 +107,6 @@ exports.updateFromArgv = function(argv) {
         // A bot never accepting new games shouldn't be appearing in the dropdown, polite to our users.
         exports.hidden = true;
     }
-    exports.check_rejectnew = function()
-    {
-        if (argv.rejectnew)  return true;
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        return false;
-    };
     exports.bot_command = argv._;
 
     // 2) specific ranked/unranked options exports
