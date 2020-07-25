@@ -8,13 +8,9 @@ const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
-exports.start_date = new Date();
-
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
-exportInitialConfigRankedUnranked("");
-exportInitialConfigRankedUnranked("_ranked");
-exportInitialConfigRankedUnranked("_unranked");
+exportInitialConfig();
 
 exports.updateFromArgv = function(argv) {
     // console messages
@@ -56,8 +52,8 @@ exports.updateFromArgv = function(argv) {
     if (argv.logfile !== undefined) {
         exportLogfileFilename(argv.logfile, argv.debug);
     }
-    exportMicroseconds("timeout", argv);
-    exportMicroseconds("startupbuffer", argv);
+    exportSecondsAsMilliseconds("timeout", argv);
+    exportSecondsAsMilliseconds("startupbuffer", argv);
 
     if (argv.beta) {
         exports.host = 'beta.online-go.com';
@@ -115,6 +111,14 @@ exports.updateFromArgv = function(argv) {
 
 }
 
+function exportInitialConfig() {
+    exportInitialConfigRankedUnranked("");
+    exportInitialConfigRankedUnranked("_ranked");
+    exportInitialConfigRankedUnranked("_unranked");
+
+    exports.start_date = new Date();
+}
+
 function exportInitialConfigRankedUnranked(rankedUnrankedUnderscored) {
     exports[`banned_users${rankedUnrankedUnderscored}`] = {};
     exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = false;
@@ -134,10 +138,10 @@ function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
         // check undefined specifically to handle valid values such as 0 or null which are tested false
         if (argv[general] !== undefined) {
             if (argv[ranked] !== undefined) {
-                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, use either --${general} or --${ranked} or no option if you want to allow all values.`;
+                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, use either --${general} or --${ranked}, or do not use anything to switch to default settings for this option.`;
             }
             if (argv[unranked] !== undefined) {
-                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, use either --${general} or --${unranked} or no option if you want to allow all values.`;
+                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, use either --${general} or --${unranked}, or do not use anything to switch to default settings for this option.`;
             }
         }
     }
@@ -226,10 +230,10 @@ function getValidFilename(filename) {
     return filename.replace(/[^\w\-. ]/g, "-");
 }
 
-function exportMicroseconds(optionName, argv) {
+function exportSecondsAsMilliseconds(optionName, argv) {
     if (argv[optionName] !== undefined) {
-        // Convert some times to microseconds once here so
-        // we don't need to do it each time it is used later.
+        // Convert some times in seconds to milliseconds once here so we don't need
+        // to do it each time it is used later.
         exports[optionName] = argv[optionName] * 1000;
     }
 }
