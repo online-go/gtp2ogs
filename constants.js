@@ -64,6 +64,7 @@ const rankedUnrankedOptions = [
     { name: "speeds", default: "all" },
     { name: "timecontrols", default: "fischer,byoyomi,simple,canadian" },
     { name: "proonly" },
+    { name: "noprovisional" },
     { name: "nopause" },
     { name: "nopauseonweekends" },
     { name: "noautohandicap" },

@@ -84,6 +84,9 @@ function getArgv() {
         .describe('proonly', 'For all games, only accept those from professionals')
         .describe('proonlyranked', 'For ranked games, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
+        .describe('noprovisional', 'Do not accept challenges from provisional players')
+        .describe('noprovisionalranked', 'Do not accept challenges from provisional players for ranked games')
+        .describe('noprovisionalunranked', 'Do not accept challenges from provisional players for unranked games')
         /* note: - nopause disables pausing DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/

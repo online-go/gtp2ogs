@@ -442,6 +442,14 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 `--proonlyunranked` For unranked games, only accept those from professionals
 
+#### noprovisional
+
+`--noprovisional` Do not accept challenges from provisional players
+
+`--noprovisionalranked` Do not accept challenges from provisional players for ranked games
+
+`--noprovisionalunranked` Do not accept challenges from provisional players for unranked games
+
 #### nopause
 
 `--nopause`  Disable pausing during games
