@@ -18,7 +18,7 @@ function getArgv() {
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
         .default('rejectnewmsg', rootOptionsDefaults.rejectnewmsg)
-        .describe('rejectnewfile', 'Reject new challenges if file (ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location. Location can either be absolute (ex: ~/ or /home/myUsername/) or relative for relative paths, it is relative to your current shell path (ex: if your shell is in ~/ and your rejectnew file is in ~/gtp2ogs/rejectnewfiles, do ./rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs and your rejectnewfile is in ~/gtp2ogs_rejectnewfiles/, do ../gtp2ogs_logs/rejectnewfiles/rejectnew-file.txt')
+        .describe('rejectnewfile', 'Reject new challenges if file (ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location. Location can either be absolute (ex: ~/ or /home/myUsername/) or relative for relative paths, it is relative to your current shell path (ex: if your shell is in ~/ and your rejectnew file is in ~/gtp2ogs/rejectnewfiles, do ./gtp2ogs/rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs and your rejectnewfile is in ~/gtp2ogs_rejectnewfiles/, do ../gtp2ogs_rejectnewfiles/rejectnew-file.txt')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
