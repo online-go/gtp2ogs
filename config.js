@@ -73,8 +73,8 @@ exports.updateFromArgv = function(argv) {
     // 2) specific ranked/unranked options exports
 
     exportMinMaxRanks(argv);
-    exportBansUnderscored(argv);
-    exportAllowedGroupsUnderscored(argv);
+    exportBans(argv);
+    exportAllowedGroups(argv);
 
     // console messages
     // C - test exports warnings
@@ -287,7 +287,7 @@ function processBansExport(argName, argv) {
     }
 }
 
-function exportBansUnderscored(argv) {
+function exportBans(argv) {
     processBansExport("bans", argv);
     processBansExport("bansranked", argv);
     processBansExport("bansunranked", argv);
@@ -347,7 +347,7 @@ function processAllowedGroupExport(argName, argv) {
     } 
 }
 
-function exportAllowedGroupsUnderscored(argv) {
+function exportAllowedGroups(argv) {
     processBoardsizesExport("boardsizes", argv);
     processBoardsizesExport("boardsizesranked", argv);
     processBoardsizesExport("boardsizesunranked", argv);
