@@ -11,6 +11,7 @@ function base_challenge(overrides) {
             username: 'human',
             professional: false,
             ranking: 10.0,
+            ui_class: "",
         },
         rules: 'chinese',
         ranked: true,

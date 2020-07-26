@@ -180,12 +180,138 @@ describe('Challenges', () => {
 
   });
 
+  describe('No provisional', () => {
+    it('reject provisional player for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "provisional"
+
+      config.noprovisional = true;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking, you need to play a few more ranked games.' }));
+    });
+
+    it('reject provisional player for all games and game is unranked', () => {
+        const notification = base_challenge({ ranked: false });
+        // cannot override user directly: it would delete other required properties in notification.user
+        notification.user.ui_class = "provisional"
+  
+        config.noprovisional = true;
+        
+        const result = conn.checkChallengeUser(notification);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking, you need to play a few more ranked games.' }));
+      });
+
+    it('reject provisional player for all games even with other ui_classes', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "supporter provisional timeout admin"
+  
+      config.noprovisional = true;
+        
+      const result = conn.checkChallengeUser(notification);
+        
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking, you need to play a few more ranked games.' }));
+    });
+
+    it('accept non-provisional player for all games (empty ui_class) and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+  
+      config.noprovisional = true;
+        
+      const result = conn.checkChallengeUser(notification);
+        
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept non-provisional player for all games (empty ui_class) and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+    
+      config.noprovisional = true;
+          
+      const result = conn.checkChallengeUser(notification);
+          
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept non-provisional player (with other ui_classes)', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "supporter timeout admin"
+    
+      config.noprovisional = true;
+        
+      const result = conn.checkChallengeUser(notification);
+         
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    // minimal ranked unranked args testing, already covered cases for general arg, and already tested getCheckedArgName
+    // in other tests
+
+    it('reject provisional player for ranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "provisional"
+  
+      config.noprovisionalranked = true;
+      
+      const result = conn.checkChallengeUser(notification);
+        
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking for ranked games, you need to play a few more ranked games.' }));
+    });
+
+    it('reject provisional player for unranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "provisional"
+    
+      config.noprovisionalunranked = true;
+        
+      const result = conn.checkChallengeUser(notification);
+          
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking for unranked games, you need to play a few more ranked games.' }));
+    });
+
+    it('accept non-provisional player for ranked games (empty ui_class) and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+      
+      config.noprovisionalranked = true;
+            
+      const result = conn.checkChallengeUser(notification);
+            
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept non-provisional player for unranked games (empty ui_class) and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+      
+      config.noprovisionalunranked = true;
+            
+      const result = conn.checkChallengeUser(notification);
+            
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+  });
+
   describe('Min Max Rank', () => {
 
     it('reject user ranking too low', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 10; // "20k"
 
       config.minrank = 17;
@@ -200,7 +326,7 @@ describe('Challenges', () => {
     it('accept user ranking edge min', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 17; // "13k"
 
       config.minrank = 17;
@@ -215,7 +341,7 @@ describe('Challenges', () => {
     it('accept user ranking between min and max', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 25; // "5k"
 
       config.minrank = 17;
@@ -229,7 +355,7 @@ describe('Challenges', () => {
 
     it('accept user ranking edge max', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 32; // "3d"
 
       config.minrank = 17;
@@ -244,7 +370,7 @@ describe('Challenges', () => {
     it('reject user ranking too high', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 35; // "6d"
 
       config.minrank = 17;
@@ -259,7 +385,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (9d+)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 41; // "12d"
 
       config.minrank = 17;
@@ -274,7 +400,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (pro)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 37; // "1p" (1p" = "8d")
 
       config.minrank = 17;
