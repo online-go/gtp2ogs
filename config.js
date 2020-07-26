@@ -86,14 +86,14 @@ exports.updateFromArgv = function(argv) {
 }
 
 function exportInitialConfig() {
-    exportInitialConfigRankedUnranked("");
-    exportInitialConfigRankedUnranked("_ranked");
-    exportInitialConfigRankedUnranked("_unranked");
+    exportInitialConfigUnderscored("");
+    exportInitialConfigUnderscored("_ranked");
+    exportInitialConfigUnderscored("_unranked");
 
     exports.start_date = new Date();
 }
 
-function exportInitialConfigRankedUnranked(rankedUnrankedUnderscored) {
+function exportInitialConfigUnderscored(rankedUnrankedUnderscored) {
     exports[`banned_users${rankedUnrankedUnderscored}`] = {};
     exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = false;
     exports[`allowed_boardsizes${rankedUnrankedUnderscored}`] = [];
