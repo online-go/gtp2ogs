@@ -1,5 +1,5 @@
 function base_gamedata(overrides) {
-    let base = {
+    const base = {
         game_id: 1,
         game_name: 'Friendly Match',
         phase: 'play',

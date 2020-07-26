@@ -7,7 +7,7 @@ const { decodeMoves } = require("./gtp/decodeMoves");
 const { gtpchar2num } = require("./gtp/gtpchar2num");
 const { move2gtpvertex } = require("./gtp/move2gtpvertex");
 
-const console = require('./console').console;
+const { console } = require('./console');
 const config = require('./config');
 const { Pv } = require('./pv');
 

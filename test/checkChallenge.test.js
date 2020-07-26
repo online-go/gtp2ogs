@@ -1,6 +1,7 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
 const assert = require('assert');
+const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
@@ -23,10 +24,11 @@ describe('Challenges', () => {
   let conn;
  
   beforeEach(function() {
+    stub_console();
+
     config = getNewConfigUncached();
     connection = getNewConnectionUncached();
 
-    stub_console();
     sinon.useFakeTimers();
     
     const fake_api = new FakeAPI();
@@ -179,12 +181,138 @@ describe('Challenges', () => {
 
   });
 
+  describe('No provisional', () => {
+    it('reject provisional player for all games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "provisional"
+
+      config.noprovisional = true;
+      
+      const result = conn.checkChallengeUser(notification);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking, you need to play a few more ranked games.' }));
+    });
+
+    it('reject provisional player for all games and game is unranked', () => {
+        const notification = base_challenge({ ranked: false });
+        // cannot override user directly: it would delete other required properties in notification.user
+        notification.user.ui_class = "provisional"
+  
+        config.noprovisional = true;
+        
+        const result = conn.checkChallengeUser(notification);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking, you need to play a few more ranked games.' }));
+      });
+
+    it('reject provisional player for all games even with other ui_classes', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "supporter provisional timeout admin"
+  
+      config.noprovisional = true;
+        
+      const result = conn.checkChallengeUser(notification);
+        
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking, you need to play a few more ranked games.' }));
+    });
+
+    it('accept non-provisional player for all games (empty ui_class) and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+  
+      config.noprovisional = true;
+        
+      const result = conn.checkChallengeUser(notification);
+        
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept non-provisional player for all games (empty ui_class) and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+    
+      config.noprovisional = true;
+          
+      const result = conn.checkChallengeUser(notification);
+          
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept non-provisional player (with other ui_classes)', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "supporter timeout admin"
+    
+      config.noprovisional = true;
+        
+      const result = conn.checkChallengeUser(notification);
+         
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    // minimal ranked unranked args testing, already covered cases for general arg, and already tested getCheckedArgName
+    // in other tests
+
+    it('reject provisional player for ranked games and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "provisional"
+  
+      config.noprovisionalranked = true;
+      
+      const result = conn.checkChallengeUser(notification);
+        
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking for ranked games, you need to play a few more ranked games.' }));
+    });
+
+    it('reject provisional player for unranked games and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = "provisional"
+    
+      config.noprovisionalunranked = true;
+        
+      const result = conn.checkChallengeUser(notification);
+          
+      assert.deepEqual(result, ({ reject: true, msg: 'It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking for unranked games, you need to play a few more ranked games.' }));
+    });
+
+    it('accept non-provisional player for ranked games (empty ui_class) and game is ranked', () => {
+      const notification = base_challenge({ ranked: true });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+      
+      config.noprovisionalranked = true;
+            
+      const result = conn.checkChallengeUser(notification);
+            
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept non-provisional player for unranked games (empty ui_class) and game is unranked', () => {
+      const notification = base_challenge({ ranked: false });
+      // cannot override user directly: it would delete other required properties in notification.user
+      notification.user.ui_class = ""
+      
+      config.noprovisionalunranked = true;
+            
+      const result = conn.checkChallengeUser(notification);
+            
+      assert.deepEqual(result, ({ reject: false }));
+    });
+
+  });
+
   describe('Min Max Rank', () => {
 
     it('reject user ranking too low', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 10; // "20k"
 
       config.minrank = 17;
@@ -199,7 +327,7 @@ describe('Challenges', () => {
     it('accept user ranking edge min', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 17; // "13k"
 
       config.minrank = 17;
@@ -214,7 +342,7 @@ describe('Challenges', () => {
     it('accept user ranking between min and max', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 25; // "5k"
 
       config.minrank = 17;
@@ -228,7 +356,7 @@ describe('Challenges', () => {
 
     it('accept user ranking edge max', () => {
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 32; // "3d"
 
       config.minrank = 17;
@@ -243,7 +371,7 @@ describe('Challenges', () => {
     it('reject user ranking too high', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 35; // "6d"
 
       config.minrank = 17;
@@ -258,7 +386,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (9d+)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 41; // "12d"
 
       config.minrank = 17;
@@ -273,7 +401,7 @@ describe('Challenges', () => {
     it('reject user ranking too high (pro)', () => {
 
       const notification = base_challenge({ ranked: false });
-      // cannot override user.ranking property directly: it would delete required property notification.user.ratings.overall.games_played
+      // cannot override user directly: it would delete other required properties in notification.user
       notification.user.ranking = 37; // "1p" (1p" = "8d")
 
       config.minrank = 17;
@@ -282,6 +410,111 @@ describe('Challenges', () => {
       const result = conn.checkChallengeUser(notification);
       
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum rank is 3d.' }));
+    });
+   
+  });
+
+  describe('Rejectnew', () => {
+
+    it('reject all games if rejectnew is used with default rejectnewmsg', () => {
+
+      const notification = base_challenge({ ranked: false });
+
+      config.rejectnew = true;
+
+      const result = conn.checkChallengeBot(notification, fs);
+      
+      assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
+    });
+
+    // rejectnew is ranked-unranked aspecific, so ranked unranked testing is minimal
+    it('also rejectnew in ranked games', () => {
+
+        const notification = base_challenge({ ranked: true });
+  
+        config.rejectnew = true;
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
+    });
+
+    it('reject all games if rejectnew is used with custom rejectnewmsg', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        config.rejectnew = true;
+        config.rejectnewmsg = 'Sorry, i am not available now.';
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'Sorry, i am not available now.' }));
+    });
+
+    it('do not reject game if rejectnew is not used, and rejectnewmsg is default', () => {
+
+        const notification = base_challenge({ ranked: false });
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('also do not reject game in ranked games', () => {
+
+        const notification = base_challenge({ ranked: true });
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('do not reject game if rejectnew is not used, and rejectnewmsg is custom', () => {
+
+        const notification = base_challenge({ ranked: false });
+
+        config.rejectnewmsg = 'Sorry, i am not available now.';
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('reject all games if rejectnewfile is used and a reject file exists', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        // relative path from where shell is, so root of gtp2ogs
+        config.rejectnewfile = "./test/rejectnew/rejectnew-file.txt";
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: true, msg: 'Currently, this bot is not accepting games, try again later' }));
+    });
+
+    it('accept all games if rejectnewfile is used but a reject file does not exist, and rejectnew msg is default', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        // relative path from where shell is, so root of gtp2ogs
+        config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: false }));
+    });
+
+    it('accept all games if rejectnewfile is used but a reject file does not exist, and rejectnew msg is custom', () => {
+
+        const notification = base_challenge({ ranked: false });
+  
+        // relative path from where shell is, so root of gtp2ogs
+        config.rejectnewfile = "./test/rejectnew/rejectnew-file-someotherfilethatdoesnotexist.txt";
+        config.rejectnewmsg = 'Sorry, i am not available now.';
+        
+        const result = conn.checkChallengeBot(notification, fs);
+        
+        assert.deepEqual(result, ({ reject: false }));
     });
    
   });

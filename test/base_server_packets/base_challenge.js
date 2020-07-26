@@ -1,5 +1,5 @@
 function base_challenge(overrides) {
-    let base = {
+    const base = {
         type: 'challenge',
         challenge_id: 1,
         player_id: 1,
@@ -11,6 +11,7 @@ function base_challenge(overrides) {
             username: 'human',
             professional: false,
             ranking: 10.0,
+            ui_class: "",
         },
         rules: 'chinese',
         ranked: true,

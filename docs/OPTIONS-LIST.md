@@ -25,7 +25,7 @@ currently provides:
 --timeout 0
 --maxconnectedgames 20
 --maxconnectedgamesperuser 3
---rejectnewmsg "Currently, this bot is not accepting games, try again later "
+--rejectnewmsg "Currently, this bot is not accepting games, try again later"
 --boardsizes 9,13,19
 --komis automatic
 --speeds all
@@ -126,6 +126,8 @@ save it locally.
 
 ### rejectnew options
 
+rejectnew and rejectnewfile cannot be both used at the same time.
+
 `--rejectnew` Reject all new challenges with the default
 reject message
 
@@ -133,10 +135,12 @@ reject message
 if you add the rejectnewmsg option, Reject all new challenges with a
 customized message instead of the default message.
 
-see for details [notes G](/docs/NOTES.md#g)
+`--rejectnewfile ~/rejectnew-file.txt` Reject new challenges if file
+(ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location.
 
-`--rejectnewfile ~/rejectnew.status` Reject new challenges if
-file exists (checked each time, can use for load-balancing)
+Rejectnewfile is checked again at every challenge, can use for load-balancing)
+
+see for details [notes G](/docs/NOTES.md#g)
 
 ### debug
 
@@ -181,8 +185,22 @@ MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 ### logfile
 
 `--logfile` In addition to logging to the console, also log gtp2ogs
-output to a text file. Filename argument is optional (using only `--logfile`
-will use default filename, for example `gtp2ogs_logfile_2020-05-21T21:40:22.910Z`)
+output to a text file.
+
+Filename can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-),
+underscores (_), spaces ( ), dots (.), any other character will be replaced with
+a hyphen (-).
+
+Filename argument is optional (using only `--logfile` will use default filename
+based on start date and time, for example `gtp2ogs-logfile-2020-05-21T21-40-22-910Z`)
+
+note: starting gtp2ogs from a different directory used specifically to store your
+logs will keep your gtp2ogs main directory clean.
+
+For example:
+`cd ~/gtp2ogs_logs && node ~/gtp2ogs/gtp2ogs.js --beta --apikey stubapikey --username testuserbot --persist --noclock --debug --logfile -- ~/sai/build/sai-0.17-d2c82fc0 --gtp -w ~/networks/sai/9b/e1eab1d6_1913000.gz --noponder -v 400 --symm -r -1 --lambda 1.0 --mu 0`
+
+will store all logfiles in `~/gtp2ogs_logs`.
 
 ### json
 
@@ -423,6 +441,14 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 `--proonlyranked` For ranked games, only accept those from professionals
 
 `--proonlyunranked` For unranked games, only accept those from professionals
+
+#### noprovisional
+
+`--noprovisional` Do not accept challenges from provisional players
+
+`--noprovisionalranked` Do not accept challenges from provisional players for ranked games
+
+`--noprovisionalunranked` Do not accept challenges from provisional players for unranked games
 
 #### nopause
 

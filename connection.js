@@ -1,5 +1,6 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
+const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const querystring = require('querystring');
@@ -9,8 +10,8 @@ const { getArgNamesUnderscoredGRU } = require('./options/getArgNamesUnderscoredG
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 
 let config;
-const console = require('./console').console;
-const Game = require('./game').Game;
+const { console } = require('./console');
+const { Game } = require('./game');
 
 /****************/
 /** Connection **/
@@ -298,7 +299,7 @@ class Connection {
         const resultNotificationKeys = getCheckedKeysInObjRejectResult(notificationKeys, notification);
         if (resultNotificationKeys) return resultNotificationKeys;
 
-        const notificationKeysUser = ["id", "username", "professional", "ranking"];
+        const notificationKeysUser = ["id", "username", "professional", "ranking", "ui_class"];
         const resultNotificationKeysUser = getCheckedKeysInObjRejectResult(notificationKeysUser, notification.user);
         if (resultNotificationKeysUser) return resultNotificationKeysUser;
 
@@ -317,8 +318,7 @@ class Connection {
         const knownSpeeds = ["blitz", "live", "correspondence"];
         if (!knownSpeeds.includes(notification.time_control.speed)) {
             err(`Unknown speed ${notification.time_control.speed}.`);
-            const msg = `Unknown speed ${notification.time_control.speed}`
-                        + `, cannot check challenge, please try again.`;
+            const msg = `Unknown speed ${notification.time_control.speed}, cannot check challenge, please try again.`;
             return { reject: true, msg };
         }
 
@@ -326,17 +326,14 @@ class Connection {
         const knownTimecontrols = ["fischer", "byoyomi", "canadian", "simple", "absolute", "none"];
         if (!knownTimecontrols.includes(notification.time_control.time_control)) {
             err(`Unknown time control ${notification.time_control.time_control}.`);
-            const msg = `Unknown time control ${notification.time_control.time_control}`
-                        + `, cannot check challenge, please try again.`;
+            const msg = `Unknown time control ${notification.time_control.time_control}, cannot check challenge, please try again.`;
             return { reject: true, msg };
         }
 
         // Sometimes server sends us live challenges with pauses on weekends enabled.
         if (notification.time_control.pause_on_weekends && notification.time_control.speed !== "correspondence") {
             err(`Unhandled pause on weekends in non-correspondence challenge (${notification.time_control.speed}).`);
-            const msg = `There was an unexpected error: your ${notification.time_control.speed} challenge`
-                        + ` has pause on weekends, but this is only possible for correspondence games`
-                        + `, please try again.`;
+            const msg = `There was an unexpected error: your ${notification.time_control.speed} challenge has pause on weekends, but this is only possible for correspondence games, please try again.`;
             return { reject: true, msg };
         }
 
@@ -366,6 +363,9 @@ class Connection {
             }
         }
 
+        const resultNoProvisional = getNoProvisionalRejectResult(notification.user.ui_class, notification.ranked);
+        if (resultNoProvisional) return resultNoProvisional;
+
         if (!notification.user.professional) {
             const beginning = "Games against non-professionals are";
             const ending    = "";
@@ -381,9 +381,9 @@ class Connection {
     }
     // Check bot is available, else don't mislead user
     //
-    checkChallengeBot(notification) {
+    checkChallengeBot(notification, fs) {
 
-        if (config.check_rejectnew()) {
+        if (check_rejectnew(fs)) {
             conn_log("Not accepting new games (rejectnew).");
             return { reject: true, msg: config.rejectnewmsg };
         }
@@ -392,14 +392,8 @@ class Connection {
             const number_connected_games = Object.keys(this.connected_games).length;
             if (config.DEBUG) console.log(`# of connected games = ${number_connected_games}`);
             if (number_connected_games >= config.maxconnectedgames) {
-                conn_log(`${number_connected_games} games being played, `
-                         + `maximum is ${config.maxconnectedgames}`);
-                const msg = `Currently, ${number_connected_games} games `
-                            + `are being played by this bot, maximum is `
-                            + `${config.maxconnectedgames} (if you see this message `
-                            + `and you dont see any game on the bot profile page, `
-                            + `it is because private game(s) are being played), `
-                            + `try again later`;
+                conn_log(`${number_connected_games} games being played, maximum is ${config.maxconnectedgames}`);
+                const msg = `Currently, ${number_connected_games} games are being played by this bot, maximum is ${config.maxconnectedgames} (if you see this message and you dont see any game on the bot profile page, it is because private game(s) are being played), try again later`;
                 return { reject: true, msg };
             }
         } else if (config.DEBUG) {
@@ -409,10 +403,7 @@ class Connection {
         const connected_games_per_user = this.countGamesForPlayer(notification.user.id);
         if (connected_games_per_user >= config.maxconnectedgamesperuser) {
             conn_log("Too many connected games for this user.");
-            const msg = `Maximum number of simultaneous games allowed per player `
-                        + `against this bot ${config.maxconnectedgamesperuser}, `
-                        + `please reduce your number of simultaneous games against `
-                        + `this bot, and try again`;
+            const msg = `Maximum number of simultaneous games allowed per player against this bot ${config.maxconnectedgamesperuser}, please reduce your number of simultaneous games against this bot, and try again`;
             return { reject: true, msg };
         }
 
@@ -518,18 +509,23 @@ class Connection {
         return { reject: false };  // Ok !
 
     }
+
     // Check challenge entirely, and return reject status + optional error msg.
     //
     checkChallenge(notification) {
 
-        for (const test of [this.checkChallengeSanityChecks,
-                           this.checkChallengeUser,
-                           this.checkChallengeBot,
-                           this.checkChallengeBooleans,
-                           this.checkChallengeAllowedGroup,
-                           this.checkChallengeHandicap,
-                           this.checkChallengeTimeSettings]) {
-            const result = test.bind(this)(notification);
+        const tests = [
+            [this.checkChallengeSanityChecks, notification],
+            [this.checkChallengeUser, notification],
+            [this.checkChallengeBot, notification, fs],
+            [this.checkChallengeBooleans, notification],
+            [this.checkChallengeAllowedGroup, notification],
+            [this.checkChallengeHandicap, notification],
+            [this.checkChallengeTimeSettings, notification]
+        ];
+
+        for (const [test, ...params] of tests) {
+            const result = test.bind(this)(...params);
             if (result.reject) return result;
         }
 
@@ -542,10 +538,7 @@ class Connection {
 
         const handi = (notification.handicap > 0 ? `H${notification.handicap}` : "");
         const accepting = (c0.reject ? "Rejecting" : "Accepting");
-        conn_log(`${accepting} challenge from ${notification.user.username} `
-                 + `(${rankToString(notification.user.ranking)})  `
-                 + `[${notification.width}x${notification.height}] ${handi} `
-                 + `id = ${notification.game_id}`);
+        conn_log(`${accepting} challenge from ${notification.user.username} (${rankToString(notification.user.ranking)})  [${notification.width}x${notification.height}] ${handi} id = ${notification.game_id}`);
 
         if (!c0.reject) {
             post(api1(`me/challenges/${notification.challenge_id}/accept`), this.auth({ }))
@@ -796,6 +789,12 @@ function processCheckedTimeSettingsKeysRejectResult(timecontrol, keys, notif) {
     }
 }
 
+function check_rejectnew(fs) {
+    if (config.rejectnew)  return true;
+    if (config.rejectnewfile && fs.existsSync(config.rejectnewfile))  return true;
+    return false;
+}
+
 function getCheckedArgName(optionName, notificationRanked) {
     const argNames = getArgNamesGRU(optionName);
     const [general, ranked, unranked] = argNames;
@@ -816,6 +815,20 @@ function getCheckedArgName(optionName, notificationRanked) {
     return undefined;
 }
 
+function checkOptionIsInUiClass(notifUiClass, option) {
+    return notifUiClass.split(" ").includes(option);
+}
+
+function getNoProvisionalRejectResult(notif, notificationRanked) {
+    const argName = getCheckedArgName(`noprovisional`, notificationRanked);
+    if (argName && checkOptionIsInUiClass(notif, "provisional")) {
+        const forRankedUnrankedGames = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
+        const msg = `It seems you are still new on OGS (Provisional Player), this bot only accepts challenges from players with a regular ranking${forRankedUnrankedGames}, you need to play a few more ranked games.`;
+        conn_log(`${argName}.`);
+        return { reject : true, msg };
+    }
+}
+
 function getBooleansGeneralReject(nameF) {
     const msg = `${nameF} not allowed on this bot.`;
     conn_log(msg);
@@ -831,11 +844,8 @@ function getBooleansGRUReject(argName, nameF, ending) {
 
 function getBoardsizeNotSquareReject(argName, notificationWidth, notificationHeight) {
     const rankedUnranked = getForFromBLCRankedUnrankedGames("for ", "", argName, "");
-    conn_log(`boardsize ${notificationWidth}x${notificationHeight} `
-             + `is not square, not allowed ${rankedUnranked}`);
-    const msg = `Board size ${notificationWidth}x${notificationHeight} is not square`
-                + `, not allowed${rankedUnranked}.\nPlease choose a SQUARE board size`
-                + ` (same width and height), for example try 9x9 or 19x19.`;
+    conn_log(`boardsize ${notificationWidth}x${notificationHeight} is not square, not allowed ${rankedUnranked}`);
+    const msg = `Board size ${notificationWidth}x${notificationHeight} is not square, not allowed${rankedUnranked}.\nPlease choose a SQUARE board size (same width and height), for example try 9x9 or 19x19.`;
     return { reject: true, msg };
 }
 
@@ -867,8 +877,7 @@ function getAllowedGroupReject(argName, nameF, notif) {
     const notifToString = getAllowedGroupNotifToString(argName, notif);
 
     conn_log(`${nameF} ${forRankedUnrankedGames}is ${notifToString}, not in ${argToString} (${argName}).`);
-    const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}`
-                + `, please choose one of these allowed ${nameF}s${forRankedUnrankedGames}:\n${argToString}.`;
+    const msg = `${nameF} ${notifToString} is not allowed on this bot${forRankedUnrankedGames}, please choose one of these allowed ${nameF}s${forRankedUnrankedGames}:\n${argToString}.`;
     return { reject: true, msg };
 }
 

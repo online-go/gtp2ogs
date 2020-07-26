@@ -47,6 +47,16 @@ const droppedOptions = [
 
 const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
 
+const rootOptionsDefaults = {
+    host: 'online-go.com',
+    maxconnectedgames: 20,
+    maxconnectedgamesperuser: 3,
+    port: 443,
+    rejectnewmsg: 'Currently, this bot is not accepting games, try again later',
+    startupbuffer: 5,
+    timeout: 0,
+};
+
 const rankedUnrankedOptions = [
     { name: "bans" },
     { name: "boardsizes", default: "9,13,19" },
@@ -54,6 +64,7 @@ const rankedUnrankedOptions = [
     { name: "speeds", default: "all" },
     { name: "timecontrols", default: "fischer,byoyomi,simple,canadian" },
     { name: "proonly" },
+    { name: "noprovisional" },
     { name: "nopause" },
     { name: "nopauseonweekends" },
     { name: "noautohandicap" },
@@ -82,8 +93,7 @@ const rankedUnrankedOptions = [
 ];
 
 function getBLCString(optionName, rankedUnranked) {
-    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} `
-           + `and/or --${optionName}corr${rankedUnranked}`;
+    return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} and/or --${optionName}corr${rankedUnranked}`;
 }
 
-module.exports = { droppedOptions, ogsPvAIs, rankedUnrankedOptions };
+module.exports = { droppedOptions, ogsPvAIs, rootOptionsDefaults, rankedUnrankedOptions };

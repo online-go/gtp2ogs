@@ -1,0 +1,1 @@
+as long as this file exists, rejectnewfile should reject all games in checkChallenge.test.js

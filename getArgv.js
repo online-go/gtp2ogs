@@ -1,4 +1,4 @@
-const { ogsPvAIs } = require('./constants');
+const { ogsPvAIs, rootOptionsDefaults } = require('./constants');
 
 function getArgv() {
 
@@ -17,27 +17,26 @@ function getArgv() {
         .describe('farewellscore', 'Send the score according to the bot at the end of the game')
         .describe('rejectnew', 'Reject all new challenges with the default reject message')
         .describe('rejectnewmsg', 'Adds a customized reject message included in quote yourmessage quote')
-        .default('rejectnewmsg', 'Currently, this bot is not accepting games, try again later ')
-        .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
+        .default('rejectnewmsg', rootOptionsDefaults.rejectnewmsg)
+        .describe('rejectnewfile', 'Reject new challenges if file (ex: rejectnew.status, rejectnew-file.txt, etc.) exists at specified location. Location can either be absolute (ex: ~/ or /home/myUsername/) or relative for relative paths, it is relative to your current shell path (ex: if your shell is in ~/ and your rejectnew file is in ~/gtp2ogs/rejectnewfiles, do ./gtp2ogs/rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs and your rejectnewfile is in ~/gtp2ogs_rejectnewfiles/, do ../gtp2ogs_rejectnewfiles/rejectnew-file.txt')
         .describe('debug', 'Output GTP command and responses from your Go engine')
         .describe('ogspv', `Send winrate and variations for supported AIs (${ogsPvAIs.join(', ')})with supported settings`)
         .string('ogspv')
         .describe('aichat', 'Allow bots to send chat messages using `DISCUSSION:` `MALKOVICH:` in stderr')
-        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file.'
-                             + 'Filename argument is optional (using only --logfile will use default filename,'
-                             + 'for example gtp2ogs_logfile_2020-05-21T21:40:22.910Z)')
+        .describe('logfile', 'In addition to logging to the console, also log gtp2ogs output to a text file. Filename argument is optional (using only --logfile will use default filename based on start date and time, for example gtp2ogs-logfile-2020-05-21T21-40-22-910Z)')
+        .string('logfile')
         .describe('json', 'Send and receive GTP commands in a JSON encoded format')
         .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
         .describe('host', 'OGS Host to connect to')
-        .default('host', 'online-go.com') // default to OGS. If --beta, host will switch to beta OGS automatically
+        .default('host', rootOptionsDefaults.host) // default to OGS. If --beta, host will switch to beta OGS automatically
         .describe('port', 'OGS Port to connect to')
-        .default('port', 443)
+        .default('port', rootOptionsDefaults.port)
         .describe('insecure', 'Do not use ssl to connect to the ggs/rest servers')
         .describe('hidden', 'Hides the botname from the OGS game -Play against computer- bot list (but it can still accept challenges)')
         .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
-        .default('startupbuffer', 5)
+        .default('startupbuffer', rootOptionsDefaults.startupbuffer)
         .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
-        .default('timeout', 0)
+        .default('timeout', rootOptionsDefaults.timeout)
         // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
         .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
@@ -48,12 +47,11 @@ function getArgv() {
         /* note: for maxconnectedgames, correspondence games are currently included
         /  in the maxconnectedgames count if you use `--persist` )*/
         .describe('maxconnectedgames', 'Maximum number of connected games for all users')
-        .default('maxconnectedgames', 20)
+        .default('maxconnectedgames', rootOptionsDefaults.maxconnectedgames)
         .describe('maxconnectedgamesperuser', 'Maximum number of connected games per user against this bot')
-        .default('maxconnectedgamesperuser', 3)
+        .default('maxconnectedgamesperuser', rootOptionsDefaults.maxconnectedgamesperuser)
         .describe('rankedonly', 'Only accept ranked matches')
         .describe('unrankedonly', 'Only accept unranked matches')
-        .describe('fakerank', 'Fake bot ranking to calculate automatic handicap stones number in autohandicap (-1) based on rankDifference between fakerank and user ranking, to fix the bypass minhandicap maxhandicap issue if handicap is -automatic')
         // 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
         //     2A) ALL/RANKED/UNRANKED
         .describe('bans', 'Comma separated list of usernames or IDs')
@@ -86,6 +84,9 @@ function getArgv() {
         .describe('proonly', 'For all games, only accept those from professionals')
         .describe('proonlyranked', 'For ranked games, only accept those from professionals')
         .describe('proonlyunranked', 'For unranked games, only accept those from professionals')
+        .describe('noprovisional', 'Do not accept challenges from provisional players')
+        .describe('noprovisionalranked', 'Do not accept challenges from provisional players for ranked games')
+        .describe('noprovisionalunranked', 'Do not accept challenges from provisional players for unranked games')
         /* note: - nopause disables pausing DURING games, (game.js), but
         /        - nopauseonweekends rejects challenges BEFORE games (connection.js)
         /          (only for correspondence games)*/
@@ -98,9 +99,6 @@ function getArgv() {
         .describe('noautohandicap', 'Do not allow handicap to be set to -automatic-')
         .describe('noautohandicapranked', 'Do not allow handicap to be set to -automatic- for ranked games')
         .describe('noautohandicapunranked', 'Do not allow handicap to be set to -automatic- for unranked games')
-        .describe('mingamesplayed', 'Do not accept challenges from players who played less ranked games than specified minimum number (too new players)')
-        .describe('mingamesplayedranked', 'Do not accept ranked challenges from players who played less ranked games than specified minimum number (too new players)')
-        .describe('mingamesplayedunranked', 'Do not accept unranked challenges from players who played less ranked games than specified minimum number (too new players)')
         .describe('minrank', 'Minimum opponent rank to accept (ex: 15k)')
         .string('minrank')
         .describe('minrankranked', 'Minimum opponent rank to accept for ranked games (ex: 15k)')
@@ -133,10 +131,10 @@ function getArgv() {
         .describe('maxmaintimeliveunranked', 'Maximum seconds of main time for live unranked games')
         .describe('minmaintimecorr', 'Minimum seconds of main time for correspondence games')
         .describe('maxmaintimecorr', 'Maximum seconds of main time for correspondence games')
-        .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games ')
-        .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games ')
-        .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games ')
-        .describe('maxmaintimecorrunranked', 'Maximum seconds of main time for correspondence unranked games ')
+        .describe('minmaintimecorrranked', 'Minimum seconds of main time for correspondence ranked games')
+        .describe('maxmaintimecorrranked', 'Maximum seconds of main time for correspondence ranked games')
+        .describe('minmaintimecorrunranked', 'Minimum seconds of main time for correspondence unranked games')
+        .describe('maxmaintimecorrunranked', 'Maximum seconds of main time for correspondence unranked games')
         .describe('minperiodsblitz', 'Minimum number of periods for blitz games')
         .describe('minperiodsblitzranked', 'Minimum number of periods for blitz ranked games')
         .describe('minperiodsblitzunranked', 'Minimum number of periods for blitz unranked games')
@@ -165,8 +163,8 @@ function getArgv() {
         .describe('maxperiodtimelive', 'Maximum seconds of period time for live games')
         .describe('minperiodtimeliveranked', 'Minimum seconds of period time for live ranked games')
         .describe('maxperiodtimeliveranked', 'Maximum seconds of period time for live ranked games')
-        .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games ')
-        .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games ')
+        .describe('minperiodtimeliveunranked', 'Minimum seconds of period time for live unranked games')
+        .describe('maxperiodtimeliveunranked', 'Maximum seconds of period time for live unranked games')
         .describe('minperiodtimecorr', 'Minimum seconds of period time for correspondence games')
         .describe('maxperiodtimecorr', 'Maximum seconds of period time for correspondence games')
         .describe('minperiodtimecorrranked', 'Minimum seconds of period time for correspondence ranked games')
