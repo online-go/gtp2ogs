@@ -3,16 +3,14 @@
 // see: https://github.com/online-go/gtp2ogs/blob/devel/docs/DEV.md#no-console-eslint-rule-in-configjs
 /* eslint-disable no-console */
 
-const fs = require('fs');
-
 const { getArgNamesGRU } = require('./options/getArgNamesGRU');
 const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
-const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
+exports.start_date = new Date();
 
-exports.check_rejectnew = function() {};
+const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
 exports.banned_users = {};
 exports.banned_users_ranked = {};
@@ -53,6 +51,7 @@ exports.updateFromArgv = function(argv) {
     testDroppedArgv(droppedOptions, argv);
     testConflictingOptions("rankedonly", "unrankedonly", argv);
     testConflictingOptions("persist", "persistnoncorr", argv);
+    testConflictingOptions("rejectnew", "rejectnewfile", argv);
     ensureSupportedOgspvAI(argv.ogspv, ogsPvAIs);
     testRankedUnrankedOptions(rankedUnrankedOptions, argv);
 
@@ -76,8 +75,8 @@ exports.updateFromArgv = function(argv) {
     if (argv.debug) {
         exports.DEBUG = true;
     }
-    if (argv.logfile && typeof argv.logfile === "boolean") {
-        exports.logfile = `gtp2ogs_logfile_${new Date().toISOString()}`;
+    if (argv.logfile !== undefined) {
+        exportLogfileFilename(argv.logfile);
     }
     for (const k of ["timeout", "startupbuffer"]) {
         if (argv[k]) {
@@ -110,12 +109,6 @@ exports.updateFromArgv = function(argv) {
         // A bot never accepting new games shouldn't be appearing in the dropdown, polite to our users.
         exports.hidden = true;
     }
-    exports.check_rejectnew = function()
-    {
-        if (argv.rejectnew)  return true;
-        if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
-        return false;
-    };
     exports.bot_command = argv._;
 
     // 2) specific ranked/unranked options exports
@@ -235,16 +228,43 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
         
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
 
-        if ((argv[general] === undefined)) {
+        if (argv[general] === undefined) {
             if ((argv[ranked] === undefined) && (argv[unranked] === undefined)) {                
                 argv[general] = option.default;
-            } else if (argv[unranked] === undefined) {
-                argv[ranked] = option.default;
-            } else if (argv[ranked] === undefined) {
+            } else if (argv[ranked] !== undefined && argv[unranked] === undefined) {
+                // also set the opposite arg currently undefined to the default, more convenient for botadmin
                 argv[unranked] = option.default;
+
+            } else if (argv[ranked] === undefined && argv[unranked] !== undefined) {
+                // also set the opposite arg currently undefined to the default, more convenient for botadmin
+                argv[ranked] = option.default;
             }
         }
     }
+}
+
+function getLogfileFilename(argvLogfile) {
+    return (argvLogfile === "" ? `gtp2ogs-logfile-${exports.start_date.toISOString()}` : argvLogfile);
+}
+
+function getValidFilename(filename) {
+    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
+    // space ( ), dot (.) to a hyphen (-)
+    return filename.replace(/[^\w\-. ]/g, "-");
+}
+
+function exportLogfileFilename(argvLogfile) {
+    const filename = getLogfileFilename(argvLogfile);
+    const validFilename = getValidFilename(filename);
+    
+    if (filename !== validFilename) {
+        console.log (`Logfile name "${filename}" has been automatically renamed to`
+                        + ` "${validFilename}".\nValid logfile name can only be composed of`
+                        + ` letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_)`
+                        + `, spaces ( ), dots (.).\n`);
+    }
+
+    exports.logfile = validFilename;
 }
 
 function parseRank(arg) {

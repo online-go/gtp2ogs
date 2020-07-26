@@ -60,6 +60,8 @@ option if minhandicap (or ranked unranked) is used and higher than -1
 
 ## G
 
+### rejectnewmsg
+
 when using the "msg" options (`--greeting` , `--farewell` ,
 `--rejectnew --rejectnewmsg` , some special characters will
 make gtp2ogs crash, such as `!!` (two times `!`) , so test
@@ -68,6 +70,17 @@ special characters in your messages with caution
 these special characters have been tested to work on messages,
 among others:  `!` (one time `!`) , `?` , `,` , `(` , `)` ,
 `:` , `;`
+
+### rejectnewfile
+
+Location can either be absolute (ex: ~/ or /home/myUsername/) or
+relative (for relative paths, it is relative to your current shell path
+(ex: if your shell is in ~/ and your rejectnew file is in ~/gtp2ogs/rejectnewfiles,
+do ./rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs
+and your rejectnewfile is in ~/gtp2ogs_rejectnewfiles/, do
+../gtp2ogs_logs/rejectnewfiles/rejectnew-file.txt)
+
+Rejectnewfile is checked again at every challenge, can use for load-balancing)
 
 ## H
 
