@@ -21,7 +21,7 @@ class FakeGTP {
             write: (data) => {
                 console.log('STDIN: ', data.trim());
 
-                let cmd = data.trim().split(' ')[0];
+                const cmd = data.trim().split(' ')[0];
                 if (this.cmd_callbacks[cmd]) {
                     this.cmd_callbacks[cmd](data.trim());
                 } else {

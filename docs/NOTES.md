@@ -76,9 +76,9 @@ among others:  `!` (one time `!`) , `?` , `,` , `(` , `)` ,
 Location can either be absolute (ex: ~/ or /home/myUsername/) or
 relative (for relative paths, it is relative to your current shell path
 (ex: if your shell is in ~/ and your rejectnew file is in ~/gtp2ogs/rejectnewfiles,
-do ./rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs
+do ./gtp2ogs/rejectnewfiles/rejectnew-file.txt, ex2: if your shell is in ~/gtp2ogs_logs
 and your rejectnewfile is in ~/gtp2ogs_rejectnewfiles/, do
-../gtp2ogs_logs/rejectnewfiles/rejectnew-file.txt)
+../gtp2ogs_rejectnewfiles/rejectnew-file.txt)
 
 Rejectnewfile is checked again at every challenge, can use for load-balancing)
 

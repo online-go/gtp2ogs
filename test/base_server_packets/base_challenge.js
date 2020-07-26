@@ -1,5 +1,5 @@
 function base_challenge(overrides) {
-    let base = {
+    const base = {
         type: 'challenge',
         challenge_id: 1,
         player_id: 1,
