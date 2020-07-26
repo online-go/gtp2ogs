@@ -6,6 +6,8 @@ const { pushArgsInProcessArgv } = require('./module_loading/pushArgsInProcessArg
 const { removeProcessArgvIndexTwoAndHigherElements } = require('./module_loading/removeProcessArgvIndexTwoAndHigherElements');
 const { stub_console } = require('./utils/stub_console');
 
+const { getArgv } = require('../getArgv');
+
 describe('getArgv', () => {
 
     beforeEach(function() {
@@ -20,7 +22,7 @@ describe('getArgv', () => {
         const args = getArgs(gtp2ogs_command);
         pushArgsInProcessArgv(args);
 
-        const argv = require('../getArgv').getArgv();
+        const argv = getArgv();
         // do not compare $0 (main js executable file), mocha version number always changes
         // ('$0': '../.vscode/extensions/hbenl.vscode-mocha-test-adapter-2.6.2/out/worker/bundle.js')
         // and it is always gtp2ogs.js in real gtp2ogs run.
