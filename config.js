@@ -59,10 +59,8 @@ exports.updateFromArgv = function(argv) {
         exports.host = 'beta.online-go.com';
     }
 
-    exportNoAutoHandicapIfMinHandicapIsPositive("", argv);
-    exportNoAutoHandicapIfMinHandicapIsPositive("ranked", argv);
-    exportNoAutoHandicapIfMinHandicapIsPositive("unranked", argv);
-    
+    exportNoAutoHandicapsIfMinHandicapsArePositive(argv);
+
     if (argv.ogspv) {
         exports.ogspv = argv.ogspv.toUpperCase();
     }
@@ -74,33 +72,9 @@ exports.updateFromArgv = function(argv) {
 
     // 2) specific ranked/unranked options exports
 
-    processRankExport("minrank", argv);
-    processRankExport("minrankranked", argv);
-    processRankExport("minrankunranked", argv);
-
-    processRankExport("maxrank", argv);
-    processRankExport("maxrankranked", argv);
-    processRankExport("maxrankunranked", argv);
-
-    processBansExport("bans", argv);
-    processBansExport("bansranked", argv);
-    processBansExport("bansunranked", argv);
-
-    processBoardsizesExport("boardsizes", argv);
-    processBoardsizesExport("boardsizesranked", argv);
-    processBoardsizesExport("boardsizesunranked", argv);
-
-    processKomisExport("komis", argv);
-    processKomisExport("komisranked", argv);
-    processKomisExport("komisunranked", argv);
-
-    processAllowedGroupExport("speeds", argv);
-    processAllowedGroupExport("speedsranked", argv);
-    processAllowedGroupExport("speedsunranked", argv);
-
-    processAllowedGroupExport("timecontrols", argv);
-    processAllowedGroupExport("timecontrolsranked", argv);
-    processAllowedGroupExport("timecontrolsunranked", argv);
+    exportMinMaxRanks(argv);
+    exportBansUnderscored(argv);
+    exportAllowedGroupsUnderscored(argv);
 
     // console messages
     // C - test exports warnings
@@ -248,6 +222,12 @@ function exportNoAutoHandicapIfMinHandicapIsPositive(rankedUnranked, argv){
     }
 }
 
+function exportNoAutoHandicapsIfMinHandicapsArePositive(argv) {
+    exportNoAutoHandicapIfMinHandicapIsPositive("", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("ranked", argv);
+    exportNoAutoHandicapIfMinHandicapIsPositive("unranked", argv);
+}
+
 function exportLogfileFilename(argvLogfile, argvDebug) {
     const filename = getLogfileFilename(argvLogfile);
     const validFilename = getValidFilename(filename);
@@ -285,6 +265,16 @@ function processRankExport(argName, argv) {
     }
 }
 
+function exportMinMaxRanks(argv) {
+    processRankExport("minrank", argv);
+    processRankExport("minrankranked", argv);
+    processRankExport("minrankunranked", argv);
+
+    processRankExport("maxrank", argv);
+    processRankExport("maxrankranked", argv);
+    processRankExport("maxrankunranked", argv);
+}
+
 function processBansExport(argName, argv) {
     const arg = argv[argName];
     const rankedUnrankedUnderscored = getRankedUnrankedUnderscored(argName);
@@ -295,6 +285,12 @@ function processBansExport(argName, argv) {
             exports[`banned_users${rankedUnrankedUnderscored}`][bannedUser] = true;
         }
     }
+}
+
+function exportBansUnderscored(argv) {
+    processBansExport("bans", argv);
+    processBansExport("bansranked", argv);
+    processBansExport("bansunranked", argv);
 }
 
 function processBoardsizesExport(argName, argv) {
@@ -349,6 +345,24 @@ function processAllowedGroupExport(argName, argv) {
             }
         }
     } 
+}
+
+function exportAllowedGroupsUnderscored(argv) {
+    processBoardsizesExport("boardsizes", argv);
+    processBoardsizesExport("boardsizesranked", argv);
+    processBoardsizesExport("boardsizesunranked", argv);
+
+    processKomisExport("komis", argv);
+    processKomisExport("komisranked", argv);
+    processKomisExport("komisunranked", argv);
+
+    processAllowedGroupExport("speeds", argv);
+    processAllowedGroupExport("speedsranked", argv);
+    processAllowedGroupExport("speedsunranked", argv);
+
+    processAllowedGroupExport("timecontrols", argv);
+    processAllowedGroupExport("timecontrolsranked", argv);
+    processAllowedGroupExport("timecontrolsunranked", argv);
 }
 
 function warnIfNopauseIsMissing(rankedUnranked) {
