@@ -20,15 +20,7 @@ exports.updateFromArgv = function(argv) {
     console.log(`\ngtp2ogs version 6.0.1\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n${debugStatus}`);
 
     // B - throw errors
-
     // all errors should be tested and thrown before we start exporting.
-    // For example, if a minrank option is used we first export it like all other
-    // used argv options.
-    // but then when adjusting argv exports (ex: to parse rank), minrank arg value
-    // is tested false (ex: "", null) in processRankExport, so we don't enter the code
-    // that throws an error inside parseRank, thus exporting an invalid rank ""
-    // so throwing all errors before doing any export avoids to run in such a case, and
-    // is also perhaps easier to handle
 
     testBotCommandArgvIsValid(argv);
     testDroppedArgv(droppedOptions, argv);
@@ -215,10 +207,6 @@ function testMinMaxRankIsValid(optionName, argv) {
     const arg = argv[optionName];
   
     if (arg !== undefined) {
-        if (typeof arg !== "string") {
-            throw new Error(`Error: ${arg} is of invalid type, should be string but is ${typeof arg}.`);
-        }
-
         const results = getRankMatchResults(arg);
         if (!results) {
             throw new Error(`Error: could not parse rank ${arg}.`);
@@ -227,6 +215,11 @@ function testMinMaxRankIsValid(optionName, argv) {
 }
 
 function testMinMaxRanksAreValid(argv) {
+    // if a minmaxrank option is used but tested false (ex: "") later
+    // in processRankExport, it will still keep being exported even though we do not enter
+    // the code that checks if option is not valid to throw an error
+    // so this makes code more safe to test all errors beforehand
+
     testMinMaxRankIsValid("minrank", argv);
     testMinMaxRankIsValid("minrankranked", argv);
     testMinMaxRankIsValid("minrankunranked", argv);
@@ -243,6 +236,17 @@ function getValidFilename(filename) {
     // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
     // space ( ), dot (.) to a hyphen (-)
     return filename.replace(/[^\w\-. ]/g, "-");
+}
+
+function exportLogfileFilename(argvLogfile, argvDebug) {
+    const filename = getLogfileFilename(argvLogfile);
+    const validFilename = getValidFilename(filename);
+    
+    if (argvDebug && filename !== validFilename) {
+        console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
+    }
+
+    exports.logfile = validFilename;
 }
 
 function exportSecondsAsMilliseconds(optionName, argv) {
@@ -267,17 +271,6 @@ function exportNoAutoHandicapsIfMinHandicapsArePositive(argv) {
     exportNoAutoHandicapIfMinHandicapIsPositive("", argv);
     exportNoAutoHandicapIfMinHandicapIsPositive("ranked", argv);
     exportNoAutoHandicapIfMinHandicapIsPositive("unranked", argv);
-}
-
-function exportLogfileFilename(argvLogfile, argvDebug) {
-    const filename = getLogfileFilename(argvLogfile);
-    const validFilename = getValidFilename(filename);
-    
-    if (argvDebug && filename !== validFilename) {
-        console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
-    }
-
-    exports.logfile = validFilename;
 }
 
 function parseRank(arg) {
