@@ -87,14 +87,6 @@ exports.updateFromArgv = function(argv) {
 
 }
 
-function exportInitialConfig() {
-    exportInitialConfigUnderscored("");
-    exportInitialConfigUnderscored("_ranked");
-    exportInitialConfigUnderscored("_unranked");
-
-    exports.start_date = new Date();
-}
-
 function exportInitialConfigUnderscored(rankedUnrankedUnderscored) {
     exports[`banned_users${rankedUnrankedUnderscored}`] = {};
     exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = false;
@@ -105,6 +97,14 @@ function exportInitialConfigUnderscored(rankedUnrankedUnderscored) {
     exports[`allow_all_speeds${rankedUnrankedUnderscored}`] = false;
     exports[`allowed_timecontrols${rankedUnrankedUnderscored}`] = {};
     exports[`allow_all_timecontrols${rankedUnrankedUnderscored}`] = false;
+}
+
+function exportInitialConfig() {
+    exportInitialConfigUnderscored("");
+    exportInitialConfigUnderscored("_ranked");
+    exportInitialConfigUnderscored("_unranked");
+
+    exports.start_date = new Date();
 }
 
 function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
@@ -206,11 +206,9 @@ function getRankMatchResults(arg) {
 function testMinMaxRankIsValid(optionName, argv) {
     const arg = argv[optionName];
   
-    if (arg !== undefined) {
+    if (arg !== undefined) { // also test empty string ""
         const results = getRankMatchResults(arg);
-        if (!results) {
-            throw new Error(`Error: could not parse rank ${arg}.`);
-        }
+        if (!results) throw new Error(`Error: could not parse rank ${arg}.`);
     }
 }
 
