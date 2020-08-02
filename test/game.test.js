@@ -39,7 +39,7 @@ describe('Game', () => {
         const fake_socket = new FakeSocket();
         const conn = new connection.Connection(() => { return fake_socket; }, config);
         
-        let fake_gtp = new FakeGTP();
+        const fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
         conn.connectToGame(1);
         game = conn.connected_games[1];

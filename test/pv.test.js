@@ -25,15 +25,15 @@ describe("Pv should work", () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
-        let fake_api = new FakeAPI();
+        const fake_socket = new FakeSocket();
+        const fake_api = new FakeAPI();
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP();
+        const fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fake_socket; }, config);
+        const conn = new connection.Connection(() => { return fake_socket; }, config);
 
         const game = sinon.spy();
         config.ogspv = true;
@@ -82,15 +82,15 @@ describe("Pv should work", () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
-        let fake_api = new FakeAPI();
+        const fake_socket = new FakeSocket();
+        const fake_api = new FakeAPI();
         fake_api.request({ path: '/foo' }, () => { });
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP();
+        const fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fake_socket; }, config);
+        const conn = new connection.Connection(() => { return fake_socket; }, config);
 
         const game = sinon.spy();
         game.sendChat = sinon.spy();

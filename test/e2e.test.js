@@ -30,20 +30,20 @@ describe('A single game', () => {
         stub_console();
         sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
-        let fake_api = new FakeAPI();
+        const fake_socket = new FakeSocket();
+        const fake_api = new FakeAPI();
         fake_api.request({path: '/foo'}, () => {});
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
-        let fake_gtp = new FakeGTP();
+        const fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fake_socket; }, config);
+        const conn = new connection.Connection(() => { return fake_socket; }, config);
 
-        let bot_id = sinon.spy();
-        let bot_connect = sinon.spy();
-        let authenticate = sinon.spy();
-        let notification_connect = sinon.spy();
+        const bot_id = sinon.spy();
+        const bot_connect = sinon.spy();
+        const authenticate = sinon.spy();
+        const notification_connect = sinon.spy();
         fake_socket.on_emit('bot/id', () => {
             bot_id();
             return {id: 1, jwt: 1};
@@ -61,7 +61,7 @@ describe('A single game', () => {
         assert.equal(notification_connect.called, true);
         assert.equal(bot_connect.called, true);
 
-        let accept = sinon.spy();
+        const accept = sinon.spy();
         fake_api.on_path('/api/v1/me/challenges/1/accept', accept);
         fake_socket.inject('notification', base_challenge());
         assert.equal(accept.called, true);
@@ -70,9 +70,9 @@ describe('A single game', () => {
 
         // Missing gameStarted notification.
 
-        let genmove = sinon.spy();
-        let play = sinon.spy();
-        let game_move = sinon.spy()
+        const genmove = sinon.spy();
+        const play = sinon.spy();
+        const game_move = sinon.spy()
         fake_gtp.on_cmd('genmove', (arg) => {
             genmove(arg);
             fake_gtp.gtp_response('Q4');
@@ -105,7 +105,7 @@ describe('A single game', () => {
             move: [3, 3],
         });
 
-        let gamedata = base_gamedata({
+        const gamedata = base_gamedata({
             phase: 'finished',
             winner: 1,
             outcome: 'Resignation',
@@ -119,15 +119,15 @@ describe('A single game', () => {
 describe('Games do not hang', () => {
     function setupStubs() {
         stub_console();
-        let clock = sinon.useFakeTimers();
+        const clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        const fake_socket = new FakeSocket();
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
-        let fake_api = new FakeAPI();
+        const fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
 
         sinon.stub(child_process, 'spawn').callsFake(() => {
-            let fake_gtp = new FakeGTP();
+            const fake_gtp = new FakeGTP();
             fake_gtp.on_cmd('genmove', () => {
                 // Takes 1 second to generate a move.
                 setTimeout(() => {
@@ -146,14 +146,14 @@ describe('Games do not hang', () => {
 
     function setupGames(fakes) {
         fakes.socket.on_emit('game/connect', (connect) => {
-            let gamedata = base_gamedata({
+            const gamedata = base_gamedata({
                 game_id: connect.game_id,
             });
             gamedata.time_control.speed = 'correspondence';
             fakes.socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
         });
 
-        let seen_moves = {};
+        const seen_moves = {};
 
         fakes.socket.on_emit('game/move', (move) => {
             fakes.socket.inject('game/'+move.game_id+'/move', {
@@ -175,15 +175,15 @@ describe('Games do not hang', () => {
 
 
     it('due to correspondence queue starvation', () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
         sinon.stub(config, 'corrqueue').value(true);
 
-        let conn = new connection.Connection(() => { return fakes.socket; }, config);
-        let seen_moves = setupGames(fakes);
+        const conn = new connection.Connection(() => { return fakes.socket; }, config);
+        const seen_moves = setupGames(fakes);
         fakes.socket.inject('connect');
 
         // Set up the games.
-        let games = 5;
+        const games = 5;
         for (let i = 1; i <= games; i++) {
             seen_moves[i] = 0;
             fakes.socket.inject('active_game', base_active_game({ id: i }));
@@ -203,16 +203,16 @@ describe('Games do not hang', () => {
     });
 
     it('due to a timeout on a game waiting for move', () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
         sinon.stub(config, 'corrqueue').value(true);
         sinon.stub(config, 'timeout').value(5);
 
-        let conn = new connection.Connection(() => { return fakes.socket; }, config);
-        let seen_moves = setupGames(fakes);
+        const conn = new connection.Connection(() => { return fakes.socket; }, config);
+        const seen_moves = setupGames(fakes);
         fakes.socket.inject('connect');
 
         // Set up the games.
-        let games = 5;
+        const games = 5;
         for (let i = 1; i <= games; i++) {
             seen_moves[i] = 0;
             fakes.socket.inject('active_game', base_active_game({ id: i }));
@@ -232,10 +232,10 @@ describe('Games do not hang', () => {
     });
 
     it('due to a missing gamedata', () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
 
-        let genmove = sinon.spy();
-        let fake_gtp = new FakeGTP();
+        const genmove = sinon.spy();
+        const fake_gtp = new FakeGTP();
         fake_gtp.on_cmd('genmove', () => {
             genmove();
             fake_gtp.gtp_response('Q4');
@@ -243,7 +243,7 @@ describe('Games do not hang', () => {
         child_process.spawn.restore();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
-        let conn = new connection.Connection(() => { return fakes.socket; }, config);
+        const conn = new connection.Connection(() => { return fakes.socket; }, config);
         fakes.socket.inject('connect');
         fakes.socket.inject('active_game', base_active_game());
         assert.equal(genmove.called, false, 'Genmove called with missing gamedata');
@@ -264,24 +264,24 @@ describe('Periodic actions', () => {
         stub_console();
         // Idle games should be removed after 5 seconds.
         sinon.stub(config, 'timeout').value(5000);
-        let clock = sinon.useFakeTimers();
+        const clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        const fake_socket = new FakeSocket();
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
-        let fake_api = new FakeAPI();
+        const fake_api = new FakeAPI();
         sinon.stub(https, 'request').callsFake(fake_api.request);
-        let fake_gtp = new FakeGTP();
+        const fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         fake_socket.on_emit('game/connect', (connect) => {
-            let gamedata = base_gamedata({ id: connect.game_id })
+            const gamedata = base_gamedata({ id: connect.game_id })
             // Base gamedata indicates the last move was at time point 0, which is where the fake clock starts at, too.
             // Turn for the human to play.
             gamedata.clock.current_player = 2;
             fake_socket.inject('game/'+connect.game_id+'/gamedata', gamedata);
         });
 
-        let conn = new connection.Connection(() => { return fake_socket; }, config);
+        const conn = new connection.Connection(() => { return fake_socket; }, config);
         fake_socket.inject('connect');
 
         // Create 10 games.
@@ -292,7 +292,7 @@ describe('Periodic actions', () => {
 
         // Advance the clock for half the games to have made a move at the 5th second.
         for (let i = 0; i < 5; i++) {
-            let game_clock = base_gamedata().clock;
+            const game_clock = base_gamedata().clock;
             game_clock.current_player = 2;
             game_clock.last_move = 5000;
             fake_socket.inject('game/'+i+'/clock', game_clock);
@@ -317,12 +317,12 @@ describe('Periodic actions', () => {
 describe("Retrying bot failures", () => {
     function setupStubs() {
         sinon.stub(console, 'log');
-        let fake_clock = sinon.useFakeTimers();
+        const fake_clock = sinon.useFakeTimers();
 
-        let fake_socket = new FakeSocket();
+        const fake_socket = new FakeSocket();
         fake_socket.on_emit('bot/id', () => { return {id: 1, jwt: 1} });
 
-        let retry = sinon.spy();
+        const retry = sinon.spy();
         fake_socket.on_emit('game/connect', () => {
             retry();
             setTimeout(() => {
@@ -330,7 +330,7 @@ describe("Retrying bot failures", () => {
             }, 1000);
         });
 
-        let fake_gtp = new FakeGTP();
+        const fake_gtp = new FakeGTP();
         sinon.stub(child_process, 'spawn').returns(fake_gtp);
 
         return {
@@ -344,7 +344,7 @@ describe("Retrying bot failures", () => {
     }
 
     function ensureRetry(fakes) {
-        let conn = new connection.Connection(() => { return fakes.socket; }, config);
+        const conn = new connection.Connection(() => { return fakes.socket; }, config);
         fakes.socket.inject('connect');
         fakes.socket.inject('active_game', base_active_game());
         fakes.socket.inject('game/1/gamedata', base_gamedata());
@@ -361,7 +361,7 @@ describe("Retrying bot failures", () => {
     }
 
     it("crash at startup", () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
 
         child_process.spawn.restore();
         sinon.stub(child_process, 'spawn').callsFake(() => {
@@ -379,7 +379,7 @@ describe("Retrying bot failures", () => {
     }); 
 
     it("crash at write", () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
 
         fakes.gtp.on_cmd('genmove', () => {
             fakes.gtp.on_cmd('genmove', () => {
@@ -394,7 +394,7 @@ describe("Retrying bot failures", () => {
     });
 
     it("silent crash during genmove", () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
 
         fakes.gtp.on_cmd('genmove', () => {
             fakes.gtp.on_cmd('genmove', () => {
@@ -409,7 +409,7 @@ describe("Retrying bot failures", () => {
     });
 
     it("error during genmove", () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
 
         fakes.gtp.on_cmd('genmove', () => {
             fakes.gtp.on_cmd('genmove', () => {
@@ -424,7 +424,7 @@ describe("Retrying bot failures", () => {
     });
 
     it("giving up eventually", () => {
-        let fakes = setupStubs();
+        const fakes = setupStubs();
 
         fakes.gtp.on_cmd('genmove', () => {
             fakes.failure();
