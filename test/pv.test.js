@@ -6,15 +6,17 @@ const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
+const { assignConfigArguments } = require('./module_loading/assignConfigArguments');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
 const { FakeGTP } = require('./fake_modules/FakeGTP');
 const { FakeSocket } = require('./fake_modules/FakeSocket');
-const { getNewConfig } = require('./module_loading/getNewConfig');
 const { stub_console } = require('./utils/stub_console');
 
 const { Bot } = require('../bot');
-const config = getNewConfig();
+const config = require('../config');
 const connection = require('../connection');
+
+assignConfigArguments(config);
 
 afterEach(function () {
     sinon.restore();

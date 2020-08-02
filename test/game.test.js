@@ -5,6 +5,7 @@ const child_process = require('child_process');
 const https = require('https');
 const sinon = require('sinon');
 
+const { assignConfigArguments } = require('./module_loading/assignConfigArguments');
 const { base_gamedata } = require('./base_server_packets/base_gamedata');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
 const { FakeGTP } = require('./fake_modules/FakeGTP');
@@ -28,6 +29,7 @@ describe('Game', () => {
         stub_console();
 
         config = getNewConfigUncached();
+        assignConfigArguments(config);
         connection = getNewConnectionUncached();
 
         sinon.useFakeTimers();

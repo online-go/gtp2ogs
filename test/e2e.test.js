@@ -5,19 +5,20 @@ const child_process = require('child_process');
 const https = require('https');
 const sinon = require('sinon');
 
+const { assignConfigArguments } = require('./module_loading/assignConfigArguments');
 const { base_active_game } = require('./base_server_packets/base_active_game');
 const { base_challenge } = require('./base_server_packets/base_challenge');
 const { base_gamedata } = require('./base_server_packets/base_gamedata');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
 const { FakeGTP } = require('./fake_modules/FakeGTP');
 const { FakeSocket } = require('./fake_modules/FakeSocket');
-const { getNewConfig } = require('./module_loading/getNewConfig');
 const { stub_console } = require('./utils/stub_console');
 
-const config = getNewConfig();
+const config = require('../config');
 const connection = require('../connection');
 const { console } = require('../console');
 
+assignConfigArguments(config);
 config.timeout = 0;
 config.corrqueue = false;
 

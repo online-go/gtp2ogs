@@ -8,6 +8,10 @@ const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
+// TODO fix circular dependency
+// config is not yet exported, cannot use our own console.js
+const { console } = require('./console');
+
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
 exportInitialConfig();
@@ -23,6 +27,7 @@ exports.updateFromArgv = function(argv) {
 
     testBotCommandArgvIsValid(argv);
     testDroppedArgv(droppedOptions, argv);
+    testDroppedKomis(argv);
     testConflictingOptions("rankedonly", "unrankedonly", argv);
     testConflictingOptions("persist", "persistnoncorr", argv);
     testConflictingOptions("rejectnew", "rejectnewfile", argv);
@@ -85,14 +90,6 @@ exports.updateFromArgv = function(argv) {
 
 }
 
-function exportInitialConfig() {
-    exportInitialConfigUnderscored("");
-    exportInitialConfigUnderscored("_ranked");
-    exportInitialConfigUnderscored("_unranked");
-
-    exports.start_date = new Date();
-}
-
 function exportInitialConfigUnderscored(rankedUnrankedUnderscored) {
     exports[`banned_users${rankedUnrankedUnderscored}`] = {};
     exports[`allow_all_boardsizes${rankedUnrankedUnderscored}`] = false;
@@ -105,6 +102,14 @@ function exportInitialConfigUnderscored(rankedUnrankedUnderscored) {
     exports[`allow_all_timecontrols${rankedUnrankedUnderscored}`] = false;
 }
 
+function exportInitialConfig() {
+    exportInitialConfigUnderscored("");
+    exportInitialConfigUnderscored("_ranked");
+    exportInitialConfigUnderscored("_unranked");
+
+    exports.start_date = new Date();
+}
+
 function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
     for (const option of rankedUnrankedOptions) {
         const [general, ranked, unranked] = getArgNamesGRU(option.name);
@@ -112,10 +117,10 @@ function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
         // check undefined specifically to handle valid values such as 0 or null which are tested false
         if (argv[general] !== undefined) {
             if (argv[ranked] !== undefined) {
-                throw `Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, use either --${general} or --${ranked}, or do not use anything to switch to default settings for this option.`;
+                throw new Error(`Cannot use --${general} and --${ranked} at the same time.\nFor ranked games, use either --${general} or --${ranked}, or do not use anything to switch to default settings for this option.`);
             }
             if (argv[unranked] !== undefined) {
-                throw `Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, use either --${general} or --${unranked}, or do not use anything to switch to default settings for this option.`;
+                throw new Error(`Cannot use --${general} and --${unranked} at the same time.\nFor unranked games, use either --${general} or --${unranked}, or do not use anything to switch to default settings for this option.`);
             }
         }
     }
@@ -123,16 +128,16 @@ function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
 
 function testBotCommandArgvIsValid(argv) {
     if (argv._ === undefined) {
-        throw "Missing bot command.";
+        throw new Error("Missing bot command.");
     }
 
     const parsedBotCommand = JSON.stringify(argv._);
 
     if (!Array.isArray(argv._)) {
-        throw `Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters, please check your syntax ( -- ).`;
+        throw new Error(`Bot command (detected as ${parsedBotCommand}) was not correctly parsed as an array of parameters, please check your syntax ( -- ).`);
     }
     if (argv._.length === 0) {
-        throw `Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element in your bot command which should be the AI executable (ex: lz.exe).`;
+        throw new Error(`Bot command (detected as ${parsedBotCommand}) cannot be empty, please use at least one element in your bot command which should be the AI executable (ex: lz.exe).`);
     }
 }
 
@@ -140,16 +145,21 @@ function testDroppedArgv(droppedOptions, argv) {
     for (const [oldNames, newName] of droppedOptions) {
         for (const oldName of oldNames) {
             if (argv[oldName]) {
-                if (newName !== undefined) throw `Dropped: --${oldName} is no longer supported, use --${newName} instead.`;
-                throw `Dropped: --${oldName} is no longer supported.`;
+                if (newName !== undefined) {
+                    throw new Error(`Dropped: --${oldName} is no longer supported, use --${newName} instead.`);
+                }
+                throw new Error(`Dropped: --${oldName} is no longer supported.`);
             }
         }
     }
+}
+
+function testDroppedKomis(argv) {
     for (const argName of getArgNamesGRU("komis")) {
         if (argv[argName]) {
             for (const komi of ["auto","null"]) {
                 if (argv[argName].split(",").includes(komi)) {
-                    throw `Dropped: --${argName} ${komi} is no longer supported, use --${argName} automatic instead`;
+                    throw new Error(`Dropped: --${argName} ${komi} is no longer supported, use --${argName} automatic instead`);
                 }
             }
         }
@@ -158,7 +168,7 @@ function testDroppedArgv(droppedOptions, argv) {
 
 function testConflictingOptions(optionNameFirst, optionNameSecond, argv) {
     if (argv[optionNameFirst] && argv[optionNameSecond]) {
-        throw `Please choose either --${optionNameFirst} or --${optionNameSecond}, not both.`;
+        throw new Error(`Please choose either --${optionNameFirst} or --${optionNameSecond}, not both.`);
     }
 }
 
@@ -169,7 +179,7 @@ function ensureSupportedOgspvAI(ogspv, ogsPvAIs) {
     const upperCaseAIs   = ogsPvAIs.map(e => e.toUpperCase());
 
     if (!upperCaseAIs.includes(upperCaseOgsPv)) {
-        throw `Unsupported --ogspv option ${ogspv}.\nSupported options are ${ogsPvAIs.join(', ')}`;
+        throw new Error(`Unsupported --ogspv option ${ogspv}.\nSupported options are ${ogsPvAIs.join(', ')}`);
     }
 }
 
@@ -185,7 +195,6 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
             } else if (argv[ranked] !== undefined && argv[unranked] === undefined) {
                 // also set the opposite arg currently undefined to the default, more convenient for botadmin
                 argv[unranked] = option.default;
-
             } else if (argv[ranked] === undefined && argv[unranked] !== undefined) {
                 // also set the opposite arg currently undefined to the default, more convenient for botadmin
                 argv[ranked] = option.default;
@@ -202,6 +211,17 @@ function getValidFilename(filename) {
     // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
     // space ( ), dot (.) to a hyphen (-)
     return filename.replace(/[^\w\-. ]/g, "-");
+}
+
+function exportLogfileFilename(argvLogfile, argvDebug) {
+    const filename = getLogfileFilename(argvLogfile);
+    const validFilename = getValidFilename(filename);
+    
+    if (argvDebug && filename !== validFilename) {
+        console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
+    }
+
+    exports.logfile = validFilename;
 }
 
 function exportSecondsAsMilliseconds(optionName, argv) {
@@ -228,17 +248,6 @@ function exportNoAutoHandicapsIfMinHandicapsArePositive(argv) {
     exportNoAutoHandicapIfMinHandicapIsPositive("unranked", argv);
 }
 
-function exportLogfileFilename(argvLogfile, argvDebug) {
-    const filename = getLogfileFilename(argvLogfile);
-    const validFilename = getValidFilename(filename);
-    
-    if (argvDebug && filename !== validFilename) {
-        console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
-    }
-
-    exports.logfile = validFilename;
-}
-
 function parseRank(arg) {
     if (arg) {
         const re = /(\d+)([kdp])/;
@@ -253,14 +262,16 @@ function parseRank(arg) {
                 return (36 + parseInt(results[1]));
             }
         } else {
-            throw `error: could not parse rank -${arg}-`;
+            throw new Error(`error: could not parse rank -${arg}-`);
         }
+    } else {
+        throw new Error(`error: cannot parse unexisting rank -${arg}-`);
     }
 }
 
 function processRankExport(argName, argv) {
     const arg = argv[argName];
-    if (arg) {
+    if (arg !== undefined) { // also test empty string
         exports[argName] = parseRank(arg);
     }
 }

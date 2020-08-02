@@ -1,15 +1,16 @@
-const { rootOptionsDefaults } = require('../../constants');
+const { assignRootOptionsDefaults } = require('./assignRootOptionsDefaults');
+const { assignRankedUnrankedDefaults } = require('./assignRankedUnrankedDefaults');
 
 function assignConfigArguments(config) {
-    config.DEBUG = true;
+    config.username = 'testbot';
     config.apikey = 'deadbeef';
     config.host = 'test';
     config.port = 80;
-    config.username = 'testbot';
-
-    config.rejectnewmsg = rootOptionsDefaults.rejectnewmsg;
-
+    config.DEBUG = true;
     config.bot_command = ['gtp-program', '--argument'];
+
+    assignRootOptionsDefaults(config);
+    assignRankedUnrankedDefaults(config);
 }
 
 exports.assignConfigArguments = assignConfigArguments;

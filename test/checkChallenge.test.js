@@ -5,7 +5,9 @@ const fs = require('fs');
 const https = require('https');
 const sinon = require('sinon');
 
+const { assignConfigArguments } = require('./module_loading/assignConfigArguments');
 const { base_challenge } = require('./base_server_packets/base_challenge');
+const { disableAllOtherTimeSettingsOptions } = require('./module_loading/disableAllOtherTimeSettingsOptions');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
 const { FakeSocket } = require('./fake_modules/FakeSocket');
 const { getNewConfigUncached } = require('./module_loading/getNewConfigUncached');
@@ -27,6 +29,7 @@ describe('Challenges', () => {
     stub_console();
 
     config = getNewConfigUncached();
+    assignConfigArguments(config);
     connection = getNewConnectionUncached();
 
     sinon.useFakeTimers();
@@ -39,9 +42,9 @@ describe('Challenges', () => {
     conn = new connection.Connection(() => { return fake_socket; }, config);
   });
   
-  describe('General rules', () => {
+  describe('Defaults', () => {
 
-    it('accept default notification from base_challenge, with almost empty config', () => {
+    it('accept default notification from base_challenge with all defaults from config', () => {
       const notification = base_challenge();
       
       const result = conn.checkChallenge(notification);
@@ -547,19 +550,6 @@ describe('Challenges', () => {
 
     });
 
-    it('accept non-square boardsizes if no arg is specified', () => {
-
-      const notification = base_challenge({ ranked: false, width: 19, height: 18 });
-
-      config.allow_all_boardsizes = false;
-      config.allowed_boardsizes = [];
-
-      const result = conn.checkChallengeAllowedGroup(notification);
-
-      assert.deepEqual(result, ({ reject: false }));
-
-    });
-
   });
 
   describe('Some Booleans', () => {
@@ -668,9 +658,11 @@ describe('Challenges', () => {
   });
 
   describe('Allowed Speeds', () => {
+
     it('reject speed not in allowed speeds', () => {
 
-      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence", time_control: "byoyomi" } });
 
       config.speeds = "blitz, live";
       config.allow_all_speeds = false;
@@ -686,7 +678,8 @@ describe('Challenges', () => {
 
     it('accept speed in allowed speeds', () => {
 
-      const notification = base_challenge({ ranked: false, time_control: { speed: "live" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: false, time_control: { speed: "live", time_control: "byoyomi" } });
 
       config.speeds = "blitz, live";
       config.allow_all_speeds = false;
@@ -702,7 +695,8 @@ describe('Challenges', () => {
 
     it('accept speed not in allowed speeds if all', () => {
 
-      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: false, time_control: { speed: "correspondence", time_control: "byoyomi" } });
 
       config.speeds = "all";
       config.allow_all_speeds = true;
@@ -724,7 +718,8 @@ describe('Challenges', () => {
 
     it('reject speed based on ranked arg if ranked arg is used and game is ranked', () => {
 
-      const notification = base_challenge({ ranked: true, time_control: { speed: "live" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: true, time_control: { speed: "live", time_control: "byoyomi" } });
 
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
@@ -743,7 +738,8 @@ describe('Challenges', () => {
 
     it('accept speed based on ranked arg if ranked arg is used and game is ranked', () => {
 
-      const notification = base_challenge({ ranked: true, time_control: { speed: "blitz" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: true, time_control: { speed: "blitz", time_control: "byoyomi" } });
 
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
@@ -763,7 +759,8 @@ describe('Challenges', () => {
 
     it('reject speed based on unranked arg if unranked arg is used and game is unranked', () => {
 
-      const notification = base_challenge({ ranked: false, time_control: { speed: "blitz" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: false, time_control: { speed: "blitz", time_control: "byoyomi" } });
 
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
@@ -783,7 +780,8 @@ describe('Challenges', () => {
 
     it('accept speed based on unranked arg if unranked arg is used and game is unranked', () => {
 
-      const notification = base_challenge({ ranked: false, time_control: { speed: "live" } });
+      // after override of notification.time_control.time_control reassign it
+      const notification = base_challenge({ ranked: false, time_control: { speed: "live", time_control: "byoyomi" } });
 
       config.speedsranked = "blitz,correspondence";
       config.allow_all_speeds_ranked = false;
@@ -877,12 +875,14 @@ describe('Challenges', () => {
 
   });
 
-  describe('Byoyomi time settings', () => {
+  describe('Byoyomi maintime blitz settings', () => {
 
     // sample:
     // {"system":"byoyomi","time_control":"byoyomi","speed":"live","pause_on_weekends":false,"main_time":1200,"period_time":30,"periods":5}
 
-    // Main Time Blitz
+    beforeEach(function() {
+        disableAllOtherTimeSettingsOptions(config, "maintime", "blitz");
+    });
 
     it('reject main time blitz too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
@@ -939,7 +939,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Main Time for blitz games in byoyomi is 30 seconds, please reduce Main Time.' }));
     });
 
-    // Periods Blitz
+  });
+
+  describe('Byoyomi periods blitz settings ', () => {
+
+    beforeEach(function() {
+        disableAllOtherTimeSettingsOptions(config, "periods", "blitz");
+    });
 
     it('reject number of periods blitz too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
@@ -996,7 +1002,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum number of periods for blitz games in byoyomi is 20, please reduce the number of periods.' }));
     });
 
-    // Period Time Blitz
+  });
+
+  describe('Byoyomi periodtime blitz settings', () => {
+
+    beforeEach(function() {
+        disableAllOtherTimeSettingsOptions(config, "periodtime", "blitz");
+    });
 
     it('reject period time blitz too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "blitz", main_time: 1, periods: 1, period_time: 1 } });
@@ -1053,7 +1065,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Period Time for blitz games in byoyomi is 15 seconds, please reduce Period Time.' }));
     });
 
-    // Main Time Live
+  });
+
+  describe('Byoyomi maintime live settings', () => {
+
+    beforeEach(function() {
+        disableAllOtherTimeSettingsOptions(config, "maintime", "live");
+    });
 
     it('reject main time live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 1 } });
@@ -1109,8 +1127,14 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Main Time for live games in byoyomi is 5 minutes, please reduce Main Time.' }));
     });
-  
-    // Periods Live
+
+  });
+
+  describe('Byoyomi periods live settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periods", "live");
+    });
   
     it('reject number of periods live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 1 } });
@@ -1166,8 +1190,14 @@ describe('Challenges', () => {
       
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum number of periods for live games in byoyomi is 20, please reduce the number of periods.' }));
     });
-  
-    // Period Time Live
+
+  });
+
+  describe('Byoyomi periodtime live settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periodtime", "live");
+    });
   
     it('reject period time live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "live", main_time: 1, periods: 1, period_time: 1 } });
@@ -1224,7 +1254,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Period Time for live games in byoyomi is 2 minutes, please reduce Period Time.' }));
     });
 
-    // Main Time Correspondence
+  });
+
+  describe('Byoyomi maintime corr settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "maintime", "corr");
+    });
 
     it('reject main time correspondence too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 1 } });
@@ -1281,7 +1317,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Main Time for correspondence games in byoyomi is 7 days, please reduce Main Time.' }));
     });
 
-    // Periods Correspondence
+  });
+
+  describe('Byoyomi periods corr settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periods", "corr");
+    });
 
     it('reject number of periods correspondence too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 1 } });
@@ -1338,7 +1380,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum number of periods for correspondence games in byoyomi is 10, please reduce the number of periods.' }));
     });
 
-    // Period Time Correspondence
+  });
+
+  describe('Byoyomi periodtime corr settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periodtime", "corr");
+    });
 
     it('reject period time correspondence too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "byoyomi", time_control: "byoyomi", speed: "correspondence", main_time: 1, periods: 1, period_time: 1 } });
@@ -1399,6 +1447,10 @@ describe('Challenges', () => {
 
   describe('Some time controls have no main time, do not check maintime', () => {
 
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "maintime", "live");
+    });
+
     it('simple timecontrol accepts any main time, even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "simple", time_control: "simple", speed: "live", per_move: 1 } });
 
@@ -1434,7 +1486,11 @@ describe('Challenges', () => {
     
   });
 
-  describe('Non-Byoyomi time controls have no period time, do not check periods', () => {
+  describe('Non-Byoyomi time controls have no periods, do not check periods', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periods", "live");
+    });
 
     it('canadian timecontrol accepts any periods number, even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 1, main_time: 1, period_time: 1 } });
@@ -1472,6 +1528,10 @@ describe('Challenges', () => {
   });
 
   describe('Some time controls have no period time, do not check periodtime', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periodtime", "corr");
+    });
 
     it('absolute timecontrol accepts any period time, even if too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "absolute", time_control: "absolute", speed: "correspondence", total_time: 1 } });
@@ -1515,23 +1575,8 @@ describe('Challenges', () => {
     // sample:
     // {"system":"none","time_control":"none","speed":"correspondence","pause_on_weekends":false}
 
-    it('none time control accepts any period time, even if config is empty of time settings', () => {
+    it('none time control accepts any period time, even if config is full of defaults', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "none", time_control: "none", speed: "correspondence" } });
-      
-      const result = conn.checkChallengeTimeSettings(notification);
-      
-      assert.deepEqual(result, ({ reject: false }));
-    });
-
-    it('none time control accepts any period time, even if config is full of time settings', () => {
-      const notification = base_challenge({ ranked: false, time_control: { system: "none", time_control: "none", speed: "correspondence" } });
-
-      config.minmaintimecorr = 20000;
-      config.maxmaintimecorr = 80000;
-      config.minperiodscorr = 3;
-      config.maxmaintimecorr = 10;
-      config.minperiodtimecorr = 2000;
-      config.maxperiodtimecorr = 8000;
       
       const result = conn.checkChallengeTimeSettings(notification);
       
@@ -1540,14 +1585,16 @@ describe('Challenges', () => {
 
   });
 
-  describe('Canadian time settings', () => {
+  describe('Canadian maintime settings', () => {
 
     // sample:
     // {"system":"canadian","time_control":"canadian","speed":"live","pause_on_weekends":false,"main_time":600,"period_time":180,"stones_per_period":1}
 
     // Just making sure it works similarly as byoyomi, so testing only "live" speed.
 
-    // Main time
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "maintime", "live");
+    });
 
     it('reject main time live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 59, period_time: 1 } });
@@ -1604,9 +1651,15 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Main Time for live games in canadian is 30 minutes, please reduce Main Time.' }));
     });
 
-    // Periods are not checked for non-byoyomi time controls
+  });
 
-    // Period Time (Period Time for all the X Stones)
+  // Periods are not checked for non-byoyomi time controls
+
+  describe('Canadian periodtime settings (for all the X stones)', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periodtime", "live");
+    });
 
     it('reject period time for all the stones live too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "canadian", time_control: "canadian", speed: "live", stones_per_period: 5, main_time: 1, period_time: 74 } });
@@ -1665,14 +1718,16 @@ describe('Challenges', () => {
 
   });
 
-  describe('Fischer time settings', () => {
+  describe('Fischer maintime 1 (initial time) settings', () => {
 
     // sample:
     // {"system":"fischer","time_control":"fischer","speed":"live","pause_on_weekends":false,"time_increment":10,"initial_time":80,"max_time":120}
 
     // Just making sure it works similarly as byoyomi, so testing only "live" speed.
 
-    // Main Time 1 (Initial time)
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "maintime", "live");
+    });
 
     it('reject main time 1 (initial time) too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 59, max_time: 59 } });
@@ -1729,7 +1784,13 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Initial Time for live games in fischer is 30 minutes, please reduce Initial Time.' }));
     });
 
-    // Main Time 2 (Max Time)
+  });
+
+  describe('Fischer maintime 2 (max time) settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "maintime", "live");
+    });
 
     it('accept main time 2 (max time) edge max', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 1, initial_time: 900, max_time: 1800 } });
@@ -1753,9 +1814,15 @@ describe('Challenges', () => {
       assert.deepEqual(result, ({ reject: true, msg: 'Maximum Max Time for live games in fischer is 30 minutes, please reduce Max Time.' }));
     });
 
-    // Periods are not checked for non-byoyomi time controls
+  });
 
-    // Period Time (Increment Time)
+  // Periods are not checked for non-byoyomi time controls
+
+  describe('Fischer periodtime (increment time) settings', () => {
+
+    beforeEach(function() {
+      disableAllOtherTimeSettingsOptions(config, "periodtime", "live");
+    });
 
     it('reject period time (increment time) too low', () => {
       const notification = base_challenge({ ranked: false, time_control: { system: "fischer", time_control: "fischer", speed: "live", time_increment: 9, initial_time: 1, max_time: 1 } });
@@ -1814,7 +1881,7 @@ describe('Challenges', () => {
 
   });
 
-  describe('Simple time settings', () => {
+  describe('Simple time (periodtime) settings', () => {
 
     // sample:
     // {"system":"simple","time_control":"simple","speed":"blitz","pause_on_weekends":false,"per_move":5}
@@ -1884,7 +1951,7 @@ describe('Challenges', () => {
   
   });
 
-  describe('Absolute time settings', () => {
+  describe('Absolute (maintime) time settings', () => {
 
     // sample:
     // {"system":"absolute","time_control":"absolute","speed":"correspondence","pause_on_weekends":true,"total_time":2419200}
