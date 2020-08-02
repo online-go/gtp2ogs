@@ -10,13 +10,18 @@ const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnd
 
 // TODO fix circular dependency
 // config is not yet exported, cannot use our own console.js
-const { console } = require('./console');
+const { console, setLogfile } = require('./console');
 
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
 exportInitialConfig();
 
 exports.updateFromArgv = function(argv) {
+    // setup console before we use it
+    if (argv.logfile !== undefined) {
+        exportLogfileFilename(argv.logfile, argv.debug);
+    }
+
     // console messages
     // A- greeting and debug status
 
@@ -46,6 +51,7 @@ exports.updateFromArgv = function(argv) {
     // 0) Export everything in argv first
 
     for (const k in argv) {
+        if (k === "logfile") continue;
         exports[k] = argv[k];
     }
 
@@ -53,9 +59,6 @@ exports.updateFromArgv = function(argv) {
 
     if (argv.debug) {
         exports.DEBUG = true;
-    }
-    if (argv.logfile !== undefined) {
-        exportLogfileFilename(argv.logfile, argv.debug);
     }
     exportSecondsAsMilliseconds("timeout", argv);
     exportSecondsAsMilliseconds("startupbuffer", argv);
@@ -221,6 +224,7 @@ function exportLogfileFilename(argvLogfile, argvDebug) {
         console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
     }
 
+    setLogfile(validFilename, argvDebug)
     exports.logfile = validFilename;
 }
 
