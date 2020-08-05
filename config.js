@@ -8,8 +8,6 @@ const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
-// TODO fix circular dependency
-// config is not yet exported, cannot use our own console.js
 const { console, setLogfile } = require('./console');
 
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
