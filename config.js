@@ -10,7 +10,7 @@ const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnd
 
 // TODO fix circular dependency
 // config is not yet exported, cannot use our own console.js
-const { console, setLogfile } = require('./console');
+let { console, setLogfile } = require('./console');
 
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
@@ -224,7 +224,8 @@ function exportLogfileFilename(argvLogfile, argvDebug) {
         console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
     }
 
-    setLogfile(validFilename, argvDebug)
+    setLogfile(validFilename, argvDebug);
+    console = require('./console').console
     exports.logfile = validFilename;
 }
 
