@@ -30,15 +30,16 @@ exports.setLogfile = (logfile, debug) => {
     console_config.format = [console_fmt(DEBUG)];
     if (logfile) {
         const real_console = require('console');
-        console_config.transport = [(data) => {
+        console_config.transport = (data) => {
             real_console.log(data.output);
             fs.open(logfile, 'a', parseInt('0644', 8), function (e, id) {
                 fs.write(id, data.output + "\n", null, 'utf8', function () {
                     fs.close(id, () => { });
                 });
             });
-        }];
+        };
     }
+    exports.console = tracer.colorConsole(console_config);
 }
 
 exports.console = tracer.colorConsole(console_config);
