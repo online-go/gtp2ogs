@@ -1,9 +1,9 @@
-function disableAllOtherTimeSettingsOptions(config, optionType, timecontrol) {
+function disableAllOtherTimeSettingsOptions(config, optionType, timecontrolAbridged) {
     for (const timesettingsOption of ["maintime", "periods", "periodtime"]) {
         if (timesettingsOption !== optionType) {
             // we do not test these (disable default)
-            config[`min${timesettingsOption}${timecontrol}`] = undefined;
-            config[`max${timesettingsOption}${timecontrol}`] = undefined;
+            config[`min${timesettingsOption}${timecontrolAbridged}`] = undefined;
+            config[`max${timesettingsOption}${timecontrolAbridged}`] = undefined;
         }
     }
 }

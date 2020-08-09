@@ -164,7 +164,7 @@ describe('Config', () => {
             // assignConfigArguments would assing config.DEBUG to be true regardless of argv's debug,
             // so we now assignConfigArguments out of the getNewConfig functions, and we never
             // assignConfigArguments in config.test.js because testing if argv is correctly exported
-            // is the purpose of this test, there is not point to assign config.DEBUG before testing
+            // is the purpose of this test, there is no point to assign config.DEBUG before testing
             // config.updateFromArgv(argv)
             argv.debug = undefined;
 
@@ -197,44 +197,12 @@ describe('Config', () => {
 
     describe('Logfile', () => {
 
-        it('export logfile filename string without change if valid', () => {
-            argv.logfile = "some-filename";
+        it('export logfile if used', () => {
+            argv.logfile = "some-filename-333";
 
             config.updateFromArgv(argv);
             
-            assert.deepEqual(config.logfile, "some-filename");
-        });
-
-        it('export fixed logfile filename if invalid string filename', () => {
-            argv.logfile = "*/\\_some-file#<>$!&*'{?\"}:name 9876543210AZaz@+|=,;._!?==`file-";
-
-            config.updateFromArgv(argv);
-
-            assert.deepEqual(config.logfile, "---_some-file-------------name 9876543210AZaz------._-----file-");
-        });
-
-        it('export logfile with default filename based on current date and time if empty string (--logfile)', () => {
-            argv.logfile = "";
-            // - month is between 0 and 11 (add +1)
-            // - Date.UTC in this local test to avoid local GMT mismatch between expected and result,
-            //   that varies between testing machines, but local time is fine in the real gtp2ogs.
-            //   ex: GMT+2 on this local machine would make 0 (hours) AM GMT +2 become 22 (hours) PM
-            //   of the previous day.
-            //   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/UTC
-            config.start_date = new Date(Date.UTC(2020, 6, 10, 8, 30, 45, 333));
-
-            config.updateFromArgv(argv);
-
-            assert.deepEqual(config.logfile, "gtp2ogs-logfile-2020-07-10T08-30-45.333Z");
-        });
-
-        it('export logfile filename as a string without change if all characters are valid and are numbers', () => {
-            argv.logfile = "333333333";
-            config.start_date = new Date(Date.UTC(2020, 6, 10, 8, 30, 45, 333));
-
-            config.updateFromArgv(argv);
-
-            assert.deepEqual(config.logfile, "333333333");
+            assert.deepEqual(config.logfile, "some-filename-333");
         });
 
         it('do not export logfile if not used', () => {

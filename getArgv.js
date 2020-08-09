@@ -1,6 +1,11 @@
 const { ogsPvAIs, rootOptionsDefaults } = require('./constants');
 
-function getArgv() {
+// start writing console output in the logfile using our custom styled console.js only once we have debug
+// and valid logfile informations from argv, use native node console until then, which will not log anything
+// in the logfile.
+const console = require('console');
+
+exports.getArgv = function () {
 
     const yargs = require("yargs")
         // 1) ROOT OPTIONS
@@ -176,4 +181,24 @@ function getArgv() {
     return yargs.argv;
 }
 
-exports.getArgv = getArgv;
+exports.fixInvalidLogfileName = function (argv, start_date) {
+    if (argv.logfile !== undefined) { // also test empty string
+        const filename = getLogfileFilename(argv.logfile, start_date);
+        const validFilename = getValidFilename(filename);
+        
+        if (argv.debug && filename !== validFilename) {
+            console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
+        }
+        argv.logfile = validFilename;
+    }
+}
+
+function getLogfileFilename(argvLogfile, start_date) {
+    return (argvLogfile === "" ? `gtp2ogs-logfile-${start_date.toISOString()}` : argvLogfile);
+}
+
+function getValidFilename(filename) {
+    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
+    // space ( ), dot (.) to a hyphen (-)
+    return filename.replace(/[^\w\-. ]/g, "-");
+}

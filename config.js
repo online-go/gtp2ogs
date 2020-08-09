@@ -8,20 +8,13 @@ const { getOptionName } = require('./options/getOptionName');
 const { getRankedUnranked } = require('./options/getRankedUnranked');
 const { getRankedUnrankedUnderscored } = require('./options/getRankedUnrankedUnderscored');
 
-// TODO fix circular dependency
-// config is not yet exported, cannot use our own console.js
-let { console, setLogfile } = require('./console');
+const { console } = require('./console');
 
 const { droppedOptions, ogsPvAIs, rankedUnrankedOptions } = require('./constants');
 
 exportInitialConfig();
 
 exports.updateFromArgv = function(argv) {
-    // setup console before we use it
-    if (argv.logfile !== undefined) {
-        exportLogfileFilename(argv.logfile, argv.debug);
-    }
-
     // console messages
     // A- greeting and debug status
 
@@ -51,7 +44,6 @@ exports.updateFromArgv = function(argv) {
     // 0) Export everything in argv first
 
     for (const k in argv) {
-        if (k === "logfile") continue;
         exports[k] = argv[k];
     }
 
@@ -109,8 +101,6 @@ function exportInitialConfig() {
     exportInitialConfigUnderscored("");
     exportInitialConfigUnderscored("_ranked");
     exportInitialConfigUnderscored("_unranked");
-
-    exports.start_date = new Date();
 }
 
 function testRankedUnrankedOptions(rankedUnrankedOptions, argv) {
@@ -204,29 +194,6 @@ function setRankedUnrankedOptionsDefaults(rankedUnrankedOptions, argv) {
             }
         }
     }
-}
-
-function getLogfileFilename(argvLogfile) {
-    return (argvLogfile === "" ? `gtp2ogs-logfile-${exports.start_date.toISOString()}` : argvLogfile);
-}
-
-function getValidFilename(filename) {
-    // convert any other character than letters (A-Z a-z), numbers (0-9), hypens (-), underscore (_),
-    // space ( ), dot (.) to a hyphen (-)
-    return filename.replace(/[^\w\-. ]/g, "-");
-}
-
-function exportLogfileFilename(argvLogfile, argvDebug) {
-    const filename = getLogfileFilename(argvLogfile);
-    const validFilename = getValidFilename(filename);
-    
-    if (argvDebug && filename !== validFilename) {
-        console.log (`Logfile name "${filename}" has been automatically renamed to "${validFilename}".\nValid logfile name can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-), underscores (_), spaces ( ), dots (.).\n`);
-    }
-
-    setLogfile(validFilename, argvDebug);
-    console = require('./console').console
-    exports.logfile = validFilename;
 }
 
 function exportSecondsAsMilliseconds(optionName, argv) {

@@ -1,6 +1,5 @@
 // vim: tw=120 softtabstop=4 shiftwidth=4
 
-const fs = require('fs')
 const tracer = require('tracer');
 
 let DEBUG = false;
@@ -25,14 +24,14 @@ const console_config = {
     }
 };
 
-exports.setLogfile = (logfile, debug) => {
-    DEBUG = debug;
+exports.setLogfileConsole = (argv, fs) => {
+    DEBUG = argv.debug;
     console_config.format = [console_fmt(DEBUG)];
-    if (logfile) {
+    if (argv.logfile) {
         const real_console = require('console');
         console_config.transport = (data) => {
             real_console.log(data.output);
-            fs.open(logfile, 'a', parseInt('0644', 8), function (e, id) {
+            fs.open(argv.logfile, 'a', parseInt('0644', 8), function (e, id) {
                 fs.write(id, data.output + "\n", null, 'utf8', function () {
                     fs.close(id, () => { });
                 });

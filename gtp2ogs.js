@@ -6,15 +6,25 @@
 // Remove api key from command line ASAP.
 process.title = 'gtp2ogs';
 
-// Do this before importing anything else in case the other modules use config.
-const { getArgv } = require('./getArgv');
+const start_date = new Date();
+
+
+const { getArgv, fixInvalidLogfileName } = require('./getArgv');
 const argv = getArgv();
+// start writing console output in the logfile using our custom styled console.js only once we have debug
+// and valid logfile informations from argv, use native node console until then, which will not log anything
+// in the logfile.
+fixInvalidLogfileName(argv, start_date);
+
+const { setLogfileConsole } = require('./console');
+const fs = require('fs');
+const console = setLogfileConsole(argv, fs);
+
+// Do this before importing anything other than argv or console, in case these other modules use config.
 const config = require('./config');
 config.updateFromArgv(argv);
 
 process.title = `gtp2ogs ${config.bot_command.join(' ')}`;
-
-const { console } = require('./console');
 
 const io = require('socket.io-client');
 const { Connection } = require('./connection');
