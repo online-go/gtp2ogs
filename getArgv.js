@@ -1,9 +1,9 @@
 const { ogsPvAIs, rootOptionsDefaults } = require('./constants');
 
-// start writing console output in the logfile using our custom styled console.js only once we have debug
-// and valid logfile informations from argv, use native node console until then, which will not log anything
-// in the logfile.
-const console = require('console');
+// once we have debug and valid logfile informations (from argv) we can start writing console output
+// to a logfile using our custom styled console.js, before we have these informations we can also
+// use our custom styled console.js but it will not log anything in the logfile.
+const { console } = require('./console');
 
 exports.getArgv = function () {
 

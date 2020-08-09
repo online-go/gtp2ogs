@@ -2,6 +2,7 @@ const assert = require('assert');
 
 const { fixInvalidLogfileName } = require('../getArgv');
 const { getNewArgvWithArguments } = require('./module_loading/getNewArgvWithArguments');
+const { stub_console } = require('./utils/stub_console');
 
 let argv;
 
@@ -16,6 +17,8 @@ const start_date = new Date(Date.UTC(2020, 6, 10, 8, 30, 45, 333));
 describe('Fix argv.logfile to valid filename', () => {
 
     beforeEach(function () {
+        stub_console();
+
         argv = getNewArgvWithArguments();
     });
 
