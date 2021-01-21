@@ -37,8 +37,6 @@ function getArgv() {
         .default('startupbuffer', rootOptionsDefaults.startupbuffer)
         .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
         .default('timeout', rootOptionsDefaults.timeout)
-        // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
-        .describe('kgstime', 'Set this if bot understands the kgs-time_settings command')
         .describe('showboard', 'Set this if bot understands the showboard GTP command, and if you want to display the showboard output')
         .describe('persist', 'Bot process remains running between moves')
         .describe('persistnoncorr', 'Bot process remains running between moves, except for correspondence games where bot is always killed')

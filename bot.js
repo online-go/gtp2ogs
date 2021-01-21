@@ -11,6 +11,9 @@ const { console } = require('./console');
 const config = require('./config');
 const { Pv } = require('./pv');
 
+const gtpCommandEndRegex = new RegExp("(\\r?\\n){2}$");
+const gtpCommandSplitRegex = new RegExp("(\\r?\\n){2}");
+
 /*********/
 /** Bot **/
 /*********/
@@ -70,7 +73,7 @@ class Bot {
                 }
             }
 
-            if (!stdout_buffer || stdout_buffer[stdout_buffer.length-1] !== '\n') {
+            if (!stdout_buffer || !(gtpCommandEndRegex.test(stdout_buffer))) {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
@@ -78,7 +81,7 @@ class Bot {
                 this.log("<<<", stdout_buffer.trim());
             }
 
-            const lines = stdout_buffer.split("\n");
+            const lines = stdout_buffer.split(gtpCommandSplitRegex);
             stdout_buffer = "";
             for (let i = 0; i < lines.length; ++i) {
                 const line = lines[i];
@@ -212,7 +215,7 @@ class Bot {
                This problem would happen if a bot were to crash and re-start during a period.
                This is only an issue if it is our turn, and our main time left is 0.
             */
-            if (config.kgstime) {
+            if (this.kgstime) {
                 let black_timeleft = 0;
                 let white_timeleft = 0;
 
@@ -287,7 +290,7 @@ class Bot {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-            if (config.kgstime) {
+            if (this.kgstime) {
                 this.command("kgs-time_settings canadian " + state.time_control.main_time + " "
                     + state.time_control.period_time + " " + state.time_control.stones_per_period);
             } else {
@@ -308,7 +311,7 @@ class Bot {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-            if (config.kgstime) {
+            if (this.kgstime) {
                 this.command("kgs-time_settings canadian " + (state.time_control.initial_time - state.time_control.time_increment)
                     + " " + state.time_control.time_increment + " 1");
             } else {
@@ -342,7 +345,7 @@ class Bot {
             let black_timeleft = Math.max( Math.floor(state.clock.black_time.thinking_time - black_offset), 0);
             let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
-            if (config.kgstime) {
+            if (this.kgstime) {
                 this.command("kgs-time_settings absolute " + state.time_control.total_time);
             } else {
                 this.command("time_settings " + state.time_control.total_time + " 0 0");
@@ -352,7 +355,7 @@ class Bot {
         }
         /*  OGS doesn't actually send 'none' time control type
             else if (state.time_control.system === 'none') {
-                if (config.kgstime) {
+                if (this.kgstime) {
                     this.command("kgs-time_settings none");
                 } else {
                     // GTP v2 says byoyomi time > 0 and stones = 0 means no time limits
@@ -368,9 +371,25 @@ class Bot {
             if (config.DEBUG) { this.log("Attempting to load dead bot") }
             this.failed = true;
             if (eb) { eb() }
-            return false;
+            return;
         }
 
+        this.command("list_commands", (commands) => {
+            this.kgstime = commands.includes("kgs-time_settings");
+            this.katatime = commands.includes("kata-list_time_settings");
+            if (this.katatime) {
+                this.command("kata-list_time_settings", (kataTimeSettings) => {
+                    this.katafischer = kataTimeSettings.includes("fischer")
+                    this.loadState2(state, cb, eb);
+                }, eb);
+            } else {
+                this.katafischer = false;
+                this.loadState2(state, cb, eb);
+            }
+        }, eb);
+    }
+
+    loadState2(state, cb, eb) {
         if (state.width === state.height) {
             this.command(`boardsize ${state.width}`, () => {}, eb);
         } else {
@@ -416,8 +435,9 @@ class Bot {
         }
         if (config.showboard) {
             this.command("showboard", cb, eb);
+        } else {
+            cb();
         }
-        return true;
     }
 
     command(str, cb, eb, final_command) {

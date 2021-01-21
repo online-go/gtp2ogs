@@ -237,10 +237,6 @@ available on first move (if set)
 
 `--timeout` Disconnect from a game after this many seconds (if set)
 
-### kgstime
-
-`--kgstime`  Set this if bot understands the kgs-time_settings command
-
 ### showboard
 
 `--showboard`  Set this if bot understands the showboard

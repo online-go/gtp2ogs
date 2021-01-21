@@ -272,7 +272,7 @@ class Game {
         }
     }
     // Start the bot.
-    ensureBotStarted(eb) {
+    ensureBotStarted(cb, eb) {
         if (this.bot && this.bot.dead) {
             this.ensureBotKilled();
         }
@@ -287,17 +287,18 @@ class Game {
                 'game_id': this.game_id
             }));
             if (eb) eb();
-            return false;
+            return;
         }
 
         this.bot = new Bot(this.conn, this, config.bot_command);
         this.log(`Starting new bot process [${this.bot.pid()}]`);
 
         this.log("State loading for new bot");
-        return this.bot.loadState(this.state, () => {
+        this.bot.loadState(this.state, () => {
             if (config.DEBUG) {
                 this.log("State loaded for new bot");
             }
+            cb();
         }, eb);
     }
 
@@ -333,14 +334,15 @@ class Game {
             this.ensureBotKilled();
 
             if (eb) eb(e);
-        }
 
-        if (!this.ensureBotStarted(botError)) {
             this.log("Failed to start the bot, can not make a move, trying to restart");
             this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
-            return;
         }
 
+        this.ensureBotStarted(() => this.getBotMoves2(cmd, cb, doneProcessing, botError), botError);
+    }
+    
+    getBotMoves2(cmd, cb, doneProcessing, botError) {
         if (config.DEBUG) this.bot.log("Generating move for game", this.game_id);
         this.log(cmd);
 
