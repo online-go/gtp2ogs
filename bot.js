@@ -178,8 +178,6 @@ class Bot {
           
            kgs-time_settings adds support for Japanese byoyomi.
           
-           TODO: Use known_commands to check for kgs-time_settings support automatically.
-          
            The kgsGtp interface (http://www.weddslist.com/kgs/how/kgsGtp.html)
            converts byoyomi to absolute time for bots that don't support 
            kgs-time_settings by using main_time plus periods * period_time.
@@ -190,12 +188,14 @@ class Bot {
         */  
         if (config.noclock) return;
 
-        //let now = state.clock.now ? state.clock.now : (Date.now() - this.conn.clock_drift);
+        // clock_drift compensates for difference between server and client time, and latency.
         let now = Date.now() - this.conn.clock_drift;
 
         let black_offset = 0;
         let white_offset = 0;
 
+        // offset indicates how long we've had since last move. Ogs only communicates how much
+        // time the player had when last move was made.
         if (state.clock.current_player === state.clock.black_player_id) {
             black_offset = ((this.firstmove===true ? config.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         } else {
@@ -256,8 +256,8 @@ class Bot {
                    they expect time left in the current byoyomi period on time_left.
                 */
 
-                this.command("time_left black " + black_timeleft + " " + (state.clock.black_time.thinking_time > 0 ? "0" : state.clock.black_time.periods));
-                this.command("time_left white " + white_timeleft + " " + (state.clock.white_time.thinking_time > 0 ? "0" : state.clock.white_time.periods));
+               this.command("time_left black " + black_timeleft + " " + (state.clock.black_time.thinking_time > 0 ? "0" : state.clock.black_time.periods));
+               this.command("time_left white " + white_timeleft + " " + (state.clock.white_time.thinking_time > 0 ? "0" : state.clock.white_time.periods));
             } else {
                 /* OGS enforces the number of periods is always 1 or greater.
                    Let's pretend the final period is a Canadian Byoyomi of 1 stone.
