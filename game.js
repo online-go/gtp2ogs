@@ -280,7 +280,7 @@ class Game {
         if (this.bot) {
             cb();
             return;
-        };
+        }
 
         if (this.bot_failures >= 5) {
             // This bot keeps on failing, give up on the game.
