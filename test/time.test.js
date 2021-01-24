@@ -51,7 +51,7 @@ const byoYomi_overtime1 = {
 
 const simple_time = {
     "system": "simple",
-    "per_move": 86400  /* seconds */
+    "per_move": 12345  /* seconds */
 }
 
 const simple_clock = 12345 /* this field is simply a number of seconds on the clock, 
@@ -560,7 +560,7 @@ describe("Time should be reported", () => {
             it("period time", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 0 86400 1"],
+                    ["time_settings 0 12345 1"],
                     ["time_left black 12345 1"],
                     ["time_left white 12338 1"] // 12345 - 6.4s delay and startup buffer = 12338, 1 for overtime.
                 ]);
@@ -571,7 +571,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 0 86400 1"],
+                    ["time_settings 0 12345 1"],
                     ["time_left black 12345 1"],
                     ["time_left white 998 1"]
                 ]);
@@ -582,7 +582,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 0 86400 1"],
+                    ["time_settings 0 12345 1"],
                     ["time_left black 12345 1"],
                     ["time_left white 0 1"]
                 ]);
@@ -597,7 +597,7 @@ describe("Time should be reported", () => {
             it("period time", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 0 86400 1"],
+                    ["time_settings 0 12345 1"],
                     ["time_left black 12345 1"],
                     ["time_left white 12338 1"] // 12345 - 6.4s delay and startup buffer = 12338, 1 for overtime.
                 ]);
@@ -608,7 +608,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 0 86400 1"],
+                    ["time_settings 0 12345 1"],
                     ["time_left black 12345 1"],
                     ["time_left white 998 1"]
                 ]);
@@ -619,7 +619,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 0 86400 1"],
+                    ["time_settings 0 12345 1"],
                     ["time_left black 12345 1"],
                     ["time_left white 0 1"]
                 ]);

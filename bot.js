@@ -345,15 +345,19 @@ class Bot {
             /* Simple could also be viewed as a Canadian byomoyi that starts
                immediately with # of stones = 1
             */
-            let black_timeleft = state.clock.black_time - black_offset;
-            let white_timeleft = state.clock.white_time - white_offset;
+
+            // for some reason ogs sends a timestamp (equal to state.clock.last_move) instead of our time.
+            // Luckely we can use state.time_control.per_move since simple time is always in overtime.
+            let black_timeleft = state.time_control.per_move - black_offset;
+            let white_timeleft = state.time_control.per_move - white_offset;
 
             this.command("time_settings 0 " + state.time_control.per_move + " 1");
+
             this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " 1");
             this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " 1");
         } else if (state.time_control.system === 'absolute') {
             let black_timeleft = state.clock.black_time.thinking_time - black_offset;
-            let white_timeleft =state.clock.white_time.thinking_time - white_offset;
+            let white_timeleft = state.clock.white_time.thinking_time - white_offset;
 
             this.command("time_settings " + state.time_control.total_time + " 0 0");
             this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " 0");
