@@ -229,16 +229,21 @@ describe("Time should be reported", () => {
                 state.clock.last_move = init_time - (12345 + 4 * 3600 + 1000) * 1000;
 
                 bot.loadClock(state);
-                // assert.deepStrictEqual(bot.command.args, [
-                //     ["time_settings 100800 3600 1"], // we add 4 of the 5 periods to the main time, so 86400+4*3600=100800. After that 1 stone per 3600 seconds byo-yomi.
-                //     ["time_left black 26745 0"], // 12345 main time left + 4*3600 perod time = 26745. 0 for main time.
-                //     ["time_left white 2598 1"] //  should be 26745 - 12345 - 4*3600 - 1000 - 2 (since last move and startup buffer) = 26745-26745 - 1002 = rolled into last period 3600 - 1002 = 2598
-                // ]);
-                // WRONG:
                 assert.deepStrictEqual(bot.command.args, [
-                    ["time_settings 100800 -24147 1"],
-                    ["time_left black 26745 0"],
-                    ["time_left white -24147 1"]
+                    ["time_settings 100800 3600 1"], // we add 4 of the 5 periods to the main time, so 86400+4*3600=100800. After that 1 stone per 3600 seconds byo-yomi.
+                    ["time_left black 26745 0"], // 12345 main time left + 4*3600 perod time = 26745. 0 for main time.
+                    ["time_left white 2598 1"] //  should be 26745 - 12345 - 4*3600 - 1000 - 2 (since last move and startup buffer) = 26745-26745 - 1002 = rolled into last period 3600 - 1002 = 2598
+                ]);
+            });
+
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (123450 + 4 * 3600 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 100800 3600 1"], // we add 4 of the 5 periods to the main time, so 86400+4*3600=100800. After that 1 stone per 3600 seconds byo-yomi.
+                    ["time_left black 26745 0"], // 12345 main time left + 4*3600 perod time = 26745. 0 for main time.
+                    ["time_left white 0 1"]
                 ]);
             });
 
@@ -260,8 +265,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    // ["time_settings 100800 3600 1"], // we add 4 of the 5 periods to the main time, so 86400+4*3600=100800. After that 1 stone per 3600 seconds byo-yomi.
-                    ["time_settings 100800 3593 1"], // WRONG
+                    ["time_settings 100800 3600 1"], // we add 4 of the 5 periods to the main time, so 86400+4*3600=100800. After that 1 stone per 3600 seconds byo-yomi.
                     ["time_left black 3600 1"], // 3600 period time left. 1 for period time.
                     ["time_left white 3593 1"] //  should be 3600 - 6.4s = 3593 (rounded down)
                 ]);
@@ -276,8 +280,7 @@ describe("Time should be reported", () => {
             it("main time", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    // ["kgs-time_settings byoyomi 86400 3600 5"],
-                    ["kgs-time_settings byoyomi 86400 3593 5"], // WRONG
+                    ["kgs-time_settings byoyomi 86400 3600 5"],
                     ["time_left black 12345 0"], // 12345 main time left. 0 for main time.
                     ["time_left white 12338 0"] //  12345 main time left - 6.4s = 12338. 0 for main time.
                 ]);
@@ -288,11 +291,9 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    // ["kgs-time_settings byoyomi 86400 3600 5"],
-                    // ["time_left white 2598 4"], // 12345 - 12345 - 1000 - 2 (since last move and startup buffer) = first overtime used and 3600-1002s remaining = 2598 4
-                    ["kgs-time_settings byoyomi 86400 -9747 5"], // WRONG
+                    ["kgs-time_settings byoyomi 86400 3600 5"],
                     ["time_left black 12345 0"], // 12345 main time left. 0 for main time.
-                    ["time_left white 0 0"] // WRONG
+                    ["time_left white 2598 5"] // 12345 - 12345 - 1000 - 2 (since last move and startup buffer) = first overtime used and 3600-1002s remaining = 2598 4
                 ]);
             });
 
@@ -300,16 +301,21 @@ describe("Time should be reported", () => {
                 state.clock.last_move = init_time - (12345 + 4 * 3600 + 1000) * 1000;
 
                 bot.loadClock(state);
-                // assert.deepStrictEqual(bot.command.args, [
-                //     ["kgs-time_settings byoyomi 86400 3600 5"],
-                //     ["time_left white 2598 1"], // should be 26745 - 12345 - 1000 - 2 (since last move and startup buffer) = 26745-13347 = 13398 (rounded down)
-                //     ["time_left black 12345 0"] // 12345 main time left. 0 for main time.
-                // ]);
-                // WRONG:
                 assert.deepStrictEqual(bot.command.args, [
-                    ["kgs-time_settings byoyomi 86400 -24147 5"],
-                    ["time_left black 12345 0"],
-                    ["time_left white 0 0"]
+                    ["kgs-time_settings byoyomi 86400 3600 5"],
+                    ["time_left black 12345 0"], // 12345 main time left. 0 for main time.
+                    ["time_left white 2598 1"] // should be 26745 - 12345 - 1000 - 2 (since last move and startup buffer) = 26745-13347 = 13398 (rounded down)
+                ]);
+            });
+
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (123450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["kgs-time_settings byoyomi 86400 3600 5"],
+                    ["time_left black 12345 0"], // 12345 main time left. 0 for main time.
+                    ["time_left white 0 1"]
                 ]);
             });
 
@@ -319,8 +325,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    // ["kgs-time_settings byoyomi 86400 3600 5"],
-                    ["kgs-time_settings byoyomi 86400 3593 5"], // WRONG
+                    ["kgs-time_settings byoyomi 86400 3600 5"],
                     ["time_left black 3600 3"],
                     ["time_left white 3593 3"] // should be 3600 - 6.4s = 3593 (rounded down), and 3 remaining periods
                 ]);
@@ -332,8 +337,7 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    // ["kgs-time_settings byoyomi 86400 3600 5"],
-                    ["kgs-time_settings byoyomi 86400 3593 5"], // WRONG
+                    ["kgs-time_settings byoyomi 86400 3600 5"],
                     ["time_left black 3600 1"], // 3600 period time left. 1 for period time.
                     ["time_left white 3593 1"] //  should be 3600 - 6.4s = 3593 (rounded down)
                 ]);
@@ -365,8 +369,18 @@ describe("Time should be reported", () => {
                 assert.deepStrictEqual(bot.command.args, [
                     ["time_settings 86400 3600 10"],
                     ["time_left black 12345 0"],
-                    // ["time_left white 2598 10"] 
-                    ["time_left white -9747 10"] // WRONG
+                    ["time_left white 2598 10"]
+                ]);
+            });
+
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (123450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 86400 3600 10"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 0 10"]
                 ]);
             });
 
@@ -388,7 +402,6 @@ describe("Time should be reported", () => {
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    // ["time_settings 100800 3600 1"], // we add 4 of the 5 periods to the main time, so 86400+4*3600=100800. After that 1 stone per 3600 seconds byo-yomi.
                     ["time_settings 86400 3600 10"],
                     ["time_left black 200 1"],
                     ["time_left white 193 1"] // 2000 - 6.4 rounded down
@@ -417,20 +430,18 @@ describe("Time should be reported", () => {
                 assert.deepStrictEqual(bot.command.args, [
                     ["kgs-time_settings canadian 86400 3600 10"],
                     ["time_left black 12345 0"],
-                    // ["time_left white 2598 10"] 
-                    ["time_left white -9747 10"] // WRONG
+                    ["time_left white 2598 10"]
                 ]);
             });
 
-            it("main time rollover into last period", () => {
-                state.clock.last_move = init_time - (12345 + 4 * 3600 + 1000) * 1000;
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (123450 + 4 * 3600 + 1000) * 1000;
 
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["kgs-time_settings canadian 86400 3600 10"],
                     ["time_left black 12345 0"],
-                    // ["time_left white 1993 10"] // 2000 - 6.4 rounded down
-                    ["time_left white -24147 10"] // WRONG
+                    ["time_left white 0 10"]
                 ]);
             });
 
@@ -472,10 +483,8 @@ describe("Time should be reported", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["time_settings 82800 3600 1"],
-                    // ["time_left black 8745 0"],
-                    // ["time_left white 8738 0"]
-                    ["time_left black 12345 0"], // WRONG, should either use 1 for overtime or if 0, substract period time.
-                    ["time_left white 12338 0"] // 12345 - 6.4s delay and startup buffer, also WRONG
+                    ["time_left black 8745 0"], // 12345 - 3600 = 8745 main time left.
+                    ["time_left white 8738 0"]
                 ]);
             });
 
@@ -485,10 +494,19 @@ describe("Time should be reported", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["time_settings 82800 3600 1"],
-                    // ["time_left black 2600 1"],
-                    // ["time_left white 2598 1"]
-                    ["time_left black 12345 0"], // WRONG // 12345 main time left. 0 for main time.
-                    ["time_left white 2598 0"] // WRONG // Should be for overtime.
+                    ["time_left black 8745 0"],
+                    ["time_left white 2598 1"]
+                ]);
+            });
+
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (87450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 82800 3600 1"],
+                    ["time_left black 8745 0"],
+                    ["time_left white 0 1"]
                 ]);
             });
         });
@@ -502,10 +520,8 @@ describe("Time should be reported", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["kgs-time_settings canadian 82800 3600 1"],
-                    // ["time_left black 8745 0"],
-                    // ["time_left white 8738 0"]
-                    ["time_left black 12345 0"], // WRONG, should either use 1 for overtime or if 0, substract period time.
-                    ["time_left white 12338 0"] // 12345 - 6.4 rounded down, also WRONG
+                    ["time_left black 8745 0"],
+                    ["time_left white 8738 0"]
                 ]);
             });
 
@@ -515,10 +531,19 @@ describe("Time should be reported", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["kgs-time_settings canadian 82800 3600 1"],
-                    // ["time_left black 2600 1"],
-                    // ["time_left white 2598 1"]
-                    ["time_left black 12345 0"], // WRONG // 12345 main time left. 0 for main time.
-                    ["time_left white 2598 0"] // WRONG // Should be 1 for overtime.
+                    ["time_left black 8745 0"],
+                    ["time_left white 2598 1"]
+                ]);
+            });
+
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (87450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["kgs-time_settings canadian 82800 3600 1"],
+                    ["time_left black 8745 0"],
+                    ["time_left white 0 1"]
                 ]);
             });
         });
@@ -532,14 +557,34 @@ describe("Time should be reported", () => {
         });
 
         describe("in gtp time", () => {
-            it("main time", () => {
+            it("period time", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["time_settings 0 86400 1"],
-                    // ["time_left black 86400 1"],
-                    // ["time_left white 12338 1"] // 12345 - 6.4s delay and startup buffer = 12338, 1 for overtime.
-                    ["time_left black 0 1"],
-                    ["time_left white 1 1"] // Wrong
+                    ["time_left black 12345 1"],
+                    ["time_left white 12338 1"] // 12345 - 6.4s delay and startup buffer = 12338, 1 for overtime.
+                ]);
+            });
+
+            it("period time with delay", () => {
+                state.clock.last_move = init_time - (12345 - 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 0 86400 1"],
+                    ["time_left black 12345 1"],
+                    ["time_left white 998 1"]
+                ]);
+            });
+
+            it("period time with delay should not go negative", () => {
+                state.clock.last_move = init_time - (123450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 0 86400 1"],
+                    ["time_left black 12345 1"],
+                    ["time_left white 0 1"]
                 ]);
             });
         });
@@ -549,14 +594,34 @@ describe("Time should be reported", () => {
                 bot.kgstime = true;
             });
 
-            it("main time", () => {
+            it("period time", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
                     ["time_settings 0 86400 1"],
-                    // ["time_left black 86400 1"],
-                    // ["time_left white 12338 1"] // 12345 - 6.4s delay and startup buffer = 12338, 1 for overtime.
-                    ["time_left black 0 1"], // Wrong
-                    ["time_left white 1 1"] // Wrong
+                    ["time_left black 12345 1"],
+                    ["time_left white 12338 1"] // 12345 - 6.4s delay and startup buffer = 12338, 1 for overtime.
+                ]);
+            });
+
+            it("period time with delay", () => {
+                state.clock.last_move = init_time - (12345 - 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 0 86400 1"],
+                    ["time_left black 12345 1"],
+                    ["time_left white 998 1"]
+                ]);
+            });
+
+            it("period time with delay should not go negative", () => {
+                state.clock.last_move = init_time - (123450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 0 86400 1"],
+                    ["time_left black 12345 1"],
+                    ["time_left white 0 1"]
                 ]);
             });
         });
@@ -578,6 +643,28 @@ describe("Time should be reported", () => {
                     ["time_left white 12338 0"] // 12345 - 6.4s delay and startup buffer = 12338, 0 for main time.
                 ]);
             });
+
+            it("absolute time with delay", () => {
+                state.clock.last_move = init_time - (12345 - 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 86400 0 0"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 998 0"]
+                ]);
+            });
+
+            it("absolute time with delay should not go negative", () => {
+                state.clock.last_move = init_time - (123450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 86400 0 0"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 0 0"]
+                ]);
+            });
         });
 
         describe("in kgs time", () => {
@@ -588,7 +675,7 @@ describe("Time should be reported", () => {
             it("main time", () => {
                 bot.loadClock(state);
                 assert.deepStrictEqual(bot.command.args, [
-                    ["kgs-time_settings absolute 86400"],
+                    ["time_settings 86400 0 0"],
                     ["time_left black 12345 0"],
                     ["time_left white 12338 0"] // 12345 - 6.4s delay and startup buffer = 12338, 0 for main time.
                 ]);
@@ -599,19 +686,61 @@ describe("Time should be reported", () => {
                 state.clock.current_player = state.clock.black_player_id;
 
                 assert.deepStrictEqual(bot.command.args, [
-                    ["kgs-time_settings absolute 86400"],
-                    // ["time_left black 12338 0"], // 12345 - 6.4s delay and startup buffer = 12338, 0 for main time.
-                    // ["time_left white 12345 0"] 
-                    ["time_left black 12345 0"], // WRONG
-                    ["time_left white 12338 0"] // WRONG
-
+                    ["time_settings 86400 0 0"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 12338 0"] // 12345 - 6.4s delay and startup buffer = 12338, 0 for main time
                 ]);
+            });
+
+            it("absolute time with delay", () => {
+                state.clock.last_move = init_time - (12345 - 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 86400 0 0"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 998 0"]
+                ]);
+            });
+
+            it("absolute time with delay should not go negative", () => {
+                state.clock.last_move = init_time - (123450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["time_settings 86400 0 0"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 0 0"]
+                ]);
+            });
+        });
+    });
+
+    describe("for none", () => {
+        beforeEach(() => {
+            state.time_control = none_time;
+        });
+
+        describe("in gtp time", () => {
+            it("no time", () => {
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, []);
+            });
+        });
+
+        describe("in kgs time", () => {
+            beforeEach(() => {
+                bot.kgstime = true;
+            });
+
+            it("no time", () => {
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, []);
             });
         });
     });
     /*
         todo:
-            For gtp, kgs and katago
             byo-yomi:
                 katago -> same as kgs time
             canadese:
@@ -619,10 +748,8 @@ describe("Time should be reported", () => {
             fischer:
                 katago -> direct
             simple:
-                katago -> direct
+                katago -> same as kgs time
             absolute:
-                katago -> direct
-            none:
-                none.
+                katago -> same as kgs time
     */
 });
