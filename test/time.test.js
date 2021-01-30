@@ -511,7 +511,7 @@ describe("Time should be reported", () => {
             });
         });
 
-        describe("in kgs time", () => {
+        describe("in kata time", () => {
             beforeEach(() => {
                 bot.kgstime = true;
             });
@@ -544,6 +544,43 @@ describe("Time should be reported", () => {
                     ["kgs-time_settings canadian 82800 3600 1"],
                     ["time_left black 8745 0"],
                     ["time_left white 0 1"]
+                ]);
+            });
+        });
+
+        describe("in kgs time", () => {
+            beforeEach(() => {
+                bot.katafischer = true;
+            });
+
+            it("main time", () => {
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["kata-time_settings fischer-capped 86400 3600 172800 -1"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 12338 0"]
+                ]);
+            });
+
+            it("main time rollover into period time", () => {
+                state.clock.last_move = init_time - (8745 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["kata-time_settings fischer-capped 86400 3600 172800 -1"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 2598 0"]
+                ]);
+            });
+
+            it("rollover should not be negative", () => {
+                state.clock.last_move = init_time - (87450 + 1000) * 1000;
+
+                bot.loadClock(state);
+                assert.deepStrictEqual(bot.command.args, [
+                    ["kata-time_settings fischer-capped 86400 3600 172800 -1"],
+                    ["time_left black 12345 0"],
+                    ["time_left white 0 0"]
                 ]);
             });
         });

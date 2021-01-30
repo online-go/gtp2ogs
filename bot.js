@@ -241,11 +241,9 @@ class Bot {
                     }
                 }
 
-                this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
-                    + state.time_control.period_time
-                    + " " + state.time_control.periods);
-                this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " " + (black_time > 0 ? "0" : black_periods));
-                this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " " + (white_time > 0 ? "0" : white_periods));
+                this.command(`kgs-time_settings byoyomi ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.periods}`);
+                this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_time > 0 ? "0" : black_periods}`);
+                this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_time > 0 ? "0" : white_periods}`);
             } else {
                 /* Gtp does not support japanese byoyom. We fake it as Canadian byoyomi.
                    Let's pretend the final period is a Canadian Byoyomi of 1 stone.
@@ -265,19 +263,17 @@ class Bot {
                     white_timeleft = state.time_control.period_time - white_offset + state.clock.black_time.period_time * (black_periods - 1);
                 }
 
-                this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
-                    + state.time_control.period_time
-                    + " 1");
+                this.command(`time_settings ${state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time} ${state.time_control.period_time} 1`);
                 // If we're in the last period, tell the bot. Otherwise pretend we're in main time.
                 if (black_timeleft <= state.clock.black_time.period_time) {
-                    this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " 1");
+                    this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`);
                 } else {
-                    this.command("time_left black " + Math.floor(black_timeleft - state.clock.black_time.period_time) + " 0");
+                    this.command(`time_left black ${Math.floor(black_timeleft - state.clock.black_time.period_time)} 0`);
                 }
                 if (white_timeleft <= state.clock.white_time.period_time) {
-                    this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " 1");
+                    this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`);
                 } else {
-                    this.command("time_left white " + Math.floor(white_timeleft - state.clock.white_time.period_time) + " 0");
+                    this.command(`time_left white ${Math.floor(white_timeleft - state.clock.white_time.period_time)} 0`);
                 }
             }
         } else if (state.time_control.system === 'canadian') {
@@ -298,49 +294,53 @@ class Bot {
             }
 
             if (this.kgstime) {
-                this.command("kgs-time_settings canadian " + state.time_control.main_time + " "
-                    + state.time_control.period_time + " " + state.time_control.stones_per_period);
+                this.command(`kgs-time_settings canadian ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`);
             } else {
-                this.command("time_settings " + state.time_control.main_time + " "
-                    + state.time_control.period_time + " " + state.time_control.stones_per_period);
+                this.command(`time_settings ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`);
             }
 
-            this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " " + black_stones);
-            this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " " + white_stones);
+            this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_stones}`);
+            this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_stones}`);
         } else if (state.time_control.system === 'fischer') {
-            /* Not supported by kgs-time_settings and I assume most bots.
-               A better way than absolute is to handle this with
-               a fake Canadian byoyomi. This should let the bot know
-               a good approximation of how to handle the time remaining.
-            */
-            let black_timeleft = state.clock.black_time.thinking_time - black_offset - state.time_control.time_increment;
-            let white_timeleft = state.clock.white_time.thinking_time - white_offset - state.time_control.time_increment;
-            let black_periods = 0;
-            let white_periods = 0;
-
-            if (this.kgstime) {
-                this.command("kgs-time_settings canadian " + (state.time_control.initial_time - state.time_control.time_increment)
-                    + " " + state.time_control.time_increment + " 1");
+            if (this.katafischer) {
+                let black_timeleft = state.clock.black_time.thinking_time - black_offset;
+                let white_timeleft = state.clock.white_time.thinking_time - white_offset;
+                this.command(`kata-time_settings fischer-capped ${state.time_control.initial_time} ${state.time_control.time_increment} ${state.time_control.max_time} -1`);
+                this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
+                this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
             } else {
-                this.command("time_settings " + (state.time_control.initial_time - state.time_control.time_increment)
-                    + " " + state.time_control.time_increment + " 1");
-            }
+                /* Not supported by kgs-time_settings and I assume most bots.
+                   A better way than absolute is to handle this with
+                   a fake Canadian byoyomi. This should let the bot know
+                   a good approximation of how to handle the time remaining.
+                */
+               let black_timeleft = state.clock.black_time.thinking_time - black_offset - state.time_control.time_increment;
+               let white_timeleft = state.clock.white_time.thinking_time - white_offset - state.time_control.time_increment;
+               let black_periods = 0;
+               let white_periods = 0;
 
-            if (black_timeleft <= 0) {
-                black_periods = 1;
-                black_timeleft += state.time_control.time_increment;
-            }
-            if (white_timeleft <= 0) {
-                white_periods = 1;
-                white_timeleft += state.time_control.time_increment;
-            }
+               if (this.kgstime) {
+                   this.command(`kgs-time_settings canadian ${state.time_control.initial_time - state.time_control.time_increment} ${state.time_control.time_increment} 1`);
+               } else {
+                   this.command(`time_settings ${state.time_control.initial_time - state.time_control.time_increment} ${state.time_control.time_increment} 1`);
+               }
 
-            /* Always tell the bot we are in main time ('0') so it doesn't try
-               to think all of timeleft per move.
-               But subtract the increment time above to avoid timeouts.
-            */
-            this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " " + black_periods);
-            this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " " + white_periods);
+               if (black_timeleft <= 0) {
+                   black_periods = 1;
+                   black_timeleft += state.time_control.time_increment;
+               }
+               if (white_timeleft <= 0) {
+                   white_periods = 1;
+                   white_timeleft += state.time_control.time_increment;
+               }
+
+               /* Always tell the bot we are in main time ('0') so it doesn't try
+                  to think all of timeleft per move.
+                  But subtract the increment time above to avoid timeouts.
+               */
+               this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_periods}`);
+               this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_periods}`);
+            }
         } else if (state.time_control.system === 'simple') {
             /* Simple could also be viewed as a Canadian byomoyi that starts
                immediately with # of stones = 1
@@ -351,17 +351,17 @@ class Bot {
             let black_timeleft = state.time_control.per_move - black_offset;
             let white_timeleft = state.time_control.per_move - white_offset;
 
-            this.command("time_settings 0 " + state.time_control.per_move + " 1");
+            this.command(`time_settings 0 ${state.time_control.per_move} 1`);
 
-            this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " 1");
-            this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " 1");
+            this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`);
+            this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`);
         } else if (state.time_control.system === 'absolute') {
             let black_timeleft = state.clock.black_time.thinking_time - black_offset;
             let white_timeleft = state.clock.white_time.thinking_time - white_offset;
 
-            this.command("time_settings " + state.time_control.total_time + " 0 0");
-            this.command("time_left black " + Math.floor(Math.max(black_timeleft, 0)) + " 0");
-            this.command("time_left white " + Math.floor(Math.max(white_timeleft, 0)) + " 0");
+            this.command(`time_settings ${state.time_control.total_time} 0 0`);
+            this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
+            this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
         }
         /*  OGS doesn't actually send 'none' time control type
             else if (state.time_control.system === 'none') {
@@ -389,7 +389,7 @@ class Bot {
             this.katatime = commands.includes("kata-list_time_settings");
             if (this.katatime) {
                 this.command("kata-list_time_settings", (kataTimeSettings) => {
-                    this.katafischer = kataTimeSettings.includes("fischer")
+                    this.katafischer = kataTimeSettings.includes("fischer-capped")
                     this.loadState2(state, cb, eb);
                 }, eb);
             } else {
