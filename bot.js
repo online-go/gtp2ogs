@@ -173,18 +173,18 @@ class Bot {
            http://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#sec:time-handling
            http://www.weddslist.com/kgs/how/kgsGtp.html
 
-           GTP v2 only supports Canadian byoyomi, no timer (see spec above), 
+           GTP v2 only supports Canadian Byoyomi, no timer (see spec above), 
            and absolute (period time zero).
           
-           kgs-time_settings adds support for Japanese byoyomi.
+           kgs-time_settings adds support for Japanese Byoyomi.
           
            The kgsGtp interface (http://www.weddslist.com/kgs/how/kgsGtp.html)
            converts byoyomi to absolute time for bots that don't support 
            kgs-time_settings by using main_time plus periods * period_time.
            But then the bot would view that as the total time left for entire rest of game...
           
-           Japanese byoyomi with one period left could be viewed as a special case 
-           of Canadian byoyomi where the number of stones is always = 1
+           Japanese Byoyomi with one period left could be viewed as a special case 
+           of Canadian Byoyomi where the number of stones is always = 1
         */
         if (config.noclock) return;
 
@@ -245,7 +245,7 @@ class Bot {
                 this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_time > 0 ? "0" : black_periods}`);
                 this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_time > 0 ? "0" : white_periods}`);
             } else {
-                /* Gtp does not support japanese byoyom. We fake it as Canadian byoyomi.
+                /* Gtp does not support Japanese Byoyomi. We fake it as Canadian Byoyomi.
                    Let's pretend the final period is a Canadian Byoyomi of 1 stone.
                    This lets the bot know it can use the full period per move,
                    not try to fit the rest of the game into the time left.
@@ -311,7 +311,7 @@ class Bot {
             } else {
                 /* Not supported by kgs-time_settings and I assume most bots.
                    A better way than absolute is to handle this with
-                   a fake Canadian byoyomi. This should let the bot know
+                   a fake Canadian Byoyomi. This should let the bot know
                    a good approximation of how to handle the time remaining.
                 */
                let black_timeleft = state.clock.black_time.thinking_time - black_offset - state.time_control.time_increment;
@@ -342,7 +342,7 @@ class Bot {
                this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_periods}`);
             }
         } else if (state.time_control.system === 'simple') {
-            /* Simple could also be viewed as a Canadian byomoyi that starts
+            /* Simple could also be viewed as a Canadian Byoyomi that starts
                immediately with # of stones = 1
             */
 
