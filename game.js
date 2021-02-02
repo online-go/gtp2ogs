@@ -153,7 +153,7 @@ class Game {
                     if (config.DEBUG) this.log(noPauseMg);
                     this.resumeGame();
                 }
-            } 
+            }
 
             //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
@@ -222,7 +222,7 @@ class Game {
                     // If we are white, we wait for opponent to make extra moves.
                     if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
                     if (config.DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
-                    if (this.state.moves.length ===1) { // remind once, avoid spamming the reminder
+                    if (this.state.moves.length === 1) { // remind once, avoid spamming the reminder
                         this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
                     }
                 }
@@ -250,7 +250,7 @@ class Game {
             'game_id': game_id
         }));
 
-        this.connect_timeout = setTimeout(()=>{
+        this.connect_timeout = setTimeout(() => {
             if (!this.state) {
                 this.log("No gamedata after 1s, reqesting again");
                 this.scheduleRetry();
@@ -272,12 +272,15 @@ class Game {
         }
     }
     // Start the bot.
-    ensureBotStarted(eb) {
+    ensureBotStarted(cb, eb) {
         if (this.bot && this.bot.dead) {
             this.ensureBotKilled();
         }
 
-        if (this.bot) return true;
+        if (this.bot) {
+            cb();
+            return;
+        }
 
         if (this.bot_failures >= 5) {
             // This bot keeps on failing, give up on the game.
@@ -287,17 +290,18 @@ class Game {
                 'game_id': this.game_id
             }));
             if (eb) eb();
-            return false;
+            return;
         }
 
         this.bot = new Bot(this.conn, this, config.bot_command);
         this.log(`Starting new bot process [${this.bot.pid()}]`);
 
         this.log("State loading for new bot");
-        return this.bot.loadState(this.state, () => {
+        this.bot.loadState(this.state, () => {
             if (config.DEBUG) {
                 this.log("State loaded for new bot");
             }
+            cb();
         }, eb);
     }
 
@@ -326,21 +330,22 @@ class Game {
 
         let failed = false;
         const botError = (e) => {
-            if (failed)  return;
+            if (failed) return;
 
             failed = true;
             doneProcessing();
             this.ensureBotKilled();
 
             if (eb) eb(e);
-        }
 
-        if (!this.ensureBotStarted(botError)) {
             this.log("Failed to start the bot, can not make a move, trying to restart");
             this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
-            return;
         }
 
+        this.ensureBotStarted(() => this.getBotMoves2(cmd, cb, doneProcessing, botError), botError);
+    }
+
+    getBotMoves2(cmd, cb, doneProcessing, botError) {
         if (config.DEBUG) this.bot.log("Generating move for game", this.game_id);
         this.log(cmd);
 
@@ -410,7 +415,7 @@ class Game {
             this.state.moves.length < this.state.handicap);
 
         if (!doing_handicap) {  // Regular genmove ...
-            const sendTheMove = (moves) => {  this.uploadMove(moves[0]);  };
+            const sendTheMove = (moves) => { this.uploadMove(moves[0]); };
             this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
             return;
         }
@@ -424,7 +429,7 @@ class Game {
         const warnAndResign = (msg) => {
             this.log(msg);
             this.ensureBotKilled();
-            this.uploadMove({'resign': true});
+            this.uploadMove({ 'resign': true });
         }
 
         // Get handicap stones from bot and return first one.
@@ -470,19 +475,18 @@ class Game {
     }
     getRes(result) {
         const m = this.state.outcome.match(/(.*) points/);
-        if (m)  return m[1];
+        if (m) return m[1];
 
-        if (result === 'Resignation')  return 'R';
+        if (result === 'Resignation') return 'R';
         if (result === 'Cancellation') return 'Can';
-        if (result === 'Timeout')      return 'Time';
+        if (result === 'Timeout') return 'Time';
     }
-    gameOver()
-    {
+    gameOver() {
         if (config.farewell && this.state)
             this.sendChat(config.farewell, "discussion");
 
         // Display result
-        const col = (this.state.winner === this.state.players.black.id ? 'B' : 'W' );
+        const col = (this.state.winner === this.state.players.black.id ? 'B' : 'W');
         const result = `${this.state.outcome[0].toUpperCase()}${this.state.outcome.substr(1)}`;
         const res = this.getRes(result);
         const winloss = (this.state.winner === this.conn.bot_id ? "W" : "L");
@@ -506,11 +510,11 @@ class Game {
 
         if (!this.disconnect_timeout) {
             if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
-            this.disconnect_timeout = setTimeout(() => {  this.conn.disconnectFromGame(this.game_id);  }, 1000);
+            this.disconnect_timeout = setTimeout(() => { this.conn.disconnectFromGame(this.game_id); }, 1000);
         }
     }
     header() {
-        if (!this.state)  return;
+        if (!this.state) return;
         const botIsBlack = this.state.players.black.username === config.username;
         const color = botIsBlack ? '  B' : 'W  ';  // Playing black / white against ...
         const player = botIsBlack ? this.state.players.white : this.state.players.black;
@@ -522,8 +526,8 @@ class Game {
     }
     log() {
         const moves = (this.state && this.state.moves ? this.state.moves.length : 0);
-        const movestr = (moves ? `Move ${moves}`: "        ");
-        const arr = [ `[Game ${this.game_id}]  ${movestr} ` ];
+        const movestr = (moves ? `Move ${moves}` : "        ");
+        const arr = [`[Game ${this.game_id}]  ${movestr} `];
 
         for (let i = 0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
@@ -547,10 +551,10 @@ class Game {
             'game_id': this.game_id,
             'player_id': this.conn.bot_id
         }));
-    }    
+    }
     getOpponent() {
-        const player = (this.state.players.white.id === this.conn.bot_id ? 
-                        this.state.players.black : this.state.players.white);
+        const player = (this.state.players.white.id === this.conn.bot_id ?
+            this.state.players.black : this.state.players.white);
         return player;
     }
 }
@@ -560,7 +564,7 @@ function num2char(num) {
     return "abcdefghijklmnopqrstuvwxyz"[num];
 }
 function encodeMove(move) {
-    if (move['x'] === -1) 
+    if (move['x'] === -1)
         return "..";
     return num2char(move['x']) + num2char(move['y']);
 }

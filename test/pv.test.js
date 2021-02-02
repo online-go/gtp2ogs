@@ -46,7 +46,7 @@ describe("Pv should work", () => {
         fake_gtp.stderr.emit('data', 'ble\r\n');
         fake_gtp.stderr.emit('data', 'blaor\r\n');
 
-        assert.equal(bot.pv.postPvToChat.callCount, 2); 
+        assert.strictEqual(bot.pv.postPvToChat.callCount, 2); 
         assert.ok(bot.pv.postPvToChat.firstCall.calledWith('blable')); 
         assert.ok(bot.pv.postPvToChat.secondCall.calledWith('blaor')); 
 
@@ -103,7 +103,7 @@ describe("Pv should work", () => {
 
         fake_gtp.stderr.emit('data', fs.readFileSync(`./test/pv_samples/${fileName}.txt`));
 
-        assert.equal(game.sendChat.callCount, 1);
+        assert.strictEqual(game.sendChat.callCount, 1);
         assert.ok(game.sendChat.firstCall.calledWith(chatBody, 3, 'malkovich'));
         
         conn.terminate();
