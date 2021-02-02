@@ -57,7 +57,7 @@ function decodeMoves(move_obj, width, height) {
                     ret.push({"x": x, "y": y, "edited": false, "color": 0});
                 } else {
                     if (moves[i] !== "") { 
-                        throw `Unparsed move input: ${moves[i]}`;
+                        throw new Error(`Unparsed move input: ${moves[i]}`);
                     }
                 }
             }

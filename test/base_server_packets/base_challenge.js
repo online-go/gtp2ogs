@@ -18,7 +18,7 @@ function base_challenge(overrides) {
         width: 19,
         height: 19,
         handicap: 0,
-        komi: 7.5,
+        komi: null,
         time_control: {
             speed: 'live',
             system: 'fischer',
