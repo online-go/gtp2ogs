@@ -163,6 +163,7 @@ Supported AIs:
 
 - `LeelaZero` (<https://zero.sjeng.org/>)
 - `Sai` (<http://sai.unich.it/>)
+- `Sai18` (<http://sai.unich.it/>) with any version since 1.8.0
 - `KataGo` (<https://github.com/lightvector/KataGo>)
 - `PhoenixGo` (<https://github.com/Tencent/PhoenixGo>)
 - `Leela` (<https://sjeng.org/leela.html>)

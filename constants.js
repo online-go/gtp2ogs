@@ -45,7 +45,7 @@ const droppedOptions = [
     [["timecontrolunranked"], "timecontrolsunranked"]
 ];
 
-const ogsPvAIs = ["LeelaZero", "Sai", "KataGo", "PhoenixGo", "Leela"];
+const ogsPvAIs = ["LeelaZero", "Sai", "Sai18", "KataGo", "PhoenixGo", "Leela"];
 
 const rootOptionsDefaults = {
     host: 'online-go.com',
