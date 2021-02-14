@@ -68,6 +68,11 @@ describe("Pv should work", () => {
         testPv('SAI', 'saiOutput', chatBody);
     });
 
+    it("should output pv for sai18", () => {
+        const chatBody = {type: "analysis", name: "Winrate: 55.94%, Score: 2, Visits: 10201, Playouts: 10199", from: 2, moves: "qcqdpcncocodnbqnblbmdlepgr", marks: {circle: "qc"}};
+        testPv('SAI18', 'saiOutput18', chatBody);
+    });
+
     it("should output pv for kataGo", () => {
         const chatBody = {type: "analysis", name: "Visits: 4005, Winrate: 41.71, Score: -0.9", from: 2, moves: "cdpddpppfdfqcmcqdq", marks: {circle: "cd"}};
         testPv('KATAGO', 'kataGoOutput', chatBody);

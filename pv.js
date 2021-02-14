@@ -15,22 +15,26 @@ class Pv {
         this.pvLine =  null;
         this.postPvToChat = { 'LEELAZERO':  this.postPvToChatDualLine,
                               'SAI': this.postPvToChatDualLine,
+                              'SAI18': this.postPvToChatDualLine,
                               'KATAGO': this.postPvToChatSingleLine,
                               'PHOENIXGO':  this.postPvToChatDualLine,
                               'LEELA': this.postPvToChatSingleLine
                             }[setting];
         this.getPvChat = { 'LEELAZERO':  this.getPvChatLZ,
                            'SAI': this.getPvChatSAI,
+                           'SAI18': this.getPvChatSAI18,
                            'KATAGO': this.getPvChatKata,
                            'PHOENIXGO':  this.getPvChatPG,
                            'LEELA': this.getPvChatLeela
                          }[setting];
         this.PVRE =      { 'LEELAZERO':  (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+.\d\d)%\) (\(LCB: +(\d+.\d\d)%\) )?\(N: +(\d+.\d\d)%\) PV:(( ([A-Z][0-9]+|pass)+)+)/),
                            'SAI': (/([A-Z]\d+|pass) -> +(\d+) \(V: +(\d+\.\d\d)%\) (\(LCB: +(-?\d+\.\d\d)%\) )?\(N: +(\d+\.\d\d)%\) \(A: +(-?\d+\.\d)\)( \(B: (-?\d+\.\d\d)\))? PV:(( ([A-Z][0-9]+|pass)+)+)/),
+                           'SAI18': (/([A-Z]\d+|pass) +(\d+) +(\d)+ +(\d)+ +(\d+\.\d\d)% +(\d+\.\d\d)% +(\d+\.\d\d)% +(\d+\.\d\d)% +(\d+\.\d\d)% +(\d+\.\d\d)% +(-?\d+\.\d) +(\d+)%(( ([A-Z][0-9]+|pass)+)+)/),
                            'PHOENIXGO':  (/main move path: ((,?[a-z]{2}\(((\(ind\))|[^()])*\))+)/)
                          }[setting];
         this.STOPRE =    { 'LEELAZERO':  (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'SAI': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
+                           'SAI18': (/(\d+) visits, (\d+) nodes, (\d+) playouts, (\d+) n\/s/),
                            'KATAGO': (/CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/),
                            'PHOENIXGO':  (/[0-9]+.. move\([bw]\): [a-z]{2}, (winrate=([0-9]+\.[0-9]+)%, N=([0-9]+), Q=(-?[0-9]+\.[0-9]+), p=(-?[0-9]+\.[0-9]+), v=(-?[0-9]+\.[0-9]+), cost (-?[0-9]+\.[0-9]+)ms, sims=([0-9]+)), height=([0-9]+), avg_height=([0-9]+\.[0-9]+), global_step=([0-9]+)/),
                            'LEELA': (/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/)
@@ -101,6 +105,17 @@ class Pv {
               // nps    = stop[4]; // unused
               name      = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`,
               pv = this.PvToGtp(this.pvLine[10]);
+
+        return this.createMessage(name, pv);
+    }
+    getPvChatSAI18(stop) {
+        const winrate   = this.pvLine[5],
+              score     = this.game.my_color === "black" ? this.pvLine[11] : -parseFloat(this.pvLine[11]),
+              visits    = stop[1],
+              playouts  = stop[3],
+              // nps    = stop[4]; // unused
+              name      = `Winrate: ${winrate}%, Score: ${score}, Visits: ${visits}, Playouts: ${playouts}`,
+              pv = this.PvToGtp(this.pvLine[13]);
 
         return this.createMessage(name, pv);
     }
