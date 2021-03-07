@@ -134,7 +134,7 @@ class Pv {
               winrate =stop[2],
               playouts = stop [3]
               scoreLead = stop[4],
-              //ScoreStdev = stop[5], // unused
+              ScoreStdev = stop[5],
               PDA = stop[7] ? ` PDA: ${stop[7]}` : "",
               pv = this.PvToGtp(stop[8]),
               name = `Visits: ${visits}, Winrate: ${winrate}, Playouts: ${playouts}, Score: ${scoreLead}${PDA}`;
