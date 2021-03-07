@@ -132,11 +132,12 @@ class Pv {
     getPvChatKata(stop) {
         const visits = stop[1],
               winrate =stop[2],
-              scoreLead = stop[3],
-              //ScoreStdev = stop[4], // unused
-              PDA = stop[6] ? ` PDA: ${stop[6]}` : "",
-              pv = this.PvToGtp(stop[7]),
-              name = `Visits: ${visits}, Winrate: ${winrate}, Score: ${scoreLead}${PDA}`;
+              playouts = stop [3]
+              scoreLead = stop[4],
+              //ScoreStdev = stop[5], // unused
+              PDA = stop[7] ? ` PDA: ${stop[7]}` : "",
+              pv = this.PvToGtp(stop[8]),
+              name = `Visits: ${visits}, Winrate: ${winrate}, Playouts: ${playouts}, Score: ${scoreLead}${PDA}`;
 
         return this.createMessage(name, pv);
     }
