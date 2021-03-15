@@ -193,6 +193,10 @@ class Game {
                 }));
                 return;
             }
+            if (move.move_number !== this.state.moves.length + 1) {
+                console.error(`Received move for ${this.game_id} but move_number is invalid. ${move.move_number} !== ${this.state.moves.length + 1}`);
+                return;
+            }
             try {
                 this.state.moves.push(move.move);
 
