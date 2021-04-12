@@ -6,7 +6,7 @@ class Pv {
     constructor(setting, game) {
         this.game = game;
         this.lookingForPv = false;
-        if (setting === 'SAI') { 
+        if (['SAI', 'SAI18'].includes(setting)) { 
             this.saiScore = false;
         } else {
             this.startupCheckSai = () => {}; // disable sai check for other bots.
@@ -111,10 +111,11 @@ class Pv {
     getPvChatSAI18(stop) {
         const winrate   = this.pvLine[5],
               score     = this.game.my_color === "black" ? this.pvLine[11] : -parseFloat(this.pvLine[11]),
+              scoreLine = this.saiScore ? `, Score: ${score}` : "",
               visits    = stop[1],
               playouts  = stop[3],
               // nps    = stop[4]; // unused
-              name      = `Winrate: ${winrate}%, Score: ${score}, Visits: ${visits}, Playouts: ${playouts}`,
+              name      = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`,
               pv = this.PvToGtp(this.pvLine[13]);
 
         return this.createMessage(name, pv);
