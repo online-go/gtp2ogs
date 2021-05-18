@@ -20,7 +20,7 @@
     "gtp2ogs": "gtp2ogs.js"
   },
   "dependencies": {
-    "socket.io-client": "^2.4.0",
+    "socket.io-client": "^4.1.2",
     "split2": "^3.1.0",
     "tracer": "^1.1.2",
     "yargs": "^15.4.0"
