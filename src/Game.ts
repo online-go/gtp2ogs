@@ -1,16 +1,33 @@
-// vim: tw=120 softtabstop=4 shiftwidth=4
+import { decodeMoves, move2gtpvertex } from "./gtp";
 
-const { decodeMoves } = require("./gtp/decodeMoves");
-const { move2gtpvertex } = require("./gtp/move2gtpvertex");
-
-const { Bot } = require('./bot');
-const { console } = require('./console');
+import { Bot } from "./Bot";
+import { trace } from "./trace";
 let config;
 
 /**********/
 /** Game **/
 /**********/
-class Game {
+export class Game {
+    static moves_processing: any;
+    static corr_moves_processing: any;
+
+    connect_timeout: ReturnType<typeof setTimeout>;
+
+    conn: any;
+    game_id: any;
+    socket: any;
+    state: any;
+    opponent_evenodd: any;
+    greeted: any;
+    connected: any;
+    bot: any;
+    bot_failures: any;
+    my_color: any;
+    corr_move_pending: any;
+    processing: any;
+    handicap_moves: any;
+    disconnect_timeout: any;
+
     constructor(conn, game_id, myConfig) {
         this.conn = conn;
         config = myConfig;
@@ -25,7 +42,7 @@ class Game {
         this.my_color = null;
         this.corr_move_pending = false;
         this.processing = false;
-        this.handicap_moves = [];    // Handicap stones waiting to be sent when bot is playing black.
+        this.handicap_moves = []; // Handicap stones waiting to be sent when bot is playing black.
         this.disconnect_timeout = null;
 
         this.scheduleRetry = this.scheduleRetry.bind(this);
@@ -39,7 +56,9 @@ class Game {
         });
 
         this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
-            if (!this.connected) return;
+            if (!this.connected) {
+                return;
+            }
 
             // Server has an issue that gamedata.clock.now will exist inconsistently. This will cause
             // false positives for gamedata changes. We never use the field, so just remove it.
@@ -50,7 +69,7 @@ class Game {
 
             // Only call game over handler if game really just finished.
             // For some reason we get connected to already finished games once in a while ...
-            if (gamedata.phase === 'finished') {
+            if (gamedata.phase === "finished") {
                 if (this.state && gamedata.phase !== this.state.phase) {
                     this.state = gamedata;
                     this.gameOver();
@@ -58,12 +77,14 @@ class Game {
                 return; // ignore -- it's either handled by gameOver or we already handled it before.
             }
 
-            const gamedataChanged = this.state ? (JSON.stringify(this.state) !== JSON.stringify(gamedata)) : false;
+            const gamedataChanged = this.state
+                ? JSON.stringify(this.state) !== JSON.stringify(gamedata)
+                : false;
             // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing, unless
             // bot is not running.
             //
             if (this.state && !gamedataChanged && this.bot && !this.bot.dead) {
-                this.log('Ignoring gamedata that matches current state');
+                this.log("Ignoring gamedata that matches current state");
                 return;
             }
 
@@ -75,8 +96,8 @@ class Game {
             if (this.bot && gamedataChanged) {
                 this.log("Killing bot because of gamedata change after bot was started");
                 if (config.DEBUG) {
-                    this.log('Previously seen gamedata:', this.state);
-                    this.log('New gamedata:', gamedata);
+                    this.log("Previously seen gamedata:", this.state);
+                    this.log("New gamedata:", gamedata);
                 }
                 this.ensureBotKilled();
 
@@ -120,37 +141,58 @@ class Game {
 
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
-            if (this.state.phase === "play" && this.state.clock.current_player === this.conn.bot_id) {
-                if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
+            if (
+                this.state.phase === "play" &&
+                this.state.clock.current_player === this.conn.bot_id
+            ) {
+                if (
+                    config.corrqueue &&
+                    this.state.time_control.speed === "correspondence" &&
+                    Game.corr_moves_processing > 0
+                ) {
                     this.corr_move_pending = true;
                 } else {
-                    if (!this.bot || !this.processing) this.makeMove(this.state.moves.length);
+                    if (!this.bot || !this.processing) {
+                        this.makeMove(this.state.moves.length);
+                    }
                 }
             }
         });
 
         this.socket.on(`game/${game_id}/clock`, (clock) => {
-            if (!this.connected) return;
+            if (!this.connected) {
+                return;
+            }
 
             // Server has an issue that gamedata.clock.now will exist inconsistently. This will cause
             // false positives for gamedata changes. We never use the field, so just remove it.
             delete clock.now;
 
-            if (config.DEBUG) this.log("clock:", JSON.stringify(clock));
+            if (config.DEBUG) {
+                this.log("clock:", JSON.stringify(clock));
+            }
 
-            if ((config.nopause && !config.nopauseranked && !config.nopauseunranked)
-                || (config.nopauseranked && this.state.ranked)
-                || (config.nopauseunranked && !this.state.ranked)) {
-                if (clock.pause && clock.pause.paused && clock.pause.pause_control
-                    && !clock.pause.pause_control["stone-removal"] && !clock.pause.pause_control.system
-                    && !clock.pause.pause_control.weekend
-                    && !clock.pause.pause_control[`vacation-${clock.black_player_id}`]
-                    && !clock.pause.pause_control[`vacation-${clock.white_player_id}`]) {
-
+            if (
+                (config.nopause && !config.nopauseranked && !config.nopauseunranked) ||
+                (config.nopauseranked && this.state.ranked) ||
+                (config.nopauseunranked && !this.state.ranked)
+            ) {
+                if (
+                    clock.pause &&
+                    clock.pause.paused &&
+                    clock.pause.pause_control &&
+                    !clock.pause.pause_control["stone-removal"] &&
+                    !clock.pause.pause_control.system &&
+                    !clock.pause.pause_control.weekend &&
+                    !clock.pause.pause_control[`vacation-${clock.black_player_id}`] &&
+                    !clock.pause.pause_control[`vacation-${clock.white_player_id}`]
+                ) {
                     const forRankedUnranked = getForRankedUnranked(this.state.ranked);
                     const noPauseMg = `Pausing not allowed ${forRankedUnranked}. Resuming game.`;
                     this.sendChat(noPauseMg);
-                    if (config.DEBUG) this.log(noPauseMg);
+                    if (config.DEBUG) {
+                        this.log(noPauseMg);
+                    }
                     this.resumeGame();
                 }
             }
@@ -159,7 +201,9 @@ class Game {
             if (this.state) {
                 this.state.clock = clock;
             } else {
-                if (config.DEBUG) console.error(`Received clock for ${this.game_id} but no state exists`);
+                if (config.DEBUG) {
+                    trace.error(`Received clock for ${this.game_id} but no state exists`);
+                }
             }
 
             // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
@@ -168,33 +212,48 @@ class Game {
             //}
         });
         this.socket.on(`game/${game_id}/phase`, (phase) => {
-            if (!this.connected) return;
-            this.log("phase", phase)
+            if (!this.connected) {
+                return;
+            }
+            this.log("phase", phase);
 
             //this.log("Move: ", move);
             if (this.state) {
                 this.state.phase = phase;
             } else {
-                if (config.DEBUG) console.error(`Received phase for ${this.game_id} but no state exists`);
+                if (config.DEBUG) {
+                    trace.error(`Received phase for ${this.game_id} but no state exists`);
+                }
             }
 
-            if (phase === 'play') {
+            if (phase === "play") {
                 this.scheduleRetry();
             }
         });
         this.socket.on(`game/${game_id}/move`, (move) => {
-            if (!this.connected) return;
-            if (config.DEBUG) this.log(`game/${game_id}/move:`, move);
+            if (!this.connected) {
+                return;
+            }
+            if (config.DEBUG) {
+                this.log(`game/${game_id}/move:`, move);
+            }
             if (!this.state) {
-                console.error(`Received move for ${this.game_id} but no state exists`);
+                trace.error(`Received move for ${this.game_id} but no state exists`);
                 // Try to connect again, to get the server to send the gamedata over.
-                this.socket.emit('game/connect', this.auth({
-                    'game_id': game_id
-                }));
+                this.socket.emit(
+                    "game/connect",
+                    this.auth({
+                        game_id: game_id,
+                    }),
+                );
                 return;
             }
             if (move.move_number !== this.state.moves.length + 1) {
-                console.error(`Received move for ${this.game_id} but move_number is invalid. ${move.move_number} !== ${this.state.moves.length + 1}`);
+                trace.error(
+                    `Received move for ${this.game_id} but move_number is invalid. ${
+                        move.move_number
+                    } !== ${this.state.moves.length + 1}`,
+                );
                 return;
             }
             try {
@@ -202,11 +261,14 @@ class Game {
 
                 // Log opponent moves
                 const m = decodeMoves(move.move, this.state.width, this.state.height)[0];
-                if ((this.my_color === "white" && (this.state.handicap) >= this.state.moves.length) ||
-                    move.move_number % 2 === this.opponent_evenodd)
+                if (
+                    (this.my_color === "white" && this.state.handicap >= this.state.moves.length) ||
+                    move.move_number % 2 === this.opponent_evenodd
+                ) {
                     this.log(`Got     ${move2gtpvertex(m, this.state.width, this.state.height)}`);
+                }
             } catch (e) {
-                console.error(e)
+                trace.error(e);
             }
 
             // If we're in free placement handicap phase of the game, make extra moves or wait it out, as appropriate.
@@ -217,16 +279,33 @@ class Game {
             //
             // If handicap >= 1, we don't check for opponent_evenodd to move on our turns until handicaps are finished.
             //
-            if (this.state.free_handicap_placement && (this.state.handicap) > this.state.moves.length) {
+            if (
+                this.state.free_handicap_placement &&
+                this.state.handicap > this.state.moves.length
+            ) {
                 if (this.my_color === "black") {
                     // If we are black, we make extra moves.
                     //
                     this.makeMove(this.state.moves.length);
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
-                    if (config.DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
-                    if (this.state.moves.length === 1) { // remind once, avoid spamming the reminder
+                    if (this.bot) {
+                        this.bot.sendMove(
+                            decodeMoves(move.move, this.state.width, this.state.height)[0],
+                            this.state.width,
+                            this.state.height,
+                            this.my_color === "black" ? "white" : "black",
+                        );
+                    }
+                    if (config.DEBUG) {
+                        this.log(
+                            "Waiting for opponent to finish",
+                            this.state.handicap - this.state.moves.length,
+                            "more handicap moves",
+                        );
+                    }
+                    if (this.state.moves.length === 1) {
+                        // remind once, avoid spamming the reminder
                         this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
                     }
                 }
@@ -235,24 +314,38 @@ class Game {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        this.bot.sendMove(decodeMoves(move.move, this.state.width, this.state.height)[0], this.state.width, this.state.height, this.my_color === "black" ? "white" : "black");
+                        this.bot.sendMove(
+                            decodeMoves(move.move, this.state.width, this.state.height)[0],
+                            this.state.width,
+                            this.state.height,
+                            this.my_color === "black" ? "white" : "black",
+                        );
                     }
 
-                    if (config.corrqueue && this.state.time_control.speed === "correspondence" && Game.corr_moves_processing > 0) {
+                    if (
+                        config.corrqueue &&
+                        this.state.time_control.speed === "correspondence" &&
+                        Game.corr_moves_processing > 0
+                    ) {
                         this.corr_move_pending = true;
                     } else {
                         this.makeMove(this.state.moves.length);
                     }
                     //this.makeMove(this.state.moves.length);
                 } else {
-                    if (config.DEBUG) this.log("Ignoring our own move", move.move_number);
+                    if (config.DEBUG) {
+                        this.log("Ignoring our own move", move.move_number);
+                    }
                 }
             }
         });
 
-        this.socket.emit('game/connect', this.auth({
-            'game_id': game_id
-        }));
+        this.socket.emit(
+            "game/connect",
+            this.auth({
+                game_id: game_id,
+            }),
+        );
 
         this.connect_timeout = setTimeout(() => {
             if (!this.state) {
@@ -290,10 +383,15 @@ class Game {
             // This bot keeps on failing, give up on the game.
             this.log("Bot has crashed too many times, resigning game");
             this.sendChat("Bot has crashed too many times, resigning game"); // we notify user of this in ingame chat
-            this.socket.emit('game/resign', this.auth({
-                'game_id': this.game_id
-            }));
-            if (eb) eb();
+            this.socket.emit(
+                "game/resign",
+                this.auth({
+                    game_id: this.game_id,
+                }),
+            );
+            if (eb) {
+                eb();
+            }
             return;
         }
 
@@ -301,17 +399,25 @@ class Game {
         this.log(`Starting new bot process [${this.bot.pid()}]`);
 
         this.log("State loading for new bot");
-        this.bot.loadState(this.state, () => {
-            if (config.DEBUG) {
-                this.log("State loaded for new bot");
-            }
-            cb();
-        }, eb);
+        this.bot.loadState(
+            this.state,
+            () => {
+                if (config.DEBUG) {
+                    this.log("State loaded for new bot");
+                }
+                cb();
+            },
+            eb,
+        );
     }
 
     checkBotPersists() {
-        if (config.persist) return true;
-        if (config.persistnoncorr && this.state.time_control.speed !== "correspondence") return true;
+        if (config.persist) {
+            return true;
+        }
+        if (config.persistnoncorr && this.state.time_control.speed !== "correspondence") {
+            return true;
+        }
         return false;
     }
 
@@ -320,8 +426,9 @@ class Game {
     getBotMoves(cmd, cb, eb) {
         ++Game.moves_processing;
         this.processing = true;
-        if (config.corrqueue && this.state.time_control.speed === "correspondence")
+        if (config.corrqueue && this.state.time_control.speed === "correspondence") {
             ++Game.corr_moves_processing;
+        }
 
         const doneProcessing = () => {
             this.processing = false;
@@ -334,64 +441,91 @@ class Game {
 
         let failed = false;
         const botError = (e) => {
-            if (failed) return;
+            if (failed) {
+                return;
+            }
 
             failed = true;
             doneProcessing();
             this.ensureBotKilled();
 
-            if (eb) eb(e);
+            if (eb) {
+                eb(e);
+            }
 
             this.log("Failed to start the bot, can not make a move, trying to restart");
             this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
-        }
+        };
 
         this.ensureBotStarted(() => this.getBotMoves2(cmd, cb, doneProcessing, botError), botError);
     }
 
     getBotMoves2(cmd, cb, doneProcessing, botError) {
-        if (config.DEBUG) this.bot.log("Generating move for game", this.game_id);
+        if (config.DEBUG) {
+            this.bot.log("Generating move for game", this.game_id);
+        }
         this.log(cmd);
 
-        this.bot.getMoves(cmd, this.state, (moves) => {
-            doneProcessing();
-            cb(moves)
+        this.bot.getMoves(
+            cmd,
+            this.state,
+            (moves) => {
+                doneProcessing();
+                cb(moves);
 
-            if (!this.checkBotPersists()) {
-                this.ensureBotKilled();
-            }
-
-        }, botError);
+                if (!this.checkBotPersists()) {
+                    this.ensureBotKilled();
+                }
+            },
+            botError,
+        );
     }
 
     scheduleRetry() {
         if (config.DEBUG) {
-            this.log("Unable to react correctly - re-connect to trigger action based on game state.");
+            this.log(
+                "Unable to react correctly - re-connect to trigger action based on game state.",
+            );
         }
-        this.socket.emit('game/disconnect', this.auth({
-            'game_id': this.game_id,
-        }));
-        this.socket.emit('game/connect', this.auth({
-            'game_id': this.game_id,
-        }));
+        this.socket.emit(
+            "game/disconnect",
+            this.auth({
+                game_id: this.game_id,
+            }),
+        );
+        this.socket.emit(
+            "game/connect",
+            this.auth({
+                game_id: this.game_id,
+            }),
+        );
     }
     // Send move to server.
-    // 
+    //
     uploadMove(move) {
         if (move.resign) {
             this.log("Resigning");
-            this.socket.emit('game/resign', this.auth({
-                'game_id': this.game_id
-            }));
+            this.socket.emit(
+                "game/resign",
+                this.auth({
+                    game_id: this.game_id,
+                }),
+            );
             return;
         }
 
-        if (config.DEBUG) this.log(`Playing ${move.text}`, move);
-        else this.log(`Playing ${move.text}`);
-        this.socket.emit('game/move', this.auth({
-            'game_id': this.game_id,
-            'move': encodeMove(move)
-        }));
+        if (config.DEBUG) {
+            this.log(`Playing ${move.text}`, move);
+        } else {
+            this.log(`Playing ${move.text}`);
+        }
+        this.socket.emit(
+            "game/move",
+            this.auth({
+                game_id: this.game_id,
+                move: encodeMove(move),
+            }),
+        );
     }
 
     // Get move from bot and upload to server.
@@ -399,27 +533,48 @@ class Game {
     // (we get all of them at once with place_free_handicap).
     //
     makeMove(move_number) {
-        if (config.DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!==", move_number, "?"); }
-        if (!this.state || this.state.moves.length !== move_number)
+        if (config.DEBUG && this.state) {
+            this.log(
+                "makeMove",
+                move_number,
+                "is",
+                this.state.moves.length,
+                "!==",
+                move_number,
+                "?",
+            );
+        }
+        if (!this.state || this.state.moves.length !== move_number) {
             return;
-        if (this.state.phase !== 'play')
+        }
+        if (this.state.phase !== "play") {
             return;
-        if (!this.greeted && this.state.moves.length < (2 + this.state.handicap)) {
+        }
+        if (!this.greeted && this.state.moves.length < 2 + this.state.handicap) {
             this.greeted = true;
             if (config.greeting) {
-                this.sendChat(config.greeting, "discussion");
+                this.sendChat(config.greeting, undefined, "discussion");
             }
             if (config.greetingbotcommand) {
-                const pretty_bot_command = config.bot_command.join(' ');
-                this.sendChat(`You are playing against: ${pretty_bot_command}`, "discussion");
+                const pretty_bot_command = config.bot_command.join(" ");
+                this.sendChat(
+                    `You are playing against: ${pretty_bot_command}`,
+                    undefined,
+                    "discussion",
+                );
             }
         }
 
-        const doing_handicap = (this.state.free_handicap_placement && this.state.handicap > 1 &&
-            this.state.moves.length < this.state.handicap);
+        const doing_handicap =
+            this.state.free_handicap_placement &&
+            this.state.handicap > 1 &&
+            this.state.moves.length < this.state.handicap;
 
-        if (!doing_handicap) {  // Regular genmove ...
-            const sendTheMove = (moves) => { this.uploadMove(moves[0]); };
+        if (!doing_handicap) {
+            // Regular genmove ...
+            const sendTheMove = (moves) => {
+                this.uploadMove(moves[0]);
+            };
             this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
             return;
         }
@@ -433,16 +588,20 @@ class Game {
         const warnAndResign = (msg) => {
             this.log(msg);
             this.ensureBotKilled();
-            this.uploadMove({ 'resign': true });
-        }
+            this.uploadMove({ resign: true });
+        };
 
         // Get handicap stones from bot and return first one.
         const storeMoves = (moves) => {
-            if (moves.length !== this.state.handicap) {  // Sanity check
-                warnAndResign("place_free_handicap returned wrong number of handicap stones, resigning.");
+            if (moves.length !== this.state.handicap) {
+                // Sanity check
+                warnAndResign(
+                    "place_free_handicap returned wrong number of handicap stones, resigning.",
+                );
                 return;
             }
-            for (const i in moves) {                     // Sanity check
+            for (const i in moves) {
+                // Sanity check
                 if (moves[i].pass || moves[i].x < 0) {
                     warnAndResign("place_free_handicap returned a pass, resigning.");
                     return;
@@ -452,7 +611,11 @@ class Game {
             this.uploadMove(this.handicap_moves.shift());
         };
 
-        this.getBotMoves(`place_free_handicap ${this.state.handicap}`, storeMoves, this.scheduleRetry);
+        this.getBotMoves(
+            `place_free_handicap ${this.state.handicap}`,
+            storeMoves,
+            this.scheduleRetry,
+        );
     }
 
     auth(obj) {
@@ -473,111 +636,151 @@ class Game {
 
         this.log("Disconnecting from game.");
         this.connected = false;
-        this.socket.emit('game/disconnect', this.auth({
-            'game_id': this.game_id
-        }));
+        this.socket.emit(
+            "game/disconnect",
+            this.auth({
+                game_id: this.game_id,
+            }),
+        );
     }
     getRes(result) {
         const m = this.state.outcome.match(/(.*) points/);
-        if (m) return m[1];
+        if (m) {
+            return m[1];
+        }
 
-        if (result === 'Resignation') return 'R';
-        if (result === 'Cancellation') return 'Can';
-        if (result === 'Timeout') return 'Time';
+        if (result === "Resignation") {
+            return "R";
+        }
+        if (result === "Cancellation") {
+            return "Can";
+        }
+        if (result === "Timeout") {
+            return "Time";
+        }
     }
     gameOver() {
-        if (config.farewell && this.state)
-            this.sendChat(config.farewell, "discussion");
+        if (config.farewell && this.state) {
+            this.sendChat(config.farewell, undefined, "discussion");
+        }
 
         // Display result
-        const col = (this.state.winner === this.state.players.black.id ? 'B' : 'W');
+        const col = this.state.winner === this.state.players.black.id ? "B" : "W";
         const result = `${this.state.outcome[0].toUpperCase()}${this.state.outcome.substr(1)}`;
         const res = this.getRes(result);
-        const winloss = (this.state.winner === this.conn.bot_id ? "W" : "L");
+        const winloss = this.state.winner === this.conn.bot_id ? "W" : "L";
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         // Notify bot of end of game and send score
         if (config.farewellscore && this.bot) {
             const sendTheScore = (score) => {
-                if (score) this.log(`Bot thinks the score was ${score}`);
-                if (res !== "R" && res !== "Time" && res !== "Can") this.sendChat(`Final score was ${score} according to the bot.`, "discussion");
-                if (this.bot) { // only kill the bot after it processed this
+                if (score) {
+                    this.log(`Bot thinks the score was ${score}`);
+                }
+                if (res !== "R" && res !== "Time" && res !== "Can") {
+                    this.sendChat(
+                        `Final score was ${score} according to the bot.`,
+                        undefined,
+                        "discussion",
+                    );
+                }
+                if (this.bot) {
+                    // only kill the bot after it processed this
                     this.bot.gameOver();
                     this.ensureBotKilled();
                 }
             };
-            this.bot.command('final_score', sendTheScore, null, true); // allow bot to process end of game
+            this.bot.command("final_score", sendTheScore, null, true); // allow bot to process end of game
         } else if (this.bot) {
             this.bot.gameOver();
             this.ensureBotKilled();
         }
 
         if (!this.disconnect_timeout) {
-            if (config.DEBUG) console.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
-            this.disconnect_timeout = setTimeout(() => { this.conn.disconnectFromGame(this.game_id); }, 1000);
+            if (config.DEBUG) {
+                trace.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
+            }
+            this.disconnect_timeout = setTimeout(() => {
+                this.conn.disconnectFromGame(this.game_id);
+            }, 1000);
         }
     }
     header() {
-        if (!this.state) return;
+        if (!this.state) {
+            return;
+        }
         const botIsBlack = this.state.players.black.username === config.username;
-        const color = botIsBlack ? '  B' : 'W  ';  // Playing black / white against ...
+        const color = botIsBlack ? "  B" : "W  "; // Playing black / white against ...
         const player = botIsBlack ? this.state.players.white : this.state.players.black;
-        const handi = (this.state && this.state.handicap ? `H${this.state.handicap}` : "  ");
+        const handi = this.state && this.state.handicap ? `H${this.state.handicap}` : "  ";
         return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handi}`;
 
         // XXX doesn't work, getting garbage ranks here ...
         // const rank = rankToString(player.rank);
     }
-    log() {
-        const moves = (this.state && this.state.moves ? this.state.moves.length : 0);
-        const movestr = (moves ? `Move ${moves}` : "        ");
+    log(...args: any[]) {
+        const moves = this.state && this.state.moves ? this.state.moves.length : 0;
+        const movestr = moves ? `Move ${moves}` : "        ";
         const arr = [`[Game ${this.game_id}]  ${movestr} `];
 
-        for (let i = 0; i < arguments.length; ++i) {
-            arr.push(arguments[i]);
+        for (let i = 0; i < args.length; ++i) {
+            arr.push(args[i]);
         }
-        console.log.apply(null, arr);
+        trace.log.apply(null, arr);
     }
-    sendChat(str, move_number, type = "discussion") {
-        if (!this.connected) return;
+    sendChat(str: string, move_number?: number, type = "discussion") {
+        if (!this.connected) {
+            return;
+        }
 
-        this.socket.emit('game/chat', this.auth({
-            'game_id': this.game_id,
-            'player_id': this.conn.user_id,
-            'body': str,
-            'move_number': move_number,
-            'type': type,
-            'username': config.username
-        }));
+        this.socket.emit(
+            "game/chat",
+            this.auth({
+                game_id: this.game_id,
+                player_id: this.conn.user_id,
+                body: str,
+                move_number: move_number,
+                type: type,
+                username: config.username,
+            }),
+        );
     }
     resumeGame() {
-        this.socket.emit('game/resume', this.auth({
-            'game_id': this.game_id,
-            'player_id': this.conn.bot_id
-        }));
+        this.socket.emit(
+            "game/resume",
+            this.auth({
+                game_id: this.game_id,
+                player_id: this.conn.bot_id,
+            }),
+        );
     }
     getOpponent() {
-        const player = (this.state.players.white.id === this.conn.bot_id ?
-            this.state.players.black : this.state.players.white);
+        const player =
+            this.state.players.white.id === this.conn.bot_id
+                ? this.state.players.black
+                : this.state.players.white;
         return player;
     }
 }
 
 function num2char(num) {
-    if (num === -1) return ".";
+    if (num === -1) {
+        return ".";
+    }
     return "abcdefghijklmnopqrstuvwxyz"[num];
 }
 function encodeMove(move) {
-    if (move['x'] === -1)
+    if (move["x"] === -1) {
         return "..";
-    return num2char(move['x']) + num2char(move['y']);
+    }
+    return num2char(move["x"]) + num2char(move["y"]);
 }
 function getForRankedUnranked(rankedStatus) {
-    if (rankedStatus) return "for ranked games";
+    if (rankedStatus) {
+        return "for ranked games";
+    }
     return "for unranked games";
 }
 
 Game.moves_processing = 0;
 Game.corr_moves_processing = 0;
-
-exports.Game = Game;

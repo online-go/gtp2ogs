@@ -1,0 +1,34 @@
+{
+    "compileOnSave": true,
+    "buildOnSave": true,
+    "compilerOptions": {
+        "outDir": "build",
+        "target": "es2021",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "removeComments": false,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "lib": ["es2021"],
+        "baseUrl": ".",
+        "paths": {
+            "*": ["*", "src/*"]
+        },
+
+        "forceConsistentCasingInFileNames": true,
+
+        "noImplicitAny": false,
+        "noImplicitReturns": false,
+        "noImplicitThis": false,
+        "strictBindCallApply": false,
+        "strictFunctionTypes": false,
+        "strictNullChecks": false,
+        "strictPropertyInitialization": false,
+        "noUnusedLocals": false,
+
+        "sourceMap": true,
+        "inlineSources": true
+    },
+    "exclude": ["node_modules"],
+    "include": ["./src/**/*.ts"]
+}

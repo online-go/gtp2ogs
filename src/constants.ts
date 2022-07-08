@@ -1,4 +1,4 @@
-const droppedOptions = [
+export const droppedOptions = [
     [["botid", "bot", "id"], "username"],
     [["mingamesplayed", "mingamesplayedranked", "mingamesplayedunranked"], undefined],
     [["fakerank"], undefined],
@@ -8,7 +8,7 @@ const droppedOptions = [
     [["maxunrankedhandicap"], "maxhandicapunranked"],
     [["maxtotalgames"], "maxconnectedgames"],
     [["maxactivegames"], "maxconnectedgamesperuser"],
-    [["maxmaintime"],  getBLCString("maxmaintime", "")],
+    [["maxmaintime"], getBLCString("maxmaintime", "")],
     [["maxmaintimeranked"], getBLCString("maxmaintime", "ranked")],
     [["maxmaintimeunranked"], getBLCString("maxmaintime", "unranked")],
     [["minmaintime"], getBLCString("minmaintime", "")],
@@ -20,7 +20,7 @@ const droppedOptions = [
     [["minperiodtime"], getBLCString("minperiodtime", "")],
     [["minperiodtimeranked"], getBLCString("minperiodtime", "ranked")],
     [["minperiodtimeunranked"], getBLCString("minperiodtime", "unranked")],
-    [["maxperiods"],  getBLCString("maxperiods", "")],
+    [["maxperiods"], getBLCString("maxperiods", "")],
     [["maxperiodsranked"], getBLCString("maxperiods", "ranked")],
     [["maxperiodsunranked"], getBLCString("maxperiods", "unranked")],
     [["minperiods"], getBLCString("minperiods", "")],
@@ -32,8 +32,17 @@ const droppedOptions = [
     [["boardsize"], "boardsizes"],
     [["boardsizeranked"], "boardsizesranked"],
     [["boardsizeunranked"], "boardsizesunranked"],
-    [["boardsizewidths", "boardsizewidthsranked", "boardsizewidthsunranked",
-        "boardsizeheights", "boardsizeheightsranked", "boardsizeheightsunranked"], "boardsizes"],
+    [
+        [
+            "boardsizewidths",
+            "boardsizewidthsranked",
+            "boardsizewidthsunranked",
+            "boardsizeheights",
+            "boardsizeheightsranked",
+            "boardsizeheightsunranked",
+        ],
+        "boardsizes",
+    ],
     [["komi"], "komis"],
     [["komiranked"], "komisranked"],
     [["komiunranked"], "komisunranked"],
@@ -42,22 +51,22 @@ const droppedOptions = [
     [["speedunranked"], "speedsunranked"],
     [["timecontrol"], "timecontrols"],
     [["timecontrolranked"], "timecontrolsranked"],
-    [["timecontrolunranked"], "timecontrolsunranked"]
+    [["timecontrolunranked"], "timecontrolsunranked"],
 ];
 
-const ogsPvAIs = ["LeelaZero", "Sai", "Sai18", "KataGo", "PhoenixGo", "Leela"];
+export const ogsPvAIs = ["LeelaZero", "Sai", "Sai18", "KataGo", "PhoenixGo", "Leela"];
 
-const rootOptionsDefaults = {
-    host: 'online-go.com',
+export const rootOptionsDefaults = {
+    host: "online-go.com",
     maxconnectedgames: 20,
     maxconnectedgamesperuser: 3,
     port: 443,
-    rejectnewmsg: 'Currently, this bot is not accepting games, try again later',
+    rejectnewmsg: "Currently, this bot is not accepting games, try again later",
     startupbuffer: 5,
     timeout: 0,
 };
 
-const rankedUnrankedOptions = [
+export const rankedUnrankedOptions = [
     { name: "bans" },
     { name: "boardsizes", default: "9,13,19" },
     { name: "komis", default: "automatic" },
@@ -89,11 +98,11 @@ const rankedUnrankedOptions = [
     { name: "maxperiodscorr", default: 10 },
     { name: "maxperiodtimeblitz", default: 10 }, // 10 seconds
     { name: "maxperiodtimelive", default: 120 }, // 2 minutes
-    { name: "maxperiodtimecorr", default: 259200 } // 3 days
+    { name: "maxperiodtimecorr", default: 259200 }, // 3 days
 ];
 
-function getBLCString(optionName, rankedUnranked) {
+export const config: { [key: string]: any } = {};
+
+function getBLCString(optionName: string, rankedUnranked: string): string {
     return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} and/or --${optionName}corr${rankedUnranked}`;
 }
-
-module.exports = { droppedOptions, ogsPvAIs, rootOptionsDefaults, rankedUnrankedOptions };
