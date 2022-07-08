@@ -337,13 +337,6 @@ class Connection {
             return { reject: true, msg };
         }
 
-        // OGS enforces rules to be chinese regardless of user's choice.
-        if (!notification.rules.includes("chinese")) {
-            err(`Unhandled rules: ${notification.rules}.`);
-            const msg = `Games against bots on OGS can only be chinese rules.`;
-            return { reject: true, msg };
-        }
-
         return { reject: false }; // OK !
 
     }
