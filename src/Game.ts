@@ -572,8 +572,26 @@ export class Game {
 
         if (!doing_handicap) {
             // Regular genmove ...
+            const move_start = Date.now();
             const sendTheMove = (moves) => {
-                this.uploadMove(moves[0]);
+                const move_end = Date.now();
+                const move_time = move_end - move_start;
+                if (config.min_move_time && move_time < config.min_move_time) {
+                    trace.info(
+                        "Min move time was ",
+                        config.min_move_time,
+                        "ms and we only took ",
+                        move_time,
+                        "ms. Waiting ",
+                        config.min_move_time - move_time,
+                        "ms before sending move",
+                    );
+                    setTimeout(() => {
+                        this.uploadMove(moves[0]);
+                    }, config.min_move_time - move_time);
+                } else {
+                    this.uploadMove(moves[0]);
+                }
             };
             this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
             return;

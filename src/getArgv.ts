@@ -12,6 +12,10 @@ export function getArgv() {
         .describe("username", "Specify the username of the bot, for example GnuGo")
         .describe("apikey", "Specify the API key for the bot")
         .describe(
+            "minMoveTime",
+            "Specify the minimum move time in milliseconds. Bots that move faster than this will have an artificial delay added before submitting the move to slow the game down.",
+        )
+        .describe(
             "greeting",
             "Greeting message to appear in chat at first move (ex: Hello, have a nice game)",
         )

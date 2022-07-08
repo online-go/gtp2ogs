@@ -20,6 +20,8 @@ export function updateFromArgv(argv) {
         `\ngtp2ogs version 6.0.1\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n${debugStatus}`,
     );
 
+    config.min_move_time = argv.minMoveTime || 0;
+
     // B - test unsupported argv
 
     testBotCommandArgvIsValid(argv);
