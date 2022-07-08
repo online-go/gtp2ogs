@@ -29,7 +29,7 @@
     "eslint": "^7.4.0",
     "markdownlint": "^0.20.2",
     "markdownlint-cli": "^0.22.0",
-    "mocha": "^8.2.1",
+    "mocha": "^10.0.0",
     "nyc": "^15.0.1",
     "sinon": "^9.0.2"
   },
