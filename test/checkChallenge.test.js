@@ -11,6 +11,7 @@ const { FakeSocket } = require('./fake_modules/FakeSocket');
 const { getNewConfigUncached } = require('./module_loading/getNewConfigUncached');
 const { getNewConnectionUncached } = require('./module_loading/getNewConnectionUncached');
 const { stub_console } = require('./utils/stub_console');
+const { trace } = require('../dist/trace');
 
 let config;
 let connection;
@@ -45,6 +46,8 @@ describe('Challenges', () => {
       const notification = base_challenge();
       
       const result = conn.checkChallenge(notification);
+      trace.error('result: ' + JSON.stringify(result));
+      console.error('result: ' + JSON.stringify(result));
       
       assert.deepEqual(result, ({ reject: false }));
     });

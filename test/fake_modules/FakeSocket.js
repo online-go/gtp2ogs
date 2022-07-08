@@ -1,4 +1,4 @@
-const { console } = require('../../console');
+const { trace } = require('../../dist/trace');
 
 // Fake a socket.io-client
 class FakeSocket {
@@ -8,17 +8,17 @@ class FakeSocket {
     }
 
     on(ev, cb) {
-        console.log('client subscribe: ' + ev)
+        trace.log('client subscribe: ' + ev)
         this.on_callbacks[ev] = cb;
     }
 
     inject(ev, data) {
-        console.log('client on(' + ev + ')')
+        trace.log('client on(' + ev + ')')
         this.on_callbacks[ev](data);
     }
 
     emit(ev, data, cb) {
-        console.log('client: ' + ev);
+        trace.log('client: ' + ev);
 
         let ret;
         if (this.emit_callbacks[ev]) {
@@ -30,7 +30,7 @@ class FakeSocket {
     }
 
     on_emit(ev, cb) {
-        console.log('server subscribe: ' + ev);
+        trace.log('server subscribe: ' + ev);
         this.emit_callbacks[ev] = cb;
     }
 }

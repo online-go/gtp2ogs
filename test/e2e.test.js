@@ -15,8 +15,8 @@ const { getNewConfig } = require('./module_loading/getNewConfig');
 const { stub_console } = require('./utils/stub_console');
 
 const config = getNewConfig();
-const connection = require('../connection');
-const { console } = require('../console');
+const connection = require('../dist/Connection');
+const { trace } = require('../dist/trace');
 
 config.timeout = 0;
 config.corrqueue = false;
@@ -316,7 +316,7 @@ describe('Periodic actions', () => {
 
 describe("Retrying bot failures", () => {
     function setupStubs() {
-        sinon.stub(console, 'log');
+        sinon.stub(trace, 'log');
         const fake_clock = sinon.useFakeTimers();
 
         const fake_socket = new FakeSocket();

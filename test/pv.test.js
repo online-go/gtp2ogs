@@ -12,9 +12,9 @@ const { FakeSocket } = require('./fake_modules/FakeSocket');
 const { getNewConfig } = require('./module_loading/getNewConfig');
 const { stub_console } = require('./utils/stub_console');
 
-const { Bot } = require('../bot');
+const { Bot } = require('../dist/Bot');
 const config = getNewConfig();
-const connection = require('../connection');
+const connection = require('../dist/Connection');
 
 afterEach(function () {
     sinon.restore();

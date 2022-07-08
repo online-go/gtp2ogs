@@ -3,7 +3,7 @@ import * as http from "http";
 import * as https from "https";
 import * as querystring from "querystring";
 
-import { trace } from "trace";
+import { trace } from "./trace";
 import { getArgNamesGRU, getArgNamesUnderscoredGRU, getRankedUnranked } from "./options";
 
 let config;
@@ -441,6 +441,7 @@ export class Connection {
     //
     checkChallengeUser(notification) {
         for (const uid of ["username", "id"]) {
+            console.log(config.banned_users);
             if (config.banned_users[notification.user[uid]]) {
                 return getRejectBanned(notification.user.username, "");
             }

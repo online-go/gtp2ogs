@@ -12,7 +12,7 @@ config.updateFromArgv(argv);
 
 process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
-import { trace } from "trace";
+import { trace } from "./trace";
 import { io } from "socket.io-client";
 import { Connection } from "./Connection";
 

@@ -1,4 +1,4 @@
-const { console } = require('../../console');
+const { trace } = require('../../dist/trace');
 const stream = new require('stream');
 
 // Fake GTP child_process (spwan)
@@ -19,7 +19,7 @@ class FakeGTP {
             },
             end: () => {},
             write: (data) => {
-                console.log('STDIN: ', data.trim());
+                trace.log('STDIN: ', data.trim());
 
                 const cmd = data.trim().split(' ')[0];
                 if (this.cmd_callbacks[cmd]) {
@@ -36,7 +36,7 @@ class FakeGTP {
     }
 
     on_cmd(cmd, cb) {
-        console.log('GTP: ', cmd);
+        trace.log('GTP: ', cmd);
         this.cmd_callbacks[cmd] = cb;
     }
 

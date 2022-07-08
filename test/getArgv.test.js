@@ -6,7 +6,7 @@ const { pushArgsInProcessArgv } = require('./module_loading/pushArgsInProcessArg
 const { removeProcessArgvIndexTwoAndHigherElements } = require('./module_loading/removeProcessArgvIndexTwoAndHigherElements');
 const { stub_console } = require('./utils/stub_console');
 
-const { getArgv } = require('../getArgv');
+const { getArgv } = require('../dist/getArgv');
 
 describe('getArgv', () => {
 

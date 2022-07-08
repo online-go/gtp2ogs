@@ -1,6 +1,6 @@
 
 const assert = require('assert');
-const { Bot } = require('../bot');
+const { Bot } = require('../dist/Bot');
 const { FakeAPI } = require('./fake_modules/FakeAPI');
 const { FakeGTP } = require('./fake_modules/FakeGTP');
 const { FakeSocket } = require('./fake_modules/FakeSocket');
@@ -9,7 +9,7 @@ const https = require('https');
 const child_process = require('child_process');
 const sinon = require('sinon');
 const config = getNewConfig();
-const connection = require('../connection');
+const connection = require('../dist/Connection');
 const { stub_console } = require('./utils/stub_console');
 
 afterEach(() => sinon.restore());

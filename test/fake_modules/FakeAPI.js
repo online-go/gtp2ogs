@@ -1,4 +1,4 @@
-const { console } = require('../../console');
+const { trace } = require('../../dist/trace');
 
 // Fake http/https request 
 class FakeAPI {
@@ -13,7 +13,7 @@ class FakeAPI {
 
     request(options, cb) {
         let response = '';
-        console.log('api ' + options.path);
+        trace.log('api ' + options.path);
         if (this.callbacks[options.path]) {
             response = this.callbacks[options.path](options);
         }

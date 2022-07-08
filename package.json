@@ -52,7 +52,7 @@
     },
     "scripts": {
         "gulp": "gulp",
-        "test": "nyc mocha",
+        "test": "nyc mocha --allow-uncaught",
         "lint": "eslint \"./**/*.js\"",
         "lint:fix": "eslint --fix src/ --ext=.ts,.tsx",
         "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",

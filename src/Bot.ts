@@ -1,6 +1,6 @@
 import { trace } from "./trace";
 import { spawn } from "child_process";
-import { split2 } from "split2";
+import * as split2 from "split2";
 
 import { decodeMoves, gtpchar2num, move2gtpvertex } from "./gtp";
 import { config } from "./config";

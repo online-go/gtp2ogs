@@ -1,4 +1,4 @@
-const { rootOptionsDefaults } = require('../../constants');
+const { rootOptionsDefaults } = require('../../dist/constants');
 
 function assignConfigArguments(config) {
     config.DEBUG = true;

@@ -1,11 +1,11 @@
 const sinon = require('sinon');
 
-const { console } = require('../../console');
+const { trace } = require('../../dist/trace');
 
 function stub_console() {
-    sinon.stub(console, 'log');
-    sinon.stub(console, 'debug');
-    sinon.stub(console, 'error');
+    sinon.stub(trace, 'log');
+    sinon.stub(trace, 'debug');
+    sinon.stub(trace, 'error');
 }
 
 exports.stub_console = stub_console;
