@@ -5,7 +5,7 @@ Below is a list of all available options.
 In gtp2ogs, options need to be inputted as command-line arguments.
 
 The number of options (and of bot arguments) is free, use the
- ones you want.
+ones you want.
 
 ## DEFAULT VALUES SUMMARY
 
@@ -103,9 +103,9 @@ And due to its nature, this supports all bots.
 You may rename your bot command files and arguments to be self-explanatory,
 for example:
 
-- `saiNetwork337.gz` is shorter than `6470f77e4768bef4ef85641c04a0e3a068cf097c760b4a9c1b9c4d58b304b031.gz`
-(you may want to trim it), and clearer than `network.gz`
-- `sai-0.17.5.exe` or `sai-fb36e42.exe` is clearer than `sai.exe`.
+-   `saiNetwork337.gz` is shorter than `6470f77e4768bef4ef85641c04a0e3a068cf097c760b4a9c1b9c4d58b304b031.gz`
+    (you may want to trim it), and clearer than `network.gz`
+-   `sai-0.17.5.exe` or `sai-fb36e42.exe` is clearer than `sai.exe`.
 
 ### farewell
 
@@ -144,7 +144,7 @@ see for details [notes G](/docs/NOTES.md#g)
 
 ### debug
 
-`--debug`  Output GTP command and responses from your Go engine
+`--debug` Output GTP command and responses from your Go engine
 
 ### ogspv
 
@@ -161,12 +161,12 @@ see a live example in: <https://online-go.com/game/23008077>
 
 Supported AIs:
 
-- `LeelaZero` (<https://zero.sjeng.org/>)
-- `Sai` (<http://sai.unich.it/>)
-- `Sai18` (<http://sai.unich.it/>) with any version since 1.8.0
-- `KataGo` (<https://github.com/lightvector/KataGo>)
-- `PhoenixGo` (<https://github.com/Tencent/PhoenixGo>)
-- `Leela` (<https://sjeng.org/leela.html>)
+-   `LeelaZero` (<https://zero.sjeng.org/>)
+-   `Sai` (<http://sai.unich.it/>)
+-   `Sai18` (<http://sai.unich.it/>) with any version since 1.8.0
+-   `KataGo` (<https://github.com/lightvector/KataGo>)
+-   `PhoenixGo` (<https://github.com/Tencent/PhoenixGo>)
+-   `Leela` (<https://sjeng.org/leela.html>)
 
 for example `--ogspv LeelaZero`
 
@@ -189,7 +189,7 @@ MALKOVICH: Let him think on that for a bit, clearly BA1 kills him here.
 output to a text file.
 
 Filename can only be composed of letters (A-Z a-z), numbers (0-9), hyphens (-),
-underscores (_), spaces ( ), dots (.), any other character will be replaced with
+underscores (\_), spaces ( ), dots (.), any other character will be replaced with
 a hyphen (-).
 
 Filename argument is optional (using only `--logfile` will use default filename
@@ -205,11 +205,11 @@ will store all logfiles in `~/gtp2ogs_logs`.
 
 ### json
 
-`--json`  Send and receive GTP commands in a JSON encoded format
+`--json` Send and receive GTP commands in a JSON encoded format
 
 ### beta
 
-`--beta`  Connect to the [beta server](https://beta.online-go.com/)
+`--beta` Connect to the [beta server](https://beta.online-go.com/)
 instead of [OGS](https://online-go.com/) (changes host automatically)
 
 ### host
@@ -222,12 +222,12 @@ instead of [OGS](https://online-go.com/) (changes host automatically)
 
 ### insecure
 
-`--insecure`  Do not use ssl to connect to the ggs/rest servers
+`--insecure` Do not use ssl to connect to the ggs/rest servers
 
 ### hidden
 
 `--hidden` Hides the botname from the OGS game "Play against
- computer" bot list (but it can still accept challenges)
+computer" bot list (but it can still accept challenges)
 
 ### startupbuffer
 
@@ -240,12 +240,12 @@ available on first move (if set)
 
 ### showboard
 
-`--showboard`  Set this if bot understands the showboard
+`--showboard` Set this if bot understands the showboard
 GTP command, and if you want to display the showboard output
 
-- This breaks some bots which dont support it (ex: PhoenixGo)
-- And this makes the log much bigger, so may not be desired even
-if supported
+-   This breaks some bots which dont support it (ex: PhoenixGo)
+-   And this makes the log much bigger, so may not be desired even
+    if supported
 
 So default is disabled
 
@@ -253,7 +253,7 @@ So default is disabled
 
 The below options cannot be both used at the same time.
 
-`--persist`  Bot process remains running between moves
+`--persist` Bot process remains running between moves
 
 `--persistnoncorr` Bot process remains running between moves, except for
 correspondence games where bot is always killed
@@ -287,7 +287,13 @@ The below options cannot be both used at the same time.
 
 `--rankedonly` Only accept ranked matches
 
-`--unrankedonly`  Only accept unranked matches
+`--unrankedonly` Only accept unranked matches
+
+### minMoveTime
+
+`--minMoveTime <ms>` Waits for a minimum of milliseconds before
+submitting a move. This is to artifically slow down a bot reaction
+time.
 
 ## 2) OPTIONS TO CHECK RANKED/UNRANKED CHALLENGES
 
@@ -304,8 +310,8 @@ example:
 
 result of these bans arguments:
 
-- banned users for ranked games: A,B,X,Y
-- banned users for unranked games: A,B,Z
+-   banned users for ranked games: A,B,X,Y
+-   banned users for unranked games: A,B,Z
 
 #### bans
 
@@ -322,26 +328,26 @@ are banned from unranked games
 
 Here you can either use:
 
-- only the general option (ex: `--maxhandicap 2`), the same setting
-will be used for ranked and unranked games
+-   only the general option (ex: `--maxhandicap 2`), the same setting
+    will be used for ranked and unranked games
 
-- OR both the ranked AND the unranked option
-(ex: `--maxhandicapranked 0 --maxhandicapunranked 9`),
-and in that case, the general option will be ignored
-and instead the ranked and unranked will be used depending
-on whether the game is ranked or unranked.
+-   OR both the ranked AND the unranked option
+    (ex: `--maxhandicapranked 0 --maxhandicapunranked 9`),
+    and in that case, the general option will be ignored
+    and instead the ranked and unranked will be used depending
+    on whether the game is ranked or unranked.
 
 ### 2B1) ALLOWED GROUP
 
 For the allowed groups arguments, you can either use the value:
 
-- `all`: will allow ALL possible values
-- for text-only groups (ex: speeds ("blitz", "fischer", "white", etc.)),
-comma-separated values (without space) will allow every value inputted,
-every other value will be rejected
-- for numbers groups +/- text groups (ex: komis contain comma-separated numbers
-(5.5,6.5,7.5) or text ("automatic"), (ex: boardsizes contain only comma-separated
-numbers (9,13,19).
+-   `all`: will allow ALL possible values
+-   for text-only groups (ex: speeds ("blitz", "fischer", "white", etc.)),
+    comma-separated values (without space) will allow every value inputted,
+    every other value will be rejected
+-   for numbers groups +/- text groups (ex: komis contain comma-separated numbers
+    (5.5,6.5,7.5) or text ("automatic"), (ex: boardsizes contain only comma-separated
+    numbers (9,13,19).
 
 example: `--speeds blitz,live`
 example 2: `--speedsranked live,correspondence --speedsunranked blitz,live`
@@ -357,13 +363,13 @@ example 3: `--komis 0.5,5.5,7.5,automatic`
 
 Possible boardsize width value(s):
 
-- `all` (allows all board sizes)
-- comma separated and `:` separated values, for example
- `25` (allows 25x25), or `9,13,15:17,19` (allows
- 9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
+-   `all` (allows all board sizes)
+-   comma separated and `:` separated values, for example
+    `25` (allows 25x25), or `9,13,15:17,19` (allows
+    9x9, 13x13, 15x15, 16x16, 17x17, 19x19)
 
 note: it is possible to allow non-square boardsizes by using `all`
- (which will allow possible boardsizes)
+(which will allow possible boardsizes)
 
 see [notes B](/docs/NOTES.md#b) for details:
 
@@ -377,16 +383,16 @@ see [notes B](/docs/NOTES.md#b) for details:
 
 Possible komi value(s):
 
-- `all` (allows all komis)
-- comma separated and `:` separated values,
- for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis
- (5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis
- (-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
+-   `all` (allows all komis)
+-   comma separated and `:` separated values,
+    for example `7.5` (allows komi 7.5), or `5.5:7.5,0.5,automatic` allows komis
+    (5.5, 6.5, 7.5, 0.5, automatic), or `-2:3:0.5` (allows komis
+    (-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3).
 
 For extra komi explanations, see:
 
-- [notes C](/docs/NOTES.md#c)
-- [notes D](/docs/NOTES.md#d)
+-   [notes C](/docs/NOTES.md#c)
+-   [notes D](/docs/NOTES.md#d)
 
 #### speeds
 
@@ -400,10 +406,10 @@ accept for unranked games
 
 Possible speed value(s):
 
-- `all` (allows all speeds)
-- comma separated values, for example `blitz`, or `live, correspondence`
+-   `all` (allows all speeds)
+-   comma separated values, for example `blitz`, or `live, correspondence`
 
-Full list of possible values:  `blitz`,  `live`, `correspondence`.
+Full list of possible values: `blitz`, `live`, `correspondence`.
 
 #### timecontrols
 
@@ -417,10 +423,10 @@ games
 
 Possible timecontrol value(s):
 
-- `all` (allows all timecontrols)
-- comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
+-   `all` (allows all timecontrols)
+-   comma separated values, for example `byoyomi`, or `fischer, byoyomi, simple`
 
-Full list of possible values:  `fischer`,  `byoyomi`, `canadian`,
+Full list of possible values: `fischer`, `byoyomi`, `canadian`,
 `simple`, `absolute`, `none`.
 
 see [notes E](/docs/NOTES.md#e) for details
@@ -449,7 +455,7 @@ for example `--noautohandicap`), or single values (for example `--maxhandicap 9`
 
 #### nopause
 
-`--nopause`  Disable pausing during games
+`--nopause` Disable pausing during games
 
 `--nopauseranked` Disable pausing during ranked games
 
@@ -461,7 +467,7 @@ note: this setting has no effect on pausing DURING games, here
 we only accept or reject a match if it comes with the setting
 "Pause on week-ends" (specific to correspondence games)
 
-`--nopauseonweekends`  Do not accept matches that come with the
+`--nopauseonweekends` Do not accept matches that come with the
 option -pauses on weekends- (specific to correspondence games)
 
 `--nopauseonweekendsranked` Do not accept ranked matches that come
@@ -486,15 +492,15 @@ come with the option -pauses on weekends- (specific to correspondence games)
 
 min:
 
-`--minhandicap`  Minimum handicap to accept
+`--minhandicap` Minimum handicap to accept
 
-`--minhandicapranked`  Mininimum handicap to accept for ranked games
+`--minhandicapranked` Mininimum handicap to accept for ranked games
 
 `--minhandicapunranked` Minimum handicap to accept for unranked games
 
 max:
 
-`--maxhandicap`  Maximum handicap to accept for all games
+`--maxhandicap` Maximum handicap to accept for all games
 
 `--maxhandicapranked` Maximum handicap to accept for ranked games
 
@@ -650,7 +656,7 @@ For period times below, if timecontrol is canadian, divide the
 wanted period time for all the stones by the number of stones per period,
 
 for example max periodtime
-5 minutes / 25 stones = 5*60 /25 = maxperiodtime = 12 (seconds)
+5 minutes / 25 stones = 5\*60 /25 = maxperiodtime = 12 (seconds)
 
 min:
 
@@ -668,10 +674,10 @@ min:
 (average time per stone if timecontrol is canadian) for live games
 (default 10 , which is 10 seconds)
 
-  `--minperiodtimeliveranked` Minimum seconds per period
+`--minperiodtimeliveranked` Minimum seconds per period
 (average time per stone if timecontrol is canadian) for live ranked games
 
-  `--minperiodtimeliveunranked` Minimum seconds per period
+`--minperiodtimeliveunranked` Minimum seconds per period
 (average time per stone if timecontrol is canadian) for live unranked games
 
 `--minperiodtimecorr` Minimum seconds per period
