@@ -222,7 +222,7 @@ instead of [OGS](https://online-go.com/) (changes host automatically)
 
 ### insecure
 
-`--insecure` Do not use ssl to connect to the ggs/rest servers
+`--insecure` Do not use SSL to connect to the OGS REST servers
 
 ### hidden
 
