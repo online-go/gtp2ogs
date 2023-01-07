@@ -28,17 +28,17 @@ export class Connection {
     connected_games: { [game_id: string]: Game };
 
     socket: any;
-    games_by_player: any;
-    connected: any;
-    connect_timeout: any;
-    idle_timeout_interval: any;
-    clock_drift: any;
-    network_latency: any;
-    ping_interval: any;
+    games_by_player: { [player_id: string]: Game[] };
+    connected: boolean;
+    connect_timeout: ReturnType<typeof setTimeout>;
+    idle_timeout_interval: ReturnType<typeof setInterval>;
+    clock_drift: number;
+    network_latency: number;
+    ping_interval: ReturnType<typeof setInterval>;
     jwt: any;
-    bot_id: any;
-    corr_queue_interval: any;
-    corr_moves_processing: any;
+    bot_id: number;
+    corr_queue_interval: ReturnType<typeof setInterval>;
+    corr_moves_processing: number;
 
     constructor(io_client, myConfig) {
         config = myConfig;

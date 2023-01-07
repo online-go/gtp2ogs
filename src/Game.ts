@@ -2,6 +2,7 @@ import { decodeMoves, move2gtpvertex } from "./gtp";
 
 import { Bot } from "./Bot";
 import { trace } from "./trace";
+import type { Connection } from "./Connection";
 let config;
 
 /**********/
@@ -13,20 +14,20 @@ export class Game {
 
     connect_timeout: ReturnType<typeof setTimeout>;
 
-    conn: any;
-    game_id: any;
+    conn: Connection;
+    game_id: number;
     socket: any;
     state: any;
-    opponent_evenodd: any;
-    greeted: any;
-    connected: any;
-    bot: any;
-    bot_failures: any;
-    my_color: any;
-    corr_move_pending: any;
-    processing: any;
-    handicap_moves: any;
-    disconnect_timeout: any;
+    opponent_evenodd: null | number;
+    greeted: boolean;
+    connected: boolean;
+    bot?: Bot;
+    bot_failures: number;
+    my_color: null | string;
+    corr_move_pending: boolean;
+    processing: boolean;
+    handicap_moves: Array<string>;
+    disconnect_timeout: ReturnType<typeof setTimeout>;
 
     constructor(conn, game_id, myConfig) {
         this.conn = conn;
@@ -37,7 +38,7 @@ export class Game {
         this.opponent_evenodd = null;
         this.greeted = false;
         this.connected = true;
-        this.bot = null;
+        this.bot = undefined;
         this.bot_failures = 0;
         this.my_color = null;
         this.corr_move_pending = false;
@@ -365,7 +366,7 @@ export class Game {
                 }
             }
             this.bot.kill();
-            this.bot = null;
+            this.bot = undefined;
         }
     }
     // Start the bot.
@@ -755,7 +756,7 @@ export class Game {
             "game/chat",
             this.auth({
                 game_id: this.game_id,
-                player_id: this.conn.user_id,
+                player_id: this.conn.bot_id,
                 body: str,
                 move_number: move_number,
                 type: type,

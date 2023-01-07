@@ -21,21 +21,19 @@ export class Bot {
     conn: Connection;
     game: Game;
 
-    // TODO: these all need proper typings, these are just copy/paste from
-    // errors to get the typescript migration building
-    commands_sent: any;
-    command_callbacks: any;
-    command_error_callbacks: any;
-    firstmove: any;
-    ignore: any;
-    dead: any;
-    failed: any;
-    pv: any;
-    proc: any;
-    kgstime: any;
-    katafischer: any;
-    katatime: any;
-    json_initialized: any;
+    commands_sent: number;
+    command_callbacks: Array<cb_type>;
+    command_error_callbacks: Array<eb_type>;
+    firstmove: boolean;
+    ignore: boolean;
+    dead: boolean;
+    failed: boolean;
+    pv: Pv;
+    proc: ReturnType<typeof spawn>;
+    kgstime: boolean;
+    katafischer: boolean;
+    katatime: boolean;
+    json_initialized: boolean;
 
     constructor(conn: Connection, game: Game, cmd: string[]) {
         this.conn = conn;
@@ -150,7 +148,7 @@ export class Bot {
                     this.command_callbacks.shift();
                     const eb = this.command_error_callbacks.shift();
                     if (eb) {
-                        eb();
+                        eb(line.trim());
                     }
                     //throw new Error(`Unexpected output: ${line}`);
                 }
