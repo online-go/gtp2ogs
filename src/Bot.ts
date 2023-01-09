@@ -35,13 +35,15 @@ export class Bot {
     katafischer: boolean;
     katatime: boolean;
     json_initialized: boolean;
+    is_resign_bot: boolean;
 
-    constructor(conn: Connection, game: Game, cmd: string[]) {
+    constructor(conn: Connection, game: Game, cmd: string[], is_resign_bot: boolean = false) {
         this.conn = conn;
         this.game = game;
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.command_error_callbacks = [];
+        this.is_resign_bot = is_resign_bot;
         this.firstmove = true;
         this.ignore = false; // Ignore output from bot ?
         // Set to true when the bot process has died and needs to be restarted before it can be used again.
@@ -182,23 +184,32 @@ export class Bot {
             }
         });
     }
-    pid() {
+    pid(): number {
         if (this.proc) {
             return this.proc.pid;
         } else {
             return -1;
         }
     }
-    log(...arr: any[]) {
-        trace.log.apply(null, [`[${this.pid()}]`, ...arr]);
+    log(...arr: any[]): void {
+        trace.log.apply(null, [
+            `[${this.is_resign_bot ? "resign bot " : ""}${this.pid()}]`,
+            ...arr,
+        ]);
     }
-    error(...arr: any[]) {
-        trace.error.apply(null, [`[${this.pid()}]`, ...arr]);
+    error(...arr: any[]): void {
+        trace.error.apply(null, [
+            `[${this.is_resign_bot ? "resign bot " : ""}${this.pid()}]`,
+            ...arr,
+        ]);
     }
-    verbose(...arr: any[]) {
-        trace.verbose.apply(null, [`[${this.pid()}]`, ...arr]);
+    verbose(...arr: any[]): void {
+        trace.verbose.apply(null, [
+            `[${this.is_resign_bot ? "resign bot " : ""}${this.pid()}]`,
+            ...arr,
+        ]);
     }
-    loadClock(state) {
+    loadClock(state): void {
         /* References:
            http://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#sec:time-handling
            http://www.weddslist.com/kgs/how/kgsGtp.html

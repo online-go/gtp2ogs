@@ -202,7 +202,6 @@ export class Game {
                 }
             }
 
-            //this.log("Clock: ", JSON.stringify(clock));
             if (this.state) {
                 this.state.clock = clock;
             } else {
@@ -210,11 +209,6 @@ export class Game {
                     trace.error(`Received clock for ${this.game_id} but no state exists`);
                 }
             }
-
-            // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
-            //if (this.bot) {
-            //    this.bot.loadClock(this.state);
-            //}
         });
         this.socket.on(`game/${game_id}/phase`, (phase) => {
             if (!this.connected) {
@@ -301,9 +295,15 @@ export class Game {
                             this.state.height,
                             this.my_color === "black" ? "white" : "black",
                         );
+                        void this.resign_bot.sendMove(
+                            decodeMoves(move.move, this.state.width, this.state.height)[0],
+                            this.state.width,
+                            this.state.height,
+                            this.my_color === "black" ? "white" : "black",
+                        );
                     }
                     if (config.DEBUG) {
-                        this.log(
+                        this.verbose(
                             "Waiting for opponent to finish",
                             this.state.handicap - this.state.moves.length,
                             "more handicap moves",
@@ -320,6 +320,12 @@ export class Game {
                     //
                     if (this.bot) {
                         void this.bot.sendMove(
+                            decodeMoves(move.move, this.state.width, this.state.height)[0],
+                            this.state.width,
+                            this.state.height,
+                            this.my_color === "black" ? "white" : "black",
+                        );
+                        void this.resign_bot.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -416,10 +422,17 @@ export class Game {
         }
 
         if (config.resign_bot_command) {
-            this.resign_bot = new Bot(this.conn, this, config.resign_bot_command);
+            this.resign_bot = new Bot(
+                this.conn,
+                this,
+                config.resign_bot_command,
+                true /* is resign bot */,
+            );
 
             this.resign_bot.log(
-                `[game ${this.game_id}] Starting up resign bot: ${config.bot_command.join(" ")}`,
+                `[game ${this.game_id}] Starting up resign bot: ${config.resign_bot_command.join(
+                    " ",
+                )}`,
             );
             this.resign_bot.log(`[game ${this.game_id}] Loading state`);
             await this.resign_bot.loadState(this.state);
@@ -465,17 +478,34 @@ export class Game {
             }
             this.log(cmd);
 
-            const moves = await this.bot.getMoves(cmd, this.state);
+            const [our_moves, resign_moves] = await Promise.all([
+                this.bot.getMoves(cmd, this.state),
+                this.resign_bot?.getMoves(cmd, this.state),
+            ]);
+
+            this.verbose(
+                `Our moves: ${JSON.stringify(our_moves)}  Resign bot: ${JSON.stringify(
+                    resign_moves,
+                )}`,
+            );
+
+            const resign = resign_moves && resign_moves.length > 0 && resign_moves[0].resign;
+
+            if (resign) {
+                this.log("Our resign bot has indicated we should resign, so we are resigning");
+            }
 
             doneProcessing();
             if (!this.checkBotPersists()) {
                 this.ensureBotKilled();
             }
-            return moves;
+
+            return resign ? resign_moves : our_moves;
         } catch (e) {
             doneProcessing();
             this.ensureBotKilled();
 
+            trace.error(e);
             this.log("Failed to start the bot, can not make a move, trying to restart");
             this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
             throw e;
@@ -706,10 +736,12 @@ export class Game {
             if (this.bot) {
                 // only kill the bot after it processed this
                 this.bot.gameOver();
+                this.resign_bot?.gameOver();
                 this.ensureBotKilled();
             }
         } else if (this.bot) {
             this.bot.gameOver();
+            this.resign_bot?.gameOver();
             this.ensureBotKilled();
         }
 
@@ -736,6 +768,19 @@ export class Game {
         // const rank = rankToString(player.rank);
     }
     log(...args: any[]): void {
+        const moves = this.state && this.state.moves ? this.state.moves.length : 0;
+        const movestr = moves ? `Move ${moves}` : "        ";
+        const arr = [`[Game ${this.game_id}]  ${movestr} `];
+
+        for (let i = 0; i < args.length; ++i) {
+            arr.push(args[i]);
+        }
+        trace.log.apply(null, arr);
+    }
+    verbose(...args: any[]): void {
+        if (!config.DEBUG) {
+            return;
+        }
         const moves = this.state && this.state.moves ? this.state.moves.length : 0;
         const movestr = moves ? `Move ${moves}` : "        ";
         const arr = [`[Game ${this.game_id}]  ${movestr} `];
