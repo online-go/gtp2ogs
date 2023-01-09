@@ -1,6 +1,7 @@
 const gulp = require("gulp");
 const gulpEslint = require("gulp-eslint-new");
 var ts = require("gulp-typescript");
+var sourcemaps = require("gulp-sourcemaps");
 var tsProject = ts.createProject("tsconfig.json");
 
 const ts_sources = ["src/**/*.ts", "src/**/*.tsx", "!src/**/*.test.ts", "!src/**/*.test.tsx"];
@@ -21,10 +22,17 @@ function watch_build(done) {
     done();
 }
 
-function build() {
-    return tsProject.src().pipe(tsProject()).js.pipe(gulp.dest("dist"));
-}
+function build(done) {
+    //return tsProject.src().pipe(tsProject()).js.pipe(gulp.dest("dist"));
 
+    return tsProject
+        .src()
+        .pipe(sourcemaps.init())
+        .pipe(tsProject())
+        .pipe(sourcemaps.write("../dist"))
+        .pipe(gulp.dest("dist"))
+        .on("end", done);
+}
 
 function eslint() {
     return gulp

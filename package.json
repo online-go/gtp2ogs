@@ -1,6 +1,6 @@
 {
     "name": "gtp2ogs",
-    "version": "7.0.0-beta.1",
+    "version": "7.0.0",
     "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
     "files": [
         "dist/*"
@@ -30,6 +30,7 @@
         "mocha": "^10.0.0",
         "gulp": "^4.0.2",
         "gulp-eslint-new": "^1.4.4",
+        "gulp-sourcemaps": "^3.0.0",
         "gulp-typescript": "^6.0.0-alpha.1",
         "nyc": "^15.0.1",
         "prettier": "2.6.2",
