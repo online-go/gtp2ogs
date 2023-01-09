@@ -101,7 +101,12 @@ export const rankedUnrankedOptions = [
     { name: "maxperiodtimecorr", default: 259200 }, // 3 days
 ];
 
-export const config: { [key: string]: any } = {};
+interface Config {
+    bot_command: string[];
+    [key: string]: any;
+}
+
+export const config: Partial<Config> = {};
 
 function getBLCString(optionName: string, rankedUnranked: string): string {
     return `${optionName}blitz${rankedUnranked}, --${optionName}live${rankedUnranked} and/or --${optionName}corr${rankedUnranked}`;

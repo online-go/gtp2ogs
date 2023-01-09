@@ -17,7 +17,9 @@ export function updateFromArgv(argv) {
 
     const debugStatus = argv.debug ? "DEBUG: ON\n" : "";
     trace.log(
-        `\ngtp2ogs version 6.0.1\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n${debugStatus}`,
+        `\ngtp2ogs version ${
+            process.env.npm_package_version || "development"
+        }\n--------------------\n- For changelog or latest devel updates, please visit https://github.com/online-go/gtp2ogs/tree/devel\n${debugStatus}`,
     );
 
     config.min_move_time = argv.minMoveTime || 0;
@@ -72,6 +74,21 @@ export function updateFromArgv(argv) {
         config.hidden = true;
     }
     config.bot_command = argv._;
+
+    if (argv.resignbot) {
+        /* Our full resign bot command needs to be encapsulated in qoutes as
+         * it's a shell command to run, this splits that command into an array
+         * like we normally expect for a bot command. Note while this does handle
+         * one level of qoutes, it doesn't handle qoute escaping or any other
+         * fancy stuff, so I appologize in advance if you bump into that.
+         * Here is the place to address that though if you need it.
+         */
+        const cmd = argv.resignbot
+            .split(/'(.*?)'|"(.*?)"|\s/)
+            .filter((x: string) => x !== undefined && x !== "");
+
+        config.resign_bot_command = cmd;
+    }
 
     // 2) specific ranked/unranked options exports
 

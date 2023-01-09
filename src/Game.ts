@@ -1,5 +1,6 @@
 import { decodeMoves, move2gtpvertex } from "./gtp";
 
+import { Move } from "./types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
 import type { Connection } from "./Connection";
@@ -22,11 +23,13 @@ export class Game {
     greeted: boolean;
     connected: boolean;
     bot?: Bot;
+    resign_bot?: Bot;
     bot_failures: number;
+    resign_bot_failures: number;
     my_color: null | string;
     corr_move_pending: boolean;
     processing: boolean;
-    handicap_moves: Array<string>;
+    handicap_moves: Move[];
     disconnect_timeout: ReturnType<typeof setTimeout>;
 
     constructor(conn, game_id, myConfig) {
@@ -39,6 +42,7 @@ export class Game {
         this.greeted = false;
         this.connected = true;
         this.bot = undefined;
+        this.resign_bot = undefined;
         this.bot_failures = 0;
         this.my_color = null;
         this.corr_move_pending = false;
@@ -73,7 +77,7 @@ export class Game {
             if (gamedata.phase === "finished") {
                 if (this.state && gamedata.phase !== this.state.phase) {
                     this.state = gamedata;
-                    this.gameOver();
+                    void this.gameOver();
                 }
                 return; // ignore -- it's either handled by gameOver or we already handled it before.
             }
@@ -154,7 +158,7 @@ export class Game {
                     this.corr_move_pending = true;
                 } else {
                     if (!this.bot || !this.processing) {
-                        this.makeMove(this.state.moves.length);
+                        void this.makeMove(this.state.moves.length);
                     }
                 }
             }
@@ -287,11 +291,11 @@ export class Game {
                 if (this.my_color === "black") {
                     // If we are black, we make extra moves.
                     //
-                    this.makeMove(this.state.moves.length);
+                    void this.makeMove(this.state.moves.length);
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
                     if (this.bot) {
-                        this.bot.sendMove(
+                        void this.bot.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -315,7 +319,7 @@ export class Game {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        this.bot.sendMove(
+                        void this.bot.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -330,7 +334,7 @@ export class Game {
                     ) {
                         this.corr_move_pending = true;
                     } else {
-                        this.makeMove(this.state.moves.length);
+                        void this.makeMove(this.state.moves.length);
                     }
                     //this.makeMove(this.state.moves.length);
                 } else {
@@ -368,15 +372,24 @@ export class Game {
             this.bot.kill();
             this.bot = undefined;
         }
+        if (this.resign_bot) {
+            if (this.resign_bot.failed) {
+                this.resign_bot_failures++;
+                if (config.DEBUG) {
+                    this.log(`Observed ${this.resign_bot_failures} resign_bot failures`);
+                }
+            }
+            this.resign_bot.kill();
+            this.resign_bot = undefined;
+        }
     }
     // Start the bot.
-    ensureBotStarted(cb, eb) {
+    async ensureBotStarted(): Promise<void> {
         if (this.bot && this.bot.dead) {
             this.ensureBotKilled();
         }
 
         if (this.bot) {
-            cb();
             return;
         }
 
@@ -390,26 +403,30 @@ export class Game {
                     game_id: this.game_id,
                 }),
             );
-            if (eb) {
-                eb();
-            }
-            return;
+            throw new Error("Bot has crashed too many times, resigning game");
         }
 
         this.bot = new Bot(this.conn, this, config.bot_command);
-        this.log(`Starting new bot process [${this.bot.pid()}]`);
+        this.bot.log(`[game ${this.game_id}] Starting up bot: ${config.bot_command.join(" ")}`);
 
-        this.log("State loading for new bot");
-        this.bot.loadState(
-            this.state,
-            () => {
-                if (config.DEBUG) {
-                    this.log("State loaded for new bot");
-                }
-                cb();
-            },
-            eb,
-        );
+        this.bot.log(`[game ${this.game_id}] Loading state`);
+        await this.bot.loadState(this.state);
+        if (config.DEBUG) {
+            this.bot.log(`[game ${this.game_id}] State loaded successfully`);
+        }
+
+        if (config.resign_bot_command) {
+            this.resign_bot = new Bot(this.conn, this, config.resign_bot_command);
+
+            this.resign_bot.log(
+                `[game ${this.game_id}] Starting up resign bot: ${config.bot_command.join(" ")}`,
+            );
+            this.resign_bot.log(`[game ${this.game_id}] Loading state`);
+            await this.resign_bot.loadState(this.state);
+            if (config.DEBUG) {
+                this.resign_bot.log(`[game ${this.game_id}] State loaded successfully`);
+            }
+        }
     }
 
     checkBotPersists() {
@@ -424,7 +441,7 @@ export class Game {
 
     // Send @cmd to bot and call @cb with returned moves.
     //
-    getBotMoves(cmd, cb, eb) {
+    async getBotMoves(cmd): Promise<Move[]> {
         ++Game.moves_processing;
         this.processing = true;
         if (config.corrqueue && this.state.time_control.speed === "correspondence") {
@@ -440,49 +457,32 @@ export class Game {
             }
         };
 
-        let failed = false;
-        const botError = (e) => {
-            if (failed) {
-                return;
-            }
+        try {
+            await this.ensureBotStarted();
 
-            failed = true;
+            if (config.DEBUG) {
+                this.bot.log("Generating move for game", this.game_id);
+            }
+            this.log(cmd);
+
+            const moves = await this.bot.getMoves(cmd, this.state);
+
+            doneProcessing();
+            if (!this.checkBotPersists()) {
+                this.ensureBotKilled();
+            }
+            return moves;
+        } catch (e) {
             doneProcessing();
             this.ensureBotKilled();
 
-            if (eb) {
-                eb(e);
-            }
-
             this.log("Failed to start the bot, can not make a move, trying to restart");
             this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
-        };
-
-        this.ensureBotStarted(() => this.getBotMoves2(cmd, cb, doneProcessing, botError), botError);
-    }
-
-    getBotMoves2(cmd, cb, doneProcessing, botError) {
-        if (config.DEBUG) {
-            this.bot.log("Generating move for game", this.game_id);
+            throw e;
         }
-        this.log(cmd);
-
-        this.bot.getMoves(
-            cmd,
-            this.state,
-            (moves) => {
-                doneProcessing();
-                cb(moves);
-
-                if (!this.checkBotPersists()) {
-                    this.ensureBotKilled();
-                }
-            },
-            botError,
-        );
     }
 
-    scheduleRetry() {
+    scheduleRetry(): void {
         if (config.DEBUG) {
             this.log(
                 "Unable to react correctly - re-connect to trigger action based on game state.",
@@ -503,7 +503,7 @@ export class Game {
     }
     // Send move to server.
     //
-    uploadMove(move) {
+    uploadMove(move: Move): void {
         if (move.resign) {
             this.log("Resigning");
             this.socket.emit(
@@ -533,7 +533,7 @@ export class Game {
     // Handle handicap stones with bot as black transparently
     // (we get all of them at once with place_free_handicap).
     //
-    makeMove(move_number) {
+    async makeMove(move_number): Promise<void> {
         if (config.DEBUG && this.state) {
             this.log(
                 "makeMove",
@@ -574,7 +574,8 @@ export class Game {
         if (!doing_handicap) {
             // Regular genmove ...
             const move_start = Date.now();
-            const sendTheMove = (moves) => {
+            try {
+                const moves = await this.getBotMoves(`genmove ${this.my_color}`);
                 const move_end = Date.now();
                 const move_time = move_end - move_start;
                 if (config.min_move_time && move_time < config.min_move_time) {
@@ -593,8 +594,9 @@ export class Game {
                 } else {
                     this.uploadMove(moves[0]);
                 }
-            };
-            this.getBotMoves(`genmove ${this.my_color}`, sendTheMove, this.scheduleRetry);
+            } catch (e) {
+                this.scheduleRetry();
+            }
             return;
         }
 
@@ -611,7 +613,9 @@ export class Game {
         };
 
         // Get handicap stones from bot and return first one.
-        const storeMoves = (moves) => {
+
+        try {
+            const moves = await this.getBotMoves(`place_free_handicap ${this.state.handicap}`);
             if (moves.length !== this.state.handicap) {
                 // Sanity check
                 warnAndResign(
@@ -628,19 +632,15 @@ export class Game {
             }
             this.handicap_moves = moves;
             this.uploadMove(this.handicap_moves.shift());
-        };
-
-        this.getBotMoves(
-            `place_free_handicap ${this.state.handicap}`,
-            storeMoves,
-            this.scheduleRetry,
-        );
+        } catch (e) {
+            this.scheduleRetry();
+        }
     }
 
     auth(obj) {
         return this.conn.auth(obj);
     }
-    disconnect() {
+    disconnect(): void {
         this.conn.removeGameForPlayer(this.game_id);
 
         if (this.processing) {
@@ -662,7 +662,7 @@ export class Game {
             }),
         );
     }
-    getRes(result) {
+    getRes(result): string {
         const m = this.state.outcome.match(/(.*) points/);
         if (m) {
             return m[1];
@@ -678,7 +678,7 @@ export class Game {
             return "Time";
         }
     }
-    gameOver() {
+    async gameOver(): Promise<void> {
         if (config.farewell && this.state) {
             this.sendChat(config.farewell, undefined, "discussion");
         }
@@ -692,24 +692,22 @@ export class Game {
 
         // Notify bot of end of game and send score
         if (config.farewellscore && this.bot) {
-            const sendTheScore = (score) => {
-                if (score) {
-                    this.log(`Bot thinks the score was ${score}`);
-                }
-                if (res !== "R" && res !== "Time" && res !== "Can") {
-                    this.sendChat(
-                        `Final score was ${score} according to the bot.`,
-                        undefined,
-                        "discussion",
-                    );
-                }
-                if (this.bot) {
-                    // only kill the bot after it processed this
-                    this.bot.gameOver();
-                    this.ensureBotKilled();
-                }
-            };
-            this.bot.command("final_score", sendTheScore, null, true); // allow bot to process end of game
+            const score = await this.bot.command("final_score", true); // allow bot to process end of game
+            if (score) {
+                this.log(`Bot thinks the score was ${score}`);
+            }
+            if (res !== "R" && res !== "Time" && res !== "Can") {
+                this.sendChat(
+                    `Final score was ${score} according to the bot.`,
+                    undefined,
+                    "discussion",
+                );
+            }
+            if (this.bot) {
+                // only kill the bot after it processed this
+                this.bot.gameOver();
+                this.ensureBotKilled();
+            }
         } else if (this.bot) {
             this.bot.gameOver();
             this.ensureBotKilled();
@@ -724,7 +722,7 @@ export class Game {
             }, 1000);
         }
     }
-    header() {
+    header(): string {
         if (!this.state) {
             return;
         }
@@ -737,7 +735,7 @@ export class Game {
         // XXX doesn't work, getting garbage ranks here ...
         // const rank = rankToString(player.rank);
     }
-    log(...args: any[]) {
+    log(...args: any[]): void {
         const moves = this.state && this.state.moves ? this.state.moves.length : 0;
         const movestr = moves ? `Move ${moves}` : "        ";
         const arr = [`[Game ${this.game_id}]  ${movestr} `];
@@ -747,7 +745,7 @@ export class Game {
         }
         trace.log.apply(null, arr);
     }
-    sendChat(str: string, move_number?: number, type = "discussion") {
+    sendChat(str: string, move_number?: number, type = "discussion"): void {
         if (!this.connected) {
             return;
         }
@@ -764,7 +762,7 @@ export class Game {
             }),
         );
     }
-    resumeGame() {
+    resumeGame(): void {
         this.socket.emit(
             "game/resume",
             this.auth({
@@ -782,19 +780,19 @@ export class Game {
     }
 }
 
-function num2char(num) {
+function num2char(num: number): string {
     if (num === -1) {
         return ".";
     }
     return "abcdefghijklmnopqrstuvwxyz"[num];
 }
-function encodeMove(move) {
+function encodeMove(move: Move): string {
     if (move["x"] === -1) {
         return "..";
     }
     return num2char(move["x"]) + num2char(move["y"]);
 }
-function getForRankedUnranked(rankedStatus) {
+function getForRankedUnranked(rankedStatus: boolean): string {
     if (rankedStatus) {
         return "for ranked games";
     }

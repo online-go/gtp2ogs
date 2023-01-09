@@ -12,6 +12,10 @@ export function getArgv() {
         .describe("username", "Specify the username of the bot, for example GnuGo")
         .describe("apikey", "Specify the API key for the bot")
         .describe(
+            "resignbot",
+            "Specify an alternative bot command to run and consult for every move. If this bot at anypoint indicates that we should resign, we resign instead of playing our primary bot's move.",
+        )
+        .describe(
             "minMoveTime",
             "Specify the minimum move time in milliseconds. Bots that move faster than this will have an artificial delay added before submitting the move to slow the game down.",
         )

@@ -16,9 +16,9 @@ import { trace } from "./trace";
 import { io } from "socket.io-client";
 import { Connection } from "./Connection";
 
-process.on("uncaughtException", (er) => {
+process.on("uncaughtException", (err) => {
     console.trace("ERROR: Uncaught exception");
-    trace.error(`ERROR: ${er.stack}`);
+    trace.error(err);
     if (!conn || !conn.socket) {
         conn = getNewConnection();
     } else {

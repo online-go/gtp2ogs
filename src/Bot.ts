@@ -2,6 +2,7 @@ import { trace } from "./trace";
 import { spawn } from "child_process";
 import * as split2 from "split2";
 
+import { Move } from "./types";
 import { decodeMoves, gtpchar2num, move2gtpvertex } from "./gtp";
 import { config } from "./config";
 import { Pv } from "./Pv";
@@ -11,7 +12,7 @@ import type { Connection } from "./Connection";
 const gtpCommandEndRegex = new RegExp("(\\r?\\n){2}$");
 const gtpCommandSplitRegex = new RegExp("(\\r?\\n){2}");
 
-type cb_type = (command?: string) => void;
+type cb_type = (output?: string) => void;
 type eb_type = (err?: any) => void;
 
 /*********/
@@ -126,9 +127,9 @@ export class Bot {
                         ++i;
                     }
                     const cb = this.command_callbacks.shift();
-                    this.command_error_callbacks.shift();
+                    this.command_error_callbacks.shift(); // discard;
                     if (cb) {
-                        cb(line.substr(1).trim());
+                        cb(line.substring(1).trim());
                     }
                 } else if (line.trim()[0] === "?") {
                     this.log(line);
@@ -137,39 +138,42 @@ export class Bot {
                         this.log(lines[i]);
                     }
                     this.failed = true;
-                    this.command_callbacks.shift();
+                    this.command_callbacks.shift(); // discard;
                     const eb = this.command_error_callbacks.shift();
                     if (eb) {
-                        eb(line.substr(1).trim());
+                        eb(line.substring(1).trim());
                     }
                 } else {
-                    this.log("Unexpected output: ", line);
+                    this.error("Unexpected output: ", line);
                     this.failed = true;
-                    this.command_callbacks.shift();
+                    this.command_callbacks.shift(); // discard;
                     const eb = this.command_error_callbacks.shift();
                     if (eb) {
                         eb(line.trim());
                     }
-                    //throw new Error(`Unexpected output: ${line}`);
                 }
             }
         });
         this.proc.on("exit", (code) => {
-            if (config.DEBUG) {
-                this.log("Bot exited");
+            const unexpected = !this.dead;
+            if (unexpected) {
+                if (code) {
+                    this.log("Bot exited", code);
+                } else {
+                    this.log("Bot exited");
+                }
             }
-            this.command_callbacks.shift();
+
+            this.command_callbacks.shift(); // discard;
             this.dead = true;
             const eb = this.command_error_callbacks.shift();
-            if (eb) {
+            if (unexpected && eb) {
                 eb(code);
             }
         });
         this.proc.stdin.on("error", (code) => {
-            if (config.DEBUG) {
-                this.log("Bot stdin write error");
-            }
-            this.command_callbacks.shift();
+            this.error("Bot stdin write error", code);
+            this.command_callbacks.shift(); // discard;
             this.dead = true;
             this.failed = true;
             const eb = this.command_error_callbacks.shift();
@@ -277,15 +281,15 @@ export class Bot {
                     }
                 }
 
-                this.command(
+                void this.command(
                     `kgs-time_settings byoyomi ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.periods}`,
                 );
-                this.command(
+                void this.command(
                     `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${
                         black_time > 0 ? "0" : black_periods
                     }`,
                 );
-                this.command(
+                void this.command(
                     `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${
                         white_time > 0 ? "0" : white_periods
                     }`,
@@ -321,7 +325,7 @@ export class Bot {
                         state.clock.black_time.period_time * (black_periods - 1);
                 }
 
-                this.command(
+                void this.command(
                     `time_settings ${
                         state.time_control.main_time +
                         (state.time_control.periods - 1) * state.time_control.period_time
@@ -329,18 +333,22 @@ export class Bot {
                 );
                 // If we're in the last period, tell the bot. Otherwise pretend we're in main time.
                 if (black_timeleft <= state.clock.black_time.period_time) {
-                    this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`);
+                    void this.command(
+                        `time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`,
+                    );
                 } else {
-                    this.command(
+                    void this.command(
                         `time_left black ${Math.floor(
                             black_timeleft - state.clock.black_time.period_time,
                         )} 0`,
                     );
                 }
                 if (white_timeleft <= state.clock.white_time.period_time) {
-                    this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`);
+                    void this.command(
+                        `time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`,
+                    );
                 } else {
-                    this.command(
+                    void this.command(
                         `time_left white ${Math.floor(
                             white_timeleft - state.clock.white_time.period_time,
                         )} 0`,
@@ -365,30 +373,30 @@ export class Bot {
             }
 
             if (this.kgstime) {
-                this.command(
+                void this.command(
                     `kgs-time_settings canadian ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`,
                 );
             } else {
-                this.command(
+                void this.command(
                     `time_settings ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`,
                 );
             }
 
-            this.command(
+            void this.command(
                 `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_stones}`,
             );
-            this.command(
+            void this.command(
                 `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_stones}`,
             );
         } else if (state.time_control.system === "fischer") {
             if (this.katafischer) {
                 const black_timeleft = state.clock.black_time.thinking_time - black_offset;
                 const white_timeleft = state.clock.white_time.thinking_time - white_offset;
-                this.command(
+                void this.command(
                     `kata-time_settings fischer-capped ${state.time_control.initial_time} ${state.time_control.time_increment} ${state.time_control.max_time} -1`,
                 );
-                this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
-                this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
+                void this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
+                void this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
             } else {
                 /* Not supported by kgs-time_settings and I assume most bots.
                    A better way than absolute is to handle this with
@@ -407,13 +415,13 @@ export class Bot {
                 let white_periods = 0;
 
                 if (this.kgstime) {
-                    this.command(
+                    void this.command(
                         `kgs-time_settings canadian ${
                             state.time_control.initial_time - state.time_control.time_increment
                         } ${state.time_control.time_increment} 1`,
                     );
                 } else {
-                    this.command(
+                    void this.command(
                         `time_settings ${
                             state.time_control.initial_time - state.time_control.time_increment
                         } ${state.time_control.time_increment} 1`,
@@ -433,10 +441,10 @@ export class Bot {
                   to think all of timeleft per move.
                   But subtract the increment time above to avoid timeouts.
                */
-                this.command(
+                void this.command(
                     `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_periods}`,
                 );
-                this.command(
+                void this.command(
                     `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_periods}`,
                 );
             }
@@ -450,17 +458,17 @@ export class Bot {
             const black_timeleft = state.time_control.per_move - black_offset;
             const white_timeleft = state.time_control.per_move - white_offset;
 
-            this.command(`time_settings 0 ${state.time_control.per_move} 1`);
+            void this.command(`time_settings 0 ${state.time_control.per_move} 1`);
 
-            this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`);
-            this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`);
+            void this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`);
+            void this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`);
         } else if (state.time_control.system === "absolute") {
             const black_timeleft = state.clock.black_time.thinking_time - black_offset;
             const white_timeleft = state.clock.white_time.thinking_time - white_offset;
 
-            this.command(`time_settings ${state.time_control.total_time} 0 0`);
-            this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
-            this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
+            void this.command(`time_settings ${state.time_control.total_time} 0 0`);
+            void this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
+            void this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
         }
         /*  OGS doesn't actually send 'none' time control type
             else if (state.time_control.system === 'none') {
@@ -475,52 +483,30 @@ export class Bot {
         */
     }
 
-    loadState(state, cb, eb) {
+    async loadState(state): Promise<string> {
         if (this.dead) {
-            if (config.DEBUG) {
-                this.log("Attempting to load dead bot");
-            }
             this.failed = true;
-            if (eb) {
-                eb();
-            }
-            return;
+            this.error("Attempted to load state to a dead bot");
+            throw new Error("Attempting to load dead bot");
         }
 
-        this.command(
-            "list_commands",
-            (commands) => {
-                this.kgstime = commands.includes("kgs-time_settings");
-                this.katatime = commands.includes("kata-list_time_settings");
-                if (this.katatime) {
-                    this.command(
-                        "kata-list_time_settings",
-                        (kataTimeSettings) => {
-                            this.katafischer = kataTimeSettings.includes("fischer-capped");
-                            this.loadState2(state, cb, eb);
-                        },
-                        eb,
-                    );
-                } else {
-                    this.katafischer = false;
-                    this.loadState2(state, cb, eb);
-                }
-            },
-            eb,
-        );
-    }
-
-    loadState2(state, cb, eb) {
-        if (state.width === state.height) {
-            this.command(`boardsize ${state.width}`, () => {}, eb);
+        const commands = await this.command("list_commands");
+        this.kgstime = commands.includes("kgs-time_settings");
+        this.katatime = commands.includes("kata-list_time_settings");
+        if (this.katatime) {
+            const kataTimeSettings = await this.command("kata-list_time_settings");
+            this.katafischer = kataTimeSettings.includes("fischer-capped");
         } else {
-            this.command(`boardsize ${state.width} ${state.height}`, () => {}, eb);
+            this.katafischer = false;
         }
-        this.command("clear_board", () => {}, eb);
-        this.command(`komi ${state.komi}`, () => {}, eb);
-        //this.log(state);
 
-        //this.loadClock(state);
+        if (state.width === state.height) {
+            await this.command(`boardsize ${state.width}`);
+        } else {
+            await this.command(`boardsize ${state.width} ${state.height}`);
+        }
+        await this.command("clear_board");
+        await this.command(`komi ${state.komi}`);
 
         let have_initial_state = false;
         if (state.initial_state) {
@@ -529,17 +515,13 @@ export class Bot {
             have_initial_state = !!black.length || !!white.length;
 
             for (let i = 0; i < black.length; ++i) {
-                this.command(
+                await this.command(
                     `play black ${move2gtpvertex(black[i], state.width, state.height)}`,
-                    () => {},
-                    eb,
                 );
             }
             for (let i = 0; i < white.length; ++i) {
-                this.command(
+                await this.command(
                     `play white ${move2gtpvertex(white[i], state.width, state.height)}`,
-                    () => {},
-                    eb,
                 );
             }
         }
@@ -557,77 +539,75 @@ export class Bot {
             if (doing_handicap && handicap_moves.length < state.handicap) {
                 handicap_moves.push(move);
                 if (handicap_moves.length === state.handicap) {
-                    this.sendHandicapMoves(handicap_moves, state.width, state.height);
+                    void this.sendHandicapMoves(handicap_moves, state.width, state.height);
                 } else {
                     continue;
                 } // don't switch color.
             } else {
-                this.command(`play ${color} ${move2gtpvertex(move, state.width, state.height)}`);
+                await this.command(
+                    `play ${color} ${move2gtpvertex(move, state.width, state.height)}`,
+                );
             }
 
             color = color === "black" ? "white" : "black";
         }
         if (config.showboard) {
-            this.command("showboard", cb, eb);
-        } else {
-            cb();
+            return await this.command("showboard");
         }
+        return "";
     }
 
-    command(str: string, cb?: cb_type, eb?: eb_type, final_command?: boolean): void {
-        if (this.dead) {
-            if (config.DEBUG) {
-                this.log("Attempting to send a command to dead bot:", str);
+    command(str: string, final_command?: boolean): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            if (this.dead) {
+                this.error("Attempting to send a command to dead bot:", str);
+                this.failed = true;
+                reject(`Attempting to send a command to dead bot: ${str}`);
+                return;
             }
-            this.failed = true;
-            if (eb) {
-                eb();
-            }
-            return;
-        }
 
-        this.command_callbacks.push(cb);
-        this.command_error_callbacks.push(eb);
-        if (config.DEBUG) {
-            this.log(">>>", str);
-        }
-        try {
-            if (config.json) {
-                if (!this.json_initialized) {
-                    this.proc.stdin.write(`{"gtp_commands": [`);
-                    this.json_initialized = true;
+            this.command_callbacks.push(resolve);
+            this.command_error_callbacks.push(reject);
+            if (config.DEBUG) {
+                this.log(">>>", str);
+            }
+            try {
+                if (config.json) {
+                    if (!this.json_initialized) {
+                        this.proc.stdin.write(`{"gtp_commands": [`);
+                        this.json_initialized = true;
+                    } else {
+                        this.proc.stdin.write(",");
+                    }
+                    this.proc.stdin.write(JSON.stringify(str));
+                    if (final_command) {
+                        this.proc.stdin.write("]}");
+                        this.proc.stdin.end();
+                    }
                 } else {
-                    this.proc.stdin.write(",");
+                    this.proc.stdin.write(`${str}\r\n`);
                 }
-                this.proc.stdin.write(JSON.stringify(str));
-                if (final_command) {
-                    this.proc.stdin.write("]}");
-                    this.proc.stdin.end();
-                }
-            } else {
-                this.proc.stdin.write(`${str}\r\n`);
+            } catch (e) {
+                // I think this does not normally happen, the exception will usually be raised in the async write handler
+                // and delivered through an 'error' event.
+                //
+                this.error("Failed to send command: ", str);
+                this.error(e);
+                this.dead = true;
+                this.failed = true;
+                // Already calling the callback!
+                this.command_error_callbacks.shift();
+                reject(e);
+                return;
             }
-        } catch (e) {
-            // I think this does not normally happen, the exception will usually be raised in the async write handler
-            // and delivered through an 'error' event.
-            //
-            this.log("Failed to send command: ", str);
-            this.log(e);
-            this.dead = true;
-            this.failed = true;
-            // Already calling the callback!
-            this.command_error_callbacks.shift();
-            if (eb) {
-                eb(e);
-            }
-        }
+        });
     }
 
     // For commands like genmove, place_free_handicap ... :
     // Send @cmd to engine and call @cb with returned moves.
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
-    getMoves(cmd, state, cb, eb) {
+    async getMoves(cmd, state): Promise<Move[]> {
         // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
         // subtract that missing time from what we tell the bot.
         //
@@ -638,44 +618,38 @@ export class Bot {
         //
         this.firstmove = false;
 
-        this.command(
-            cmd,
-            (line: string) => {
-                line = typeof line === "string" ? line.toLowerCase() : null;
-                const parts = line.split(/ +/);
-                const moves = [];
+        const line = await this.command(cmd, true /* final command */);
 
-                for (let i = 0; i < parts.length; i++) {
-                    const move = parts[i];
+        const parts = line.toLowerCase().split(/ +/);
+        const moves: Move[] = [];
 
-                    let resign = move === "resign";
-                    const pass = move === "pass";
-                    let x = -1;
-                    let y = -1;
-                    if (!resign && !pass) {
-                        if (move && move[0]) {
-                            x = gtpchar2num(move[0]);
-                            y = state.height - parseInt(move.substr(1));
-                        } else {
-                            this.log(`${cmd} failed, resigning`);
-                            resign = true;
-                        }
-                    }
-                    moves.push({ x: x, y: y, text: move, resign: resign, pass: pass });
+        for (let i = 0; i < parts.length; i++) {
+            const move = parts[i];
+
+            let resign = move === "resign";
+            const pass = move === "pass";
+            let x = -1;
+            let y = -1;
+            if (!resign && !pass) {
+                if (move && move[0]) {
+                    x = gtpchar2num(move[0]);
+                    y = state.height - parseInt(move.substring(1));
+                } else {
+                    this.log(`${cmd} failed, resigning`);
+                    resign = true;
                 }
+            }
+            moves.push({ x, y, text: move, resign, pass });
+        }
 
-                cb(moves);
-            },
-            eb,
-            true /* final command */,
-        );
+        return moves;
     }
 
     kill() {
         this.log("Stopping bot");
         this.ignore = true; // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
         // "quit" needs to be sent before we toggle this.dead since command() checks the status of this.dead
-        this.command("quit");
+        void this.command("quit");
         this.dead = true;
         if (this.proc) {
             this.proc.kill();
@@ -688,18 +662,18 @@ export class Bot {
             }, 5000);
         }
     }
-    sendMove(move, width, height, color) {
+    async sendMove(move, width, height, color): Promise<void> {
         if (config.DEBUG) {
             this.log("Calling sendMove with", move2gtpvertex(move, width, height));
         }
-        this.command(`play ${color} ${move2gtpvertex(move, width, height)}`);
+        await this.command(`play ${color} ${move2gtpvertex(move, width, height)}`);
     }
-    sendHandicapMoves(moves, width, height) {
+    async sendHandicapMoves(moves, width, height): Promise<void> {
         let cmd = "set_free_handicap";
         for (let i = 0; i < moves.length; i++) {
             cmd += ` ${move2gtpvertex(moves[i], width, height)}`;
         }
-        this.command(cmd);
+        await this.command(cmd);
     }
     // Called on game over, in case you need something special.
     //
