@@ -13,7 +13,6 @@ module.exports = {
         "@typescript-eslint",
         "@typescript-eslint/tslint",
         "prettier",
-        "react-hooks",
     ],
     extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
     rules: {
@@ -125,7 +124,6 @@ module.exports = {
                 },
             },
         ],
-        "react-hooks/rules-of-hooks": "error",
         "prefer-const": [
             "error",
             {

@@ -1,6 +1,6 @@
 {
     "name": "gtp2ogs",
-    "version": "7.0.0",
+    "version": "7.1.0-beta.1",
     "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
     "files": [
         "dist/*"
@@ -13,18 +13,17 @@
         "yargs": "^15.4.0"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^5.26.0",
-        "@typescript-eslint/eslint-plugin-tslint": "^5.26.0",
-        "@typescript-eslint/parser": "^5.26.0",
-        "@types/node": "^16.11.6",
-        "eslint": "^8.16.0",
-        "eslint-config-prettier": "^8.5.0",
+        "@typescript-eslint/eslint-plugin": "^5.48.0",
+        "@typescript-eslint/eslint-plugin-tslint": "^5.48.0",
+        "@typescript-eslint/parser": "^5.48.0",
+        "@types/node": "^18.11.18",
+        "eslint": "^8.31.0",
+        "eslint-config-prettier": "^8.6.0",
         "eslint-plugin-import": "^2.26.0",
-        "eslint-plugin-jsdoc": "^39.3.1",
+        "eslint-plugin-jsdoc": "^39.6.4",
         "eslint-plugin-prefer-arrow": "^1.2.3",
-        "eslint-plugin-prettier": "^4.0.0",
-        "eslint-plugin-react-hooks": "^4.5.0",
-        "eslint-plugin-unicorn": "^42.0.0",
+        "eslint-plugin-prettier": "^4.2.1",
+        "eslint-plugin-unicorn": "^45.0.2",
         "markdownlint": "^0.26.2",
         "markdownlint-cli": "^0.32.2",
         "mocha": "^10.0.0",
@@ -33,9 +32,9 @@
         "gulp-sourcemaps": "^3.0.0",
         "gulp-typescript": "^6.0.0-alpha.1",
         "nyc": "^15.0.1",
-        "prettier": "2.6.2",
-        "prettier-eslint": "^15.0.0",
-        "typescript": "^4.7.2",
+        "prettier": "2.8.2",
+        "prettier-eslint": "^15.0.1",
+        "typescript": "^4.9.4",
         "sinon": "^9.0.2"
     },
     "scripts": {
