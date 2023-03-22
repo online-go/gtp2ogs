@@ -39,6 +39,7 @@
         "prettier": "2.8.2",
         "prettier-eslint": "^15.0.1",
         "typescript": "^5.0.2",
+        "typedoc": "^0.23.28",
         "ts-json-schema-generator": "^1.2.0",
         "sinon": "^9.0.2"
     },
@@ -49,6 +50,7 @@
         "lint:fix": "eslint --fix src/ --ext=.ts,.tsx",
         "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
         "prettier:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+        "typedoc": "typedoc src/Settings.ts",
         "markdown": "markdownlint **/*.md --ignore node_modules"
     },
     "repository": {

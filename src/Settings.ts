@@ -18,16 +18,24 @@ export interface Settings {
     bot: BotSettings;
     opening_bot?: BotSettings;
     scoring_bot?: BotSettings;
+
+    /** Minimum rank to accetp games from
+     * @default 0
+     * @minimum 0
+     * @maximum 35
+     */
+    min_rank: number;
 }
 
 /** Bot settings */
-interface BotSettings {
+export interface BotSettings {
     command: string;
 }
 
 function defaults(): Partial<Settings> {
     return {
         url: "https://online-go.com",
+        min_rank: 0,
     };
 }
 

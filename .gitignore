@@ -41,3 +41,8 @@ node_modules
 *.tgz
 *.log
 src/Settings.schema.json
+
+docs/docs
+*.json5
+Makefile
+botr
