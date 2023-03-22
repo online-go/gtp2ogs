@@ -6,6 +6,10 @@ process.title = "gtp2ogs";
 // Do this before importing anything else in case the other modules use config.
 import { getArgv } from "./getArgv";
 import { config } from "./config";
+import { load_settings_or_exit, settings } from "./Settings";
+
+load_settings_or_exit("test.json5");
+console.log(settings);
 
 const argv = getArgv();
 config.updateFromArgv(argv);

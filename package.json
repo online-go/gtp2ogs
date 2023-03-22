@@ -10,6 +10,8 @@
         "socket.io-client": "^4.1.2",
         "split2": "^3.1.0",
         "tracer": "^1.1.2",
+        "json5": "^2.2.3",
+        "jsonschema": "^1.4.1",
         "yargs": "^15.4.0"
     },
     "devDependencies": {
@@ -35,6 +37,7 @@
         "prettier": "2.8.2",
         "prettier-eslint": "^15.0.1",
         "typescript": "^5.0.2",
+        "ts-json-schema-generator": "^1.2.0",
         "sinon": "^9.0.2"
     },
     "scripts": {

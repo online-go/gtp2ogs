@@ -9,6 +9,7 @@
         "removeComments": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "resolveJsonModule": true,
         "lib": ["es2021"],
         "baseUrl": ".",
         "paths": {
