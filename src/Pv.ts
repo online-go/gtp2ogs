@@ -3,14 +3,14 @@ import { Game } from "./Game";
 
 export class Pv {
     game: Game;
-    lookingForPv: any;
-    saiScore: any;
+    lookingForPv: boolean;
+    saiScore: boolean;
     pvLine: any;
     postPvToChat: any;
     getPvChat: any;
-    PVRE: any;
-    STOPRE: any;
-    CLPV: any;
+    PVRE: RegExp;
+    STOPRE: RegExp;
+    CLPV?: RegExp;
 
     constructor(setting, game) {
         this.game = game;
