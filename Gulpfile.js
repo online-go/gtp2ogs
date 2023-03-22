@@ -53,7 +53,8 @@ function build_schema(done) {
             tsconfig: "tsconfig.json",
         })
         .createSchema("Settings");
-
+        
+    fs.mkdirSync("dist", { recursive: true });
     //fs.writeFile("src/Settings.schema.json", JSON.stringify(schema, null, 4), done);
     fs.writeFile("dist/Settings.schema.json", JSON.stringify(schema, null, 4), done);
 }
