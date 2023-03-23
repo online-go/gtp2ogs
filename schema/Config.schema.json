@@ -100,9 +100,7 @@
             },
             "required": [
                 "username",
-                "apikey",
-                "bot",
-                "min_rank"
+                "apikey"
             ],
             "additionalProperties": false,
             "description": "Bot config"

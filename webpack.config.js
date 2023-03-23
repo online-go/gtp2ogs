@@ -21,7 +21,7 @@ module.exports = (_env, _argv) => {
         mode: "development",
 
         entry: {
-            gtp2ogs: "./src/gtp2ogs.ts",
+            gtp2ogs: "./src/main.ts",
         },
         resolve: {
             modules: ["src", "schema", "node_modules"],

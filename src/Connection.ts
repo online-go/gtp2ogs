@@ -1,5 +1,6 @@
 import { post, api1 } from "./util";
 
+import { GobanSocket } from "goban/src/GobanSocket";
 import { trace } from "./trace";
 import { config } from "./config";
 import { Game } from "./Game";
@@ -22,7 +23,7 @@ export class Connection {
     notification_connect_interval: ReturnType<typeof setInterval>;
     connected_games: { [game_id: string]: Game };
 
-    socket: any;
+    socket: GobanSocket;
     games_by_player: { [player_id: string]: Game[] };
     connected: boolean;
     connect_timeout: ReturnType<typeof setTimeout>;
@@ -30,35 +31,17 @@ export class Connection {
     clock_drift: number;
     network_latency: number;
     ping_interval: ReturnType<typeof setInterval>;
-    jwt: any;
     bot_id: number;
+    bot_username: string;
     corr_queue_interval: ReturnType<typeof setInterval>;
     corr_moves_processing: number;
 
-    constructor(io_client) {
-        const prefix = (config.insecure ? `http://` : `https://`) + `${config.host}:${config.port}`;
-
-        conn_log(`Connecting to ${prefix}`);
-        const socket = (this.socket = io_client(prefix, {
-            reconection: true,
-            reconnectionDelay: 500,
-            reconnectionDelayMax: 60000,
-            transports: ["websocket"],
-        }));
+    constructor(socket: GobanSocket) {
+        this.socket = socket;
 
         this.connected_games = {};
         this.games_by_player = {}; // Keep track of connected games per player
         this.connected = false;
-
-        this.connect_timeout = setTimeout(
-            () => {
-                if (!this.connected) {
-                    trace.error(`Failed to connect to ${prefix}`);
-                    process.exit(-1);
-                }
-            },
-            /online-go.com$/.test(config.host) ? 5000 : 500,
-        );
 
         if (config.timeout) {
             this.idle_timeout_interval = setInterval(this.disconnectIdleGames.bind(this), 10000);
@@ -77,22 +60,27 @@ export class Connection {
             conn_log("Connected");
             this.ping();
 
-            socket.emit("bot/id", { id: config.username }, (obj) => {
-                this.bot_id = obj.id;
-                this.jwt = obj.jwt;
-                if (!this.bot_id) {
-                    trace.error(`ERROR: Bot account is unknown to the system: ${config.username}`);
-                    process.exit();
-                }
-                conn_log("Bot is username: ", config.username);
-                conn_log("Bot is user id: ", this.bot_id);
-                socket.emit("authenticate", this.auth({}));
-                socket.emit("notification/connect", this.auth({}), (x) => {
-                    conn_log(x);
-                });
-                socket.emit("bot/connect", this.auth({}));
-                socket.emit("bot/hidden", !!config.hidden);
-            });
+            socket.send(
+                "authenticate",
+                {
+                    jwt: "",
+                    bot_username: config.username,
+                    bot_apikey: config.apikey,
+                },
+                (obj) => {
+                    this.bot_id = obj?.id;
+                    this.bot_username = obj?.username;
+                    if (!this.bot_id) {
+                        trace.error(
+                            `ERROR: Bot account is unknown to the system: ${config.username}`,
+                        );
+                        process.exit();
+                    }
+                    conn_log("Bot is username: ", obj?.username);
+                    conn_log("Bot is user id: ", this.bot_id);
+                    socket.send("bot/hidden", !!config.hidden);
+                },
+            );
         });
 
         if (config.corrqueue) {
@@ -117,20 +105,6 @@ export class Connection {
             }, 1000);
         }
 
-        this.notification_connect_interval = setInterval(() => {
-            /* if we're sitting there bored, make sure we don't have any move
-            / notifications that got lost in the shuffle... and maybe someday
-            /  we'll get it figured out how this happens in the first place. */
-            if (Game.moves_processing === 0) {
-                socket.emit("notification/connect", this.auth({}), (x) => {
-                    conn_log(x);
-                });
-            }
-        }, 10000);
-        socket.on("event", (data) => {
-            //this.verbose(data);
-            trace.debug(data);
-        });
         socket.on("disconnect", () => {
             this.connected = false;
 
@@ -203,15 +177,6 @@ export class Connection {
             // Set up the game so it can listen for events.
             this.connectToGame(gamedata.id);
         });
-    }
-    auth(obj) {
-        obj.apikey = config.apikey;
-        obj.bot_id = this.bot_id;
-        obj.player_id = this.bot_id;
-        if (this.jwt) {
-            obj.jwt = this.jwt;
-        }
-        return obj;
     }
     connectToGame(game_id) {
         if (game_id in this.connected_games) {
@@ -289,7 +254,7 @@ export class Connection {
         }
     }
     deleteNotification(notification) {
-        this.socket.emit(
+        this.socket.send(
             "notification/delete",
             this.auth({ notification_id: notification.id }),
             () => {
@@ -302,7 +267,7 @@ export class Connection {
             this.disconnectFromGame(game_id);
         }
         if (this.socket) {
-            this.socket.emit("notification/connect", this.auth({}), (x) => {
+            this.socket.send("notification/connect", this.auth({}), (x) => {
                 conn_log(x);
             });
         }
@@ -384,7 +349,7 @@ export class Connection {
         return this.games_by_player[player].length;
     }
     ping() {
-        this.socket.emit("net/ping", { client: new Date().getTime() });
+        this.socket.send("net/ping", { client: new Date().getTime() });
     }
     handlePong(data) {
         const now = Date.now();
@@ -399,10 +364,10 @@ export class Connection {
         clearInterval(this.corr_queue_interval);
     }
     hide() {
-        this.socket.emit("bot/hidden", true);
+        this.socket.send("bot/hidden", true);
     }
     unhide() {
-        this.socket.emit("bot/hidden", false);
+        this.socket.send("bot/hidden", false);
     }
 }
 

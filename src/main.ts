@@ -1,34 +1,29 @@
 #!/usr/bin/env node
+import { WebSocket } from "ws";
+global.WebSocket = WebSocket;
 
-import * as JSON5 from "json5";
 import * as fs from "fs";
-import { Validator } from "jsonschema";
-import { Config, defaults, set_config } from "./config";
+import * as JSON5 from "json5";
 import * as ConfigSchema from "../schema/Config.schema.json";
+import { trace } from "trace";
+import { Validator } from "jsonschema";
+import { Config, defaults, set_config, config } from "./config";
+import { Connection } from "./Connection";
+import { GobanSocket } from "goban/src/GobanSocket";
+import * as yargs from "yargs";
 
 load_config_or_exit("test.json5");
 
+void yargs(process.argv.slice(2))
+    .describe("url", "URL of the OGS server to connect to, defaults to https://online-go.com")
+    .parse();
+
+trace.info(yargs.argv);
+
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
-import { trace } from "./trace";
-import { io } from "socket.io-client";
-import { Connection } from "./Connection";
-
-process.on("uncaughtException", (err) => {
-    console.trace("ERROR: Uncaught exception");
-    trace.error(err);
-    if (!conn || !conn.socket) {
-        conn = getNewConnection();
-    } else {
-        //conn.connection_reset();
-    }
-});
-
-let conn = getNewConnection();
-
-function getNewConnection() {
-    return new Connection(io);
-}
+const socket = new GobanSocket(config.url);
+new Connection(socket);
 
 export function load_config_or_exit(filename: string) {
     /* eslint-disable-next-line @typescript-eslint/no-var-requires */

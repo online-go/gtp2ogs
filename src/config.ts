@@ -11,7 +11,7 @@ export interface Config {
     /** API key for the bot. */
     apikey: string;
     /** Config for how to run your bot */
-    bot: BotConfig;
+    bot?: BotConfig;
     opening_bot?: BotConfig;
     resign_bot?: BotConfig;
 
@@ -22,7 +22,7 @@ export interface Config {
      * @minimum 0
      * @maximum 35
      */
-    min_rank: number;
+    min_rank?: number;
 
     greeting?: string;
     farewell?: string;
@@ -58,15 +58,17 @@ export interface BotConfig {
     command: string;
 }
 
-export function defaults(): Partial<Config> {
+export function defaults(): Config {
     return {
+        username: "",
+        apikey: "",
         url: "https://online-go.com",
         min_rank: 0,
     };
 }
 
-export let config: Config;
+export const config: Config = defaults();
 
 export function set_config(new_config: Config) {
-    config = new_config;
+    Object.assign(config, new_config);
 }
