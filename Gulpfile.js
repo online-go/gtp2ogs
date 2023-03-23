@@ -1,23 +1,25 @@
 const gulp = require("gulp");
 const gulpEslint = require("gulp-eslint-new");
-var ts = require("gulp-typescript");
-var sourcemaps = require("gulp-sourcemaps");
-var tsProject = ts.createProject("tsconfig.json");
+//var ts = require("gulp-typescript");
+//var sourcemaps = require("gulp-sourcemaps");
+//var tsProject = ts.createProject("tsconfig.json");
+const spawn = require("child_process").spawn;
 const tsj = require("ts-json-schema-generator");
 const fs = require("fs");
 
 const ts_sources = ["src/**/*.ts", "src/**/*.tsx", "!src/**/*.test.ts", "!src/**/*.test.tsx"];
-const schema_sources = ["src/Settings.ts"];
+const schema_sources = ["src/config.ts"];
 
 gulp.task("watch_eslint", watch_eslint);
-gulp.task("watch_build", watch_build);
+//gulp.task("watch_build", watch_build);
 gulp.task("watch_schema", watch_schema);
 gulp.task("eslint", eslint);
-gulp.task("build", build);
+//gulp.task("build", build);
+gulp.task("background_webpack", background_webpack);
 gulp.task("schema", build_schema);
 gulp.task(
     "default",
-    gulp.series("schema", gulp.parallel("watch_eslint", "watch_schema", "watch_build")),
+    gulp.series("schema", gulp.parallel("watch_eslint", "watch_schema", "background_webpack")),
 );
 
 function watch_eslint(done) {
@@ -30,10 +32,12 @@ function watch_schema(done) {
     done();
 }
 
+/*
 function watch_build(done) {
     gulp.watch(ts_sources, { ignoreInitial: false }, build);
     done();
 }
+
 
 function build(done) {
     return tsProject
@@ -44,19 +48,31 @@ function build(done) {
         .pipe(gulp.dest("dist"))
         .on("end", done);
 }
+*/
+
+function background_webpack(done) {
+    function spawn_webpack() {
+        let env = process.env;
+        let webpack = spawn("npm", ["run", "webpack-watch"], { stdio: "inherit", shell: true });
+
+        webpack.on("exit", spawn_webpack);
+    }
+    spawn_webpack();
+
+    done();
+}
 
 function build_schema(done) {
     const schema = tsj
         .createGenerator({
-            path: "src/Settings.ts",
-            type: "Settings",
+            path: "src/config.ts",
+            type: "Config",
             tsconfig: "tsconfig.json",
         })
-        .createSchema("Settings");
+        .createSchema("Config");
         
-    fs.mkdirSync("dist", { recursive: true });
-    //fs.writeFile("src/Settings.schema.json", JSON.stringify(schema, null, 4), done);
-    fs.writeFile("dist/Settings.schema.json", JSON.stringify(schema, null, 4), done);
+    //fs.mkdirSync("dist", { recursive: true });
+    fs.writeFile("schema/Config.schema.json", JSON.stringify(schema, null, 4), done);
 }
 function eslint() {
     return gulp

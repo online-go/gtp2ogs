@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import * as split2 from "split2";
 
 import { Move } from "./types";
-import { decodeMoves, gtpchar2num, move2gtpvertex } from "./gtp";
+import { decodeMoves } from "goban/src/GoMath";
 import { config } from "./config";
 import { Pv } from "./Pv";
 import type { Game } from "./Game";
@@ -689,4 +689,25 @@ export class Bot {
     // Called on game over, in case you need something special.
     //
     gameOver() {}
+}
+
+export function gtpchar2num(ch: string): number {
+    if (ch === "." || !ch) {
+        return -1;
+    }
+    return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
+}
+
+export function move2gtpvertex(move, width: number, height: number): string {
+    if (move.x < 0) {
+        return "pass";
+    }
+    return num2gtpchar(move["x"]) + (height - move["y"]);
+}
+
+function num2gtpchar(num: number): string {
+    if (num === -1) {
+        return ".";
+    }
+    return "abcdefghjklmnopqrstuvwxyz"[num];
 }

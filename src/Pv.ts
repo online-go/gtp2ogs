@@ -1,6 +1,8 @@
-import { char2num, gtpchar2num, num2char } from "./gtp";
+import { char2num, num2char } from "goban/src/GoMath";
+import { gtpchar2num } from "./Bot";
 import { Game } from "./Game";
 
+/** Utility class to work with Principle Variations (PV) */
 export class Pv {
     game: Game;
     lookingForPv: boolean;

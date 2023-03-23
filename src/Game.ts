@@ -1,4 +1,5 @@
-import { decodeMoves, move2gtpvertex } from "./gtp";
+import { decodeMoves } from "goban/src/GoMath";
+import { move2gtpvertex } from "./util";
 
 import { Move } from "./types";
 import { Bot } from "./Bot";

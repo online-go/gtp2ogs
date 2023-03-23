@@ -1,19 +1,14 @@
 #!/usr/bin/env node
 
-// Remove api key from command line ASAP.
-process.title = "gtp2ogs";
+import * as JSON5 from "json5";
+import * as fs from "fs";
+import { Validator } from "jsonschema";
+import { Config, defaults, set_config } from "./config";
+import * as ConfigSchema from "../schema/Config.schema.json";
 
-// Do this before importing anything else in case the other modules use config.
-import { getArgv } from "./getArgv";
-import { config } from "./config";
-import { load_settings_or_exit /*, settings */ } from "./Settings";
+load_config_or_exit("test.json5");
 
-load_settings_or_exit("test.json5");
-
-const argv = getArgv();
-config.updateFromArgv(argv);
-
-process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
+//process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
 import { trace } from "./trace";
 import { io } from "socket.io-client";
@@ -32,5 +27,30 @@ process.on("uncaughtException", (err) => {
 let conn = getNewConnection();
 
 function getNewConnection() {
-    return new Connection(io, config);
+    return new Connection(io);
+}
+
+export function load_config_or_exit(filename: string) {
+    /* eslint-disable-next-line @typescript-eslint/no-var-requires */
+    const contents = fs.readFileSync(filename, "utf8");
+    const raw = JSON5.parse(contents);
+    const with_defaults = { ...defaults(), ...raw };
+    const validator = new Validator();
+    const result = validator.validate(with_defaults, ConfigSchema);
+
+    if (!result.valid) {
+        console.error(``);
+        console.error(``);
+        console.error(`Invalid config file: ${filename}`);
+
+        for (const error of result.errors) {
+            console.error(`\t ${error.toString()}`);
+        }
+        console.error(``);
+        console.error(``);
+
+        process.exit(1);
+    }
+
+    set_config(with_defaults as Config);
 }

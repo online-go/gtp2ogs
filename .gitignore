@@ -46,3 +46,4 @@ docs/docs
 *.json5
 Makefile
 botr
+archive

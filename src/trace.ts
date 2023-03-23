@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as tracer from "tracer";
-import { config } from "./constants";
+import { config } from "./config";
 
 const console_fmt =
     "{{timestamp}} {{title}} " +

@@ -1,0 +1,124 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/Config",
+    "definitions": {
+        "Config": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to connect to, defaults to online-go.com",
+                    "default": "https://online-go.com"
+                },
+                "username": {
+                    "type": "string",
+                    "description": "Bot username"
+                },
+                "apikey": {
+                    "type": "string",
+                    "description": "API key for the bot."
+                },
+                "bot": {
+                    "$ref": "#/definitions/BotConfig",
+                    "description": "Config for how to run your bot"
+                },
+                "opening_bot": {
+                    "$ref": "#/definitions/BotConfig"
+                },
+                "resign_bot": {
+                    "$ref": "#/definitions/BotConfig"
+                },
+                "log_file": {
+                    "type": "string"
+                },
+                "min_rank": {
+                    "type": "number",
+                    "description": "Minimum rank to accept games from",
+                    "default": 0,
+                    "minimum": 0,
+                    "maximum": 35
+                },
+                "greeting": {
+                    "type": "string"
+                },
+                "farewell": {
+                    "type": "string"
+                },
+                "debug": {
+                    "type": "boolean"
+                },
+                "send_pv": {
+                    "type": "boolean"
+                },
+                "aichat": {
+                    "type": "boolean"
+                },
+                "DEBUG": {
+                    "type": "boolean"
+                },
+                "hidden": {
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "insecure": {},
+                "port": {},
+                "timeout": {},
+                "corrqueue": {},
+                "json": {
+                    "type": "boolean"
+                },
+                "logfile": {
+                    "type": "string"
+                },
+                "min_move_time": {
+                    "type": "number"
+                },
+                "noclock": {
+                    "type": "boolean"
+                },
+                "nopause": {
+                    "type": "boolean"
+                },
+                "ogspv": {
+                    "type": "boolean"
+                },
+                "resign_bot_command": {
+                    "type": "boolean"
+                },
+                "showboard": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "startupbuffer": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "username",
+                "apikey",
+                "bot",
+                "min_rank"
+            ],
+            "additionalProperties": false,
+            "description": "Bot config"
+        },
+        "BotConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "command"
+            ],
+            "additionalProperties": false,
+            "description": "Bot config"
+        }
+    }
+}
