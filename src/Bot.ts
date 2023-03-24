@@ -5,9 +5,9 @@ import * as split2 from "split2";
 import { Move } from "./types";
 import { decodeMoves } from "goban/src/GoMath";
 import { config } from "./config";
-import { Pv } from "./Pv";
-import type { Game } from "./Game";
-import type { Connection } from "./Connection";
+import type { Pv } from "./Pv";
+import { socket } from "./socket";
+import { EventEmitter } from "eventemitter3";
 
 const gtpCommandEndRegex = new RegExp("(\\r?\\n){2}$");
 const gtpCommandSplitRegex = new RegExp("(\\r?\\n){2}");
@@ -15,13 +15,12 @@ const gtpCommandSplitRegex = new RegExp("(\\r?\\n){2}");
 type cb_type = (output?: string) => void;
 type eb_type = (err?: any) => void;
 
-/*********/
-/** Bot **/
-/*********/
-export class Bot {
-    conn: Connection;
-    game: Game;
+interface Events {
+    chat: (message: string, channel: "main" | "malkovich") => void;
+}
 
+/** Manages talking to a bot via the GTP interface */
+export class Bot extends EventEmitter<Events> {
     commands_sent: number;
     command_callbacks: Array<cb_type>;
     command_error_callbacks: Array<eb_type>;
@@ -29,7 +28,7 @@ export class Bot {
     ignore: boolean;
     dead: boolean;
     failed: boolean;
-    pv: Pv;
+    pv?: Pv;
     proc: ReturnType<typeof spawn>;
     kgstime: boolean;
     katafischer: boolean;
@@ -37,9 +36,9 @@ export class Bot {
     json_initialized: boolean;
     is_resign_bot: boolean;
 
-    constructor(conn: Connection, game: Game, cmd: string[], is_resign_bot: boolean = false) {
-        this.conn = conn;
-        this.game = game;
+    constructor(cmd: string[], pv?: Pv, is_resign_bot: boolean = false) {
+        super();
+
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.command_error_callbacks = [];
@@ -51,9 +50,7 @@ export class Bot {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
-        if (config.ogspv) {
-            this.pv = new Pv(config.ogspv, game);
-        }
+        this.pv = pv;
 
         if (config.DEBUG) {
             this.log("Starting ", cmd.join(" "));
@@ -78,17 +75,14 @@ export class Bot {
             }
             this.error(`stderr: ${errline}`);
 
-            if (config.ogspv) {
-                this.pv.postPvToChat(errline);
+            if (this.pv) {
+                this.pv.processBotOutput(errline);
             }
             if (config.aichat) {
                 const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline);
                 if (chat_match) {
-                    this.game.sendChat(
-                        chat_match[2],
-                        this.game.state.moves.length + 1,
-                        chat_match[1].toLowerCase(),
-                    );
+                    const channel = /MALKOVICH:/i.test(errline) ? "malkovich" : "main";
+                    this.emit("chat", chat_match[2], channel);
                 }
             }
         });
@@ -232,7 +226,7 @@ export class Bot {
         }
 
         // clock_drift compensates for difference between server and client time, and latency.
-        const now = Date.now() - this.conn.clock_drift;
+        const now = Date.now() - socket.clock_drift;
 
         let black_offset = 0;
         let white_offset = 0;

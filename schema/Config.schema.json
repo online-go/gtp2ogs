@@ -28,6 +28,10 @@
                 "resign_bot": {
                     "$ref": "#/definitions/BotConfig"
                 },
+                "farewellscore": {
+                    "type": "boolean",
+                    "description": "Send a message saying what the bot thought the score was at the end of the game"
+                },
                 "log_file": {
                     "type": "string"
                 },

@@ -63,6 +63,16 @@ function background_webpack(done) {
 }
 
 function build_schema(done) {
+    /* We reference the schema within our config.ts file, so we need to
+     * generate a stub for it if it doesn't already exist */
+    if (!fs.existsSync("schema/Config.schema.json")) {
+        if (!fs.existsSync("schema")) {
+            fs.mkdirSync("schema");
+        }
+        console.warn("Generating stub schema/Config.schema.json");
+        fs.writeFileSync("schema/Config.schema.json", "{}");
+    }
+
     const schema = tsj
         .createGenerator({
             path: "src/config.ts",

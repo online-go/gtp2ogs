@@ -1,6 +1,7 @@
 import { char2num, num2char } from "goban/src/GoMath";
 import { gtpchar2num } from "./Bot";
 import { Game } from "./Game";
+import { config } from "./config";
 
 /** Utility class to work with Principle Variations (PV) */
 export class Pv {
@@ -14,7 +15,8 @@ export class Pv {
     STOPRE: RegExp;
     CLPV?: RegExp;
 
-    constructor(setting, game) {
+    constructor(game) {
+        const setting = config.pv_format;
         this.game = game;
         this.lookingForPv = false;
         if (["SAI", "SAI18"].includes(setting)) {
@@ -58,6 +60,12 @@ export class Pv {
         }[setting];
         this.CLPV = { PHOENIXGO: /\([^()]*\)/g }[setting];
     }
+
+    /** Scans the bot output for PVs and posts them to the chat. */
+    public processBotOutput(content: string) {
+        this.postPvToChat(content);
+    }
+
     checkPondering() {
         if (!(this.game.processing || this.lookingForPv)) {
             return true;

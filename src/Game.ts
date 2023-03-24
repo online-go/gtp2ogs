@@ -4,25 +4,26 @@ import { move2gtpvertex } from "./util";
 import { Move } from "./types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
-import type { Connection } from "./Connection";
-let config;
+import { socket } from "./socket";
+import { config } from "./config";
+import { EventEmitter } from "eventemitter3";
+import { Pv } from "./Pv";
 
-/**********/
-/** Game **/
-/**********/
-export class Game {
+interface Events {
+    disconnected: (game_id: number) => void;
+}
+
+/** This manages a single game */
+export class Game extends EventEmitter<Events> {
     static moves_processing: any;
     static corr_moves_processing: any;
 
     connect_timeout: ReturnType<typeof setTimeout>;
 
-    conn: Connection;
     game_id: number;
-    socket: any;
     state: any;
     opponent_evenodd: null | number;
     greeted: boolean;
-    connected: boolean;
     bot?: Bot;
     resign_bot?: Bot;
     bot_failures: number;
@@ -33,15 +34,12 @@ export class Game {
     handicap_moves: Move[];
     disconnect_timeout: ReturnType<typeof setTimeout>;
 
-    constructor(conn, game_id, myConfig) {
-        this.conn = conn;
-        config = myConfig;
-        this.game_id = game_id;
-        this.socket = conn.socket;
+    constructor(game_id) {
+        super();
+
         this.state = null;
         this.opponent_evenodd = null;
         this.greeted = false;
-        this.connected = true;
         this.bot = undefined;
         this.resign_bot = undefined;
         this.bot_failures = 0;
@@ -51,18 +49,16 @@ export class Game {
         this.handicap_moves = []; // Handicap stones waiting to be sent when bot is playing black.
         this.disconnect_timeout = null;
 
-        this.scheduleRetry = this.scheduleRetry.bind(this);
-
         this.log("Connecting to game.");
 
         // TODO: Command line options to allow undo?
         //
-        this.socket.on(`game/${game_id}/undo_requested`, (undodata) => {
+        socket.on(`game/${game_id}/undo_requested`, (undodata) => {
             this.log("Undo requested", JSON.stringify(undodata, null, 4));
         });
 
-        this.socket.on(`game/${game_id}/gamedata`, (gamedata) => {
-            if (!this.connected) {
+        socket.on(`game/${game_id}/gamedata`, (gamedata) => {
+            if (!socket.connected) {
                 return;
             }
 
@@ -118,10 +114,8 @@ export class Game {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
-            this.my_color = this.conn.bot_id === this.state.players.black.id ? "black" : "white";
+            this.my_color = config.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`gamedata     ${this.header()}`);
-
-            this.conn.addGameForPlayer(gamedata.game_id, this.getOpponent().id);
 
             // First handicap is just lower komi, more handicaps may change who is even or odd move #s.
             //
@@ -138,7 +132,7 @@ export class Game {
                 // If the game has a handicap, it can't be a fork and the above code works fine.
                 // If the game has no handicap, it's either a normal game or a fork. Forks may have reversed turn ordering.
                 //
-                if (this.state.clock.current_player === this.conn.bot_id) {
+                if (this.state.clock.current_player === config.bot_id) {
                     this.opponent_evenodd = this.state.moves.length % 2;
                 } else {
                     this.opponent_evenodd = (this.state.moves.length + 1) % 2;
@@ -147,10 +141,7 @@ export class Game {
 
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
-            if (
-                this.state.phase === "play" &&
-                this.state.clock.current_player === this.conn.bot_id
-            ) {
+            if (this.state.phase === "play" && this.state.clock.current_player === config.bot_id) {
                 if (
                     config.corrqueue &&
                     this.state.time_control.speed === "correspondence" &&
@@ -165,8 +156,8 @@ export class Game {
             }
         });
 
-        this.socket.on(`game/${game_id}/clock`, (clock) => {
-            if (!this.connected) {
+        socket.on(`game/${game_id}/clock`, (clock) => {
+            if (!socket.connected) {
                 return;
             }
 
@@ -211,8 +202,8 @@ export class Game {
                 }
             }
         });
-        this.socket.on(`game/${game_id}/phase`, (phase) => {
-            if (!this.connected) {
+        socket.on(`game/${game_id}/phase`, (phase) => {
+            if (!socket.connected) {
                 return;
             }
             this.log("phase", phase);
@@ -230,8 +221,8 @@ export class Game {
                 this.scheduleRetry();
             }
         });
-        this.socket.on(`game/${game_id}/move`, (move) => {
-            if (!this.connected) {
+        socket.on(`game/${game_id}/move`, (move) => {
+            if (!socket.connected) {
                 return;
             }
             if (config.DEBUG) {
@@ -240,12 +231,9 @@ export class Game {
             if (!this.state) {
                 trace.error(`Received move for ${this.game_id} but no state exists`);
                 // Try to connect again, to get the server to send the gamedata over.
-                this.socket.emit(
-                    "game/connect",
-                    this.auth({
-                        game_id: game_id,
-                    }),
-                );
+                socket.send("game/connect", {
+                    game_id: game_id,
+                });
                 return;
             }
             if (move.move_number !== this.state.moves.length + 1) {
@@ -352,12 +340,9 @@ export class Game {
             }
         });
 
-        this.socket.emit(
-            "game/connect",
-            this.auth({
-                game_id: game_id,
-            }),
-        );
+        socket.send("game/connect", {
+            game_id: game_id,
+        });
 
         this.connect_timeout = setTimeout(() => {
             if (!this.state) {
@@ -404,17 +389,22 @@ export class Game {
             // This bot keeps on failing, give up on the game.
             this.log("Bot has crashed too many times, resigning game");
             this.sendChat("Bot has crashed too many times, resigning game"); // we notify user of this in ingame chat
-            this.socket.emit(
-                "game/resign",
-                this.auth({
-                    game_id: this.game_id,
-                }),
-            );
+            socket.send("game/resign", {
+                game_id: this.game_id,
+            });
             throw new Error("Bot has crashed too many times, resigning game");
         }
 
-        this.bot = new Bot(this.conn, this, config.bot_command);
+        let pv: Pv;
+        if (config.send_pv) {
+            pv = new Pv(this);
+        }
+
+        this.bot = new Bot(config.bot_command, pv);
         this.bot.log(`[game ${this.game_id}] Starting up bot: ${config.bot_command.join(" ")}`);
+        this.bot.on("chat", (message, channel) =>
+            this.sendChat(message, this.state.moves.length + 1, channel),
+        );
 
         this.bot.log(`[game ${this.game_id}] Loading state`);
         await this.bot.loadState(this.state);
@@ -423,12 +413,7 @@ export class Game {
         }
 
         if (config.resign_bot_command) {
-            this.resign_bot = new Bot(
-                this.conn,
-                this,
-                config.resign_bot_command,
-                true /* is resign bot */,
-            );
+            this.resign_bot = new Bot(config.resign_bot_command, true /* is resign bot */);
 
             this.resign_bot.log(
                 `[game ${this.game_id}] Starting up resign bot: ${config.resign_bot_command.join(
@@ -519,30 +504,21 @@ export class Game {
                 "Unable to react correctly - re-connect to trigger action based on game state.",
             );
         }
-        this.socket.emit(
-            "game/disconnect",
-            this.auth({
-                game_id: this.game_id,
-            }),
-        );
-        this.socket.emit(
-            "game/connect",
-            this.auth({
-                game_id: this.game_id,
-            }),
-        );
+        socket.send("game/disconnect", {
+            game_id: this.game_id,
+        });
+        socket.send("game/connect", {
+            game_id: this.game_id,
+        });
     }
     // Send move to server.
     //
     uploadMove(move: Move): void {
         if (move.resign) {
             this.log("Resigning");
-            this.socket.emit(
-                "game/resign",
-                this.auth({
-                    game_id: this.game_id,
-                }),
-            );
+            socket.send("game/resign", {
+                game_id: this.game_id,
+            });
             return;
         }
 
@@ -551,13 +527,10 @@ export class Game {
         } else {
             this.log(`Playing ${move.text}`);
         }
-        this.socket.emit(
-            "game/move",
-            this.auth({
-                game_id: this.game_id,
-                move: encodeMove(move),
-            }),
-        );
+        socket.send("game/move", {
+            game_id: this.game_id,
+            move: encodeMove(move),
+        });
     }
 
     // Get move from bot and upload to server.
@@ -585,15 +558,11 @@ export class Game {
         if (!this.greeted && this.state.moves.length < 2 + this.state.handicap) {
             this.greeted = true;
             if (config.greeting) {
-                this.sendChat(config.greeting, undefined, "discussion");
+                this.sendChat(config.greeting);
             }
             if (config.greetingbotcommand) {
                 const pretty_bot_command = config.bot_command.join(" ");
-                this.sendChat(
-                    `You are playing against: ${pretty_bot_command}`,
-                    undefined,
-                    "discussion",
-                );
+                this.sendChat(`You are playing against: ${pretty_bot_command}`);
             }
         }
 
@@ -668,12 +637,7 @@ export class Game {
         }
     }
 
-    auth(obj) {
-        return this.conn.auth(obj);
-    }
     disconnect(): void {
-        this.conn.removeGameForPlayer(this.game_id);
-
         if (this.processing) {
             this.processing = false;
             --Game.moves_processing;
@@ -685,13 +649,9 @@ export class Game {
         this.ensureBotKilled();
 
         this.log("Disconnecting from game.");
-        this.connected = false;
-        this.socket.emit(
-            "game/disconnect",
-            this.auth({
-                game_id: this.game_id,
-            }),
-        );
+        socket.send("game/disconnect", {
+            game_id: this.game_id,
+        });
     }
     getRes(result): string {
         const m = this.state.outcome.match(/(.*) points/);
@@ -711,14 +671,14 @@ export class Game {
     }
     async gameOver(): Promise<void> {
         if (config.farewell && this.state) {
-            this.sendChat(config.farewell, undefined, "discussion");
+            this.sendChat(config.farewell);
         }
 
         // Display result
         const col = this.state.winner === this.state.players.black.id ? "B" : "W";
         const result = `${this.state.outcome[0].toUpperCase()}${this.state.outcome.substr(1)}`;
         const res = this.getRes(result);
-        const winloss = this.state.winner === this.conn.bot_id ? "W" : "L";
+        const winloss = this.state.winner === config.bot_id ? "W" : "L";
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
 
         // Notify bot of end of game and send score
@@ -728,11 +688,7 @@ export class Game {
                 this.log(`Bot thinks the score was ${score}`);
             }
             if (res !== "R" && res !== "Time" && res !== "Can") {
-                this.sendChat(
-                    `Final score was ${score} according to the bot.`,
-                    undefined,
-                    "discussion",
-                );
+                this.sendChat(`Final score was ${score} according to the bot.`);
             }
             if (this.bot) {
                 // only kill the bot after it processed this
@@ -751,7 +707,7 @@ export class Game {
                 trace.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
             }
             this.disconnect_timeout = setTimeout(() => {
-                this.conn.disconnectFromGame(this.game_id);
+                this.emit("disconnected", this.game_id);
             }, 1000);
         }
     }
@@ -791,35 +747,26 @@ export class Game {
         }
         trace.log.apply(null, arr);
     }
-    sendChat(str: string, move_number?: number, type = "discussion"): void {
-        if (!this.connected) {
+    sendChat(str: string, move_number?: number, channel: "main" | "malkovich" = "main"): void {
+        if (!socket.connected) {
             return;
         }
 
-        this.socket.emit(
-            "game/chat",
-            this.auth({
-                game_id: this.game_id,
-                player_id: this.conn.bot_id,
-                body: str,
-                move_number: move_number,
-                type: type,
-                username: config.username,
-            }),
-        );
+        socket.send("game/chat", {
+            game_id: this.game_id,
+            body: str,
+            move_number: move_number,
+            type: channel,
+        });
     }
     resumeGame(): void {
-        this.socket.emit(
-            "game/resume",
-            this.auth({
-                game_id: this.game_id,
-                player_id: this.conn.bot_id,
-            }),
-        );
+        socket.send("game/resume", {
+            game_id: this.game_id,
+        });
     }
     getOpponent() {
         const player =
-            this.state.players.white.id === this.conn.bot_id
+            this.state.players.white.id === config.bot_id
                 ? this.state.players.black
                 : this.state.players.white;
         return player;
