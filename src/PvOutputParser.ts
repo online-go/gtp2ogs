@@ -3,8 +3,8 @@ import { gtpchar2num } from "./Bot";
 import { Game } from "./Game";
 import { config } from "./config";
 
-/** Utility class to work with Principle Variations (PV) */
-export class Pv {
+/** Utility class to work with Principle Variations (PV) output for different bots. */
+export class PvOutputParser {
     game: Game;
     lookingForPv: boolean;
     saiScore: boolean;

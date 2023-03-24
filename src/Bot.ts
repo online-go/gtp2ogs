@@ -5,7 +5,7 @@ import * as split2 from "split2";
 import { Move } from "./types";
 import { decodeMoves } from "goban/src/GoMath";
 import { config } from "./config";
-import type { Pv } from "./Pv";
+import type { PvOutputParser } from "./PvOutputParser";
 import { socket } from "./socket";
 import { EventEmitter } from "eventemitter3";
 
@@ -28,7 +28,7 @@ export class Bot extends EventEmitter<Events> {
     ignore: boolean;
     dead: boolean;
     failed: boolean;
-    pv?: Pv;
+    pv_parser?: PvOutputParser;
     proc: ReturnType<typeof spawn>;
     kgstime: boolean;
     katafischer: boolean;
@@ -36,7 +36,7 @@ export class Bot extends EventEmitter<Events> {
     json_initialized: boolean;
     is_resign_bot: boolean;
 
-    constructor(cmd: string[], pv?: Pv, is_resign_bot: boolean = false) {
+    constructor(cmd: string[], pv_parser?: PvOutputParser, is_resign_bot: boolean = false) {
         super();
 
         this.commands_sent = 0;
@@ -50,7 +50,7 @@ export class Bot extends EventEmitter<Events> {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
-        this.pv = pv;
+        this.pv_parser = pv_parser;
 
         if (config.DEBUG) {
             this.log("Starting ", cmd.join(" "));
@@ -75,8 +75,8 @@ export class Bot extends EventEmitter<Events> {
             }
             this.error(`stderr: ${errline}`);
 
-            if (this.pv) {
-                this.pv.processBotOutput(errline);
+            if (this.pv_parser) {
+                this.pv_parser.processBotOutput(errline);
             }
             if (config.aichat) {
                 const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline);

@@ -7,7 +7,7 @@ import { trace } from "./trace";
 import { socket } from "./socket";
 import { config } from "./config";
 import { EventEmitter } from "eventemitter3";
-import { Pv } from "./Pv";
+import { PvOutputParser } from "./PvOutputParser";
 
 interface Events {
     disconnected: (game_id: number) => void;
@@ -395,12 +395,12 @@ export class Game extends EventEmitter<Events> {
             throw new Error("Bot has crashed too many times, resigning game");
         }
 
-        let pv: Pv;
+        let pv_parser: PvOutputParser;
         if (config.send_pv) {
-            pv = new Pv(this);
+            pv_parser = new PvOutputParser(this);
         }
 
-        this.bot = new Bot(config.bot_command, pv);
+        this.bot = new Bot(config.bot_command, pv_parser);
         this.bot.log(`[game ${this.game_id}] Starting up bot: ${config.bot_command.join(" ")}`);
         this.bot.on("chat", (message, channel) =>
             this.sendChat(message, this.state.moves.length + 1, channel),
@@ -413,7 +413,11 @@ export class Game extends EventEmitter<Events> {
         }
 
         if (config.resign_bot_command) {
-            this.resign_bot = new Bot(config.resign_bot_command, true /* is resign bot */);
+            this.resign_bot = new Bot(
+                config.resign_bot_command,
+                undefined,
+                true /* is resign bot */,
+            );
 
             this.resign_bot.log(
                 `[game ${this.game_id}] Starting up resign bot: ${config.resign_bot_command.join(
