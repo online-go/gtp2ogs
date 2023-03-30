@@ -32,16 +32,23 @@ const console_config = {
                 break;
         }
         if (config.verbosity > 0) {
-            data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
+            data.space = " ".repeat(Math.max(0, 20 - `${data.file}:${data.line}`.length));
         }
     },
 };
 
 if (config.logfile) {
+    const orig_console = console;
     (console_config as any).transport = (data: any) => {
-        console.log(data.output);
+        orig_console.log(data.output);
         fs.open(config.logfile, "a", parseInt("0644", 8), (_e, id) => {
-            fs.write(id, data.output + "\n", null, "utf8", () => {
+            // strip color controls characters
+            const stripped = data.output.replace(
+                // eslint-disable-next-line no-control-regex
+                /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+                "",
+            );
+            fs.write(id, stripped + "\n", null, "utf8", () => {
                 fs.close(id, () => {
                     // noop
                 });
@@ -51,6 +58,8 @@ if (config.logfile) {
 }
 
 export const trace = tracer.colorConsole(console_config);
+
+(global as any).console = trace;
 
 if (config.verbosity <= 1) {
     trace.trace = (..._args: any[]) => {
