@@ -8,7 +8,7 @@ import { trace } from "./trace";
 import { socket } from "./socket";
 import { config } from "./config";
 import { EventEmitter } from "eventemitter3";
-import { bot_pools } from "./BotPool";
+import { bot_pools } from "./pools";
 //import { PvOutputParser } from "./PvOutputParser";
 
 interface Events {

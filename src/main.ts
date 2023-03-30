@@ -7,7 +7,7 @@ import { socket } from "./socket";
 import { trace } from "./trace";
 import { post, api1 } from "./util";
 import { Game } from "./Game";
-import { bot_pools } from "./BotPool";
+import { bot_pools } from "./pools";
 
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
