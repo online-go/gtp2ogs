@@ -23,6 +23,11 @@
                     "type": "string",
                     "description": "Bot username. This is automatically set."
                 },
+                "max_pause_time": {
+                    "type": "number",
+                    "description": "Maximum time to allow the game to be paused for in seconds.",
+                    "default": 300
+                },
                 "bot": {
                     "$ref": "#/definitions/BotConfig",
                     "description": "Config for how to run your bot"
@@ -76,9 +81,6 @@
                 "noclock": {
                     "type": "boolean"
                 },
-                "nopause": {
-                    "type": "boolean"
-                },
                 "ogspv": {
                     "type": "boolean"
                 },
@@ -96,12 +98,6 @@
                     "type": "string"
                 },
                 "persistnoncorr": {
-                    "type": "boolean"
-                },
-                "nopauseranked": {
-                    "type": "boolean"
-                },
-                "nopauseunranked": {
                     "type": "boolean"
                 },
                 "persist": {

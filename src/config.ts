@@ -29,6 +29,12 @@ export interface Config {
      */
     bot_id?: number;
 
+    /** Maximum time to allow the game to be paused for in seconds.
+     * @default 300
+     * @range 300 - 172800
+     */
+    max_pause_time?: number;
+
     /** Config for how to run your bot */
     bot?: BotConfig;
     resign_bot?: BotConfig;
@@ -61,7 +67,6 @@ export interface Config {
     logfile?: string;
     min_move_time?: number;
     noclock?: boolean;
-    nopause?: boolean;
     ogspv?: boolean;
     showboard?: boolean;
     start_date?: Date;
@@ -70,8 +75,6 @@ export interface Config {
     greetingbotcommand?: string;
     persistnoncorr?: boolean;
 
-    nopauseranked?: boolean;
-    nopauseunranked?: boolean;
     persist?: boolean;
 }
 
@@ -88,6 +91,7 @@ function defaults(): Config {
         server: "https://online-go.com",
         min_rank: 0,
         verbosity: 1,
+        max_pause_time: 300,
     };
 }
 

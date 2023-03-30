@@ -35,6 +35,7 @@ export class Game extends EventEmitter<Events> {
     processing: boolean;
     handicap_moves: Move[];
     disconnect_timeout: ReturnType<typeof setTimeout>;
+    unpause_timeout?: ReturnType<typeof setTimeout>;
     log: (...arr: any[]) => any;
     trace: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
@@ -170,6 +171,8 @@ export class Game extends EventEmitter<Events> {
                     }
                 }
             }
+
+            this.checkForPause();
         });
 
         socket.on(`game/${game_id}/clock`, (clock) => {
@@ -183,34 +186,13 @@ export class Game extends EventEmitter<Events> {
 
             this.verbose("clock:", JSON.stringify(clock));
 
-            if (
-                (config.nopause && !config.nopauseranked && !config.nopauseunranked) ||
-                (config.nopauseranked && this.state.ranked) ||
-                (config.nopauseunranked && !this.state.ranked)
-            ) {
-                if (
-                    clock.pause &&
-                    clock.pause.paused &&
-                    clock.pause.pause_control &&
-                    !clock.pause.pause_control["stone-removal"] &&
-                    !clock.pause.pause_control.system &&
-                    !clock.pause.pause_control.weekend &&
-                    !clock.pause.pause_control[`vacation-${clock.black_player_id}`] &&
-                    !clock.pause.pause_control[`vacation-${clock.white_player_id}`]
-                ) {
-                    const forRankedUnranked = getForRankedUnranked(this.state.ranked);
-                    const noPauseMg = `Pausing not allowed ${forRankedUnranked}. Resuming game.`;
-                    this.sendChat(noPauseMg);
-                    this.verbose(noPauseMg);
-                    this.resumeGame();
-                }
-            }
-
             if (this.state) {
                 this.state.clock = clock;
             } else {
                 this.error(`Received clock for ${this.game_id} but no state exists`);
             }
+
+            this.checkForPause();
         });
         socket.on(`game/${game_id}/phase`, (phase) => {
             if (!socket.connected) {
@@ -683,9 +665,6 @@ export class Game extends EventEmitter<Events> {
         const player = botIsBlack ? this.state.players.white : this.state.players.black;
         const handi = this.state && this.state.handicap ? `H${this.state.handicap}` : "  ";
         return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handi}`;
-
-        // XXX doesn't work, getting garbage ranks here ...
-        // const rank = rankToString(player.rank);
     }
     sendChat(str: string, move_number?: number, channel: "main" | "malkovich" = "main"): void {
         if (!socket.connected) {
@@ -711,6 +690,39 @@ export class Game extends EventEmitter<Events> {
                 : this.state.players.white;
         return player;
     }
+
+    private checkForPause(): void {
+        const clock = this.state?.clock;
+
+        if (this.unpause_timeout) {
+            clearTimeout(this.unpause_timeout);
+            this.unpause_timeout = undefined;
+        }
+
+        if (!clock) {
+            return;
+        }
+
+        if (clock.paused_since) {
+            const pause_control = clock.pause?.pause_control || (this.state as any).pause_control;
+
+            // pause_control.paused comes from the human opponent, any other keys
+            // are system pauses, vacations, stone removal phase, weekend, etc.
+            if (Object.keys(pause_control).length === 1 && pause_control.paused) {
+                const pause_duration_s = (Date.now() - clock.paused_since) / 1000;
+                this.log("Clock has beed paused for ", pause_duration_s, " seconds");
+                if (pause_duration_s > config.max_pause_time) {
+                    this.sendChat("Maximum pause time reached, unpausing clock");
+                    this.resumeGame();
+                } else {
+                    this.unpause_timeout = setTimeout(() => {
+                        this.sendChat("Maximum pause time reached, unpausing clock");
+                        this.resumeGame();
+                    }, (config.max_pause_time - pause_duration_s) * 1000);
+                }
+            }
+        }
+    }
 }
 
 function num2char(num: number): string {
@@ -724,12 +736,6 @@ function encodeMove(move: Move): string {
         return "..";
     }
     return num2char(move["x"]) + num2char(move["y"]);
-}
-function getForRankedUnranked(rankedStatus: boolean): string {
-    if (rankedStatus) {
-        return "for ranked games";
-    }
-    return "for unranked games";
 }
 
 Game.moves_processing = 0;
