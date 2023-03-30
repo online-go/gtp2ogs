@@ -10,7 +10,7 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "resolveJsonModule": true,
-        "lib": ["es2021"],
+        "lib": ["es2021", "dom"],
         "baseUrl": ".",
         "paths": {
             "*": ["*", "src/*"]

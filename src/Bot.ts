@@ -19,8 +19,10 @@ interface Events {
     chat: (message: string, channel: "main" | "malkovich") => void;
 }
 
+let last_bot_id = 0;
 /** Manages talking to a bot via the GTP interface */
 export class Bot extends EventEmitter<Events> {
+    id: number = ++last_bot_id;
     commands_sent: number;
     command_callbacks: Array<cb_type>;
     command_error_callbacks: Array<eb_type>;
@@ -35,9 +37,25 @@ export class Bot extends EventEmitter<Events> {
     katatime: boolean;
     json_initialized: boolean;
     is_resign_bot: boolean;
+    log: (...arr: any[]) => any;
+    verbose: (...arr: any[]) => any;
+    error: (...arr: any[]) => any;
 
     constructor(cmd: string[], pv_parser?: PvOutputParser, is_resign_bot: boolean = false) {
         super();
+
+        this.log = trace.log.bind(
+            null,
+            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+        );
+        this.verbose = trace.debug.bind(
+            null,
+            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+        );
+        this.error = trace.error.bind(
+            null,
+            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+        );
 
         this.commands_sent = 0;
         this.command_callbacks = [];
@@ -52,11 +70,23 @@ export class Bot extends EventEmitter<Events> {
         this.failed = false;
         this.pv_parser = pv_parser;
 
-        if (config.DEBUG) {
+        if (config.verbosity) {
             this.log("Starting ", cmd.join(" "));
         }
         try {
             this.proc = spawn(cmd[0], cmd.slice(1));
+            this.log = trace.log.bind(
+                null,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+            );
+            this.verbose = trace.debug.bind(
+                null,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+            );
+            this.error = trace.error.bind(
+                null,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+            );
         } catch (e) {
             this.log("Failed to start the bot: ", e);
             this.ignore = true;
@@ -107,7 +137,7 @@ export class Bot extends EventEmitter<Events> {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
-            if (config.DEBUG) {
+            if (config.verbosity) {
                 this.log("<<<", stdout_buffer.trim());
             }
 
@@ -185,24 +215,7 @@ export class Bot extends EventEmitter<Events> {
             return -1;
         }
     }
-    log(...arr: any[]): void {
-        trace.log.apply(null, [
-            `[${this.is_resign_bot ? "resign bot " : ""}${this.pid()}]`,
-            ...arr,
-        ]);
-    }
-    error(...arr: any[]): void {
-        trace.error.apply(null, [
-            `[${this.is_resign_bot ? "resign bot " : ""}${this.pid()}]`,
-            ...arr,
-        ]);
-    }
-    verbose(...arr: any[]): void {
-        trace.verbose.apply(null, [
-            `[${this.is_resign_bot ? "resign bot " : ""}${this.pid()}]`,
-            ...arr,
-        ]);
-    }
+
     loadClock(state): void {
         /* References:
            http://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#sec:time-handling
@@ -573,7 +586,7 @@ export class Bot extends EventEmitter<Events> {
 
             this.command_callbacks.push(resolve);
             this.command_error_callbacks.push(reject);
-            if (config.DEBUG) {
+            if (config.verbosity) {
                 this.log(">>>", str);
             }
             try {
@@ -660,7 +673,7 @@ export class Bot extends EventEmitter<Events> {
             this.proc.kill();
             setTimeout(() => {
                 // To be 100% sure.
-                if (config.DEBUG) {
+                if (config.verbosity) {
                     this.log("Killing process directly with a signal");
                 }
                 this.proc.kill(9);
@@ -668,7 +681,7 @@ export class Bot extends EventEmitter<Events> {
         }
     }
     async sendMove(move, width, height, color): Promise<void> {
-        if (config.DEBUG) {
+        if (config.verbosity) {
             this.log("Calling sendMove with", move2gtpvertex(move, width, height));
         }
         await this.command(`play ${color} ${move2gtpvertex(move, width, height)}`);
@@ -681,8 +694,9 @@ export class Bot extends EventEmitter<Events> {
         await this.command(cmd);
     }
     // Called on game over, in case you need something special.
-    //
-    gameOver() {}
+    gameOver() {
+        //
+    }
 }
 
 export function gtpchar2num(ch: string): number {
@@ -692,7 +706,7 @@ export function gtpchar2num(ch: string): number {
     return "abcdefghjklmnopqrstuvwxyz".indexOf(ch.toLowerCase());
 }
 
-export function move2gtpvertex(move, width: number, height: number): string {
+export function move2gtpvertex(move, _width: number, height: number): string {
     if (move.x < 0) {
         return "pass";
     }

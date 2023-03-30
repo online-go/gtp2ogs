@@ -22,7 +22,9 @@ export class PvOutputParser {
         if (["SAI", "SAI18"].includes(setting)) {
             this.saiScore = false;
         } else {
-            this.startupCheckSai = () => {}; // disable sai check for other bots.
+            this.startupCheckSai = () => {
+                // do nothing for non Sai bots
+            };
         }
 
         this.pvLine = null;

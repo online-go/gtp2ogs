@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { WebSocket } from "ws";
-global.WebSocket = WebSocket;
+(global as any).WebSocket = WebSocket;
 
 import { config } from "./config";
 import { socket } from "./socket";
@@ -31,8 +31,6 @@ class Main {
     connected: boolean;
     connect_timeout: ReturnType<typeof setTimeout>;
     idle_timeout_interval: ReturnType<typeof setInterval>;
-    clock_drift: number;
-    network_latency: number;
     ping_interval: ReturnType<typeof setInterval>;
     bot_id: number;
     bot_username: string;
@@ -47,19 +45,12 @@ class Main {
         if (config.timeout) {
             this.idle_timeout_interval = setInterval(this.disconnectIdleGames.bind(this), 10000);
         }
-        if (config.DEBUG) {
+        if (config.verbosity) {
             setInterval(this.dumpStatus.bind(this), 15 * 60 * 1000);
         }
 
-        this.clock_drift = 0;
-        this.network_latency = 0;
-        this.ping_interval = setInterval(this.ping.bind(this), 10000);
-        socket.on("net/pong", this.handlePong.bind(this));
-
         socket.on("connect", () => {
             this.connected = true;
-            conn_log("Connected");
-            this.ping();
 
             socket.send(
                 "authenticate",
@@ -69,19 +60,27 @@ class Main {
                     bot_apikey: config.apikey,
                 },
                 (obj) => {
+                    if (!obj) {
+                        trace.error(`ERROR: Authentication failed`);
+                        process.exit(1);
+                    }
+
                     this.bot_id = obj?.id;
                     this.bot_username = obj?.username;
+                    config.bot_id = this.bot_id;
+                    config.username = this.bot_username;
+
                     if (!this.bot_id) {
                         trace.error(
                             `ERROR: Bot account is unknown to the system: ${config.username}`,
                         );
-                        process.exit();
+                        process.exit(1);
                     }
                     config.bot_id = this.bot_id;
-                    conn_log("Bot is username: ", obj?.username);
-                    conn_log("Bot is user id: ", this.bot_id);
+                    trace.info("Bot is username: ", this.bot_username);
+                    trace.info("Bot is user id: ", this.bot_id);
                     if (config.hidden) {
-                        conn_log("Bot is hidden");
+                        trace.info("Bot is hidden");
                     }
                     socket.send("bot/hidden", !!config.hidden);
                 },
@@ -113,10 +112,10 @@ class Main {
         socket.on("disconnect", () => {
             this.connected = false;
 
-            conn_log("Disconnected from server");
+            trace.info("Disconnected from server");
 
             for (const game_id in this.connected_games) {
-                this.disconnectFromGame(game_id);
+                this.disconnectFromGame(parseInt(game_id));
             }
         });
 
@@ -134,9 +133,7 @@ class Main {
         });
 
         socket.on("active_game", (gamedata) => {
-            if (config.DEBUG) {
-                conn_log("active_game:", JSON.stringify(gamedata));
-            }
+            trace.debug("active_game:", JSON.stringify(gamedata));
 
             /* OGS auto scores bot games now, no removal processing is needed by the bot.
 
@@ -156,16 +153,14 @@ class Main {
                     /  longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
                     /  Note: active_game and gamedata events can arrive in either order.*/
 
-                    if (config.DEBUG) {
-                        conn_log(gamedata.id, "active_game phase === finished");
-                    }
+                    trace.debug(`game ${gamedata.id} is now finished`);
 
                     /* XXX We want to disconnect right away here, but there's a game over race condition
                     /      on server side: sometimes /gamedata event with game outcome is sent after
                     /      active_game, so it's lost since there's no game to handle it anymore...
                     /      Work around it with a timeout for now.*/
                     if (!this.connected_games[gamedata.id].disconnect_timeout) {
-                        if (config.DEBUG) {
+                        if (config.verbosity) {
                             trace.log(
                                 `Starting disconnect Timeout in Connection active_game for ${gamedata.id}`,
                             );
@@ -185,8 +180,8 @@ class Main {
     }
     connectToGame(game_id: number) {
         if (game_id in this.connected_games) {
-            if (config.DEBUG) {
-                conn_log("Connected to game", game_id, "already");
+            if (config.verbosity) {
+                trace.info("Connected to game", game_id, "already");
             }
             return this.connected_games[game_id];
         }
@@ -199,8 +194,8 @@ class Main {
         return this.connected_games[game_id];
     }
     disconnectFromGame(game_id: number) {
-        if (config.DEBUG) {
-            conn_log("disconnectFromGame", game_id);
+        if (config.verbosity) {
+            trace.info("disconnectFromGame", game_id);
         }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
@@ -208,21 +203,22 @@ class Main {
         }
     }
     disconnectIdleGames() {
-        if (config.DEBUG) {
-            conn_log("Looking for idle games to disconnect");
+        if (config.verbosity) {
+            trace.info("Looking for idle games to disconnect");
         }
-        for (const game_id in this.connected_games) {
+        for (const k in this.connected_games) {
+            const game_id = this.connected_games[k].game_id;
             const state = this.connected_games[game_id].state;
             if (state === null) {
-                if (config.DEBUG) {
-                    conn_log("No game state, not checking idle status for", game_id);
+                if (config.verbosity) {
+                    trace.info("No game state, not checking idle status for", game_id);
                 }
                 continue;
             }
             const idle_time = Date.now() - state.clock.last_move;
             if (state.clock.current_player !== this.bot_id && idle_time > config.timeout) {
-                if (config.DEBUG) {
-                    conn_log(
+                if (config.verbosity) {
+                    trace.info(
                         "Found idle game",
                         game_id,
                         ", other player has been idling for",
@@ -236,13 +232,14 @@ class Main {
         }
     }
     dumpStatus() {
-        for (const game_id in this.connected_games) {
+        for (const k in this.connected_games) {
+            const game_id = this.connected_games[k].game_id;
             const game = this.connected_games[game_id];
             const msg = [];
             msg.push(`game_id = ${game_id}:`);
             if (game.state === null) {
                 msg.push("no_state");
-                conn_log(...msg);
+                trace.info(...msg);
                 continue;
             }
             msg.push(`black = ${game.state.players.black.username}`);
@@ -254,35 +251,37 @@ class Main {
             msg.push(`idle_time = ${idle_time}s`);
             if (game.bot === null) {
                 msg.push("no_bot");
-                conn_log(...msg);
+                trace.info(...msg);
                 continue;
             }
             msg.push(`bot.proc.pid = ${game.bot.pid()}`);
             msg.push(`bot.dead = ${game.bot.dead}`);
             msg.push(`bot.failed = ${game.bot.failed}`);
-            conn_log(...msg);
+            trace.info(...msg);
         }
     }
     deleteNotification(notification) {
-        socket.send("notification/delete", this.auth({ notification_id: notification.id }), () => {
-            conn_log("Deleted notification ", notification.id);
+        socket.send("notification/delete", { notification_id: notification.id }, () => {
+            trace.info("Deleted notification ", notification.id);
         });
     }
+    /*
     connection_reset() {
         for (const game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
         if (socket) {
-            socket.send("notification/connect", this.auth({}), (x) => {
-                conn_log(x);
+            socket.send("notification/connect", {}, (x) => {
+                trace.info(x);
             });
         }
     }
+    */
     on_friendRequest(notification) {
         trace.log("Friend request from ", notification.user.username);
-        post(api1("me/friends/invitations"), this.auth({ from_user: notification.user.id }))
-            .then((obj) => conn_log(obj.body))
-            .catch(conn_log);
+        post(api1("me/friends/invitations"), { from_user: notification.user.id })
+            .then((obj) => trace.info(obj.body))
+            .catch(trace.info);
     }
 
     on_challenge(notification) {
@@ -290,41 +289,26 @@ class Main {
         const rejectmsg = "";
 
         if (accept) {
-            post(api1(`me/challenges/${notification.challenge_id}/accept`), this.auth({}))
+            post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
                 .then(ignore)
                 .catch(() => {
-                    conn_log("Error accepting challenge, declining it");
-                    post(
-                        api1(`me/challenges/${notification.challenge_id}`),
-                        this.auth({
-                            delete: true,
-                            message: "Error accepting game challenge, challenge has been removed.",
-                        }),
-                    )
+                    trace.info("Error accepting challenge, declining it");
+                    post(api1(`me/challenges/${notification.challenge_id}`), {
+                        delete: true,
+                        message: "Error accepting game challenge, challenge has been removed.",
+                    })
                         .then(ignore)
-                        .catch(conn_log);
+                        .catch(trace.info);
                     this.deleteNotification(notification);
                 });
         } else {
-            post(
-                api1(`me/challenges/${notification.challenge_id}`),
-                this.auth({
-                    delete: true,
-                    message: rejectmsg || "The AI you've challenged has rejected this game.",
-                }),
-            )
+            post(api1(`me/challenges/${notification.challenge_id}`), {
+                delete: true,
+                message: rejectmsg || "The AI you've challenged has rejected this game.",
+            })
                 .then(ignore)
-                .catch(conn_log);
+                .catch(trace.info);
         }
-    }
-    ping() {
-        socket.send("net/ping", { client: new Date().getTime() });
-    }
-    handlePong(data) {
-        const now = Date.now();
-        const latency = now - data.client;
-        this.network_latency = latency;
-        this.clock_drift = now - latency / 2 - data.server;
     }
     terminate() {
         clearTimeout(this.connect_timeout);
@@ -340,27 +324,8 @@ class Main {
     }
 }
 
-function ignore() {}
-
-function conn_log(...args: any[]) {
-    const arr = ["# "];
-    let errlog = false;
-    for (let i = 0; i < args.length; ++i) {
-        const param = args[i];
-        if (typeof param === "object" && "error" in param) {
-            errlog = true;
-            arr.push(param.error);
-        } else {
-            arr.push(param);
-        }
-    }
-
-    if (errlog) {
-        trace.error.apply(null, arr);
-        trace.error(new Error().stack);
-    } else {
-        trace.log.apply(null, arr);
-    }
+function ignore() {
+    // do nothing
 }
 
 new Main();

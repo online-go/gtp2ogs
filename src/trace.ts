@@ -4,7 +4,7 @@ import { config } from "./config";
 
 const console_fmt =
     "{{timestamp}} {{title}} " +
-    (config.DEBUG ? "{{file}}:{{line}}{{space}} " : "") +
+    (config.verbosity > 0 ? "{{file}}:{{line}}{{space}} " : "") +
     "{{message}}";
 
 const console_config = {
@@ -28,7 +28,7 @@ const console_config = {
                 data.title = "!!!!!";
                 break;
         }
-        if (config.DEBUG) {
+        if (config.verbosity > 0) {
             data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
         }
     },
@@ -48,3 +48,17 @@ if (config.logfile) {
 }
 
 export const trace = tracer.colorConsole(console_config);
+
+if (config.verbosity <= 1) {
+    trace.trace = (..._args: any[]) => {
+        return null;
+    };
+}
+if (config.verbosity <= 0) {
+    trace.debug = (..._args: any[]) => {
+        return null;
+    };
+    trace.verbose = (..._args: any[]) => {
+        return null;
+    };
+}

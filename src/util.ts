@@ -2,6 +2,7 @@ import * as http from "http";
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
+import { trace } from "./trace";
 
 export function gtpchar2num(ch: string): number {
     if (ch === "." || !ch) {
@@ -24,18 +25,18 @@ function num2gtpchar(num: number): string {
     return "abcdefghjklmnopqrstuvwxyz"[num];
 }
 
-export function request(method, host, port, path, data) {
+export function request(method, path, data) {
+    const url = config.server;
+    const host = url.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const m = url.match(/:(\d+)$/);
+    const port = m ? m[1] : url.match(/^https/) ? 443 : 80;
+    const insecure = url.indexOf("https") !== 0;
+
+    trace.debug(`${method} ${path} ${JSON.stringify(data)}`);
+    data.apikey = config.apikey;
+    data.bot_id = config.bot_id;
+
     return new Promise((resolve, reject) => {
-        if (config.DEBUG) {
-            /* Keeping a backup of old copy syntax just in case.
-            /  const noapidata = JSON.parse(JSON.stringify(data));
-            /  noapidata.apikey = "hidden";*/
-
-            // ES6 offers shallow copy syntax using spread
-            const noapidata = { ...data, apikey: "hidden" };
-            console.debug(method, host, port, path, noapidata);
-        }
-
         let enc_data_type = "application/x-www-form-urlencoded";
         for (const k in data) {
             if (typeof data[k] === "object") {
@@ -73,7 +74,7 @@ export function request(method, host, port, path, data) {
             }
         }
 
-        const req = (config.insecure ? http : https).request(options, (res) => {
+        const req = (insecure ? http : https).request(options, (res) => {
             //test
             res.setEncoding("utf8");
             let body = "";
@@ -98,7 +99,7 @@ export function request(method, host, port, path, data) {
 }
 
 export function post(path, data): Promise<any> {
-    return request("POST", config.host, config.port, path, data);
+    return request("POST", path, data);
 }
 
 export function api1(str) {

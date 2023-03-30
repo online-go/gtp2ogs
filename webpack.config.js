@@ -39,8 +39,8 @@ module.exports = (_env, _argv) => {
                         {
                             loader: "ts-loader",
                             options: {
-                                transpileOnly: true,
-                                happyPackMode: true,
+                                transpileOnly: false,
+                                happyPackMode: false,
                             },
                         },
                     ],

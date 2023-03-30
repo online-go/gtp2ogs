@@ -5,18 +5,22 @@
         "Config": {
             "type": "object",
             "properties": {
-                "url": {
+                "apikey": {
                     "type": "string",
-                    "description": "URL to connect to, defaults to online-go.com",
+                    "description": "API key for the bot."
+                },
+                "verbosity": {
+                    "type": "number",
+                    "description": "Enable verbose logging"
+                },
+                "server": {
+                    "type": "string",
+                    "description": "Server URL to connect to, defaults to online-go.com",
                     "default": "https://online-go.com"
                 },
                 "username": {
                     "type": "string",
-                    "description": "Bot username"
-                },
-                "apikey": {
-                    "type": "string",
-                    "description": "API key for the bot."
+                    "description": "Bot username. This is automatically set."
                 },
                 "bot": {
                     "$ref": "#/definitions/BotConfig",
@@ -57,17 +61,9 @@
                 "aichat": {
                     "type": "boolean"
                 },
-                "DEBUG": {
-                    "type": "boolean"
-                },
                 "hidden": {
                     "type": "boolean"
                 },
-                "host": {
-                    "type": "string"
-                },
-                "insecure": {},
-                "port": {},
                 "timeout": {},
                 "corrqueue": {},
                 "json": {
@@ -88,9 +84,6 @@
                 "ogspv": {
                     "type": "boolean"
                 },
-                "resign_bot_command": {
-                    "type": "boolean"
-                },
                 "showboard": {
                     "type": "boolean"
                 },
@@ -100,10 +93,28 @@
                 },
                 "startupbuffer": {
                     "type": "number"
+                },
+                "greetingbotcommand": {
+                    "type": "string"
+                },
+                "persistnoncorr": {
+                    "type": "boolean"
+                },
+                "pv_format": {
+                    "type": "string",
+                    "const": "LEELAZERO"
+                },
+                "nopauseranked": {
+                    "type": "boolean"
+                },
+                "nopauseunranked": {
+                    "type": "boolean"
+                },
+                "persist": {
+                    "type": "boolean"
                 }
             },
             "required": [
-                "username",
                 "apikey"
             ],
             "additionalProperties": false,
@@ -113,7 +124,10 @@
             "type": "object",
             "properties": {
                 "command": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
