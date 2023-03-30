@@ -27,6 +27,12 @@ export interface Config {
      */
     max_pause_time?: number;
 
+    /** Players who are not allowed to play the bot ever. */
+    blacklist?: (number | string)[];
+
+    /** Players who are allowed to challenge the bot with any settings, bypassing all limits and checks */
+    whitelist?: (number | string)[];
+
     /** Config for how to run your bot */
     bot?: BotConfig;
 

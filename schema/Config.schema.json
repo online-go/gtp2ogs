@@ -24,6 +24,26 @@
                     "description": "Maximum time to allow the game to be paused for in seconds.",
                     "default": 300
                 },
+                "blacklist": {
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "number",
+                            "string"
+                        ]
+                    },
+                    "description": "Players who are not allowed to play the bot ever."
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "number",
+                            "string"
+                        ]
+                    },
+                    "description": "Players who are allowed to challenge the bot with any settings, bypassing all limits and checks"
+                },
                 "bot": {
                     "$ref": "#/definitions/BotConfig",
                     "description": "Config for how to run your bot"

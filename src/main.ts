@@ -19,6 +19,7 @@ const ignorable_notifications = {
     gameResumedFromStoneRemoval: true,
     tournamentStarted: true,
     tournamentEnded: true,
+    aiReviewDone: true,
 };
 
 /** This is the main class for the connection to the server. It is responsible
@@ -125,18 +126,7 @@ class Main {
             }
         });
 
-        socket.on("notification", (notification) => {
-            if (this[`on_${notification.type}`]) {
-                this[`on_${notification.type}`](notification);
-            } else {
-                if (!(notification.type in ignorable_notifications)) {
-                    trace.log("Unhandled notification type: ", notification.type, notification);
-                }
-                if (notification.type !== "delete") {
-                    this.deleteNotification(notification);
-                }
-            }
-        });
+        socket.on("notification", (notification) => this.handleNotification(notification));
 
         socket.on("active_game", (gamedata) => {
             //trace.trace("active_game:", JSON.stringify(gamedata));
@@ -273,51 +263,128 @@ class Main {
             trace.info("Deleted notification ", notification.id);
         });
     }
-    /*
-    connection_reset() {
-        for (const game_id in this.connected_games) {
-            this.disconnectFromGame(game_id);
-        }
-        if (socket) {
-            socket.send("notification/connect", {}, (x) => {
-                trace.info(x);
-            });
-        }
-    }
-    */
-    on_friendRequest(notification) {
-        trace.log("Friend request from ", notification.user.username);
-        post(api1("me/friends/invitations"), { from_user: notification.user.id })
-            .then((obj) => trace.info(obj.body))
-            .catch(trace.info);
-    }
 
-    on_challenge(notification) {
-        const accept = true;
-        const rejectmsg = "";
-
-        if (accept) {
-            post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
-                .then(ignore)
-                .catch(() => {
-                    trace.info("Error accepting challenge, declining it");
-                    post(api1(`me/challenges/${notification.challenge_id}`), {
-                        delete: true,
-                        message: "Error accepting game challenge, challenge has been removed.",
-                    })
-                        .then(ignore)
+    handleNotification(notification): void {
+        switch (notification.type) {
+            case "friendRequest":
+                {
+                    trace.log("Friend request from ", notification.user.username);
+                    post(api1("me/friends/invitations"), { from_user: notification.user.id })
+                        .then((obj) => trace.info(obj.body))
                         .catch(trace.info);
-                    this.deleteNotification(notification);
-                });
-        } else {
-            post(api1(`me/challenges/${notification.challenge_id}`), {
-                delete: true,
-                message: rejectmsg || "The AI you've challenged has rejected this game.",
-            })
-                .then(ignore)
-                .catch(trace.info);
+                }
+                break;
+
+            case "challenge":
+                {
+                    /*
+                        {
+                          id: '54337:e911260c-b102-4da1-b8a5-a4619f28375d',
+                          type: 'challenge',
+                          player_id: 54337,
+                          timestamp: 1680208777,
+                          read_timestamp: 0,
+                          read: 0,
+                          aux_delivered: 0,
+                          game_id: 51749509,
+                          challenge_id: 19684526,
+                          user: {
+                            id: 1,
+                            country: 'us',
+                            username: 'anoek',
+                            icon_url: 'https://b0c2ddc39d13e1c0ddad-93a52a5bc9e7cc06050c1a999beb3694.ssl.cf1.rackcdn.com/09ea48b349cad5d5f27e07f5e0177803-32.png',
+                            ratings: { version: 5, overall: [Object] },
+                            ui_class: 'supporter moderator admin',
+                            professional: false,
+                            rating: 1231.0717333889886,
+                            ranking: 19.729405410145198
+                          },
+                          rules: 'chinese',
+                          ranked: false,
+                          aga_rated: false,
+                          disable_analysis: false,
+                          handicap: 0,
+                          komi: null,
+                          time_control: {
+                            system: 'byoyomi',
+                            time_control: 'byoyomi',
+                            speed: 'correspondence',
+                            pause_on_weekends: true,
+                            main_time: 604800,
+                            period_time: 86400,
+                            periods: 5
+                          },
+                          challenger_color: 'black',
+                          width: 19,
+                          height: 19
+                        }
+                    */
+
+                    let reject: string | undefined;
+
+                    if (!reject) {
+                        reject = this.checkBlacklist(notification.user);
+                    }
+
+                    trace.log("Challenge received: ", notification);
+
+                    if (!reject || this.checkWhitelist(notification.user)) {
+                        post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
+                            .then(ignore)
+                            .catch(() => {
+                                trace.info("Error accepting challenge, declining it");
+                                post(api1(`me/challenges/${notification.challenge_id}`), {
+                                    delete: true,
+                                    message:
+                                        "Error accepting game challenge, challenge has been removed.",
+                                })
+                                    .then(ignore)
+                                    .catch(trace.info);
+                                this.deleteNotification(notification);
+                            });
+                    } else {
+                        post(api1(`me/challenges/${notification.challenge_id}`), {
+                            delete: true,
+                            message: reject || "The AI you've challenged has rejected this game.",
+                        })
+                            .then(ignore)
+                            .catch(trace.info);
+                    }
+                }
+                break;
+
+            default:
+                {
+                    if (!(notification.type in ignorable_notifications)) {
+                        trace.log("Unhandled notification type: ", notification.type, notification);
+                    }
+                    if (notification.type !== "delete") {
+                        this.deleteNotification(notification);
+                    }
+                }
+                break;
         }
     }
+
+    checkBlacklist(user: { id: number; username: string }): string | undefined {
+        if (!config.blacklist) {
+            return undefined;
+        }
+        if (config.blacklist.includes(user.id) || config.blacklist.includes(user.username)) {
+            return `The operator of this bot will not let you play against it.`;
+        }
+        return undefined;
+    }
+    checkWhitelist(user: { id: number; username: string }): boolean {
+        if (!config.whitelist) {
+            return false;
+        }
+        if (config.whitelist.includes(user.id) || config.whitelist.includes(user.username)) {
+            return true;
+        }
+        return false;
+    }
+
     terminate() {
         clearTimeout(this.connect_timeout);
         clearInterval(this.ping_interval);
