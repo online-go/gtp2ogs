@@ -37,9 +37,15 @@ export class Bot extends EventEmitter<Events> {
     katatime: boolean;
     json_initialized: boolean;
     is_resign_bot: boolean;
+    available_commands: { [key: string]: boolean } = {
+        list_commands: true,
+        quit: true,
+    };
+
     log: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
     error: (...arr: any[]) => any;
+    warn: (...arr: any[]) => any;
 
     constructor(cmd: string[], pv_parser?: PvOutputParser, is_resign_bot: boolean = false) {
         super();
@@ -49,6 +55,10 @@ export class Bot extends EventEmitter<Events> {
             `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
         this.verbose = trace.debug.bind(
+            null,
+            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+        );
+        this.warn = trace.warn.bind(
             null,
             `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
@@ -70,9 +80,7 @@ export class Bot extends EventEmitter<Events> {
         this.failed = false;
         this.pv_parser = pv_parser;
 
-        if (config.verbosity) {
-            this.log("Starting ", cmd.join(" "));
-        }
+        this.verbose("Starting ", cmd.join(" "));
         try {
             this.proc = spawn(cmd[0], cmd.slice(1));
             this.log = trace.log.bind(
@@ -80,6 +88,10 @@ export class Bot extends EventEmitter<Events> {
                 `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
             );
             this.verbose = trace.debug.bind(
+                null,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+            );
+            this.warn = trace.warn.bind(
                 null,
                 `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
             );
@@ -137,9 +149,7 @@ export class Bot extends EventEmitter<Events> {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
-            if (config.verbosity) {
-                this.log("<<<", stdout_buffer.trim());
-            }
+            this.verbose("<<<", stdout_buffer.trim());
 
             const lines = stdout_buffer.split(gtpCommandSplitRegex);
             stdout_buffer = "";
@@ -509,8 +519,14 @@ export class Bot extends EventEmitter<Events> {
         }
 
         const commands = await this.command("list_commands");
-        this.kgstime = commands.includes("kgs-time_settings");
-        this.katatime = commands.includes("kata-list_time_settings");
+
+        commands
+            .split(/[\r\n]/)
+            .filter((x) => x)
+            .map((x) => (this.available_commands[x.replace(/^=/, "").trim()] = true));
+
+        this.kgstime = !!this.available_commands["kgs-time_settings"];
+        this.katatime = !!this.available_commands["kata-list_time_settings"];
         if (this.katatime) {
             const kataTimeSettings = await this.command("kata-list_time_settings");
             this.katafischer = kataTimeSettings.includes("fischer-capped");
@@ -576,6 +592,16 @@ export class Bot extends EventEmitter<Events> {
     }
 
     command(str: string, final_command?: boolean): Promise<string> {
+        const arr = str.trim().split(/\s+/);
+        if (arr.length > 0) {
+            const cmd = arr[0];
+            if (!this.available_commands[cmd]) {
+                this.warn(`Bot does not support command ${cmd}`);
+                //return Promise.reject(`Bot does not support command ${cmd}`);
+                return Promise.resolve("=");
+            }
+        }
+
         return new Promise<string>((resolve, reject) => {
             if (this.dead) {
                 this.error("Attempting to send a command to dead bot:", str);
@@ -586,9 +612,7 @@ export class Bot extends EventEmitter<Events> {
 
             this.command_callbacks.push(resolve);
             this.command_error_callbacks.push(reject);
-            if (config.verbosity) {
-                this.log(">>>", str);
-            }
+            this.verbose(">>>", str);
             try {
                 if (config.json) {
                     if (!this.json_initialized) {
@@ -673,17 +697,13 @@ export class Bot extends EventEmitter<Events> {
             this.proc.kill();
             setTimeout(() => {
                 // To be 100% sure.
-                if (config.verbosity) {
-                    this.log("Killing process directly with a signal");
-                }
+                this.verbose("Killing process directly with a signal");
                 this.proc.kill(9);
             }, 5000);
         }
     }
     async sendMove(move, width, height, color): Promise<void> {
-        if (config.verbosity) {
-            this.log("Calling sendMove with", move2gtpvertex(move, width, height));
-        }
+        this.verbose("Calling sendMove with", move2gtpvertex(move, width, height));
         await this.command(`play ${color} ${move2gtpvertex(move, width, height)}`);
     }
     async sendHandicapMoves(moves, width, height): Promise<void> {

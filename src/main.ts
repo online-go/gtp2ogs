@@ -133,7 +133,7 @@ class Main {
         });
 
         socket.on("active_game", (gamedata) => {
-            trace.debug("active_game:", JSON.stringify(gamedata));
+            trace.trace("active_game:", JSON.stringify(gamedata));
 
             /* OGS auto scores bot games now, no removal processing is needed by the bot.
 

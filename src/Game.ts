@@ -34,7 +34,10 @@ export class Game extends EventEmitter<Events> {
     handicap_moves: Move[];
     disconnect_timeout: ReturnType<typeof setTimeout>;
     log: (...arr: any[]) => any;
+    trace: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
+    warn: (...arr: any[]) => any;
+    error: (...arr: any[]) => any;
 
     constructor(game_id) {
         super();
@@ -45,7 +48,10 @@ export class Game extends EventEmitter<Events> {
 
         this.game_id = game_id;
         this.log = trace.log.bind(null, `[game ${game_id}]`);
+        this.trace = trace.trace.bind(null, `[game ${game_id}]`);
         this.verbose = trace.debug.bind(null, `[game ${game_id}]`);
+        this.warn = trace.warn.bind(null, `[game ${game_id}]`);
+        this.error = trace.error.bind(null, `[game ${game_id}]`);
         this.state = null;
         this.opponent_evenodd = null;
         this.greeted = false;
@@ -107,10 +113,8 @@ export class Game extends EventEmitter<Events> {
             //
             if (this.bot && gamedataChanged) {
                 this.log("Killing bot because of gamedata change after bot was started");
-                if (config.verbosity) {
-                    this.log("Previously seen gamedata:", this.state);
-                    this.log("New gamedata:", gamedata);
-                }
+                this.verbose("Previously seen gamedata:", this.state);
+                this.verbose("New gamedata:", gamedata);
                 this.ensureBotKilled();
 
                 if (this.processing) {
@@ -175,9 +179,7 @@ export class Game extends EventEmitter<Events> {
             // false positives for gamedata changes. We never use the field, so just remove it.
             delete clock.now;
 
-            if (config.verbosity) {
-                this.log("clock:", JSON.stringify(clock));
-            }
+            this.verbose("clock:", JSON.stringify(clock));
 
             if (
                 (config.nopause && !config.nopauseranked && !config.nopauseunranked) ||
@@ -197,9 +199,7 @@ export class Game extends EventEmitter<Events> {
                     const forRankedUnranked = getForRankedUnranked(this.state.ranked);
                     const noPauseMg = `Pausing not allowed ${forRankedUnranked}. Resuming game.`;
                     this.sendChat(noPauseMg);
-                    if (config.verbosity) {
-                        this.log(noPauseMg);
-                    }
+                    this.verbose(noPauseMg);
                     this.resumeGame();
                 }
             }
@@ -207,9 +207,7 @@ export class Game extends EventEmitter<Events> {
             if (this.state) {
                 this.state.clock = clock;
             } else {
-                if (config.verbosity) {
-                    trace.error(`Received clock for ${this.game_id} but no state exists`);
-                }
+                this.error(`Received clock for ${this.game_id} but no state exists`);
             }
         });
         socket.on(`game/${game_id}/phase`, (phase) => {
@@ -222,9 +220,7 @@ export class Game extends EventEmitter<Events> {
             if (this.state) {
                 this.state.phase = phase;
             } else {
-                if (config.verbosity) {
-                    trace.error(`Received phase for ${this.game_id} but no state exists`);
-                }
+                trace.error(`Received phase for ${this.game_id} but no state exists`);
             }
 
             if (phase === "play") {
@@ -235,9 +231,7 @@ export class Game extends EventEmitter<Events> {
             if (!socket.connected) {
                 return;
             }
-            if (config.verbosity) {
-                this.log(`game/${game_id}/move:`, move);
-            }
+            this.trace(`game/${game_id}/move:`, move);
             if (!this.state) {
                 trace.error(`Received move for ${this.game_id} but no state exists`);
                 // Try to connect again, to get the server to send the gamedata over.
@@ -301,13 +295,11 @@ export class Game extends EventEmitter<Events> {
                             this.my_color === "black" ? "white" : "black",
                         );
                     }
-                    if (config.verbosity) {
-                        this.verbose(
-                            "Waiting for opponent to finish",
-                            this.state.handicap - this.state.moves.length,
-                            "more handicap moves",
-                        );
-                    }
+                    this.verbose(
+                        "Waiting for opponent to finish",
+                        this.state.handicap - this.state.moves.length,
+                        "more handicap moves",
+                    );
                     if (this.state.moves.length === 1) {
                         // remind once, avoid spamming the reminder
                         this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
@@ -343,9 +335,7 @@ export class Game extends EventEmitter<Events> {
                     }
                     //this.makeMove(this.state.moves.length);
                 } else {
-                    if (config.verbosity) {
-                        this.log("Ignoring our own move", move.move_number);
-                    }
+                    this.verbose("Ignoring our own move", move.move_number);
                 }
             }
         });
@@ -367,9 +357,7 @@ export class Game extends EventEmitter<Events> {
         if (this.bot) {
             if (this.bot.failed) {
                 this.bot_failures++;
-                if (config.verbosity) {
-                    this.log(`Observed ${this.bot_failures} bot failures`);
-                }
+                this.verbose(`Observed ${this.bot_failures} bot failures`);
             }
             this.bot.kill();
             this.bot = undefined;
@@ -377,9 +365,7 @@ export class Game extends EventEmitter<Events> {
         if (this.resign_bot) {
             if (this.resign_bot.failed) {
                 this.resign_bot_failures++;
-                if (config.verbosity) {
-                    this.log(`Observed ${this.resign_bot_failures} resign_bot failures`);
-                }
+                this.verbose(`Observed ${this.resign_bot_failures} resign_bot failures`);
             }
             this.resign_bot.kill();
             this.resign_bot = undefined;
@@ -418,9 +404,7 @@ export class Game extends EventEmitter<Events> {
 
         this.bot.log(`[game ${this.game_id}] Loading state`);
         await this.bot.loadState(this.state);
-        if (config.verbosity) {
-            this.bot.log(`[game ${this.game_id}] State loaded successfully`);
-        }
+        this.bot.verbose(`[game ${this.game_id}] State loaded successfully`);
 
         if (config.resign_bot?.command) {
             this.resign_bot = new Bot(
@@ -436,9 +420,7 @@ export class Game extends EventEmitter<Events> {
             );
             this.resign_bot.log(`[game ${this.game_id}] Loading state`);
             await this.resign_bot.loadState(this.state);
-            if (config.verbosity) {
-                this.resign_bot.log(`[game ${this.game_id}] State loaded successfully`);
-            }
+            this.resign_bot.verbose(`[game ${this.game_id}] State loaded successfully`);
         }
     }
 
@@ -473,9 +455,7 @@ export class Game extends EventEmitter<Events> {
         try {
             await this.ensureBotStarted();
 
-            if (config.verbosity) {
-                this.bot.log("Generating move for game", this.game_id);
-            }
+            this.bot.verbose("Generating move for game", this.game_id);
             this.log(cmd);
 
             const [our_moves, resign_moves] = await Promise.all([
@@ -513,11 +493,9 @@ export class Game extends EventEmitter<Events> {
     }
 
     scheduleRetry(): void {
-        if (config.verbosity) {
-            this.log(
-                "Unable to react correctly - re-connect to trigger action based on game state.",
-            );
-        }
+        this.verbose(
+            "Unable to react correctly - re-connect to trigger action based on game state.",
+        );
         socket.send("game/disconnect", {
             game_id: this.game_id,
         });
@@ -537,7 +515,7 @@ export class Game extends EventEmitter<Events> {
         }
 
         if (config.verbosity) {
-            this.log(`Playing ${move.text}`, move);
+            this.verbose(`Playing ${move.text}`, move);
         } else {
             this.log(`Playing ${move.text}`);
         }
@@ -552,8 +530,8 @@ export class Game extends EventEmitter<Events> {
     // (we get all of them at once with place_free_handicap).
     //
     async makeMove(move_number): Promise<void> {
-        if (config.verbosity && this.state) {
-            this.log(
+        if (this.state) {
+            this.verbose(
                 "makeMove",
                 move_number,
                 "is",
@@ -717,9 +695,7 @@ export class Game extends EventEmitter<Events> {
         }
 
         if (!this.disconnect_timeout) {
-            if (config.verbosity) {
-                trace.log(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
-            }
+            this.verbose(`Starting disconnect Timeout in Game ${this.game_id} gameOver()`);
             this.disconnect_timeout = setTimeout(() => {
                 this.emit("disconnected", this.game_id);
             }, 1000);

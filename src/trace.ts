@@ -12,6 +12,9 @@ const console_config = {
     dateformat: "mmm dd HH:MM:ss",
     preprocess: (data) => {
         switch (data.title) {
+            case "trace":
+                data.title = " ";
+                break;
             case "debug":
                 data.title = " ";
                 break;
@@ -22,10 +25,10 @@ const console_config = {
                 data.title = " ";
                 break;
             case "warn":
-                data.title = "!";
+                data.title = " ";
                 break;
             case "error":
-                data.title = "!!!!!";
+                data.title = "!";
                 break;
         }
         if (config.verbosity > 0) {
