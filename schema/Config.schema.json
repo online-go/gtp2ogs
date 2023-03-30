@@ -11,7 +11,8 @@
                 },
                 "verbosity": {
                     "type": "number",
-                    "description": "Enable verbose logging"
+                    "description": "Enable verbose logging.",
+                    "default": 0
                 },
                 "server": {
                     "type": "string",
@@ -26,10 +27,10 @@
                     "$ref": "#/definitions/BotConfig",
                     "description": "Config for how to run your bot"
                 },
-                "opening_bot": {
+                "resign_bot": {
                     "$ref": "#/definitions/BotConfig"
                 },
-                "resign_bot": {
+                "opening_bot": {
                     "$ref": "#/definitions/BotConfig"
                 },
                 "farewellscore": {
@@ -53,9 +54,6 @@
                     "type": "string"
                 },
                 "debug": {
-                    "type": "boolean"
-                },
-                "send_pv": {
                     "type": "boolean"
                 },
                 "aichat": {
@@ -100,10 +98,6 @@
                 "persistnoncorr": {
                     "type": "boolean"
                 },
-                "pv_format": {
-                    "type": "string",
-                    "const": "LEELAZERO"
-                },
                 "nopauseranked": {
                     "type": "boolean"
                 },
@@ -128,6 +122,12 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "instances": {
+                    "type": "number"
+                },
+                "pv_format": {
+                    "type": "string"
                 }
             },
             "required": [

@@ -9,7 +9,10 @@ export interface Config {
     /** API key for the bot. */
     apikey: string;
 
-    /** Enable verbose logging */
+    /** Enable verbose logging.
+     *  @values 0-2
+     *  @default 0
+     */
     verbosity?: number;
 
     /**
@@ -20,14 +23,16 @@ export interface Config {
 
     /** Bot username. This is automatically set. */
     username?: string;
+
     /** Bot ID. This is automatically set.
      * @hidden
      */
     bot_id?: number;
+
     /** Config for how to run your bot */
     bot?: BotConfig;
-    opening_bot?: BotConfig;
     resign_bot?: BotConfig;
+    opening_bot?: BotConfig;
 
     /** Send a message saying what the bot thought the score was at the end of the game */
     farewellscore?: boolean;
@@ -45,8 +50,6 @@ export interface Config {
     farewell?: string;
 
     debug?: boolean;
-
-    send_pv?: boolean;
 
     /* Old */
     aichat?: boolean;
@@ -67,7 +70,6 @@ export interface Config {
     greetingbotcommand?: string;
     persistnoncorr?: boolean;
 
-    pv_format?: "LEELAZERO";
     nopauseranked?: boolean;
     nopauseunranked?: boolean;
     persist?: boolean;
@@ -76,6 +78,8 @@ export interface Config {
 /** Bot config */
 export interface BotConfig {
     command: string[];
+    instances?: number;
+    pv_format?: string;
 }
 
 function defaults(): Config {
@@ -83,7 +87,13 @@ function defaults(): Config {
         apikey: "",
         server: "https://online-go.com",
         min_rank: 0,
-        verbosity: 5,
+        verbosity: 1,
+    };
+}
+
+function bot_config_defaults(): Partial<BotConfig> {
+    return {
+        instances: 1,
     };
 }
 
@@ -104,6 +114,8 @@ function load_config_or_exit(): Config {
         .describe("config", "Path to configuration file")
         .alias("config", "c")
         .describe("apikey", "API key for the bot")
+        .describe("v", "Increase level (use multiple times for more logs)")
+        .count("v")
         .strict()
         .parseSync();
 
@@ -116,6 +128,7 @@ function load_config_or_exit(): Config {
     const from_cli: Partial<Config> = {
         server: args.server,
         apikey: args.apikey,
+        verbosity: args.v || undefined,
     };
 
     const cli_bot_command = args._.length > 0 ? args._ : undefined;
@@ -141,6 +154,22 @@ function load_config_or_exit(): Config {
         } else {
             with_defaults.bot.command = cli_bot_command;
         }
+    }
+
+    if (with_defaults.bot) {
+        with_defaults.bot = { ...bot_config_defaults(), ...with_defaults.bot };
+    }
+    if (with_defaults.resign_bot) {
+        with_defaults.resign_bot = {
+            ...bot_config_defaults(),
+            ...with_defaults.resign_bot,
+        };
+    }
+    if (with_defaults.opening_bot) {
+        with_defaults.opening_bot = {
+            ...bot_config_defaults(),
+            ...with_defaults.opening_bot,
+        };
     }
 
     const validator = new Validator();

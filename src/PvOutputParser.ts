@@ -1,7 +1,7 @@
 import { char2num, num2char } from "goban/src/GoMath";
 import { gtpchar2num } from "./Bot";
 import { Game } from "./Game";
-import { config } from "./config";
+import { BotConfig } from "./config";
 
 /** Utility class to work with Principle Variations (PV) output for different bots. */
 export class PvOutputParser {
@@ -15,8 +15,8 @@ export class PvOutputParser {
     STOPRE: RegExp;
     CLPV?: RegExp;
 
-    constructor(game) {
-        const setting = config.pv_format;
+    constructor(game, bot_config: BotConfig) {
+        const setting = bot_config.pv_format;
         this.game = game;
         this.lookingForPv = false;
         if (["SAI", "SAI18"].includes(setting)) {

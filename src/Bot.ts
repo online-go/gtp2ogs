@@ -4,7 +4,7 @@ import * as split2 from "split2";
 
 import { Move } from "./types";
 import { decodeMoves } from "goban/src/GoMath";
-import { config } from "./config";
+import { config, BotConfig } from "./config";
 import type { PvOutputParser } from "./PvOutputParser";
 import { socket } from "./socket";
 import { EventEmitter } from "eventemitter3";
@@ -17,6 +17,8 @@ type eb_type = (err?: any) => void;
 
 interface Events {
     chat: (message: string, channel: "main" | "malkovich") => void;
+    terminated: () => void;
+    ready: () => void;
 }
 
 let last_bot_id = 0;
@@ -38,19 +40,42 @@ export class Bot extends EventEmitter<Events> {
     json_initialized: boolean;
     is_resign_bot: boolean;
     available_commands: { [key: string]: boolean } = {
+        /* These are required by the GTP spec */
+        protocol_version: true,
+        name: true,
+        version: true,
+        known_command: true,
         list_commands: true,
         quit: true,
+        boardsize: true,
+        clear_board: true,
+        komi: true,
+        play: true,
+        genmove: true,
     };
+    ready: Promise<string>;
+    /** True if we are available for use by a Game. This flag is managed by the pool. */
+    available: boolean = true;
 
     log: (...arr: any[]) => any;
+    trace: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
     error: (...arr: any[]) => any;
     warn: (...arr: any[]) => any;
 
-    constructor(cmd: string[], pv_parser?: PvOutputParser, is_resign_bot: boolean = false) {
+    constructor(bot_config: BotConfig, is_resign_bot: boolean = false) {
         super();
 
+        //const pv_parser = bot_config.pv_format ? new PvOutputParser(this) : undefined;
+        const pv_parser = undefined;
+
+        const cmd = bot_config.command;
+
         this.log = trace.log.bind(
+            null,
+            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+        );
+        this.trace = trace.trace.bind(
             null,
             `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
@@ -83,21 +108,24 @@ export class Bot extends EventEmitter<Events> {
         this.verbose("Starting ", cmd.join(" "));
         try {
             this.proc = spawn(cmd[0], cmd.slice(1));
+            this.proc.on("exit", () => {
+                this.emit("terminated");
+            });
             this.log = trace.log.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
             this.verbose = trace.debug.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
             this.warn = trace.warn.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
             this.error = trace.error.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid()}]`,
+                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
         } catch (e) {
             this.log("Failed to start the bot: ", e);
@@ -149,7 +177,7 @@ export class Bot extends EventEmitter<Events> {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
-            this.verbose("<<<", stdout_buffer.trim());
+            this.trace("<<<", stdout_buffer.trim());
 
             const lines = stdout_buffer.split(gtpCommandSplitRegex);
             stdout_buffer = "";
@@ -217,8 +245,24 @@ export class Bot extends EventEmitter<Events> {
                 eb(code);
             }
         });
+
+        this.ready = this.command("list_commands");
+
+        this.ready
+            .then((commands) => {
+                commands
+                    .split(/[\r\n]/)
+                    .filter((x) => x)
+                    .map((x) => (this.available_commands[x.replace(/^=/, "").trim()] = true));
+                this.emit("ready");
+            })
+            .catch((err) => {
+                trace.error(err);
+                trace.error("Failed to list bot commands, exiting.");
+                process.exit(1);
+            });
     }
-    pid(): number {
+    get pid(): number {
         if (this.proc) {
             return this.proc.pid;
         } else {
@@ -518,13 +562,6 @@ export class Bot extends EventEmitter<Events> {
             throw new Error("Attempting to load dead bot");
         }
 
-        const commands = await this.command("list_commands");
-
-        commands
-            .split(/[\r\n]/)
-            .filter((x) => x)
-            .map((x) => (this.available_commands[x.replace(/^=/, "").trim()] = true));
-
         this.kgstime = !!this.available_commands["kgs-time_settings"];
         this.katatime = !!this.available_commands["kata-list_time_settings"];
         if (this.katatime) {
@@ -612,7 +649,7 @@ export class Bot extends EventEmitter<Events> {
 
             this.command_callbacks.push(resolve);
             this.command_error_callbacks.push(reject);
-            this.verbose(">>>", str);
+            this.trace(">>>", str);
             try {
                 if (config.json) {
                     if (!this.json_initialized) {
@@ -647,17 +684,10 @@ export class Bot extends EventEmitter<Events> {
 
     // For commands like genmove, place_free_handicap ... :
     // Send @cmd to engine and call @cb with returned moves.
-    // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
-    //
     async getMoves(cmd, state): Promise<Move[]> {
-        // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
-        // subtract that missing time from what we tell the bot.
-        //
         this.loadClock(state);
 
-        // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
         // Must be after loadClock() since loadClock() checks this.firstmove!
-        //
         this.firstmove = false;
 
         const line = await this.command(cmd, true /* final command */);

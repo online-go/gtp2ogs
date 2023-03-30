@@ -1,4 +1,5 @@
 import { decodeMoves } from "goban/src/GoMath";
+import { GoEngineConfig } from "goban/src/GoEngine";
 import { move2gtpvertex } from "./util";
 
 import { Move } from "./types";
@@ -7,7 +8,8 @@ import { trace } from "./trace";
 import { socket } from "./socket";
 import { config } from "./config";
 import { EventEmitter } from "eventemitter3";
-import { PvOutputParser } from "./PvOutputParser";
+import { bot_pools } from "./BotPool";
+//import { PvOutputParser } from "./PvOutputParser";
 
 interface Events {
     disconnected: (game_id: number) => void;
@@ -21,7 +23,7 @@ export class Game extends EventEmitter<Events> {
     connect_timeout: ReturnType<typeof setTimeout>;
 
     game_id: number;
-    state: any;
+    state: GoEngineConfig;
     opponent_evenodd: null | number;
     greeted: boolean;
     bot?: Bot;
@@ -115,7 +117,7 @@ export class Game extends EventEmitter<Events> {
                 this.log("Killing bot because of gamedata change after bot was started");
                 this.verbose("Previously seen gamedata:", this.state);
                 this.verbose("New gamedata:", gamedata);
-                this.ensureBotKilled();
+                this.releaseBots();
 
                 if (this.processing) {
                     this.processing = false;
@@ -249,7 +251,7 @@ export class Game extends EventEmitter<Events> {
                 return;
             }
             try {
-                this.state.moves.push(move.move);
+                this.state.moves.push(move.move as any);
 
                 // Log opponent moves
                 const m = decodeMoves(move.move, this.state.width, this.state.height)[0];
@@ -353,28 +355,20 @@ export class Game extends EventEmitter<Events> {
     }
 
     // Kill the bot, if it is currently running.
-    ensureBotKilled() {
+    releaseBots() {
         if (this.bot) {
-            if (this.bot.failed) {
-                this.bot_failures++;
-                this.verbose(`Observed ${this.bot_failures} bot failures`);
-            }
-            this.bot.kill();
+            bot_pools.main.release(this.bot);
             this.bot = undefined;
         }
         if (this.resign_bot) {
-            if (this.resign_bot.failed) {
-                this.resign_bot_failures++;
-                this.verbose(`Observed ${this.resign_bot_failures} resign_bot failures`);
-            }
-            this.resign_bot.kill();
+            bot_pools.resign.release(this.resign_bot);
             this.resign_bot = undefined;
         }
     }
     // Start the bot.
     async ensureBotStarted(): Promise<void> {
         if (this.bot && this.bot.dead) {
-            this.ensureBotKilled();
+            this.releaseBots();
         }
 
         if (this.bot) {
@@ -391,12 +385,7 @@ export class Game extends EventEmitter<Events> {
             throw new Error("Bot has crashed too many times, resigning game");
         }
 
-        let pv_parser: PvOutputParser;
-        if (config.send_pv) {
-            pv_parser = new PvOutputParser(this);
-        }
-
-        this.bot = new Bot(config.bot.command, pv_parser);
+        this.bot = await bot_pools.main.acquire();
         this.bot.log(`[game ${this.game_id}] Starting up bot: ${config.bot.command.join(" ")}`);
         this.bot.on("chat", (message, channel) =>
             this.sendChat(message, this.state.moves.length + 1, channel),
@@ -407,11 +396,7 @@ export class Game extends EventEmitter<Events> {
         this.bot.verbose(`[game ${this.game_id}] State loaded successfully`);
 
         if (config.resign_bot?.command) {
-            this.resign_bot = new Bot(
-                config.resign_bot.command,
-                undefined,
-                true /* is resign bot */,
-            );
+            this.resign_bot = await bot_pools.resign.acquire();
 
             this.resign_bot.log(
                 `[game ${this.game_id}] Starting up resign bot: ${config.resign_bot.command.join(
@@ -422,16 +407,6 @@ export class Game extends EventEmitter<Events> {
             await this.resign_bot.loadState(this.state);
             this.resign_bot.verbose(`[game ${this.game_id}] State loaded successfully`);
         }
-    }
-
-    checkBotPersists() {
-        if (config.persist) {
-            return true;
-        }
-        if (config.persistnoncorr && this.state.time_control.speed !== "correspondence") {
-            return true;
-        }
-        return false;
     }
 
     // Send @cmd to bot and call @cb with returned moves.
@@ -476,14 +451,12 @@ export class Game extends EventEmitter<Events> {
             }
 
             doneProcessing();
-            if (!this.checkBotPersists()) {
-                this.ensureBotKilled();
-            }
+            this.releaseBots();
 
             return resign ? resign_moves : our_moves;
         } catch (e) {
             doneProcessing();
-            this.ensureBotKilled();
+            this.releaseBots();
 
             trace.error(e);
             this.log("Failed to start the bot, can not make a move, trying to restart");
@@ -600,7 +573,7 @@ export class Game extends EventEmitter<Events> {
 
         const warnAndResign = (msg) => {
             this.log(msg);
-            this.ensureBotKilled();
+            this.releaseBots();
             this.uploadMove({ resign: true });
         };
 
@@ -638,7 +611,7 @@ export class Game extends EventEmitter<Events> {
             }
         }
 
-        this.ensureBotKilled();
+        this.releaseBots();
 
         this.log("Disconnecting from game.");
         socket.send("game/disconnect", {
@@ -686,12 +659,12 @@ export class Game extends EventEmitter<Events> {
                 // only kill the bot after it processed this
                 this.bot.gameOver();
                 this.resign_bot?.gameOver();
-                this.ensureBotKilled();
+                this.releaseBots();
             }
         } else if (this.bot) {
             this.bot.gameOver();
             this.resign_bot?.gameOver();
-            this.ensureBotKilled();
+            this.releaseBots();
         }
 
         if (!this.disconnect_timeout) {

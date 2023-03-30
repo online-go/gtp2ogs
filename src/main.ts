@@ -7,6 +7,7 @@ import { socket } from "./socket";
 import { trace } from "./trace";
 import { post, api1 } from "./util";
 import { Game } from "./Game";
+import { bot_pools } from "./BotPool";
 
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
@@ -49,8 +50,13 @@ class Main {
             setInterval(this.dumpStatus.bind(this), 15 * 60 * 1000);
         }
 
-        socket.on("connect", () => {
+        socket.on("connect", async () => {
             this.connected = true;
+
+            await bot_pools.main.ready;
+            if (bot_pools.resign) {
+                await bot_pools.resign.ready;
+            }
 
             socket.send(
                 "authenticate",
@@ -133,7 +139,7 @@ class Main {
         });
 
         socket.on("active_game", (gamedata) => {
-            trace.trace("active_game:", JSON.stringify(gamedata));
+            //trace.trace("active_game:", JSON.stringify(gamedata));
 
             /* OGS auto scores bot games now, no removal processing is needed by the bot.
 
@@ -249,14 +255,16 @@ class Main {
             }
             const idle_time = (Date.now() - game.state.clock.last_move) / 1000;
             msg.push(`idle_time = ${idle_time}s`);
+            /*
             if (game.bot === null) {
                 msg.push("no_bot");
                 trace.info(...msg);
                 continue;
             }
-            msg.push(`bot.proc.pid = ${game.bot.pid()}`);
+            msg.push(`bot.proc.pid = ${game.bot.pid}`);
             msg.push(`bot.dead = ${game.bot.dead}`);
             msg.push(`bot.failed = ${game.bot.failed}`);
+            */
             trace.info(...msg);
         }
     }
