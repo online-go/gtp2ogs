@@ -6,7 +6,7 @@ import { Move } from "./types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
 import { socket } from "./socket";
-import { config } from "./config";
+import { config, TranslatableString } from "./config";
 import { EventEmitter } from "eventemitter3";
 import { bot_pools } from "./pools";
 //import { PvOutputParser } from "./PvOutputParser";
@@ -504,12 +504,8 @@ export class Game extends EventEmitter<Events> {
         }
         if (!this.greeted && this.state.moves.length < 2 + this.state.handicap) {
             this.greeted = true;
-            if (config.greeting) {
+            if (config.greeting?.en) {
                 this.sendChat(config.greeting);
-            }
-            if (config.greetingbotcommand) {
-                const pretty_bot_command = config.bot.command.join(" ");
-                this.sendChat(`You are playing against: ${pretty_bot_command}`);
             }
         }
 
@@ -666,14 +662,22 @@ export class Game extends EventEmitter<Events> {
         const handi = this.state && this.state.handicap ? `H${this.state.handicap}` : "  ";
         return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handi}`;
     }
-    sendChat(str: string, move_number?: number, channel: "main" | "malkovich" = "main"): void {
+    sendChat(
+        msg: string | TranslatableString,
+        move_number?: number,
+        channel: "main" | "malkovich" = "main",
+    ): void {
         if (!socket.connected) {
             return;
         }
 
+        if (typeof msg === "object") {
+            msg.type = "translated";
+        }
+
         socket.send("game/chat", {
             game_id: this.game_id,
-            body: str,
+            body: msg as any,
             move_number: move_number,
             type: channel,
         });

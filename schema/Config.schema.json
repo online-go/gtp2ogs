@@ -19,10 +19,6 @@
                     "description": "Server URL to connect to, defaults to online-go.com",
                     "default": "https://online-go.com"
                 },
-                "username": {
-                    "type": "string",
-                    "description": "Bot username. This is automatically set."
-                },
                 "max_pause_time": {
                     "type": "number",
                     "description": "Maximum time to allow the game to be paused for in seconds.",
@@ -31,6 +27,13 @@
                 "bot": {
                     "$ref": "#/definitions/BotConfig",
                     "description": "Config for how to run your bot"
+                },
+                "greeting": {
+                    "$ref": "#/definitions/TranslatableString",
+                    "description": "Message to send to your opponent at the start of the game"
+                },
+                "farewell": {
+                    "$ref": "#/definitions/TranslatableString"
                 },
                 "resign_bot": {
                     "$ref": "#/definitions/BotConfig"
@@ -51,12 +54,6 @@
                     "default": 0,
                     "minimum": 0,
                     "maximum": 35
-                },
-                "greeting": {
-                    "type": "string"
-                },
-                "farewell": {
-                    "type": "string"
                 },
                 "debug": {
                     "type": "boolean"
@@ -93,15 +90,6 @@
                 },
                 "startupbuffer": {
                     "type": "number"
-                },
-                "greetingbotcommand": {
-                    "type": "string"
-                },
-                "persistnoncorr": {
-                    "type": "boolean"
-                },
-                "persist": {
-                    "type": "boolean"
                 }
             },
             "required": [
@@ -131,6 +119,20 @@
             ],
             "additionalProperties": false,
             "description": "Bot config"
+        },
+        "TranslatableString": {
+            "type": "object",
+            "properties": {
+                "en": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "en"
+            ],
+            "additionalProperties": {
+                "type": "string"
+            }
         }
     }
 }

@@ -21,14 +21,6 @@ export interface Config {
      */
     server?: string;
 
-    /** Bot username. This is automatically set. */
-    username?: string;
-
-    /** Bot ID. This is automatically set.
-     * @hidden
-     */
-    bot_id?: number;
-
     /** Maximum time to allow the game to be paused for in seconds.
      * @default 300
      * @range 300 - 172800
@@ -37,6 +29,11 @@ export interface Config {
 
     /** Config for how to run your bot */
     bot?: BotConfig;
+
+    /** Message to send to your opponent at the start of the game */
+    greeting?: TranslatableString;
+    farewell?: TranslatableString;
+
     resign_bot?: BotConfig;
     opening_bot?: BotConfig;
 
@@ -51,9 +48,6 @@ export interface Config {
      * @maximum 35
      */
     min_rank?: number;
-
-    greeting?: string;
-    farewell?: string;
 
     debug?: boolean;
 
@@ -72,10 +66,23 @@ export interface Config {
     start_date?: Date;
     startupbuffer?: number;
 
-    greetingbotcommand?: string;
-    persistnoncorr?: boolean;
+    /**********/
+    /* Hidden */
+    /**********/
+    /** Bot username. This is automatically set when the bot authenticates with the API Key.
+     * @hidden
+     */
+    username?: string;
 
-    persist?: boolean;
+    /** Bot ID. This is automatically set when the bot authenticates with the API key.
+     * @hidden
+     */
+    bot_id?: number;
+}
+
+export interface TranslatableString {
+    en: string;
+    [lang: string]: string;
 }
 
 /** Bot config */
@@ -92,6 +99,38 @@ function defaults(): Config {
         min_rank: 0,
         verbosity: 1,
         max_pause_time: 300,
+
+        greeting: {
+            en: "Hello, I am a bot. Good luck, have fun!",
+            fr: "Bonjour, je suis un bot. Bonne chance, amusez-vous bien!",
+            de: "Hallo, ich bin ein Bot. Viel Glück, viel Spaß!",
+            es: "Hola, soy un bot. ¡Buena suerte, que te diviertas!",
+            it: "Ciao, sono un bot. Buona fortuna, divertiti!",
+            ja: "こんにちは、私はボットです。 お疲れ様でした、楽しんでください！",
+            ko: "안녕하세요, 저는 봇입니다. 행운을 빕니다, 즐거운 시간 되세요!",
+            nl: "Hallo, ik ben een bot. Veel geluk, veel plezier!",
+            pl: "Cześć, jestem botem. Powodzenia, baw się dobrze!",
+            pt: "Olá, eu sou um bot. Boa sorte, divirta-se!",
+            ru: "Привет, я бот. Удачи, приятной игры!",
+            "zh-tw": "大家好，我是機器人。 祝你好運，玩得開心！",
+            "zh-cn": "大家好，我是机器人。 祝你好运，玩得开心！",
+        },
+
+        farewell: {
+            en: "Thank you for the game!",
+            fr: "Merci pour la partie!",
+            de: "Danke für das Spiel!",
+            es: "¡Gracias por el juego!",
+            it: "Grazie per la partita!",
+            ja: "ゲームありがとうございました！",
+            ko: "게임 감사합니다!",
+            nl: "Bedankt voor het spel!",
+            pl: "Dziękuję za grę!",
+            pt: "Obrigado pelo jogo!",
+            ru: "Спасибо за игру!",
+            "zh-tw": "謝謝你的遊戲！",
+            "zh-cn": "谢谢你的游戏！",
+        },
     };
 }
 
