@@ -4,6 +4,8 @@ import * as yargs from "yargs";
 import * as ConfigSchema from "../schema/Config.schema.json";
 import { Validator } from "jsonschema";
 
+type BotTimeControlSystems = "fischer" | "byoyomi" | "simple";
+
 /** Bot config */
 export interface Config {
     /** API key for the bot. */
@@ -30,7 +32,8 @@ export interface Config {
     /** Players who are not allowed to play the bot ever. */
     blacklist?: (number | string)[];
 
-    /** Players who are allowed to challenge the bot with any settings, bypassing all limits and checks */
+    /** Players who are allowed to challenge the bot with any settings even
+     * when the bot is at the maximum number of simultaneous games */
     whitelist?: (number | string)[];
 
     /** Config for how to run your bot */
@@ -46,7 +49,58 @@ export interface Config {
     /** Send a message saying what the bot thought the score was at the end of the game */
     farewellscore?: boolean;
 
+    /** File to write logs to. Logs will be sent to stdout as well. */
     log_file?: string;
+
+    /** Time control systems that we can work with
+     *  @default ["fischer", "byoyomi", "simple"]
+     *  @allowedValues ["fischer", "byoyomi", "simple"]
+     *  @minItems 1
+     */
+    allowed_time_control_systems?: BotTimeControlSystems[];
+
+    /**
+     * Allowed blitz times for the bot. Blitz is disabled by default, but you
+     * can enable it by providing accetpable time settings.
+     *
+     * @default null
+     */
+    allowed_blitz_settings?: null | TimeControlRanges;
+
+    /** Allowed live game times for bot.
+     *
+     *  @default {"per_move_time_range": [10, 300], "main_time_range": [0, 3600], "periods_range": [1, 10]}
+     */
+    allowed_live_settings?: null | TimeControlRanges;
+
+    /** Allowed correspondence game times for bot.
+     *
+     *  @default {"per_move_time_range": [43200, 259200], "main_time_range": [0, 86400], "periods_range": [1, 10]}
+     */
+    allowed_correspondence_settings?: null | TimeControlRanges;
+
+    /** Allowed board sizes for the bot. If there are no restrictions, you can
+     *  provide "all", or if you can play on any square board, you can provide "square".
+     *
+     *  @default [9, 13, 19]
+     */
+    allowed_board_sizes?: number[] | (number | "all" | "square");
+
+    /** Allowed unranked games
+     *  @default true
+     */
+    allow_unranked?: boolean;
+
+    /** +- the number of ranks allowed to play against this bot. Note that
+     * ranked games are always limited to +-9. 0 to disable rank restrictions.
+     * @default 0
+     */
+    allowed_rank_range?: number;
+
+    /** Allow handicap games
+     *  @default true
+     */
+    allowed_handicap?: boolean;
 
     /** Minimum rank to accept games from
      * @default 0
@@ -86,6 +140,27 @@ export interface Config {
     bot_id?: number;
 }
 
+export interface TimeControlRanges {
+    /** Range of acceptable times per move. This is:
+     *    - The period time in byo-yomi
+     *    - The time increment and minimum move time in Fischer
+     *    - The time per move in simple time
+     *
+     * @default [10, 300] for live, [43200, 259200] for correspondence
+     */
+    per_move_time_range: [number, number];
+
+    /** Range of acceptable main times in seconds. This is only applicable for byo-yomi
+     * @default [0, 3600] for live games, [0, 86400] for correspondence games
+     */
+    main_time_range: [number, number];
+
+    /** Range of acceptable number of periods. This is only applicable for byo-yomi
+     *  @default [1, 10]
+     */
+    periods_range: [number, number];
+}
+
 export interface TranslatableString {
     en: string;
     [lang: string]: string;
@@ -105,6 +180,23 @@ function defaults(): Config {
         min_rank: 0,
         verbosity: 1,
         max_pause_time: 300,
+        allowed_time_control_systems: ["fischer", "byoyomi", "simple"],
+        allowed_blitz_settings: null,
+        allowed_live_settings: {
+            per_move_time_range: [10, 300],
+            main_time_range: [0, 3600],
+            periods_range: [1, 10],
+        },
+        allowed_correspondence_settings: {
+            per_move_time_range: [43200, 259200],
+            main_time_range: [0, 86400],
+            periods_range: [1, 10],
+        },
+
+        allowed_board_sizes: [9, 13, 19],
+        allow_unranked: true,
+        allowed_rank_range: 0,
+        allowed_handicap: true,
 
         greeting: {
             en: "Hello, I am a bot. Good luck, have fun!",

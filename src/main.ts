@@ -2,12 +2,13 @@
 import { WebSocket } from "ws";
 (global as any).WebSocket = WebSocket;
 
-import { config } from "./config";
+import { config, TimeControlRanges } from "./config";
 import { socket } from "./socket";
 import { trace } from "./trace";
 import { post, api1 } from "./util";
 import { Game } from "./Game";
 import { bot_pools } from "./pools";
+import { JGOFTimeControl } from "goban/src/JGOF";
 
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
@@ -320,15 +321,20 @@ class Main {
                         }
                     */
 
-                    let reject: string | undefined;
+                    let reject: string | undefined =
+                        this.checkBlacklist(notification.user) ||
+                        this.checkTimeControl(notification.time_control) ||
+                        this.checkBoardSize(notification.width, notification.height) ||
+                        this.checkHandicap(notification.handicap) ||
+                        this.checkRanked(notification.ranked);
 
-                    if (!reject) {
-                        reject = this.checkBlacklist(notification.user);
+                    if (this.checkWhitelist(notification.user)) {
+                        reject = undefined;
                     }
 
                     trace.log("Challenge received: ", notification);
 
-                    if (!reject || this.checkWhitelist(notification.user)) {
+                    if (!reject) {
                         post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
                             .then(ignore)
                             .catch(() => {
@@ -383,6 +389,124 @@ class Main {
             return true;
         }
         return false;
+    }
+    checkBoardSize(width: number, height: number): string | undefined {
+        const allowed = Array.isArray(config.allowed_board_sizes)
+            ? config.allowed_board_sizes
+            : [config.allowed_board_sizes];
+
+        if (allowed.includes("all")) {
+            return undefined;
+        }
+
+        if (allowed.includes("square") && width === height) {
+            return undefined;
+        }
+
+        if (width !== height) {
+            return `This bot only plays square boards.`;
+        }
+
+        if (!allowed.includes(width)) {
+            return `This bot only plays on these board sizes: ${allowed
+                .map((x) => `${x}x${x}`)
+                .join(", ")}.`;
+        }
+
+        return undefined;
+    }
+    checkHandicap(handicap: number): string | undefined {
+        if (!config.allowed_handicap && handicap !== 0) {
+            return `This bot only plays games with no handicap.`;
+        }
+        return undefined;
+    }
+    checkRanked(ranked: boolean): string | undefined {
+        if (!ranked && !config.allow_unranked) {
+            return `This bot only plays ranked games.`;
+        }
+
+        return undefined;
+    }
+    checkTimeControl(time_control: JGOFTimeControl): string | undefined {
+        if (!config.allowed_time_control_systems.includes(time_control.system as any)) {
+            return `This bot only plays games with time control system ${config.allowed_time_control_systems.join(
+                ", ",
+            )}.`;
+        }
+
+        let settings: TimeControlRanges | undefined;
+        switch (time_control.speed) {
+            case "blitz":
+                if (!config.allowed_blitz_settings) {
+                    return `This bot does not play blitz games.`;
+                }
+                settings = config.allowed_blitz_settings;
+                break;
+            case "live":
+                if (!config.allowed_live_settings) {
+                    return `This bot does not play live games.`;
+                }
+                settings = config.allowed_live_settings;
+                break;
+            case "correspondence":
+                if (!config.allowed_correspondence_settings) {
+                    return `This bot does not play correspondence games.`;
+                }
+                settings = config.allowed_correspondence_settings;
+                break;
+            default:
+                // should be unreachable
+                return `This bot does not play games with the provided time control speed`;
+        }
+
+        if (settings) {
+            switch (time_control.system) {
+                case "fischer":
+                    if (
+                        time_control.time_increment < settings.per_move_time_range[0] ||
+                        time_control.time_increment > settings.per_move_time_range[1]
+                    ) {
+                        return `Time increment is out of acceptable range`;
+                    }
+                    break;
+
+                case "byoyomi":
+                    if (
+                        time_control.period_time < settings.per_move_time_range[0] ||
+                        time_control.period_time > settings.per_move_time_range[1]
+                    ) {
+                        return `Period time is out of acceptable range`;
+                    }
+                    if (
+                        time_control.periods < settings.periods_range[0] ||
+                        time_control.periods > settings.periods_range[1]
+                    ) {
+                        return `Periods is out of acceptable range`;
+                    }
+                    if (
+                        time_control.main_time < settings.main_time_range[0] ||
+                        time_control.main_time > settings.main_time_range[1]
+                    ) {
+                        return `Main time is out of acceptable range`;
+                    }
+                    break;
+
+                case "simple":
+                    if (
+                        time_control.per_move < settings.per_move_time_range[0] ||
+                        time_control.per_move > settings.per_move_time_range[1]
+                    ) {
+                        return `Per move time is out of acceptable range`;
+                    }
+                    break;
+
+                default:
+                    return `This bot does not play games with time control system ${time_control.system}.`;
+            }
+        }
+
+        return undefined;
     }
 
     terminate() {

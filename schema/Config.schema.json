@@ -42,7 +42,7 @@
                             "string"
                         ]
                     },
-                    "description": "Players who are allowed to challenge the bot with any settings, bypassing all limits and checks"
+                    "description": "Players who are allowed to challenge the bot with any settings even when the bot is at the maximum number of simultaneous games"
                 },
                 "bot": {
                     "$ref": "#/definitions/BotConfig",
@@ -66,7 +66,130 @@
                     "description": "Send a message saying what the bot thought the score was at the end of the game"
                 },
                 "log_file": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "File to write logs to. Logs will be sent to stdout as well."
+                },
+                "allowed_time_control_systems": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "fischer",
+                            "byoyomi",
+                            "simple"
+                        ]
+                    },
+                    "description": "Time control systems that we can work with",
+                    "default": [
+                        "fischer",
+                        "byoyomi",
+                        "simple"
+                    ],
+                    "minItems": 1
+                },
+                "allowed_blitz_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed blitz times for the bot. Blitz is disabled by default, but you can enable it by providing accetpable time settings.",
+                    "default": null
+                },
+                "allowed_live_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed live game times for bot.",
+                    "default": {
+                        "per_move_time_range": [
+                            10,
+                            300
+                        ],
+                        "main_time_range": [
+                            0,
+                            3600
+                        ],
+                        "periods_range": [
+                            1,
+                            10
+                        ]
+                    }
+                },
+                "allowed_correspondence_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed correspondence game times for bot.",
+                    "default": {
+                        "per_move_time_range": [
+                            43200,
+                            259200
+                        ],
+                        "main_time_range": [
+                            0,
+                            86400
+                        ],
+                        "periods_range": [
+                            1,
+                            10
+                        ]
+                    }
+                },
+                "allowed_board_sizes": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "string",
+                            "const": "all"
+                        },
+                        {
+                            "type": "string",
+                            "const": "square"
+                        }
+                    ],
+                    "description": "Allowed board sizes for the bot. If there are no restrictions, you can provide \"all\", or if you can play on any square board, you can provide \"square\".",
+                    "default": [
+                        9,
+                        13,
+                        19
+                    ]
+                },
+                "allow_unranked": {
+                    "type": "boolean",
+                    "description": "Allowed unranked games",
+                    "default": true
+                },
+                "allowed_rank_range": {
+                    "type": "number",
+                    "description": "+- the number of ranks allowed to play against this bot. Note that ranked games are always limited to +-9. 0 to disable rank restrictions.",
+                    "default": 0
+                },
+                "allowed_handicap": {
+                    "type": "boolean",
+                    "description": "Allow handicap games",
+                    "default": true
                 },
                 "min_rank": {
                     "type": "number",
@@ -153,6 +276,50 @@
             "additionalProperties": {
                 "type": "string"
             }
+        },
+        "TimeControlRanges": {
+            "type": "object",
+            "properties": {
+                "per_move_time_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Range of acceptable times per move. This is:   - The period time in byo-yomi   - The time increment and minimum move time in Fischer   - The time per move in simple time",
+                    "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                },
+                "main_time_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Range of acceptable main times in seconds. This is only applicable for byo-yomi",
+                    "default": "[0, 3600] for live games, [0, 86400] for correspondence games"
+                },
+                "periods_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Range of acceptable number of periods. This is only applicable for byo-yomi",
+                    "default": [
+                        1,
+                        10
+                    ]
+                }
+            },
+            "required": [
+                "per_move_time_range",
+                "main_time_range",
+                "periods_range"
+            ],
+            "additionalProperties": false
         }
     }
 }
