@@ -100,7 +100,7 @@ export interface Config {
     /** Allow handicap games
      *  @default true
      */
-    allowed_handicap?: boolean;
+    allow_handicap?: boolean;
 
     /** Minimum rank to accept games from
      * @default 0
@@ -196,7 +196,7 @@ function defaults(): Config {
         allowed_board_sizes: [9, 13, 19],
         allow_unranked: true,
         allowed_rank_range: 0,
-        allowed_handicap: true,
+        allow_handicap: true,
 
         greeting: {
             en: "Hello, I am a bot. Good luck, have fun!",

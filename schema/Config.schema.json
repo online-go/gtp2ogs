@@ -186,7 +186,7 @@
                     "description": "+- the number of ranks allowed to play against this bot. Note that ranked games are always limited to +-9. 0 to disable rank restrictions.",
                     "default": 0
                 },
-                "allowed_handicap": {
+                "allow_handicap": {
                     "type": "boolean",
                     "description": "Allow handicap games",
                     "default": true

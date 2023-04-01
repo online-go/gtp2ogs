@@ -416,7 +416,7 @@ class Main {
         return undefined;
     }
     checkHandicap(handicap: number): string | undefined {
-        if (!config.allowed_handicap && handicap !== 0) {
+        if (!config.allow_handicap && handicap !== 0) {
             return `This bot only plays games with no handicap.`;
         }
         return undefined;
