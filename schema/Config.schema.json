@@ -198,16 +198,17 @@
                     "minimum": 0,
                     "maximum": 35
                 },
+                "hidden": {
+                    "type": "boolean",
+                    "description": "Hide the bot from the public bot list",
+                    "default": false
+                },
                 "debug": {
                     "type": "boolean"
                 },
                 "aichat": {
                     "type": "boolean"
                 },
-                "hidden": {
-                    "type": "boolean"
-                },
-                "timeout": {},
                 "min_move_time": {
                     "type": "number"
                 },

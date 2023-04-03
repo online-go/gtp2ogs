@@ -109,12 +109,15 @@ export interface Config {
      */
     min_rank?: number;
 
+    /** Hide the bot from the public bot list
+     * @default false
+     */
+    hidden?: boolean;
+
     debug?: boolean;
 
     /* Old */
     aichat?: boolean;
-    hidden?: boolean;
-    timeout?: any;
 
     min_move_time?: number;
     noclock?: boolean;
@@ -194,6 +197,7 @@ function defaults(): Config {
         allow_unranked: true,
         allowed_rank_range: 0,
         allow_handicap: true,
+        hidden: false,
 
         greeting: {
             en: "Hello, I am a bot. Good luck, have fun!",

@@ -43,9 +43,11 @@ class Main {
         //this.games_by_player = {}; // Keep track of connected games per player
         this.connected = false;
 
+        /*
         if (config.timeout) {
             this.idle_timeout_interval = setInterval(this.disconnectIdleGames.bind(this), 10000);
         }
+        */
         if (config.verbosity) {
             setInterval(this.dumpStatus.bind(this), 15 * 60 * 1000);
         }
@@ -175,6 +177,7 @@ class Main {
             delete this.connected_games[game_id];
         }
     }
+    /*
     disconnectIdleGames() {
         if (config.verbosity) {
             trace.info("Looking for idle games to disconnect");
@@ -204,6 +207,7 @@ class Main {
             }
         }
     }
+    */
     dumpStatus() {
         for (const k in this.connected_games) {
             const game_id = this.connected_games[k].game_id;
