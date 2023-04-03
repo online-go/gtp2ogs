@@ -120,8 +120,15 @@ export interface Config {
      */
     showboard?: boolean;
 
+    /** If set, bot moves will be delayed when made before `min_move_time` ms.
+     * This is primarily a user experience thing as can make players feel rushed
+     * if the bots are responding too quickly.
+     *
+     * @default 1500
+     */
+    min_move_time?: number;
+
     /* Old */
-    aichat?: boolean;
     ogspv?: boolean;
 
     /**********/
@@ -204,6 +211,7 @@ function defaults(): Config {
         allowed_rank_range: 0,
         allow_handicap: true,
         hidden: false,
+        min_move_time: 1500,
 
         greeting: {
             en: "Hello, I am a bot. Good luck, have fun!",

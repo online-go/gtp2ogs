@@ -493,7 +493,7 @@ export class Game extends EventEmitter<Events> {
                 const move_end = Date.now();
                 const move_time = move_end - move_start;
                 if (config.min_move_time && move_time < config.min_move_time) {
-                    trace.info(
+                    this.verbose(
                         "Min move time was ",
                         config.min_move_time,
                         "ms and we only took ",

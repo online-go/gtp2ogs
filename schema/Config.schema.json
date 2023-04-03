@@ -208,8 +208,10 @@
                     "description": "Used for debugging, will issue a showboard command when we've loaded the board state into the bot",
                     "default": false
                 },
-                "aichat": {
-                    "type": "boolean"
+                "min_move_time": {
+                    "type": "number",
+                    "description": "If set, bot moves will be delayed when made before `min_move_time` ms. This is primarily a user experience thing as can make players feel rushed if the bots are responding too quickly.",
+                    "default": 1500
                 },
                 "ogspv": {
                     "type": "boolean"
