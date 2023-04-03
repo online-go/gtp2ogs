@@ -124,7 +124,6 @@ export interface Config {
     ogspv?: boolean;
     showboard?: boolean;
     start_date?: Date;
-    startupbuffer?: number;
 
     /**********/
     /* Hidden */

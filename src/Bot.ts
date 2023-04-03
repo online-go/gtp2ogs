@@ -292,17 +292,9 @@ export class Bot extends EventEmitter<Events> {
         // offset indicates how long we've had since last move. Ogs only communicates how much
         // time the player had when last move was made.
         if (state.clock.current_player === state.clock.black_player_id) {
-            black_offset =
-                ((this.firstmove === true ? config.startupbuffer : 0) +
-                    now -
-                    state.clock.last_move) /
-                1000;
+            black_offset = (now - state.clock.last_move) / 1000;
         } else {
-            white_offset =
-                ((this.firstmove === true ? config.startupbuffer : 0) +
-                    now -
-                    state.clock.last_move) /
-                1000;
+            white_offset = (now - state.clock.last_move) / 1000;
         }
 
         if (state.time_control.system === "byoyomi") {

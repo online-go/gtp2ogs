@@ -224,9 +224,6 @@
                 "start_date": {
                     "type": "string",
                     "format": "date-time"
-                },
-                "startupbuffer": {
-                    "type": "number"
                 }
             },
             "required": [
