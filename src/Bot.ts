@@ -164,15 +164,6 @@ export class Bot extends EventEmitter<Events> {
             }
             stdout_buffer += data.toString();
 
-            if (config.json) {
-                try {
-                    stdout_buffer = JSON.parse(stdout_buffer);
-                } catch (e) {
-                    // Partial result received, wait until we can parse the result
-                    return;
-                }
-            }
-
             if (!stdout_buffer || !gtpCommandEndRegex.test(stdout_buffer)) {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
@@ -628,7 +619,7 @@ export class Bot extends EventEmitter<Events> {
         return "";
     }
 
-    command(str: string, final_command?: boolean): Promise<string> {
+    command(str: string, _final_command?: boolean): Promise<string> {
         const arr = str.trim().split(/\s+/);
         if (arr.length > 0) {
             const cmd = arr[0];
@@ -651,21 +642,7 @@ export class Bot extends EventEmitter<Events> {
             this.command_error_callbacks.push(reject);
             this.trace(">>>", str);
             try {
-                if (config.json) {
-                    if (!this.json_initialized) {
-                        this.proc.stdin.write(`{"gtp_commands": [`);
-                        this.json_initialized = true;
-                    } else {
-                        this.proc.stdin.write(",");
-                    }
-                    this.proc.stdin.write(JSON.stringify(str));
-                    if (final_command) {
-                        this.proc.stdin.write("]}");
-                        this.proc.stdin.end();
-                    }
-                } else {
-                    this.proc.stdin.write(`${str}\r\n`);
-                }
+                this.proc.stdin.write(`${str}\r\n`);
             } catch (e) {
                 // I think this does not normally happen, the exception will usually be raised in the async write handler
                 // and delivered through an 'error' event.

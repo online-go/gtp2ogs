@@ -65,7 +65,7 @@
                     "type": "boolean",
                     "description": "Send a message saying what the bot thought the score was at the end of the game"
                 },
-                "log_file": {
+                "logfile": {
                     "type": "string",
                     "description": "File to write logs to. Logs will be sent to stdout as well."
                 },

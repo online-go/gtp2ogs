@@ -50,7 +50,7 @@ export interface Config {
     farewellscore?: boolean;
 
     /** File to write logs to. Logs will be sent to stdout as well. */
-    log_file?: string;
+    logfile?: string;
 
     /** Time control systems that we can work with
      *  @default ["fischer", "byoyomi", "simple"]
