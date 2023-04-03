@@ -114,16 +114,15 @@ export interface Config {
      */
     hidden?: boolean;
 
-    debug?: boolean;
+    /** Used for debugging, will issue a showboard command when we've loaded
+     * the board state into the bot
+     * @default false
+     */
+    showboard?: boolean;
 
     /* Old */
     aichat?: boolean;
-
-    min_move_time?: number;
-    noclock?: boolean;
     ogspv?: boolean;
-    showboard?: boolean;
-    start_date?: Date;
 
     /**********/
     /* Hidden */
@@ -170,6 +169,14 @@ export interface BotConfig {
     command: string[];
     instances?: number;
     pv_format?: string;
+
+    /** Disables clocks being sent to the bot. Clocks will only be sent when
+     * the applicable clock commands are detected from the bot anyways, so this
+     * is generally unnecessary.
+     *
+     * @default false
+     */
+    disable_clock?: boolean;
 }
 
 function defaults(): Config {

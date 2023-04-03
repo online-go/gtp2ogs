@@ -25,6 +25,7 @@ let last_bot_id = 0;
 /** Manages talking to a bot via the GTP interface */
 export class Bot extends EventEmitter<Events> {
     id: number = ++last_bot_id;
+    bot_config: BotConfig;
     commands_sent: number;
     command_callbacks: Array<cb_type>;
     command_error_callbacks: Array<eb_type>;
@@ -66,6 +67,7 @@ export class Bot extends EventEmitter<Events> {
     constructor(bot_config: BotConfig, is_resign_bot: boolean = false) {
         super();
 
+        this.bot_config = bot_config;
         //const pv_parser = bot_config.pv_format ? new PvOutputParser(this) : undefined;
         const pv_parser = undefined;
 
@@ -279,7 +281,7 @@ export class Bot extends EventEmitter<Events> {
            Japanese Byoyomi with one period left could be viewed as a special case
            of Canadian Byoyomi where the number of stones is always = 1
         */
-        if (config.noclock) {
+        if (this.bot_config.disable_clock) {
             return;
         }
 

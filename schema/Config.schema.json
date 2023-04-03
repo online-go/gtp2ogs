@@ -203,27 +203,16 @@
                     "description": "Hide the bot from the public bot list",
                     "default": false
                 },
-                "debug": {
-                    "type": "boolean"
+                "showboard": {
+                    "type": "boolean",
+                    "description": "Used for debugging, will issue a showboard command when we've loaded the board state into the bot",
+                    "default": false
                 },
                 "aichat": {
                     "type": "boolean"
                 },
-                "min_move_time": {
-                    "type": "number"
-                },
-                "noclock": {
-                    "type": "boolean"
-                },
                 "ogspv": {
                     "type": "boolean"
-                },
-                "showboard": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string",
-                    "format": "date-time"
                 }
             },
             "required": [
@@ -246,6 +235,11 @@
                 },
                 "pv_format": {
                     "type": "string"
+                },
+                "disable_clock": {
+                    "type": "boolean",
+                    "description": "Disables clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally unnecessary.",
+                    "default": false
                 }
             },
             "required": [
