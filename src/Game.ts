@@ -18,7 +18,6 @@ interface Events {
 /** This manages a single game */
 export class Game extends EventEmitter<Events> {
     static moves_processing: any;
-    static corr_moves_processing: any;
 
     connect_timeout: ReturnType<typeof setTimeout>;
 
@@ -31,7 +30,6 @@ export class Game extends EventEmitter<Events> {
     bot_failures: number;
     resign_bot_failures: number;
     my_color: null | string;
-    corr_move_pending: boolean;
     processing: boolean;
     handicap_moves: Move[];
     disconnect_timeout: ReturnType<typeof setTimeout>;
@@ -62,7 +60,6 @@ export class Game extends EventEmitter<Events> {
         this.resign_bot = undefined;
         this.bot_failures = 0;
         this.my_color = null;
-        this.corr_move_pending = false;
         this.processing = false;
         this.handicap_moves = []; // Handicap stones waiting to be sent when bot is playing black.
         this.disconnect_timeout = null;
@@ -123,9 +120,6 @@ export class Game extends EventEmitter<Events> {
                 if (this.processing) {
                     this.processing = false;
                     --Game.moves_processing;
-                    if (config.corrqueue && this.state.time_control.speed === "correspondence") {
-                        --Game.corr_moves_processing;
-                    }
                 }
             }
 
@@ -159,16 +153,8 @@ export class Game extends EventEmitter<Events> {
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase === "play" && this.state.clock.current_player === config.bot_id) {
-                if (
-                    config.corrqueue &&
-                    this.state.time_control.speed === "correspondence" &&
-                    Game.corr_moves_processing > 0
-                ) {
-                    this.corr_move_pending = true;
-                } else {
-                    if (!this.bot || !this.processing) {
-                        void this.makeMove(this.state.moves.length);
-                    }
+                if (!this.bot || !this.processing) {
+                    void this.makeMove(this.state.moves.length);
                 }
             }
 
@@ -308,15 +294,7 @@ export class Game extends EventEmitter<Events> {
                         );
                     }
 
-                    if (
-                        config.corrqueue &&
-                        this.state.time_control.speed === "correspondence" &&
-                        Game.corr_moves_processing > 0
-                    ) {
-                        this.corr_move_pending = true;
-                    } else {
-                        void this.makeMove(this.state.moves.length);
-                    }
+                    void this.makeMove(this.state.moves.length);
                     //this.makeMove(this.state.moves.length);
                 } else {
                     this.verbose("Ignoring our own move", move.move_number);
@@ -396,17 +374,10 @@ export class Game extends EventEmitter<Events> {
     async getBotMoves(cmd): Promise<Move[]> {
         ++Game.moves_processing;
         this.processing = true;
-        if (config.corrqueue && this.state.time_control.speed === "correspondence") {
-            ++Game.corr_moves_processing;
-        }
 
         const doneProcessing = () => {
             this.processing = false;
             --Game.moves_processing;
-            if (config.corrqueue && this.state.time_control.speed === "correspondence") {
-                this.corr_move_pending = false;
-                --Game.corr_moves_processing;
-            }
         };
 
         try {
@@ -584,9 +555,6 @@ export class Game extends EventEmitter<Events> {
         if (this.processing) {
             this.processing = false;
             --Game.moves_processing;
-            if (config.corrqueue && this.state.time_control.speed === "correspondence") {
-                --Game.corr_moves_processing;
-            }
         }
 
         this.releaseBots();
@@ -743,4 +711,3 @@ function encodeMove(move: Move): string {
 }
 
 Game.moves_processing = 0;
-Game.corr_moves_processing = 0;

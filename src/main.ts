@@ -37,8 +37,6 @@ class Main {
     ping_interval: ReturnType<typeof setInterval>;
     bot_id: number;
     bot_username: string;
-    corr_queue_interval: ReturnType<typeof setInterval>;
-    corr_moves_processing: number;
 
     constructor() {
         this.connected_games = {};
@@ -94,28 +92,6 @@ class Main {
                 },
             );
         });
-
-        if (config.corrqueue) {
-            // Check every so often if we have correspondence games that need moves
-            this.corr_queue_interval = setInterval(() => {
-                // If a game needs a move and we aren't already working on one, make a move
-                if (Game.corr_moves_processing === 0) {
-                    /* Choose a corr game to make a move
-                    /  TODO: Choose the game with least time remaining*/
-                    const candidates = [];
-                    for (const game_id in this.connected_games) {
-                        if (this.connected_games[game_id].corr_move_pending) {
-                            candidates.push(this.connected_games[game_id]);
-                        }
-                    }
-                    // Pick a random game that needs a move.
-                    if (candidates.length > 0) {
-                        const game = candidates[Math.floor(Math.random() * candidates.length)];
-                        game.makeMove(game.state.moves.length);
-                    }
-                }
-            }, 1000);
-        }
 
         socket.on("disconnect", () => {
             this.connected = false;
@@ -513,7 +489,6 @@ class Main {
         clearTimeout(this.connect_timeout);
         clearInterval(this.ping_interval);
         clearInterval(this.notification_connect_interval);
-        clearInterval(this.corr_queue_interval);
     }
     hide() {
         socket.send("bot/hidden", true);

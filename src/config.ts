@@ -115,10 +115,7 @@ export interface Config {
     aichat?: boolean;
     hidden?: boolean;
     timeout?: any;
-    corrqueue?: any;
 
-    json?: boolean;
-    logfile?: string;
     min_move_time?: number;
     noclock?: boolean;
     ogspv?: boolean;

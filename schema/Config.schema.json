@@ -208,13 +208,6 @@
                     "type": "boolean"
                 },
                 "timeout": {},
-                "corrqueue": {},
-                "json": {
-                    "type": "boolean"
-                },
-                "logfile": {
-                    "type": "string"
-                },
                 "min_move_time": {
                     "type": "number"
                 },
