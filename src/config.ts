@@ -128,9 +128,6 @@ export interface Config {
      */
     min_move_time?: number;
 
-    /* Old */
-    ogspv?: boolean;
-
     /**********/
     /* Hidden */
     /**********/
@@ -174,16 +171,53 @@ export interface TranslatableString {
 /** Bot config */
 export interface BotConfig {
     command: string[];
+
+    /** Number of instances of the bot to run in parallel. Exactly this many
+     *  instances will be run at any given time, regardless of how many ongoing
+     *  games there are.
+     *
+     *  @default 1
+     */
     instances?: number;
+
     pv_format?: string;
 
-    /** Disables clocks being sent to the bot. Clocks will only be sent when
+    /** Enabled clocks being sent to the bot. Clocks will only be sent when
      * the applicable clock commands are detected from the bot anyways, so this
-     * is generally unnecessary.
+     * is generally fine to leave turned on.
      *
-     * @default false
+     * @default true
      */
-    disable_clock?: boolean;
+    enable_clock?: boolean;
+
+    /* Send chats that are output by the bot to the game chat
+     *
+     * Game chats are scanned for by looking at the STDERR output of the bot
+     * client and looking for lines that start with `MALKOVICH: ` or
+     * `DISCUSSION: ` or `MAIN: `. Note, MAIN and DISCUSSION are synonyms.
+     *
+     * @default true
+     */
+    send_chats?: boolean;
+
+    /** Send the principal variation (PV) values. Note that your bot must output this
+     * data in a way that can be parsed.
+     *
+     * See `pv_format` for more details on formatting and parsing PV values .
+     *
+     * @default true
+     */
+    send_pv_data?: boolean;
+
+    /** After a bot makes a move, some bots will continue writing to stderr
+     *  relevant information (such as chats or PV data). This option controls
+     *  how long we wait for the bot to finish writing to stderr before we
+     *  release the bot back into the pool of available bots.
+     *
+     *  @unit milliseconds
+     *  @default 100
+     */
+    release_delay: number;
 }
 
 function defaults(): Config {
@@ -250,6 +284,9 @@ function defaults(): Config {
 function bot_config_defaults(): Partial<BotConfig> {
     return {
         instances: 1,
+        send_chats: true,
+        send_pv_data: true,
+        release_delay: 100,
     };
 }
 

@@ -115,7 +115,7 @@ export class Game extends EventEmitter<Events> {
                 this.log("Killing bot because of gamedata change after bot was started");
                 this.verbose("Previously seen gamedata:", this.state);
                 this.verbose("New gamedata:", gamedata);
-                this.releaseBots();
+                void this.releaseBots();
 
                 if (this.processing) {
                     this.processing = false;
@@ -314,21 +314,48 @@ export class Game extends EventEmitter<Events> {
         }, 1000);
     }
 
-    // Kill the bot, if it is currently running.
-    releaseBots() {
+    // Release the bot to the pool. Because we are interested in the STDERR output
+    // coming from a bot shortly after it's made a move, we don't release it right
+    // away when this is called.
+    releaseBots(): Promise<void> {
+        const promises: Promise<void>[] = [];
+
         if (this.bot) {
-            bot_pools.main.release(this.bot);
+            const bot = this.bot;
             this.bot = undefined;
+            promises.push(
+                new Promise<void>((resolve, _reject) => {
+                    setTimeout(() => {
+                        bot.off("chat");
+                        bot_pools.main.release(bot);
+                        resolve();
+                    }, bot.bot_config.release_delay);
+                }),
+            );
         }
+
         if (this.resign_bot) {
-            bot_pools.resign.release(this.resign_bot);
+            const resign_bot = this.resign_bot;
             this.resign_bot = undefined;
+            promises.push(
+                new Promise<void>((resolve, _reject) => {
+                    setTimeout(() => {
+                        resign_bot.off("chat");
+                        bot_pools.resign.release(resign_bot);
+                        resolve();
+                    }, resign_bot.bot_config.release_delay);
+                }),
+            );
         }
+
+        return Promise.all(promises).then(() => {
+            return;
+        });
     }
     // Start the bot.
     async ensureBotStarted(): Promise<void> {
         if (this.bot && this.bot.dead) {
-            this.releaseBots();
+            await this.releaseBots();
         }
 
         if (this.bot) {
@@ -404,12 +431,12 @@ export class Game extends EventEmitter<Events> {
             }
 
             doneProcessing();
-            this.releaseBots();
+            void this.releaseBots();
 
             return resign ? resign_moves : our_moves;
         } catch (e) {
             doneProcessing();
-            this.releaseBots();
+            void this.releaseBots();
 
             trace.error(e);
             this.log("Failed to start the bot, can not make a move, trying to restart");
@@ -522,7 +549,7 @@ export class Game extends EventEmitter<Events> {
 
         const warnAndResign = (msg) => {
             this.log(msg);
-            this.releaseBots();
+            void this.releaseBots();
             this.uploadMove({ resign: true });
         };
 
@@ -557,7 +584,7 @@ export class Game extends EventEmitter<Events> {
             --Game.moves_processing;
         }
 
-        this.releaseBots();
+        void this.releaseBots();
 
         this.log("Disconnecting from game.");
         socket.send("game/disconnect", {
@@ -605,12 +632,12 @@ export class Game extends EventEmitter<Events> {
                 // only kill the bot after it processed this
                 this.bot.gameOver();
                 this.resign_bot?.gameOver();
-                this.releaseBots();
+                void this.releaseBots();
             }
         } else if (this.bot) {
             this.bot.gameOver();
             this.resign_bot?.gameOver();
-            this.releaseBots();
+            void this.releaseBots();
         }
 
         if (!this.disconnect_timeout) {

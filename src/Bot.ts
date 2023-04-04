@@ -150,8 +150,8 @@ export class Bot extends EventEmitter<Events> {
             if (this.pv_parser) {
                 this.pv_parser.processBotOutput(errline);
             }
-            if (config.aichat) {
-                const chat_match = /(DISCUSSION|MALKOVICH):(.*)/.exec(errline);
+            if (this.bot_config.send_chats) {
+                const chat_match = /(DISCUSSION|MALKOVICH|MAIN):(.*)/.exec(errline);
                 if (chat_match) {
                     const channel = /MALKOVICH:/i.test(errline) ? "malkovich" : "main";
                     this.emit("chat", chat_match[2], channel);
@@ -281,7 +281,7 @@ export class Bot extends EventEmitter<Events> {
            Japanese Byoyomi with one period left could be viewed as a special case
            of Canadian Byoyomi where the number of stones is always = 1
         */
-        if (this.bot_config.disable_clock) {
+        if (!this.bot_config.enable_clock) {
             return;
         }
 

@@ -212,9 +212,6 @@
                     "type": "number",
                     "description": "If set, bot moves will be delayed when made before `min_move_time` ms. This is primarily a user experience thing as can make players feel rushed if the bots are responding too quickly.",
                     "default": 1500
-                },
-                "ogspv": {
-                    "type": "boolean"
                 }
             },
             "required": [
@@ -233,19 +230,35 @@
                     }
                 },
                 "instances": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are.",
+                    "default": 1
                 },
                 "pv_format": {
                     "type": "string"
                 },
-                "disable_clock": {
+                "enable_clock": {
                     "type": "boolean",
-                    "description": "Disables clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally unnecessary.",
-                    "default": false
+                    "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
+                    "default": true
+                },
+                "send_chats": {
+                    "type": "boolean"
+                },
+                "send_pv_data": {
+                    "type": "boolean",
+                    "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.\n\nSee `pv_format` for more details on formatting and parsing PV values .",
+                    "default": true
+                },
+                "release_delay": {
+                    "type": "number",
+                    "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
+                    "default": 100
                 }
             },
             "required": [
-                "command"
+                "command",
+                "release_delay"
             ],
             "additionalProperties": false,
             "description": "Bot config"
