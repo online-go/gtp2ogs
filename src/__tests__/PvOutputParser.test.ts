@@ -28,7 +28,7 @@ describe("PvOutputParser", () => {
     test("KataGo output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "Visits: 4005, Winrate: 41.71, Score: -0.9",
+            name: "Win rate: 41.7%, Score: -0.9, Visits: 4005",
             from: 2,
             moves: "cdpddpppfdfqcmcqdq",
             marks: { circle: "cd" },
@@ -36,10 +36,10 @@ describe("PvOutputParser", () => {
         doTest("katago", katago_output, chatBody);
     });
 
-    it("Leela Zero output parsing", () => {
+    test("Leela Zero output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "Winrate: 57.50%, Visits: 17937, Playouts: 17936",
+            name: "Win rate: 57.5%, Visits: 17937, Playouts: 17936",
             from: 2,
             moves: "ddcccddcedfbpddpqqpqqpqnrnrmqopnpooo",
             marks: { circle: "dd" },
@@ -47,10 +47,10 @@ describe("PvOutputParser", () => {
         doTest("leela_zero", leela_zero_output, chatBody);
     });
 
-    it("Leela output parsing", () => {
+    test("Leela output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "Visits: 1435, Score: 51.28",
+            name: "Win rate: 51.3%, Visits: 1435",
             from: 2,
             moves: "fqeqerdr",
             marks: { circle: "fq" },
@@ -58,10 +58,10 @@ describe("PvOutputParser", () => {
         doTest("leela", leela_output, chatBody);
     });
 
-    it("Sai output parsing", () => {
+    test("Sai output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "Winrate: 56.84%, Score: -3.1, Visits: 12681, Playouts: 12680",
+            name: "Win rate: 56.8%, Score: -3.1, Visits: 12681, Playouts: 12680",
             from: 2,
             moves: "nceqepdqfrbobncocrdrbqdodnengobpcqdsemfnglec",
             marks: { circle: "nc" },
@@ -69,10 +69,10 @@ describe("PvOutputParser", () => {
         doTest("sai", sai_output, chatBody);
     });
 
-    it("Sai18 output parsing", () => {
+    test("Sai18 output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "Winrate: 55.94%, Score: 2, Visits: 10201, Playouts: 10199",
+            name: "Win rate: 55.9%, Score: 2, Visits: 10201, Playouts: 10199",
             from: 2,
             moves: "qcqdpcncocodnbqnblbmdlepgr",
             marks: { circle: "qc" },
@@ -80,10 +80,10 @@ describe("PvOutputParser", () => {
         doTest("sai18", sai18_output, chatBody);
     });
 
-    it("Phoenix Go output parsing", () => {
+    test("Phoenix Go output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "winrate=55.787468%, N=40, Q=0.115749, p=0.898028, v=0.083483, cost 5815.084473ms, sims=44",
+            name: "Win rate: 55.8%, N: 40, Q: 0.115749, p: 0.898028, v: 0.083483, cost: 5815ms, sims: 44",
             from: 2,
             moves: "eoncfdqcnqqnnk-f0t-f",
             marks: { circle: "eo" },

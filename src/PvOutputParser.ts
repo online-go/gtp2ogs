@@ -20,12 +20,12 @@ export class PvOutputParser {
     }
 
     /** Scans the bot output for PVs and posts them to the chat. */
-    public processBotOutput(line: string) {
+    public processBotOutput(line: string): void {
         this.detectEngine(line);
         this.processLine(line);
     }
 
-    private checkPondering() {
+    private checkPondering(): boolean {
         if (!(this.game.processing || this.lookingForPv)) {
             return true;
         }
@@ -33,17 +33,18 @@ export class PvOutputParser {
         return false;
     }
 
-    private createMessage(name, pv) {
+    private createAnalysisMessage(name: string, pv_move: string) {
         return {
             type: "analysis",
             name: name,
             from: this.game.state.moves.length,
-            moves: pv,
-            marks: { circle: pv.substring(0, 2) },
+            moves: pv_move,
+            marks: { circle: pv_move.substring(0, 2) },
         };
     }
 
-    private PvToGtp(str) {
+    /** Takes moves like "A19" => "aa" */
+    private formatMove(str: string): string {
         return str
             .trim()
             .split(" ")
@@ -51,11 +52,13 @@ export class PvOutputParser {
                 s === "pass"
                     ? ".."
                     : num2char(gtpchar2num(s[0].toLowerCase())) +
-                      num2char(this.game.state.width - s.slice(1)),
+                      num2char(this.game.state.width - parseInt(s.slice(1))),
             )
             .join("");
     }
 
+    /** This function scans through the stderr output of the bot until it
+     *  finds a line that can be used to determine what bot is being used. */
     private detectEngine(line: string) {
         if (this.detected_engine) {
             return;
@@ -123,13 +126,13 @@ export class PvOutputParser {
                     if (match) {
                         this.lookingForPv = false;
                         const visits = match[1];
-                        const winrate = match[2];
+                        const win_rate = parseFloat(match[2]).toFixed(1);
                         const scoreLead = match[3];
                         const PDA = match[6] ? ` PDA: ${match[6]}` : "";
-                        const pv = this.PvToGtp(match[7]);
-                        const name = `Visits: ${visits}, Winrate: ${winrate}, Score: ${scoreLead}${PDA}`;
+                        const pv = this.formatMove(match[7]);
+                        const name = `Win rate: ${win_rate}%, Score: ${scoreLead}${PDA}, Visits: ${visits}`;
 
-                        message = this.createMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv);
                     }
                 }
                 break;
@@ -139,11 +142,11 @@ export class PvOutputParser {
                     const match = line.match(/(\d*) visits, score (\d+\.\d\d)% \(from.* PV: (.*)/);
                     if (match) {
                         const visits = match[1];
-                        const score = match[2];
-                        const pv = this.PvToGtp(match[3]);
-                        const name = `Visits: ${visits}, Score: ${score}`;
+                        const win_rate = parseFloat(match[2]).toFixed(1);
+                        const pv = this.formatMove(match[3]);
+                        const name = `Win rate: ${win_rate}%, Visits: ${visits}`;
 
-                        message = this.createMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv);
                     }
                 }
                 break;
@@ -164,15 +167,15 @@ export class PvOutputParser {
                     );
 
                     if (match && this.detected_pv) {
-                        const winrate = this.detected_pv[3];
+                        const win_rate = parseFloat(this.detected_pv[3]).toFixed(1);
                         const visits = match[1];
                         const playouts = match[3];
-                        const name = `Winrate: ${winrate}%, Visits: ${visits}, Playouts: ${playouts}`;
-                        const pv = this.PvToGtp(this.detected_pv[7]);
+                        const name = `Win rate: ${win_rate}%, Visits: ${visits}, Playouts: ${playouts}`;
+                        const pv = this.formatMove(this.detected_pv[7]);
 
                         delete this.detected_pv;
 
-                        message = this.createMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv);
                     }
                 }
                 break;
@@ -193,7 +196,7 @@ export class PvOutputParser {
                     );
 
                     if (match && this.detected_pv) {
-                        const winrate = this.detected_pv[3];
+                        const winrate = parseFloat(this.detected_pv[3]).toFixed(1);
                         const score =
                             this.game.my_color === "black"
                                 ? this.detected_pv[7]
@@ -201,12 +204,12 @@ export class PvOutputParser {
                         const scoreLine = this.saiScore ? `, Score: ${score}` : "";
                         const visits = match[1];
                         const playouts = match[3];
-                        const name = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
-                        const pv = this.PvToGtp(this.detected_pv[10]);
+                        const name = `Win rate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
+                        const pv = this.formatMove(this.detected_pv[10]);
 
                         delete this.detected_pv;
 
-                        message = this.createMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv);
                     }
                 }
                 break;
@@ -227,7 +230,7 @@ export class PvOutputParser {
                     );
 
                     if (match && this.detected_pv) {
-                        const winrate = this.detected_pv[5];
+                        const winrate = parseFloat(this.detected_pv[5]).toFixed(1);
                         const score =
                             this.game.my_color === "black"
                                 ? this.detected_pv[11]
@@ -235,12 +238,12 @@ export class PvOutputParser {
                         const scoreLine = this.saiScore ? `, Score: ${score}` : "";
                         const visits = match[1];
                         const playouts = match[3];
-                        const name = `Winrate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
-                        const pv = this.PvToGtp(this.detected_pv[13]);
+                        const name = `Win rate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
+                        const pv = this.formatMove(this.detected_pv[13]);
 
                         delete this.detected_pv;
 
-                        message = this.createMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv);
                     }
                 }
                 break;
@@ -261,7 +264,17 @@ export class PvOutputParser {
                     );
 
                     if (match && this.detected_pv) {
-                        const name = match[1];
+                        const win_rate = parseFloat(match[2]).toFixed(1);
+                        const N = parseInt(match[3]);
+                        const Q = parseFloat(match[4]);
+                        const p = parseFloat(match[5]);
+                        const v = parseFloat(match[6]);
+                        const cost = parseFloat(match[7]);
+                        const sims = parseInt(match[8]);
+
+
+                        //const name = match[1];
+                        const name = `Win rate: ${win_rate}%, N: ${N}, Q: ${Q}, p: ${p}, v: ${v}, cost: ${Math.round(cost)}ms, sims: ${sims}`;
                         const pv = this.detected_pv[1]
                             .replace(/\([^()]*\)/g, "")
                             .split(",")
@@ -274,7 +287,7 @@ export class PvOutputParser {
 
                         delete this.detected_pv;
 
-                        message = this.createMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv);
                     }
                 }
                 break;
