@@ -4,6 +4,13 @@ import { Game } from "./Game";
 
 type SUPPORTED_ENGINE_TYPES = "leela" | "leela_zero" | "katago" | "sai" | "sai18" | "phoenixgo";
 
+interface EngineAnalysis {
+    win_rate: number;
+    score?: number;
+    visits?: number;
+    [key: string]: number | undefined;
+}
+
 /** Utility class to work with Principle Variations (PV) output for different bots. */
 export class PvOutputParser {
     game: Game;
@@ -33,9 +40,14 @@ export class PvOutputParser {
         return false;
     }
 
-    private createAnalysisMessage(name: string, pv_move: string) {
+    private createAnalysisMessage(
+        name: string,
+        pv_move: string,
+        engine_analysis: EngineAnalysis,
+    ): any {
         return {
             type: "analysis",
+            engine_analysis: engine_analysis,
             name: name,
             from: this.game.state.moves.length,
             moves: pv_move,
@@ -132,7 +144,11 @@ export class PvOutputParser {
                         const pv = this.formatMove(match[7]);
                         const name = `Win rate: ${win_rate}%, Score: ${scoreLead}${PDA}, Visits: ${visits}`;
 
-                        message = this.createAnalysisMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv, {
+                            win_rate: parseFloat(win_rate),
+                            score: parseFloat(scoreLead),
+                            visits: parseInt(visits),
+                        });
                     }
                 }
                 break;
@@ -146,7 +162,10 @@ export class PvOutputParser {
                         const pv = this.formatMove(match[3]);
                         const name = `Win rate: ${win_rate}%, Visits: ${visits}`;
 
-                        message = this.createAnalysisMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv, {
+                            win_rate: parseFloat(win_rate),
+                            visits: parseInt(visits),
+                        });
                     }
                 }
                 break;
@@ -175,7 +194,11 @@ export class PvOutputParser {
 
                         delete this.detected_pv;
 
-                        message = this.createAnalysisMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv, {
+                            win_rate: parseFloat(win_rate),
+                            visits: parseInt(visits),
+                            playouts: parseInt(playouts),
+                        });
                     }
                 }
                 break;
@@ -199,9 +222,9 @@ export class PvOutputParser {
                         const winrate = parseFloat(this.detected_pv[3]).toFixed(1);
                         const score =
                             this.game.my_color === "black"
-                                ? this.detected_pv[7]
+                                ? parseFloat(this.detected_pv[7])
                                 : -parseFloat(this.detected_pv[7]);
-                        const scoreLine = this.saiScore ? `, Score: ${score}` : "";
+                        const scoreLine = this.saiScore ? `, Score: ${score.toFixed(1)}` : "";
                         const visits = match[1];
                         const playouts = match[3];
                         const name = `Win rate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
@@ -209,7 +232,12 @@ export class PvOutputParser {
 
                         delete this.detected_pv;
 
-                        message = this.createAnalysisMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv, {
+                            win_rate: parseFloat(winrate),
+                            score: score,
+                            visits: parseInt(visits),
+                            playouts: parseInt(playouts),
+                        });
                     }
                 }
                 break;
@@ -233,9 +261,9 @@ export class PvOutputParser {
                         const winrate = parseFloat(this.detected_pv[5]).toFixed(1);
                         const score =
                             this.game.my_color === "black"
-                                ? this.detected_pv[11]
+                                ? parseFloat(this.detected_pv[11])
                                 : -parseFloat(this.detected_pv[11]);
-                        const scoreLine = this.saiScore ? `, Score: ${score}` : "";
+                        const scoreLine = this.saiScore ? `, Score: ${score.toFixed(1)}` : "";
                         const visits = match[1];
                         const playouts = match[3];
                         const name = `Win rate: ${winrate}%${scoreLine}, Visits: ${visits}, Playouts: ${playouts}`;
@@ -243,7 +271,12 @@ export class PvOutputParser {
 
                         delete this.detected_pv;
 
-                        message = this.createAnalysisMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv, {
+                            win_rate: parseFloat(winrate),
+                            score: score,
+                            visits: parseInt(visits),
+                            playouts: parseInt(playouts),
+                        });
                     }
                 }
                 break;
@@ -273,7 +306,9 @@ export class PvOutputParser {
                         const sims = parseInt(match[8]);
 
                         //const name = match[1];
-                        const name = `Win rate: ${win_rate}%, N: ${N}, Q: ${Q}, p: ${p}, v: ${v}, cost: ${Math.round(cost)}ms, sims: ${sims}`;
+                        const name = `Win rate: ${win_rate}%, N: ${N}, Q: ${Q}, p: ${p}, v: ${v}, cost: ${Math.round(
+                            cost,
+                        )}ms, sims: ${sims}`;
                         const pv = this.detected_pv[1]
                             .replace(/-nan\(ind\)/g, "")
                             .replace(/\([^()]*\)/g, "")
@@ -287,7 +322,15 @@ export class PvOutputParser {
 
                         delete this.detected_pv;
 
-                        message = this.createAnalysisMessage(name, pv);
+                        message = this.createAnalysisMessage(name, pv, {
+                            win_rate: parseFloat(win_rate),
+                            N,
+                            Q,
+                            p,
+                            v,
+                            cost,
+                            sims,
+                        });
                     }
                 }
                 break;

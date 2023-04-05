@@ -28,6 +28,11 @@ describe("PvOutputParser", () => {
     test("KataGo output parsing", () => {
         const chatBody = {
             type: "analysis",
+            engine_analysis: {
+                score: -0.9,
+                visits: 4005,
+                win_rate: 41.7,
+            },
             name: "Win rate: 41.7%, Score: -0.9, Visits: 4005",
             from: 2,
             moves: "cdpddpppfdfqcmcqdq",
@@ -39,6 +44,11 @@ describe("PvOutputParser", () => {
     test("Leela Zero output parsing", () => {
         const chatBody = {
             type: "analysis",
+            engine_analysis: {
+                playouts: 17936,
+                visits: 17937,
+                win_rate: 57.5,
+            },
             name: "Win rate: 57.5%, Visits: 17937, Playouts: 17936",
             from: 2,
             moves: "ddcccddcedfbpddpqqpqqpqnrnrmqopnpooo",
@@ -50,6 +60,10 @@ describe("PvOutputParser", () => {
     test("Leela output parsing", () => {
         const chatBody = {
             type: "analysis",
+            engine_analysis: {
+                visits: 1435,
+                win_rate: 51.3,
+            },
             name: "Win rate: 51.3%, Visits: 1435",
             from: 2,
             moves: "fqeqerdr",
@@ -61,6 +75,12 @@ describe("PvOutputParser", () => {
     test("Sai output parsing", () => {
         const chatBody = {
             type: "analysis",
+            engine_analysis: {
+                playouts: 12680,
+                score: -3.1,
+                visits: 12681,
+                win_rate: 56.8,
+            },
             name: "Win rate: 56.8%, Score: -3.1, Visits: 12681, Playouts: 12680",
             from: 2,
             moves: "nceqepdqfrbobncocrdrbqdodnengobpcqdsemfnglec",
@@ -72,7 +92,13 @@ describe("PvOutputParser", () => {
     test("Sai18 output parsing", () => {
         const chatBody = {
             type: "analysis",
-            name: "Win rate: 55.9%, Score: 2, Visits: 10201, Playouts: 10199",
+            name: "Win rate: 55.9%, Score: 2.0, Visits: 10201, Playouts: 10199",
+            engine_analysis: {
+                playouts: 10199,
+                score: 2,
+                visits: 10201,
+                win_rate: 55.9,
+            },
             from: 2,
             moves: "qcqdpcncocodnbqnblbmdlepgr",
             marks: { circle: "qc" },
@@ -83,6 +109,15 @@ describe("PvOutputParser", () => {
     test("Phoenix Go output parsing", () => {
         const chatBody = {
             type: "analysis",
+            engine_analysis: {
+                N: 40,
+                Q: 0.115749,
+                cost: 5815.084473,
+                p: 0.898028,
+                sims: 44,
+                v: 0.083483,
+                win_rate: 55.8,
+            },
             name: "Win rate: 55.8%, N: 40, Q: 0.115749, p: 0.898028, v: 0.083483, cost: 5815ms, sims: 44",
             from: 2,
             moves: "eoncfdqcnqqnnk",
