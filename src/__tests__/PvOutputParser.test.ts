@@ -85,7 +85,7 @@ describe("PvOutputParser", () => {
             type: "analysis",
             name: "Win rate: 55.8%, N: 40, Q: 0.115749, p: 0.898028, v: 0.083483, cost: 5815ms, sims: 44",
             from: 2,
-            moves: "eoncfdqcnqqnnk-f0t-f",
+            moves: "eoncfdqcnqqnnk",
             marks: { circle: "eo" },
         };
         doTest("phoenixgo", phoenix_output, chatBody);

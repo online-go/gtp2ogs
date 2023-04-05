@@ -272,10 +272,10 @@ export class PvOutputParser {
                         const cost = parseFloat(match[7]);
                         const sims = parseInt(match[8]);
 
-
                         //const name = match[1];
                         const name = `Win rate: ${win_rate}%, N: ${N}, Q: ${Q}, p: ${p}, v: ${v}, cost: ${Math.round(cost)}ms, sims: ${sims}`;
                         const pv = this.detected_pv[1]
+                            .replace(/-nan\(ind\)/g, "")
                             .replace(/\([^()]*\)/g, "")
                             .split(",")
                             .map((s) =>
