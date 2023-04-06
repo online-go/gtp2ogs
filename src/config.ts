@@ -180,8 +180,6 @@ export interface BotConfig {
      */
     instances?: number;
 
-    pv_format?: string;
-
     /** Enabled clocks being sent to the bot. Clocks will only be sent when
      * the applicable clock commands are detected from the bot anyways, so this
      * is generally fine to leave turned on.

@@ -234,9 +234,6 @@
                     "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are.",
                     "default": 1
                 },
-                "pv_format": {
-                    "type": "string"
-                },
                 "enable_clock": {
                     "type": "boolean",
                     "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
