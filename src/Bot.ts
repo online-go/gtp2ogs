@@ -5,9 +5,10 @@ import * as split2 from "split2";
 import { Move } from "./types";
 import { decodeMoves } from "goban/src/GoMath";
 import { config, BotConfig } from "./config";
-import type { PvOutputParser } from "./PvOutputParser";
+import { PvOutputParser } from "./PvOutputParser";
 import { socket } from "./socket";
 import { EventEmitter } from "eventemitter3";
+import type { Game } from "./Game";
 
 const gtpCommandEndRegex = new RegExp("(\\r?\\n){2}$");
 const gtpCommandSplitRegex = new RegExp("(\\r?\\n){2}");
@@ -25,6 +26,7 @@ let last_bot_id = 0;
 /** Manages talking to a bot via the GTP interface */
 export class Bot extends EventEmitter<Events> {
     id: number = ++last_bot_id;
+    game: Game | null = null;
     bot_config: BotConfig;
     commands_sent: number;
     command_callbacks: Array<cb_type>;
@@ -33,7 +35,7 @@ export class Bot extends EventEmitter<Events> {
     ignore: boolean;
     dead: boolean;
     failed: boolean;
-    pv_parser?: PvOutputParser;
+    pv_parser: PvOutputParser;
     proc: ReturnType<typeof spawn>;
     kgstime: boolean;
     katafischer: boolean;
@@ -68,8 +70,6 @@ export class Bot extends EventEmitter<Events> {
         super();
 
         this.bot_config = bot_config;
-        //const pv_parser = bot_config.pv_format ? new PvOutputParser(this) : undefined;
-        const pv_parser = undefined;
 
         const cmd = bot_config.command;
 
@@ -105,7 +105,7 @@ export class Bot extends EventEmitter<Events> {
         // Set to true when there is a command failure or a bot failure and the game fail counter should be incremented.
         // After a few failures we stop retrying and resign the game.
         this.failed = false;
-        this.pv_parser = pv_parser;
+        this.pv_parser = new PvOutputParser();
 
         this.verbose("Starting ", cmd.join(" "));
         try {
@@ -147,8 +147,15 @@ export class Bot extends EventEmitter<Events> {
             }
             this.error(`stderr: ${errline}`);
 
-            if (this.pv_parser) {
-                this.pv_parser.processBotOutput(errline);
+            if (!this.game) {
+                this.warn(
+                    "Bot emitted the following line to stderr when no game was attached: ",
+                    errline,
+                );
+            }
+
+            if (this.pv_parser && this.game) {
+                this.pv_parser.scanAndSendEngineAnalysis(this.game, errline);
             }
             if (this.bot_config.send_chats) {
                 const chat_match = /(DISCUSSION|MALKOVICH|MAIN):(.*)/.exec(errline);
@@ -717,6 +724,10 @@ export class Bot extends EventEmitter<Events> {
     // Called on game over, in case you need something special.
     gameOver() {
         //
+    }
+
+    setGame(game: Game | null) {
+        this.game = game;
     }
 }
 

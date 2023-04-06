@@ -123,6 +123,7 @@ describe("PvOutputParser", () => {
             moves: "eoncfdqcnqqnnk",
             marks: { circle: "eo" },
         };
+
         doTest("phoenixgo", phoenix_output, chatBody);
     });
 
@@ -142,11 +143,11 @@ describe("PvOutputParser", () => {
             },
         };
 
-        const parser = new PvOutputParser(game);
+        const parser = new PvOutputParser();
 
         for (const line of contents.split("\n")) {
             //console.log(line);
-            parser.processBotOutput(line);
+            parser.scanAndSendEngineAnalysis(game, line);
         }
 
         expect(chat).toEqual(expected_chat);

@@ -1,7 +1,7 @@
 import { decodeMoves } from "goban/src/GoMath";
 import { GoEngineConfig } from "goban/src/GoEngine";
+import { GameChatAnalysisMessage } from "goban/src/protocol";
 import { move2gtpvertex } from "./util";
-
 import { Move } from "./types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
@@ -373,6 +373,7 @@ export class Game extends EventEmitter<Events> {
         }
 
         this.bot = await bot_pools.main.acquire();
+        this.bot.setGame(this);
         this.bot.log(`[game ${this.game_id}] Starting up bot: ${config.bot.command.join(" ")}`);
         this.bot.on("chat", (message, channel) =>
             this.sendChat(message, this.state.moves.length + 1, channel),
@@ -384,6 +385,7 @@ export class Game extends EventEmitter<Events> {
 
         if (config.resign_bot?.command) {
             this.resign_bot = await bot_pools.resign.acquire();
+            this.resign_bot.setGame(this);
 
             this.resign_bot.log(
                 `[game ${this.game_id}] Starting up resign bot: ${config.resign_bot.command.join(
@@ -658,7 +660,7 @@ export class Game extends EventEmitter<Events> {
         return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handi}`;
     }
     sendChat(
-        msg: string | TranslatableString,
+        msg: string | TranslatableString | GameChatAnalysisMessage,
         move_number?: number,
         channel: "main" | "malkovich" = "main",
     ): void {

@@ -1,5 +1,6 @@
 import { char2num, num2char } from "goban/src/GoMath";
 //import { gtpchar2num } from "./Bot";
+import { GameChatAnalysisMessage } from "goban/src/protocol";
 import { Game } from "./Game";
 
 type SUPPORTED_ENGINE_TYPES = "leela" | "leela_zero" | "katago" | "sai" | "sai18" | "phoenixgo";
@@ -13,21 +14,21 @@ interface EngineAnalysis {
 
 /** Utility class to work with Principle Variations (PV) output for different bots. */
 export class PvOutputParser {
-    game: Game;
+    game!: Game;
     lookingForPv: boolean = false;
     saiScore: boolean = false;
 
     detected_engine?: SUPPORTED_ENGINE_TYPES;
     detected_pv?: RegExpMatchArray;
 
-    constructor(game) {
-        this.game = game;
+    constructor() {
         this.lookingForPv = false;
         this.saiScore = false;
     }
 
     /** Scans the bot output for PVs and posts them to the chat. */
-    public processBotOutput(line: string): void {
+    public scanAndSendEngineAnalysis(game: Game, line: string): void {
+        this.game = game;
         this.detectEngine(line);
         this.processLine(line);
     }
@@ -44,7 +45,7 @@ export class PvOutputParser {
         name: string,
         pv_move: string,
         engine_analysis: EngineAnalysis,
-    ): any {
+    ): GameChatAnalysisMessage {
         return {
             type: "analysis",
             engine_analysis: engine_analysis,
@@ -64,7 +65,7 @@ export class PvOutputParser {
                 s === "pass"
                     ? ".."
                     : num2char(gtpchar2num(s[0].toLowerCase())) +
-                      num2char(this.game.state.width - parseInt(s.slice(1))),
+                      num2char(this.game.state.height - parseInt(s.slice(1))),
             )
             .join("");
     }
@@ -128,7 +129,7 @@ export class PvOutputParser {
             LEELA     : this.postPvToChatSingleLine,
         */
 
-        let message: any = null;
+        let message: GameChatAnalysisMessage = null;
         switch (this.detected_engine) {
             case "katago":
                 {

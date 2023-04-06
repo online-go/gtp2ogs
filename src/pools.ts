@@ -84,6 +84,7 @@ export class BotPool extends EventEmitter<Events> {
     }
 
     release(bot: Bot): void {
+        bot.setGame(null);
         if (this.queue.length > 0) {
             this.queue.shift()(bot);
         } else {
