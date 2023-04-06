@@ -170,8 +170,6 @@ export class Game extends EventEmitter<Events> {
             // false positives for gamedata changes. We never use the field, so just remove it.
             delete clock.now;
 
-            this.verbose("clock:", JSON.stringify(clock));
-
             if (this.state) {
                 this.state.clock = clock;
             } else {
@@ -227,7 +225,9 @@ export class Game extends EventEmitter<Events> {
                     (this.my_color === "white" && this.state.handicap >= this.state.moves.length) ||
                     move.move_number % 2 === this.opponent_evenodd
                 ) {
-                    this.log(`Got     ${move2gtpvertex(m, this.state.width, this.state.height)}`);
+                    this.log(
+                        `Opponent played ${move2gtpvertex(m, this.state.width, this.state.height)}`,
+                    );
                 }
             } catch (e) {
                 trace.error(e);
@@ -297,7 +297,7 @@ export class Game extends EventEmitter<Events> {
                     void this.makeMove(this.state.moves.length);
                     //this.makeMove(this.state.moves.length);
                 } else {
-                    this.verbose("Ignoring our own move", move.move_number);
+                    //this.verbose("Ignoring our own move", move.move_number);
                 }
             }
         });
@@ -319,6 +319,8 @@ export class Game extends EventEmitter<Events> {
     // away when this is called.
     releaseBots(): Promise<void> {
         const promises: Promise<void>[] = [];
+
+        this.verbose("Releasing bot(s)");
 
         if (this.bot) {
             const bot = this.bot;
@@ -374,7 +376,7 @@ export class Game extends EventEmitter<Events> {
 
         this.bot = await bot_pools.main.acquire();
         this.bot.setGame(this);
-        this.bot.log(`[game ${this.game_id}] Starting up bot: ${config.bot.command.join(" ")}`);
+        this.bot.log(`[game ${this.game_id}] Acquired bot instance`);
         this.bot.on("chat", (message, channel) =>
             this.sendChat(message, this.state.moves.length + 1, channel),
         );
@@ -420,11 +422,13 @@ export class Game extends EventEmitter<Events> {
                 this.resign_bot?.getMoves(cmd, this.state),
             ]);
 
+            /*
             this.verbose(
                 `Our moves: ${JSON.stringify(our_moves)}  Resign bot: ${JSON.stringify(
                     resign_moves,
                 )}`,
             );
+            */
 
             const resign = resign_moves && resign_moves.length > 0 && resign_moves[0].resign;
 
@@ -440,7 +444,7 @@ export class Game extends EventEmitter<Events> {
             doneProcessing();
             void this.releaseBots();
 
-            trace.error(e);
+            this.error(e);
             this.log("Failed to start the bot, can not make a move, trying to restart");
             this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
             throw e;
@@ -485,17 +489,6 @@ export class Game extends EventEmitter<Events> {
     // (we get all of them at once with place_free_handicap).
     //
     async makeMove(move_number): Promise<void> {
-        if (this.state) {
-            this.verbose(
-                "makeMove",
-                move_number,
-                "is",
-                this.state.moves.length,
-                "!==",
-                move_number,
-                "?",
-            );
-        }
         if (!this.state || this.state.moves.length !== move_number) {
             return;
         }
@@ -538,6 +531,7 @@ export class Game extends EventEmitter<Events> {
                     this.uploadMove(moves[0]);
                 }
             } catch (e) {
+                this.error(e);
                 this.scheduleRetry();
             }
             return;
@@ -576,6 +570,7 @@ export class Game extends EventEmitter<Events> {
             this.handicap_moves = moves;
             this.uploadMove(this.handicap_moves.shift());
         } catch (e) {
+            this.error(e);
             this.scheduleRetry();
         }
     }
@@ -668,7 +663,7 @@ export class Game extends EventEmitter<Events> {
             return;
         }
 
-        if (typeof msg === "object") {
+        if (typeof msg === "object" && "en" in msg) {
             msg.type = "translated";
         }
 

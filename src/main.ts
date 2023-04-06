@@ -98,7 +98,7 @@ class Main {
         socket.on("disconnect", () => {
             this.connected = false;
 
-            trace.info("Disconnected from server");
+            trace.warn("Disconnected from server");
 
             for (const game_id in this.connected_games) {
                 this.disconnectFromGame(parseInt(game_id));
@@ -155,10 +155,9 @@ class Main {
     }
     connectToGame(game_id: number) {
         if (game_id in this.connected_games) {
-            if (config.verbosity) {
-                trace.info("Connected to game", game_id, "already");
-            }
             return this.connected_games[game_id];
+        } else {
+            trace.info("Connecting to game ", game_id);
         }
 
         this.connected_games[game_id] = new Game(game_id);
@@ -169,9 +168,7 @@ class Main {
         return this.connected_games[game_id];
     }
     disconnectFromGame(game_id: number) {
-        if (config.verbosity) {
-            trace.info("disconnectFromGame", game_id);
-        }
+        trace.info("Disconnecting from game ", game_id);
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
             delete this.connected_games[game_id];
@@ -241,7 +238,7 @@ class Main {
     }
     deleteNotification(notification) {
         socket.send("notification/delete", { notification_id: notification.id }, () => {
-            trace.info("Deleted notification ", notification.id);
+            trace.trace("Deleted notification ", notification.id);
         });
     }
 
@@ -312,7 +309,7 @@ class Main {
                         reject = undefined;
                     }
 
-                    trace.log("Challenge received: ", notification);
+                    trace.log("Challenge received from ", notification.user.username);
 
                     if (!reject) {
                         post(api1(`me/challenges/${notification.challenge_id}/accept`), {})

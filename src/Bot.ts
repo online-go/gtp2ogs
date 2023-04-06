@@ -61,6 +61,7 @@ export class Bot extends EventEmitter<Events> {
     available: boolean = true;
 
     log: (...arr: any[]) => any;
+    info: (...arr: any[]) => any;
     trace: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
     error: (...arr: any[]) => any;
@@ -74,6 +75,10 @@ export class Bot extends EventEmitter<Events> {
         const cmd = bot_config.command;
 
         this.log = trace.log.bind(
+            null,
+            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+        );
+        this.info = trace.info.bind(
             null,
             `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
@@ -145,16 +150,9 @@ export class Bot extends EventEmitter<Events> {
             if (errline === "") {
                 return;
             }
-            this.error(`stderr: ${errline}`);
+            this.log(`${errline}`);
 
-            if (!this.game) {
-                this.warn(
-                    "Bot emitted the following line to stderr when no game was attached: ",
-                    errline,
-                );
-            }
-
-            if (this.pv_parser && this.game) {
+            if (this.pv_parser) {
                 this.pv_parser.scanAndSendEngineAnalysis(this.game, errline);
             }
             if (this.bot_config.send_chats) {

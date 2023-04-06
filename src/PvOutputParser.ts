@@ -2,6 +2,7 @@ import { char2num, num2char } from "goban/src/GoMath";
 //import { gtpchar2num } from "./Bot";
 import { GameChatAnalysisMessage } from "goban/src/protocol";
 import { Game } from "./Game";
+import { trace } from "./trace";
 
 type SUPPORTED_ENGINE_TYPES = "leela" | "leela_zero" | "katago" | "sai" | "sai18" | "phoenixgo";
 
@@ -14,7 +15,7 @@ interface EngineAnalysis {
 
 /** Utility class to work with Principle Variations (PV) output for different bots. */
 export class PvOutputParser {
-    game!: Game;
+    game?: Game;
     lookingForPv: boolean = false;
     saiScore: boolean = false;
 
@@ -27,14 +28,18 @@ export class PvOutputParser {
     }
 
     /** Scans the bot output for PVs and posts them to the chat. */
-    public scanAndSendEngineAnalysis(game: Game, line: string): void {
+    public scanAndSendEngineAnalysis(game: Game | undefined, line: string): void {
         this.game = game;
+        const engine = this.detected_engine;
         this.detectEngine(line);
+        if (this.detected_engine !== engine) {
+            trace.info("Detected engine: " + this.detected_engine);
+        }
         this.processLine(line);
     }
 
     private checkPondering(): boolean {
-        if (!(this.game.processing || this.lookingForPv)) {
+        if (!(this.game?.processing || this.lookingForPv)) {
             return true;
         }
         this.lookingForPv = true; // Once we are processing, we continue to look for pv even after processing stops.
@@ -50,7 +55,7 @@ export class PvOutputParser {
             type: "analysis",
             engine_analysis: engine_analysis,
             name: name,
-            from: this.game.state.moves.length,
+            from: this.game?.state.moves.length || 0,
             moves: pv_move,
             marks: { circle: pv_move.substring(0, 2) },
         };
@@ -65,7 +70,7 @@ export class PvOutputParser {
                 s === "pass"
                     ? ".."
                     : num2char(gtpchar2num(s[0].toLowerCase())) +
-                      num2char(this.game.state.height - parseInt(s.slice(1))),
+                      num2char((this.game?.state.height || 0) - parseInt(s.slice(1))),
             )
             .join("");
     }
@@ -222,7 +227,7 @@ export class PvOutputParser {
                     if (match && this.detected_pv) {
                         const winrate = parseFloat(this.detected_pv[3]).toFixed(1);
                         const score =
-                            this.game.my_color === "black"
+                            this.game?.my_color === "black"
                                 ? parseFloat(this.detected_pv[7])
                                 : -parseFloat(this.detected_pv[7]);
                         const scoreLine = this.saiScore ? `, Score: ${score.toFixed(1)}` : "";
@@ -261,7 +266,7 @@ export class PvOutputParser {
                     if (match && this.detected_pv) {
                         const winrate = parseFloat(this.detected_pv[5]).toFixed(1);
                         const score =
-                            this.game.my_color === "black"
+                            this.game?.my_color === "black"
                                 ? parseFloat(this.detected_pv[11])
                                 : -parseFloat(this.detected_pv[11]);
                         const scoreLine = this.saiScore ? `, Score: ${score.toFixed(1)}` : "";
@@ -317,7 +322,8 @@ export class PvOutputParser {
                             .map((s) =>
                                 s === ".."
                                     ? ".."
-                                    : s[0] + num2char(this.game.state.width - char2num(s[1]) - 1),
+                                    : s[0] +
+                                      num2char((this.game?.state.height || 0) - char2num(s[1]) - 1),
                             )
                             .join("");
 
@@ -338,7 +344,7 @@ export class PvOutputParser {
         }
 
         if (message) {
-            this.game.sendChat(message, this.game.state.moves.length + 1, "malkovich");
+            this.game?.sendChat(message, (this.game?.state.moves.length || 0) + 1, "malkovich");
         }
     }
 }
