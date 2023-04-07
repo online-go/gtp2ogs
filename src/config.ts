@@ -39,12 +39,34 @@ export interface Config {
     /** Config for how to run your bot */
     bot?: BotConfig;
 
+    /** Bot to use for playing opening moves. This can be useful for ensuring
+     * your bot plays at least a few reasonable joseki moves if it is a weak
+     * bot. */
+    opening_bot?: BotConfig & {
+        /** Number of opening moves to play before switching to the main bot.
+         * @default 8
+         */
+        number_of_opening_moves_to_play?: number;
+    };
+
+    /** Secondary bot to use for ensuring your real bot passes or resigns
+     * appropriately. This bot will be consulted every move. If the move it
+     * returns is a pass it will override the move your bot has made (unless
+     * your bot is resigning). If the move it returns is a resign, it will
+     * count the number of successive resigns and if it is more than the number
+     * of allowed resigns you've set in this config (default of 3), it will
+     * override your bot's move with a resign.
+     */
+    ending_bot?: BotConfig & {
+        /** Number of successive resigns allowed before the bot will resign.
+         * @default 3
+         */
+        allowed_resigns?: number;
+    };
+
     /** Message to send to your opponent at the start of the game */
     greeting?: TranslatableString;
     farewell?: TranslatableString;
-
-    resign_bot?: BotConfig;
-    opening_bot?: BotConfig;
 
     /** Send a message saying what the bot thought the score was at the end of the game */
     farewellscore?: boolean;
@@ -280,12 +302,17 @@ function defaults(): Config {
 }
 
 function bot_config_defaults(): Partial<BotConfig> {
-    return {
+    const base: Partial<BotConfig> = {
         instances: 1,
         send_chats: true,
         send_pv_data: true,
         release_delay: 100,
     };
+
+    (base as any).allowed_resigns = 3;
+    (base as any).number_of_opening_moves_to_play = 8;
+
+    return base;
 }
 
 export const config: Config = load_config_or_exit();
@@ -350,10 +377,10 @@ function load_config_or_exit(): Config {
     if (with_defaults.bot) {
         with_defaults.bot = { ...bot_config_defaults(), ...with_defaults.bot };
     }
-    if (with_defaults.resign_bot) {
-        with_defaults.resign_bot = {
+    if (with_defaults.ending_bot) {
+        with_defaults.ending_bot = {
             ...bot_config_defaults(),
-            ...with_defaults.resign_bot,
+            ...with_defaults.ending_bot,
         };
     }
     if (with_defaults.opening_bot) {

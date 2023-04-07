@@ -95,5 +95,5 @@ export class BotPool extends EventEmitter<Events> {
 
 export const bot_pools = {
     main: new BotPool("Main", config.bot),
-    resign: config.resign_bot ? new BotPool("Resign", config.resign_bot) : null,
+    resign: config.ending_bot ? new BotPool("Resign", config.ending_bot) : null,
 };

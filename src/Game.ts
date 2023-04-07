@@ -26,9 +26,9 @@ export class Game extends EventEmitter<Events> {
     opponent_evenodd: null | number;
     greeted: boolean;
     bot?: Bot;
-    resign_bot?: Bot;
+    ending_bot?: Bot;
     bot_failures: number;
-    resign_bot_failures: number;
+    ending_bot_failures: number;
     my_color: null | string;
     processing: boolean;
     handicap_moves: Move[];
@@ -57,7 +57,7 @@ export class Game extends EventEmitter<Events> {
         this.opponent_evenodd = null;
         this.greeted = false;
         this.bot = undefined;
-        this.resign_bot = undefined;
+        this.ending_bot = undefined;
         this.bot_failures = 0;
         this.my_color = null;
         this.processing = false;
@@ -258,7 +258,7 @@ export class Game extends EventEmitter<Events> {
                             this.state.height,
                             this.my_color === "black" ? "white" : "black",
                         );
-                        void this.resign_bot.sendMove(
+                        void this.ending_bot.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -286,7 +286,7 @@ export class Game extends EventEmitter<Events> {
                             this.state.height,
                             this.my_color === "black" ? "white" : "black",
                         );
-                        void this.resign_bot.sendMove(
+                        void this.ending_bot.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -336,16 +336,16 @@ export class Game extends EventEmitter<Events> {
             );
         }
 
-        if (this.resign_bot) {
-            const resign_bot = this.resign_bot;
-            this.resign_bot = undefined;
+        if (this.ending_bot) {
+            const ending_bot = this.ending_bot;
+            this.ending_bot = undefined;
             promises.push(
                 new Promise<void>((resolve, _reject) => {
                     setTimeout(() => {
-                        resign_bot.off("chat");
-                        bot_pools.resign.release(resign_bot);
+                        ending_bot.off("chat");
+                        bot_pools.resign.release(ending_bot);
                         resolve();
-                    }, resign_bot.bot_config.release_delay);
+                    }, ending_bot.bot_config.release_delay);
                 }),
             );
         }
@@ -374,29 +374,27 @@ export class Game extends EventEmitter<Events> {
             throw new Error("Bot has crashed too many times, resigning game");
         }
 
+        this.bot.verbose(`[game ${this.game_id}] Acquiring bot instance(s)`);
+
         this.bot = await bot_pools.main.acquire();
         this.bot.setGame(this);
-        this.bot.log(`[game ${this.game_id}] Acquired bot instance`);
+        this.bot.verbose(`[game ${this.game_id}] Acquired bot instance`);
         this.bot.on("chat", (message, channel) =>
             this.sendChat(message, this.state.moves.length + 1, channel),
         );
 
-        this.bot.log(`[game ${this.game_id}] Loading state`);
+        //this.bot.log(`[game ${this.game_id}] Loading state`);
         await this.bot.loadState(this.state);
-        this.bot.verbose(`[game ${this.game_id}] State loaded successfully`);
+        //this.bot.verbose(`[game ${this.game_id}] State loaded successfully`);
 
-        if (config.resign_bot?.command) {
-            this.resign_bot = await bot_pools.resign.acquire();
-            this.resign_bot.setGame(this);
+        if (config.ending_bot?.command) {
+            this.ending_bot = await bot_pools.resign.acquire();
+            this.bot.verbose(`[game ${this.game_id}] Acquired resign bot instance`);
+            this.ending_bot.setGame(this);
 
-            this.resign_bot.log(
-                `[game ${this.game_id}] Starting up resign bot: ${config.resign_bot.command.join(
-                    " ",
-                )}`,
-            );
-            this.resign_bot.log(`[game ${this.game_id}] Loading state`);
-            await this.resign_bot.loadState(this.state);
-            this.resign_bot.verbose(`[game ${this.game_id}] State loaded successfully`);
+            //this.ending_bot.log(`[game ${this.game_id}] Loading state`);
+            await this.ending_bot.loadState(this.state);
+            //this.ending_bot.verbose(`[game ${this.game_id}] State loaded successfully`);
         }
     }
 
@@ -419,7 +417,7 @@ export class Game extends EventEmitter<Events> {
 
             const [our_moves, resign_moves] = await Promise.all([
                 this.bot.getMoves(cmd, this.state),
-                this.resign_bot?.getMoves(cmd, this.state),
+                this.ending_bot?.getMoves(cmd, this.state),
             ]);
 
             /*
@@ -628,12 +626,12 @@ export class Game extends EventEmitter<Events> {
             if (this.bot) {
                 // only kill the bot after it processed this
                 this.bot.gameOver();
-                this.resign_bot?.gameOver();
+                this.ending_bot?.gameOver();
                 void this.releaseBots();
             }
         } else if (this.bot) {
             this.bot.gameOver();
-            this.resign_bot?.gameOver();
+            this.ending_bot?.gameOver();
             void this.releaseBots();
         }
 

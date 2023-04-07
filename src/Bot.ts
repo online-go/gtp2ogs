@@ -41,7 +41,7 @@ export class Bot extends EventEmitter<Events> {
     katafischer: boolean;
     katatime: boolean;
     json_initialized: boolean;
-    is_resign_bot: boolean;
+    is_ending_bot: boolean;
     available_commands: { [key: string]: boolean } = {
         /* These are required by the GTP spec */
         protocol_version: true,
@@ -67,42 +67,42 @@ export class Bot extends EventEmitter<Events> {
     error: (...arr: any[]) => any;
     warn: (...arr: any[]) => any;
 
-    constructor(bot_config: BotConfig, is_resign_bot: boolean = false) {
+    constructor(bot_config: BotConfig, is_ending_bot: boolean = false) {
         super();
 
         this.bot_config = bot_config;
 
-        const cmd = bot_config.command;
+        const cmd = bot_config.command.map((x) => x.replace(/^~[/]/g, process.env.HOME + "/"));
 
         this.log = trace.log.bind(
             null,
-            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+            `[${this.is_ending_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
         this.info = trace.info.bind(
             null,
-            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+            `[${this.is_ending_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
         this.trace = trace.trace.bind(
             null,
-            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+            `[${this.is_ending_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
         this.verbose = trace.debug.bind(
             null,
-            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+            `[${this.is_ending_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
         this.warn = trace.warn.bind(
             null,
-            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+            `[${this.is_ending_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
         this.error = trace.error.bind(
             null,
-            `[${this.is_resign_bot ? "resign bot" : "bot"} ${this.id}]`,
+            `[${this.is_ending_bot ? "resign bot" : "bot"} ${this.id}]`,
         );
 
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.command_error_callbacks = [];
-        this.is_resign_bot = is_resign_bot;
+        this.is_ending_bot = is_ending_bot;
         this.firstmove = true;
         this.ignore = false; // Ignore output from bot ?
         // Set to true when the bot process has died and needs to be restarted before it can be used again.
@@ -120,19 +120,19 @@ export class Bot extends EventEmitter<Events> {
             });
             this.log = trace.log.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
+                `[${this.is_ending_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
             this.verbose = trace.debug.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
+                `[${this.is_ending_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
             this.warn = trace.warn.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
+                `[${this.is_ending_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
             this.error = trace.error.bind(
                 null,
-                `[${this.is_resign_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
+                `[${this.is_ending_bot ? "resign bot" : "bot"}  ${this.id}:${this.pid}]`,
             );
         } catch (e) {
             this.log("Failed to start the bot: ", e);
