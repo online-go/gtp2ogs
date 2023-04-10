@@ -152,6 +152,11 @@ export interface Config {
      * @hidden
      */
     bot_id?: number;
+
+    /** Config version for internal use
+     * @hidden
+     */
+    _config_version?: number;
 }
 
 export interface TimeControlRanges {
@@ -173,6 +178,11 @@ export interface TimeControlRanges {
      *  @default [1, 10]
      */
     periods_range: [number, number];
+
+    /** Concurrent games to allow for this speed bracket
+     * @default 1, 3, 500 for blitz, live, correspondence respectively
+     */
+    concurrent_games: number;
 }
 
 export interface TranslatableString {
@@ -271,11 +281,13 @@ function defaults(): Config {
             per_move_time_range: [10, 300],
             main_time_range: [0, 3600],
             periods_range: [1, 10],
+            concurrent_games: 3,
         },
         allowed_correspondence_settings: {
             per_move_time_range: [43200, 259200],
             main_time_range: [0, 86400 * 30],
             periods_range: [1, 10],
+            concurrent_games: 500,
         },
 
         allowed_board_sizes: [9, 13, 19],
@@ -408,6 +420,25 @@ function load_config_or_exit(): Config {
         }
     }
 
+    if (with_defaults.allowed_blitz_settings) {
+        if (!with_defaults.allowed_blitz_settings.concurrent_games) {
+            with_defaults.allowed_blitz_settings.concurrent_games = 1;
+        }
+    }
+
+    if (raw.allowed_live_settings) {
+        with_defaults.allowed_live_settings = {
+            ...defaults().allowed_live_settings,
+            ...raw.allowed_live_settings,
+        };
+    }
+    if (raw.allowed_correspondence_settings) {
+        with_defaults.allowed_correspondence_settings = {
+            ...defaults().allowed_correspondence_settings,
+            ...raw.allowed_correspondence_settings,
+        };
+    }
+
     if (with_defaults.bot) {
         with_defaults.bot = { ...bot_config_defaults(), ...with_defaults.bot };
     }
@@ -442,6 +473,8 @@ function load_config_or_exit(): Config {
     }
     //console.info(yargs.argv);
     //console.info(with_defaults);
+
+    with_defaults._config_version = 1;
 
     return with_defaults;
 }

@@ -69,6 +69,7 @@ class Main {
                     jwt: "",
                     bot_username: config.username,
                     bot_apikey: config.apikey,
+                    bot_config: config,
                 },
                 (obj) => {
                     if (!obj) {
@@ -267,6 +268,7 @@ class Main {
                     let reject: string | undefined =
                         this.checkBlacklist(notification.user) ||
                         this.checkTimeControl(notification.time_control) ||
+                        this.checkConcurrentGames(notification.time_control.speed) ||
                         this.checkBoardSize(notification.width, notification.height) ||
                         this.checkHandicap(notification.handicap) ||
                         this.checkRanked(notification.ranked);
@@ -369,6 +371,38 @@ class Main {
             return `This bot only plays ranked games.`;
         }
 
+        return undefined;
+    }
+    checkConcurrentGames(speed: Speed): string | undefined {
+        const count = this.countGames(speed);
+        switch (speed) {
+            case "blitz":
+                if (!config.allowed_blitz_settings?.concurrent_games) {
+                    return `This bot does not play blitz games.`;
+                }
+                if (count >= (config.allowed_blitz_settings?.concurrent_games || 0)) {
+                    return `This bot is already playing ${count} blitz games.`;
+                }
+                break;
+
+            case "live":
+                if (!config.allowed_live_settings?.concurrent_games) {
+                    return `This bot does not play live games.`;
+                }
+                if (count >= (config.allowed_live_settings?.concurrent_games || 0)) {
+                    return `This bot is already playing ${count} live games.`;
+                }
+                break;
+
+            case "correspondence":
+                if (!config.allowed_correspondence_settings?.concurrent_games) {
+                    return `This bot does not play correspondence games.`;
+                }
+                if (count >= (config.allowed_correspondence_settings?.concurrent_games || 0)) {
+                    return `This bot is already playing ${count} correspondence games.`;
+                }
+                break;
+        }
         return undefined;
     }
     checkTimeControl(time_control: JGOFTimeControl): string | undefined {

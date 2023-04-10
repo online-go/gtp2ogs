@@ -404,12 +404,18 @@
                         1,
                         10
                     ]
+                },
+                "concurrent_games": {
+                    "type": "number",
+                    "description": "Concurrent games to allow for this speed bracket",
+                    "default": "1, 3, 500 for blitz, live, correspondence respectively"
                 }
             },
             "required": [
                 "per_move_time_range",
                 "main_time_range",
-                "periods_range"
+                "periods_range",
+                "concurrent_games"
             ],
             "additionalProperties": false
         }
