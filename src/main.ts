@@ -56,8 +56,11 @@ class Main {
             this.connected = true;
 
             await bot_pools.main.ready;
-            if (bot_pools.resign) {
-                await bot_pools.resign.ready;
+            if (bot_pools.ending) {
+                await bot_pools.ending.ready;
+            }
+            if (bot_pools.opening) {
+                await bot_pools.opening.ready;
             }
 
             socket.send(

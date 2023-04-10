@@ -49,94 +49,12 @@
                     "description": "Config for how to run your bot"
                 },
                 "opening_bot": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "number_of_opening_moves_to_play": {
-                            "type": "number",
-                            "description": "Number of opening moves to play before switching to the main bot.",
-                            "default": 8
-                        },
-                        "command": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "instances": {
-                            "type": "number",
-                            "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are.",
-                            "default": 1
-                        },
-                        "enable_clock": {
-                            "type": "boolean",
-                            "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
-                            "default": true
-                        },
-                        "send_chats": {
-                            "type": "boolean"
-                        },
-                        "send_pv_data": {
-                            "type": "boolean",
-                            "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.\n\nSee `pv_format` for more details on formatting and parsing PV values .",
-                            "default": true
-                        },
-                        "release_delay": {
-                            "type": "number",
-                            "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
-                            "default": 100
-                        }
-                    },
-                    "required": [
-                        "command",
-                        "release_delay"
-                    ],
+                    "$ref": "#/definitions/OpeningBotConfig",
                     "description": "Bot to use for playing opening moves. This can be useful for ensuring your bot plays at least a few reasonable joseki moves if it is a weak bot."
                 },
                 "ending_bot": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "allowed_resigns": {
-                            "type": "number",
-                            "description": "Number of successive resigns allowed before the bot will resign.",
-                            "default": 3
-                        },
-                        "command": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "instances": {
-                            "type": "number",
-                            "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are.",
-                            "default": 1
-                        },
-                        "enable_clock": {
-                            "type": "boolean",
-                            "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
-                            "default": true
-                        },
-                        "send_chats": {
-                            "type": "boolean"
-                        },
-                        "send_pv_data": {
-                            "type": "boolean",
-                            "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.\n\nSee `pv_format` for more details on formatting and parsing PV values .",
-                            "default": true
-                        },
-                        "release_delay": {
-                            "type": "number",
-                            "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
-                            "default": 100
-                        }
-                    },
-                    "required": [
-                        "command",
-                        "release_delay"
-                    ],
-                    "description": "Secondary bot to use for ensuring your real bot passes or resigns appropriately. This bot will be consulted every move. If the move it returns is a pass it will override the move your bot has made (unless your bot is resigning). If the move it returns is a resign, it will count the number of successive resigns and if it is more than the number of allowed resigns you've set in this config (default of 3), it will override your bot's move with a resign."
+                    "$ref": "#/definitions/EndingBotConfig",
+                    "description": "Secondary bot to use for ensuring your real bot passes or resigns appropriately. This bot will be consulted every move after . If the move it returns is a pass it will override the move your bot has made (unless your bot is resigning). If the move it returns is a resign, it will count the number of successive resigns and if it is more than the number of allowed resigns you've set in this config (default of 3), it will override your bot's move with a resign."
                 },
                 "greeting": {
                     "$ref": "#/definitions/TranslatableString",
@@ -343,6 +261,99 @@
             ],
             "additionalProperties": false,
             "description": "Bot config"
+        },
+        "OpeningBotConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "instances": {
+                    "type": "number",
+                    "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are.",
+                    "default": 1
+                },
+                "enable_clock": {
+                    "type": "boolean",
+                    "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
+                    "default": true
+                },
+                "send_chats": {
+                    "type": "boolean"
+                },
+                "send_pv_data": {
+                    "type": "boolean",
+                    "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.\n\nSee `pv_format` for more details on formatting and parsing PV values .",
+                    "default": true
+                },
+                "release_delay": {
+                    "type": "number",
+                    "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
+                    "default": 100
+                },
+                "number_of_opening_moves_to_play": {
+                    "type": "number",
+                    "description": "Number of opening moves to play before switching to the main bot.",
+                    "default": 8
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "command",
+                "release_delay"
+            ]
+        },
+        "EndingBotConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "instances": {
+                    "type": "number",
+                    "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are.",
+                    "default": 1
+                },
+                "enable_clock": {
+                    "type": "boolean",
+                    "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
+                    "default": true
+                },
+                "send_chats": {
+                    "type": "boolean"
+                },
+                "send_pv_data": {
+                    "type": "boolean",
+                    "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.\n\nSee `pv_format` for more details on formatting and parsing PV values .",
+                    "default": true
+                },
+                "release_delay": {
+                    "type": "number",
+                    "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
+                    "default": 100
+                },
+                "allowed_resigns": {
+                    "type": "number",
+                    "description": "Number of successive resigns allowed before the bot will resign.",
+                    "default": 3
+                },
+                "moves_to_allow_before_checking_ratio": {
+                    "type": "number",
+                    "description": "This is the ratio of the board size to the number of moves to allow before we will start checking the ending bot for passes and resigns. This is to prevent the bot from resigning too early in a game.\n\nThe move to start consulting the ending bot is calculated by taking\n\n  ceil(board_height * board_width * ratio)",
+                    "default": 0.8
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "command",
+                "release_delay"
+            ]
         },
         "TranslatableString": {
             "type": "object",

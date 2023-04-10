@@ -26,7 +26,9 @@ export class Game extends EventEmitter<Events> {
     opponent_evenodd: null | number;
     greeted: boolean;
     bot?: Bot;
+    using_opening_bot: boolean = false;
     ending_bot?: Bot;
+    endbot_resign_count: number = 0;
     bot_failures: number;
     ending_bot_failures: number;
     my_color: null | string;
@@ -258,7 +260,7 @@ export class Game extends EventEmitter<Events> {
                             this.state.height,
                             this.my_color === "black" ? "white" : "black",
                         );
-                        void this.ending_bot.sendMove(
+                        void this.ending_bot?.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -286,7 +288,7 @@ export class Game extends EventEmitter<Events> {
                             this.state.height,
                             this.my_color === "black" ? "white" : "black",
                         );
-                        void this.ending_bot.sendMove(
+                        void this.ending_bot?.sendMove(
                             decodeMoves(move.move, this.state.width, this.state.height)[0],
                             this.state.width,
                             this.state.height,
@@ -325,11 +327,16 @@ export class Game extends EventEmitter<Events> {
         if (this.bot) {
             const bot = this.bot;
             this.bot = undefined;
+            const using_opening_bot = this.using_opening_bot;
             promises.push(
                 new Promise<void>((resolve, _reject) => {
                     setTimeout(() => {
                         bot.off("chat");
-                        bot_pools.main.release(bot);
+                        if (using_opening_bot) {
+                            bot_pools.opening.release(bot);
+                        } else {
+                            bot_pools.main.release(bot);
+                        }
                         resolve();
                     }, bot.bot_config.release_delay);
                 }),
@@ -343,7 +350,7 @@ export class Game extends EventEmitter<Events> {
                 new Promise<void>((resolve, _reject) => {
                     setTimeout(() => {
                         ending_bot.off("chat");
-                        bot_pools.resign.release(ending_bot);
+                        bot_pools.ending.release(ending_bot);
                         resolve();
                     }, ending_bot.bot_config.release_delay);
                 }),
@@ -354,14 +361,14 @@ export class Game extends EventEmitter<Events> {
             return;
         });
     }
-    // Start the bot.
-    async ensureBotStarted(): Promise<void> {
+
+    async acquireBots(): Promise<void> {
         if (this.bot && this.bot.dead) {
             await this.releaseBots();
         }
 
         if (this.bot) {
-            return;
+            throw new Error("acquireBots called but bot already acquired");
         }
 
         if (this.bot_failures >= 5) {
@@ -374,9 +381,18 @@ export class Game extends EventEmitter<Events> {
             throw new Error("Bot has crashed too many times, resigning game");
         }
 
-        this.bot.verbose(`[game ${this.game_id}] Acquiring bot instance(s)`);
-
-        this.bot = await bot_pools.main.acquire();
+        if (
+            config.opening_bot &&
+            config.opening_bot.number_of_opening_moves_to_play >= this.state.moves.length
+        ) {
+            this.verbose("Acquiring opening bot instance");
+            this.bot = await bot_pools.opening.acquire();
+            this.using_opening_bot = true;
+        } else {
+            this.verbose("Acquiring main bot instance");
+            this.bot = await bot_pools.main.acquire();
+            this.using_opening_bot = false;
+        }
         this.bot.setGame(this);
         this.bot.verbose(`[game ${this.game_id}] Acquired bot instance`);
         this.bot.on("chat", (message, channel) =>
@@ -388,13 +404,30 @@ export class Game extends EventEmitter<Events> {
         //this.bot.verbose(`[game ${this.game_id}] State loaded successfully`);
 
         if (config.ending_bot?.command) {
-            this.ending_bot = await bot_pools.resign.acquire();
-            this.bot.verbose(`[game ${this.game_id}] Acquired resign bot instance`);
-            this.ending_bot.setGame(this);
+            trace.info("Acquiring ending bot");
+            const move_to_start_checking_ending_bot = Math.ceil(
+                this.state.width *
+                    this.state.height *
+                    config.ending_bot.moves_to_allow_before_checking_ratio,
+            );
 
-            //this.ending_bot.log(`[game ${this.game_id}] Loading state`);
-            await this.ending_bot.loadState(this.state);
-            //this.ending_bot.verbose(`[game ${this.game_id}] State loaded successfully`);
+            if (this.state.moves.length >= move_to_start_checking_ending_bot) {
+                this.verbose(
+                    `[game ${this.game_id}] Consulting ending bot ${this.state.moves.length} moves played, looking for ${move_to_start_checking_ending_bot}`,
+                );
+
+                this.ending_bot = await bot_pools.ending.acquire();
+                this.ending_bot.verbose(`[game ${this.game_id}] Acquired resign bot instance`);
+                this.ending_bot.setGame(this);
+
+                //this.ending_bot.log(`[game ${this.game_id}] Loading state`);
+                await this.ending_bot.loadState(this.state);
+                //this.ending_bot.verbose(`[game ${this.game_id}] State loaded successfully`);
+            } else {
+                this.verbose(
+                    `[game ${this.game_id}] Not starting ending bot yet, only ${this.state.moves.length} moves played, looking for ${move_to_start_checking_ending_bot}`,
+                );
+            }
         }
     }
 
@@ -410,34 +443,42 @@ export class Game extends EventEmitter<Events> {
         };
 
         try {
-            await this.ensureBotStarted();
+            await this.acquireBots();
 
             this.bot.verbose("Generating move for game", this.game_id);
             this.log(cmd);
 
-            const [our_moves, resign_moves] = await Promise.all([
+            const [our_moves, end_moves] = await Promise.all([
                 this.bot.getMoves(cmd, this.state),
                 this.ending_bot?.getMoves(cmd, this.state),
             ]);
 
             /*
             this.verbose(
-                `Our moves: ${JSON.stringify(our_moves)}  Resign bot: ${JSON.stringify(
-                    resign_moves,
-                )}`,
+                `Our moves: ${JSON.stringify(our_moves)}  Resign bot: ${JSON.stringify(end_moves)}`,
             );
             */
 
-            const resign = resign_moves && resign_moves.length > 0 && resign_moves[0].resign;
+            const endbot_pass = end_moves && end_moves.length > 0 && end_moves[0].pass;
+            const endbot_resign = end_moves && end_moves.length > 0 && end_moves[0].resign;
 
-            if (resign) {
-                this.log("Our resign bot has indicated we should resign, so we are resigning");
+            if (endbot_resign) {
+                ++this.endbot_resign_count;
+                this.log(
+                    `Our resign bot has indicated we should resign ${this.endbot_resign_count} ` +
+                        `times in a row, our threshold is ${config.ending_bot.allowed_resigns}`,
+                );
+            } else {
+                this.endbot_resign_count = 0;
             }
 
             doneProcessing();
             void this.releaseBots();
 
-            return resign ? resign_moves : our_moves;
+            return end_moves &&
+                (endbot_pass || this.endbot_resign_count >= config.ending_bot?.allowed_resigns)
+                ? end_moves
+                : our_moves;
         } catch (e) {
             doneProcessing();
             void this.releaseBots();

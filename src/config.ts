@@ -42,27 +42,17 @@ export interface Config {
     /** Bot to use for playing opening moves. This can be useful for ensuring
      * your bot plays at least a few reasonable joseki moves if it is a weak
      * bot. */
-    opening_bot?: BotConfig & {
-        /** Number of opening moves to play before switching to the main bot.
-         * @default 8
-         */
-        number_of_opening_moves_to_play?: number;
-    };
+    opening_bot?: OpeningBotConfig;
 
     /** Secondary bot to use for ensuring your real bot passes or resigns
-     * appropriately. This bot will be consulted every move. If the move it
+     * appropriately. This bot will be consulted every move after . If the move it
      * returns is a pass it will override the move your bot has made (unless
      * your bot is resigning). If the move it returns is a resign, it will
      * count the number of successive resigns and if it is more than the number
      * of allowed resigns you've set in this config (default of 3), it will
      * override your bot's move with a resign.
      */
-    ending_bot?: BotConfig & {
-        /** Number of successive resigns allowed before the bot will resign.
-         * @default 3
-         */
-        allowed_resigns?: number;
-    };
+    ending_bot?: EndingBotConfig;
 
     /** Message to send to your opponent at the start of the game */
     greeting?: TranslatableString;
@@ -240,6 +230,34 @@ export interface BotConfig {
     release_delay: number;
 }
 
+export interface EndingBotConfig extends BotConfig {
+    /** Number of successive resigns allowed before the bot will resign.
+     * @default 3
+     */
+    allowed_resigns?: number;
+
+    /** This is the ratio of the board size to the number of moves
+     * to allow before we will start checking the ending bot for
+     * passes and resigns. This is to prevent the bot from resigning
+     * too early in a game.
+     *
+     * The move to start consulting the ending bot is calculated by taking
+     *
+     *    ceil(board_height * board_width * ratio)
+     *
+     * @allowed 0.1 - 1.0
+     * @default 0.8
+     */
+    moves_to_allow_before_checking_ratio?: number;
+}
+
+export interface OpeningBotConfig extends BotConfig {
+    /** Number of opening moves to play before switching to the main bot.
+     * @default 8
+     */
+    number_of_opening_moves_to_play?: number;
+}
+
 function defaults(): Config {
     return {
         apikey: "",
@@ -309,8 +327,24 @@ function bot_config_defaults(): Partial<BotConfig> {
         release_delay: 100,
     };
 
-    (base as any).allowed_resigns = 3;
-    (base as any).number_of_opening_moves_to_play = 8;
+    return base;
+}
+
+function ending_bot_config_defaults(): Partial<BotConfig> {
+    const base: Partial<EndingBotConfig> = {
+        ...bot_config_defaults(),
+        allowed_resigns: 3,
+        moves_to_allow_before_checking_ratio: 0.8,
+    };
+
+    return base;
+}
+
+function opening_bot_config_defaults(): Partial<BotConfig> {
+    const base: Partial<OpeningBotConfig> = {
+        ...bot_config_defaults(),
+        number_of_opening_moves_to_play: 8,
+    };
 
     return base;
 }
@@ -379,13 +413,13 @@ function load_config_or_exit(): Config {
     }
     if (with_defaults.ending_bot) {
         with_defaults.ending_bot = {
-            ...bot_config_defaults(),
+            ...ending_bot_config_defaults(),
             ...with_defaults.ending_bot,
         };
     }
     if (with_defaults.opening_bot) {
         with_defaults.opening_bot = {
-            ...bot_config_defaults(),
+            ...opening_bot_config_defaults(),
             ...with_defaults.opening_bot,
         };
     }
