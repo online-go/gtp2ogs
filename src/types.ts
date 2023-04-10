@@ -5,3 +5,5 @@ export interface Move {
     resign?: boolean;
     pass?: boolean;
 }
+
+export type Speed = "blitz" | "live" | "correspondence";

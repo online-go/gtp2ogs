@@ -274,7 +274,7 @@ function defaults(): Config {
         },
         allowed_correspondence_settings: {
             per_move_time_range: [43200, 259200],
-            main_time_range: [0, 86400],
+            main_time_range: [0, 86400 * 30],
             periods_range: [1, 10],
         },
 

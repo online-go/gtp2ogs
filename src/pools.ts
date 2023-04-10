@@ -1,6 +1,7 @@
 import { Bot } from "./Bot";
 import { config, BotConfig } from "./config";
 import { EventEmitter } from "eventemitter3";
+import { Speed } from "./types";
 import { trace } from "./trace";
 
 interface Events {
@@ -12,7 +13,7 @@ export class BotPool extends EventEmitter<Events> {
     pool_name: string;
     bot_config: BotConfig;
     instances: Bot[] = [];
-    queue: ((bot: Bot) => void)[] = [];
+    queue: [Speed, (bot: Bot) => void][] = [];
     ready: Promise<string[]>;
     log: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
@@ -69,7 +70,8 @@ export class BotPool extends EventEmitter<Events> {
         });
     }
 
-    async acquire(): Promise<Bot> {
+    async acquire(speed: Speed): Promise<Bot> {
+        trace.info(`Acquiring bot for ${speed} game`);
         await this.ready;
         for (let i = 0; i < this.instances.length; i++) {
             const bot = this.instances[i];
@@ -79,14 +81,27 @@ export class BotPool extends EventEmitter<Events> {
             }
         }
         return new Promise((resolve) => {
-            this.queue.push(resolve);
+            this.queue.push([speed, resolve]);
         });
+    }
+
+    public countAvailable(): number {
+        return this.instances.filter((bot) => bot.available).length;
     }
 
     release(bot: Bot): void {
         bot.setGame(null);
         if (this.queue.length > 0) {
-            this.queue.shift()(bot);
+            for (const target_speed of ["blitz", "live", "correspondence"]) {
+                for (let i = 0; i < this.queue.length; i++) {
+                    const [speed, resolve] = this.queue[i];
+                    if (speed === target_speed) {
+                        this.queue.splice(i, 1);
+                        resolve(bot);
+                        return;
+                    }
+                }
+            }
         } else {
             bot.available = true;
         }

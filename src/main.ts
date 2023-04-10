@@ -9,6 +9,7 @@ import { post, api1 } from "./util";
 import { Game } from "./Game";
 import { bot_pools } from "./pools";
 import { JGOFTimeControl } from "goban/src/JGOF";
+import { Speed } from "./types";
 
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
@@ -48,9 +49,8 @@ class Main {
             this.idle_timeout_interval = setInterval(this.disconnectIdleGames.bind(this), 10000);
         }
         */
-        if (config.verbosity) {
-            setInterval(this.dumpStatus.bind(this), 15 * 60 * 1000);
-        }
+        //setInterval(this.dumpStatus.bind(this), 1 * 60 * 1000);
+        setInterval(this.dumpStatus.bind(this), 1 * 5 * 1000);
 
         socket.on("connect", async () => {
             this.connected = true;
@@ -177,68 +177,31 @@ class Main {
             delete this.connected_games[game_id];
         }
     }
-    /*
-    disconnectIdleGames() {
-        if (config.verbosity) {
-            trace.info("Looking for idle games to disconnect");
-        }
-        for (const k in this.connected_games) {
-            const game_id = this.connected_games[k].game_id;
-            const state = this.connected_games[game_id].state;
-            if (state === null) {
-                if (config.verbosity) {
-                    trace.info("No game state, not checking idle status for", game_id);
-                }
-                continue;
-            }
-            const idle_time = Date.now() - state.clock.last_move;
-            if (state.clock.current_player !== this.bot_id && idle_time > config.timeout) {
-                if (config.verbosity) {
-                    trace.info(
-                        "Found idle game",
-                        game_id,
-                        ", other player has been idling for",
-                        idle_time,
-                        ">",
-                        config.timeout,
-                    );
-                }
-                this.disconnectFromGame(game_id);
-            }
-        }
-    }
-    */
     dumpStatus() {
-        for (const k in this.connected_games) {
-            const game_id = this.connected_games[k].game_id;
-            const game = this.connected_games[game_id];
-            const msg = [];
-            msg.push(`game_id = ${game_id}:`);
-            if (game.state === null) {
-                msg.push("no_state");
-                trace.info(...msg);
-                continue;
-            }
-            msg.push(`black = ${game.state.players.black.username}`);
-            msg.push(`white = ${game.state.players.white.username}`);
-            if (game.state.clock.current_player === this.bot_id) {
-                msg.push("bot_turn");
-            }
-            const idle_time = (Date.now() - game.state.clock.last_move) / 1000;
-            msg.push(`idle_time = ${idle_time}s`);
-            /*
-            if (game.bot === null) {
-                msg.push("no_bot");
-                trace.info(...msg);
-                continue;
-            }
-            msg.push(`bot.proc.pid = ${game.bot.pid}`);
-            msg.push(`bot.dead = ${game.bot.dead}`);
-            msg.push(`bot.failed = ${game.bot.failed}`);
-            */
-            trace.info(...msg);
-        }
+        const blitz_count = this.countGames("blitz");
+        const live_count = this.countGames("live");
+        const corr_count = this.countGames("correspondence");
+
+        trace.info(
+            `Status: playing ${blitz_count} blitz, ${live_count} live, ${corr_count} correspondence games`,
+        );
+        trace.info(
+            `Available bots: ${bot_pools.main.countAvailable()}/${
+                bot_pools.main.bot_config.instances || 0
+            } main, ${bot_pools.ending?.countAvailable() || 0}/${
+                bot_pools.ending?.bot_config.instances || 0
+            } ending, ${bot_pools.opening?.countAvailable() || 0}/${
+                bot_pools.opening?.bot_config.instances || 0
+            } opening`,
+        );
     }
+
+    countGames(speed: Speed) {
+        return Object.values(this.connected_games).filter(
+            (g) => g.state.time_control.speed === speed,
+        ).length;
+    }
+
     deleteNotification(notification) {
         socket.send("notification/delete", { notification_id: notification.id }, () => {
             trace.trace("Deleted notification ", notification.id);
