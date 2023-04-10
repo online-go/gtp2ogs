@@ -24,6 +24,35 @@ const ignorable_notifications = {
     aiReviewDone: true,
 };
 
+interface RejectionDetails {
+    message: string;
+    /* NOTE: If additional rejection_codes are added, you must also add
+     * them https://github.com/online-go/online-go.com/blob/devel/src/components/ChallengeModal/ChallengeModal.tsx
+     * so that appropriate translated messages are displayed to the user.
+     */
+    rejection_code:
+        | "blacklisted"
+        | "board_size_not_square"
+        | "board_size_not_allowed"
+        | "handicap_not_allowed"
+        | "unranked_not_allowed"
+        | "blitz_not_allowed"
+        | "too_many_blitz_games"
+        | "live_not_allowed"
+        | "too_many_live_games"
+        | "correspondence_not_allowed"
+        | "too_many_correspondence_games"
+        | "time_control_system_not_allowed"
+        | "time_increment_out_of_range"
+        | "period_time_out_of_range"
+        | "periods_out_of_range"
+        | "main_time_out_of_range"
+        | "per_move_time_out_of_range";
+    details: {
+        [key: string]: any;
+    };
+}
+
 /** This is the main class for the connection to the server. It is responsible
  * for managing games in play, responding to challenges and notifications, and
  * that sort of stuff. */
@@ -38,19 +67,15 @@ class Main {
     ping_interval: ReturnType<typeof setInterval>;
     bot_id: number;
     bot_username: string;
+    private last_status_update: { [key: string]: number } = {};
 
     constructor() {
         this.connected_games = {};
         //this.games_by_player = {}; // Keep track of connected games per player
         this.connected = false;
 
-        /*
-        if (config.timeout) {
-            this.idle_timeout_interval = setInterval(this.disconnectIdleGames.bind(this), 10000);
-        }
-        */
-        //setInterval(this.dumpStatus.bind(this), 1 * 60 * 1000);
-        setInterval(this.dumpStatus.bind(this), 1 * 5 * 1000);
+        setInterval(this.dumpStatus.bind(this), 1 * 60 * 1000);
+        setInterval(this.sendStatusUpdate.bind(this), 100);
 
         socket.on("connect", async () => {
             this.connected = true;
@@ -197,9 +222,28 @@ class Main {
         );
     }
 
+    /** Send the server our current status */
+    private sendStatusUpdate() {
+        const update = {
+            ongoing_blitz_count: this.countGames("blitz"),
+            ongoing_live_count: this.countGames("live"),
+            ongoing_correspondence_count: this.countGames("correspondence"),
+        };
+
+        if (
+            update["ongoing_blitz_count"] !== this.last_status_update["ongoing_blitz_count"] ||
+            update["ongoing_live_count"] !== this.last_status_update["ongoing_live_count"] ||
+            update["ongoing_correspondence_count"] !==
+                this.last_status_update["ongoing_correspondence_count"]
+        ) {
+            socket.send("bot/status", update);
+            this.last_status_update = update;
+        }
+    }
+
     countGames(speed: Speed) {
         return Object.values(this.connected_games).filter(
-            (g) => g.state.time_control.speed === speed,
+            (g) => g?.state?.time_control?.speed === speed,
         ).length;
     }
 
@@ -222,50 +266,7 @@ class Main {
 
             case "challenge":
                 {
-                    /*
-                        {
-                          id: '54337:e911260c-b102-4da1-b8a5-a4619f28375d',
-                          type: 'challenge',
-                          player_id: 54337,
-                          timestamp: 1680208777,
-                          read_timestamp: 0,
-                          read: 0,
-                          aux_delivered: 0,
-                          game_id: 51749509,
-                          challenge_id: 19684526,
-                          user: {
-                            id: 1,
-                            country: 'us',
-                            username: 'anoek',
-                            icon_url: 'https://b0c2ddc39d13e1c0ddad-93a52a5bc9e7cc06050c1a999beb3694.ssl.cf1.rackcdn.com/09ea48b349cad5d5f27e07f5e0177803-32.png',
-                            ratings: { version: 5, overall: [Object] },
-                            ui_class: 'supporter moderator admin',
-                            professional: false,
-                            rating: 1231.0717333889886,
-                            ranking: 19.729405410145198
-                          },
-                          rules: 'chinese',
-                          ranked: false,
-                          aga_rated: false,
-                          disable_analysis: false,
-                          handicap: 0,
-                          komi: null,
-                          time_control: {
-                            system: 'byoyomi',
-                            time_control: 'byoyomi',
-                            speed: 'correspondence',
-                            pause_on_weekends: true,
-                            main_time: 604800,
-                            period_time: 86400,
-                            periods: 5
-                          },
-                          challenger_color: 'black',
-                          width: 19,
-                          height: 19
-                        }
-                    */
-
-                    let reject: string | undefined =
+                    let reject: RejectionDetails | undefined =
                         this.checkBlacklist(notification.user) ||
                         this.checkTimeControl(notification.time_control) ||
                         this.checkConcurrentGames(notification.time_control.speed) ||
@@ -276,8 +277,6 @@ class Main {
                     if (this.checkWhitelist(notification.user)) {
                         reject = undefined;
                     }
-
-                    trace.log("Challenge received from ", notification.user.username);
 
                     if (!reject) {
                         post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
@@ -296,7 +295,8 @@ class Main {
                     } else {
                         post(api1(`me/challenges/${notification.challenge_id}`), {
                             delete: true,
-                            message: reject || "The AI you've challenged has rejected this game.",
+                            message: reject.message,
+                            rejection_details: reject,
                         })
                             .then(ignore)
                             .catch(trace.info);
@@ -317,12 +317,16 @@ class Main {
         }
     }
 
-    checkBlacklist(user: { id: number; username: string }): string | undefined {
+    checkBlacklist(user: { id: number; username: string }): RejectionDetails | undefined {
         if (!config.blacklist) {
             return undefined;
         }
         if (config.blacklist.includes(user.id) || config.blacklist.includes(user.username)) {
-            return `The operator of this bot will not let you play against it.`;
+            return {
+                message: `The operator of this bot will not let you play against it.`,
+                rejection_code: "blacklisted",
+                details: {},
+            };
         }
         return undefined;
     }
@@ -335,7 +339,7 @@ class Main {
         }
         return false;
     }
-    checkBoardSize(width: number, height: number): string | undefined {
+    checkBoardSize(width: number, height: number): RejectionDetails | undefined {
         const allowed = Array.isArray(config.allowed_board_sizes)
             ? config.allowed_board_sizes
             : [config.allowed_board_sizes];
@@ -349,92 +353,160 @@ class Main {
         }
 
         if (width !== height) {
-            return `This bot only plays square boards.`;
+            return {
+                message: `This bot only plays square boards.`,
+                rejection_code: "board_size_not_square",
+                details: { width, height },
+            };
         }
 
         if (!allowed.includes(width)) {
-            return `This bot only plays on these board sizes: ${allowed
-                .map((x) => `${x}x${x}`)
-                .join(", ")}.`;
+            return {
+                message: `This bot only plays on these board sizes: ${allowed
+                    .map((x) => `${x}x${x}`)
+                    .join(", ")}.`,
+                rejection_code: "board_size_not_allowed",
+                details: { width, height },
+            };
         }
 
         return undefined;
     }
-    checkHandicap(handicap: number): string | undefined {
+    checkHandicap(handicap: number): RejectionDetails | undefined {
         if (!config.allow_handicap && handicap !== 0) {
-            return `This bot only plays games with no handicap.`;
+            return {
+                message: `This bot only plays games with no handicap.`,
+                rejection_code: "handicap_not_allowed",
+                details: { handicap },
+            };
         }
         return undefined;
     }
-    checkRanked(ranked: boolean): string | undefined {
+    checkRanked(ranked: boolean): RejectionDetails | undefined {
         if (!ranked && !config.allow_unranked) {
-            return `This bot only plays ranked games.`;
+            return {
+                message: `This bot only plays ranked games.`,
+                rejection_code: "unranked_not_allowed",
+                details: { ranked },
+            };
         }
 
         return undefined;
     }
-    checkConcurrentGames(speed: Speed): string | undefined {
+    checkConcurrentGames(speed: Speed): RejectionDetails | undefined {
         const count = this.countGames(speed);
         switch (speed) {
             case "blitz":
                 if (!config.allowed_blitz_settings?.concurrent_games) {
-                    return `This bot does not play blitz games.`;
+                    return {
+                        message: `This bot does not play blitz games.`,
+                        rejection_code: "blitz_not_allowed",
+                        details: {},
+                    };
                 }
                 if (count >= (config.allowed_blitz_settings?.concurrent_games || 0)) {
-                    return `This bot is already playing ${count} blitz games.`;
+                    return {
+                        message: `This bot is already playing ${count} of ${
+                            config.allowed_blitz_settings?.concurrent_games || 0
+                        } allowed blitz games.`,
+                        rejection_code: "too_many_blitz_games",
+                        details: {
+                            count,
+                            allowed: config.allowed_blitz_settings?.concurrent_games || 0,
+                        },
+                    };
                 }
                 break;
 
             case "live":
                 if (!config.allowed_live_settings?.concurrent_games) {
-                    return `This bot does not play live games.`;
+                    return {
+                        message: `This bot does not play live games.`,
+                        rejection_code: "live_not_allowed",
+                        details: {},
+                    };
                 }
                 if (count >= (config.allowed_live_settings?.concurrent_games || 0)) {
-                    return `This bot is already playing ${count} live games.`;
+                    return {
+                        message: `This bot is already playing ${count} of ${
+                            config.allowed_live_settings?.concurrent_games || 0
+                        } allowed live games.`,
+                        rejection_code: "too_many_live_games",
+                        details: {
+                            count,
+                            allowed: config.allowed_live_settings?.concurrent_games || 0,
+                        },
+                    };
                 }
                 break;
 
             case "correspondence":
                 if (!config.allowed_correspondence_settings?.concurrent_games) {
-                    return `This bot does not play correspondence games.`;
+                    return {
+                        message: `This bot does not play correspondence games.`,
+                        rejection_code: "correspondence_not_allowed",
+                        details: {},
+                    };
                 }
                 if (count >= (config.allowed_correspondence_settings?.concurrent_games || 0)) {
-                    return `This bot is already playing ${count} correspondence games.`;
+                    return {
+                        message: `This bot is already playing ${count} of ${
+                            config.allowed_correspondence_settings?.concurrent_games || 0
+                        } allowed correspondence games.`,
+                        rejection_code: "too_many_correspondence_games",
+                        details: {
+                            count,
+                            allowed: config.allowed_correspondence_settings?.concurrent_games || 0,
+                        },
+                    };
                 }
                 break;
         }
         return undefined;
     }
-    checkTimeControl(time_control: JGOFTimeControl): string | undefined {
+    checkTimeControl(time_control: JGOFTimeControl): RejectionDetails | undefined {
         if (!config.allowed_time_control_systems.includes(time_control.system as any)) {
-            return `This bot only plays games with time control system ${config.allowed_time_control_systems.join(
-                ", ",
-            )}.`;
+            return {
+                message: `This bot only plays games with time control system ${config.allowed_time_control_systems.join(
+                    ", ",
+                )}.`,
+                rejection_code: "time_control_system_not_allowed",
+                details: { time_control_system: time_control.system },
+            };
         }
 
         let settings: TimeControlRanges | undefined;
         switch (time_control.speed) {
             case "blitz":
                 if (!config.allowed_blitz_settings) {
-                    return `This bot does not play blitz games.`;
+                    return {
+                        message: `This bot does not play blitz games.`,
+                        rejection_code: "blitz_not_allowed",
+                        details: {},
+                    };
                 }
                 settings = config.allowed_blitz_settings;
                 break;
             case "live":
                 if (!config.allowed_live_settings) {
-                    return `This bot does not play live games.`;
+                    return {
+                        message: `This bot does not play live games.`,
+                        rejection_code: "live_not_allowed",
+                        details: {},
+                    };
                 }
                 settings = config.allowed_live_settings;
                 break;
             case "correspondence":
                 if (!config.allowed_correspondence_settings) {
-                    return `This bot does not play correspondence games.`;
+                    return {
+                        message: `This bot does not play correspondence games.`,
+                        rejection_code: "correspondence_not_allowed",
+                        details: {},
+                    };
                 }
                 settings = config.allowed_correspondence_settings;
                 break;
-            default:
-                // should be unreachable
-                return `This bot does not play games with the provided time control speed`;
         }
 
         if (settings) {
@@ -444,7 +516,14 @@ class Main {
                         time_control.time_increment < settings.per_move_time_range[0] ||
                         time_control.time_increment > settings.per_move_time_range[1]
                     ) {
-                        return `Time increment is out of acceptable range`;
+                        return {
+                            message: `Time increment is out of acceptable range`,
+                            rejection_code: "time_increment_out_of_range",
+                            details: {
+                                time_increment: time_control.time_increment,
+                                range: settings.per_move_time_range,
+                            },
+                        };
                     }
                     break;
 
@@ -453,19 +532,40 @@ class Main {
                         time_control.period_time < settings.per_move_time_range[0] ||
                         time_control.period_time > settings.per_move_time_range[1]
                     ) {
-                        return `Period time is out of acceptable range`;
+                        return {
+                            message: `Period time is out of acceptable range`,
+                            rejection_code: "period_time_out_of_range",
+                            details: {
+                                period_time: time_control.period_time,
+                                range: settings.per_move_time_range,
+                            },
+                        };
                     }
                     if (
                         time_control.periods < settings.periods_range[0] ||
                         time_control.periods > settings.periods_range[1]
                     ) {
-                        return `Periods is out of acceptable range`;
+                        return {
+                            message: `Periods is out of acceptable range`,
+                            rejection_code: "periods_out_of_range",
+                            details: {
+                                periods: time_control.periods,
+                                range: settings.periods_range,
+                            },
+                        };
                     }
                     if (
                         time_control.main_time < settings.main_time_range[0] ||
                         time_control.main_time > settings.main_time_range[1]
                     ) {
-                        return `Main time is out of acceptable range`;
+                        return {
+                            message: `Main time is out of acceptable range`,
+                            rejection_code: "main_time_out_of_range",
+                            details: {
+                                main_time: time_control.main_time,
+                                range: settings.main_time_range,
+                            },
+                        };
                     }
                     break;
 
@@ -474,12 +574,23 @@ class Main {
                         time_control.per_move < settings.per_move_time_range[0] ||
                         time_control.per_move > settings.per_move_time_range[1]
                     ) {
-                        return `Per move time is out of acceptable range`;
+                        return {
+                            message: `Per move time is out of acceptable range`,
+                            rejection_code: "per_move_time_out_of_range",
+                            details: {
+                                per_move_time: time_control.per_move,
+                                range: settings.per_move_time_range,
+                            },
+                        };
                     }
                     break;
 
                 default:
-                    return `This bot does not play games with time control system ${time_control.system}.`;
+                    return {
+                        message: `This bot does not play games with time control system ${time_control.system}.`,
+                        rejection_code: "time_control_system_not_allowed",
+                        details: { time_control_system: time_control.system },
+                    };
             }
         }
 
