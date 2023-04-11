@@ -1,7 +1,5 @@
 # gtp2ogs
 
-[![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
-
 Gtp2ogs is a tool allows all bots/AI that support
 [GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol)
 to communicate with [OGS (Online-Go.com Server)](https://online-go.com/)
@@ -22,9 +20,6 @@ You can find operating system specific instructions below:
 -   for Windows, see [the Windows Installation Guide](/docs/INSTALLATION-WINDOWS.md)
 -   for Linux, see [the Linux Installation Guide](/docs/INSTALLATION-LINUX.md)
 
-[wonderingabout](https://github.com/wonderingabout) has put together a more detailed
-tutorialw ith screenshots and examples here: https://github.com/wonderingabout/gtp2ogs-tutorial
-
 ## Running a bot
 
 Before you get started you'll need to setup a bot account on online-go.com. To do that, you'll
@@ -34,14 +29,13 @@ both your human account and your bot account. Once that has been done, log in wi
 account, search for your bot account to view the bot profile, on that page you'll be able to
 generate an API key which you'll use to connect the bot.
 
-Once you have your your bot account setup along with it's API key, you can connect your bot
-using the following command:
+Once you have your your bot account setup along with it's API key, copy the `example_config.json5` to
+your own config file, edit it to update the apikey, the bot command settings, and any other settings
+you find appropriate then run
 
 ```
-gtp2ogs --username <yourusername> --apikey <yourapikey> -- path/to/your/ai/executable [bot arguments]
+gtp2ogs -c yourconfig.json5
 ```
-
-Additional options can be set before the `--` and are documented [here](/docs/OPTIONS-LIST.md):
 
 ## Beta OGS
 
@@ -49,15 +43,9 @@ If you'd like to connect your bot to the beta.online-go.com site simply follow a
 previous steps for setting up a bot account on the beta site and use the `--beta` command
 line argument.
 
-## Show winrate and variations in games
-
-gtp2ogs has native support for showing ingame winrate and variations for some AI,
-see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
-
 ## Community Involvement
 
--   You may also use [Issues](https://github.com/online-go/gtp2ogs/issues)
-    to report issues.
+-   Use [Issues](https://github.com/online-go/gtp2ogs/issues) to report issues.
 -   Contributing is most welcome, if you want to add features or submit fixes
     we'd be glad to review them with you and make gtp2ogs more awesome!
 -   You may also be interested in joining the Discord chat:
