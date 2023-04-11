@@ -397,7 +397,7 @@ function load_config_or_exit(): Config {
         verbosity: args.v || undefined,
     };
 
-    const cli_bot_command = args._.length > 0 ? args._ : undefined;
+    let cli_bot_command = args._.length > 0 ? args._ : undefined;
 
     for (const key of Object.keys(from_cli)) {
         if (from_cli[key] === undefined) {
@@ -413,6 +413,8 @@ function load_config_or_exit(): Config {
     const with_defaults = { ...defaults(), ...raw, ...from_cli };
 
     if (cli_bot_command) {
+        cli_bot_command = cli_bot_command.map((x: string | number) => x.toString().trim());
+
         if (!("bot" in with_defaults)) {
             with_defaults.bot = {
                 ...bot_config_defaults(),
