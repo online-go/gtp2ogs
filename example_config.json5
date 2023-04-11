@@ -1,0 +1,267 @@
+{
+    /** API key for the bot. You can get one from the bot profile page when you
+     *  are logged in as the bot operator.
+     *  REQUIRED*/
+    apikey: "FILL ME IN",
+
+    /** Maximum time to allow the game to be paused for in seconds.
+     * @default 300
+     * @range 300 - 172800
+     */
+    // max_pause_time: 300,
+
+    /** Players who are not allowed to play the bot ever. */
+    // blacklist: [],
+
+    /** Players who are allowed to challenge the bot with any settings even
+     * when the bot is at the maximum number of simultaneous games */
+    // whitelist: [],
+
+    /** Config for how to run your bot */
+    bot: {
+        /** The command to run the bot. You can also provide this on the command line if you would rather. */
+        command: ["/path/to/binary", "arg1", "arg2"],
+
+        /** Number of instances of the bot to run in parallel. Exactly this many
+         *  instances will be run at any given time, regardless of how many ongoing
+         *  games there are.
+         *
+         *  @default 1
+         */
+        // instances: 1,
+
+        /** Enabled clocks being sent to the bot. Clocks will only be sent when
+         * the applicable clock commands are detected from the bot anyways, so this
+         * is generally fine to leave turned on.
+         *
+         * @default true
+         */
+        // enable_clock: true,
+
+        /* Send chats that are output by the bot to the game chat
+         *
+         * Game chats are scanned for by looking at the STDERR output of the bot
+         * client and looking for lines that start with `MALKOVICH: ` or
+         * `DISCUSSION: ` or `MAIN: `. Note, MAIN and DISCUSSION are synonyms.
+         *
+         * @default true
+         */
+        // send_chats: true,
+
+        /** Send the principal variation (PV) values. Note that your bot must output this
+         * data in a way that can be parsed.
+         *
+         * See `pv_format` for more details on formatting and parsing PV values .
+         *
+         * @default true
+         */
+        // send_pv_data: true,
+
+        /** After a bot makes a move, some bots will continue writing to stderr
+         *  relevant information (such as chats or PV data). This option controls
+         *  how long we wait for the bot to finish writing to stderr before we
+         *  release the bot back into the pool of available bots.
+         *
+         *  @unit milliseconds
+         *  @default 100
+         */
+        // release_delay: 100,
+    },
+
+    /** Bot to use for playing opening moves. This can be useful for ensuring
+     * your bot plays at least a few reasonable joseki moves if it is a weak
+     * bot. 
+     * 
+     * The config for this bot is just like the main bot, with one additional
+     * option:
+     *
+     * `number_of_opening_moves_to_play`
+     * Which is number of opening moves to play before switching to the main bot.
+     */
+    /*
+    opening_bot: {
+        // command: string[];
+        // instances: 1,
+        // enable_clock: true,
+        // send_chats: true,
+        // send_pv_data: true,
+        // release_delay: 100,
+        // number_of_opening_moves_to_play: 8,
+    },
+    */
+
+    /** Secondary bot to use for ensuring your real bot passes or resigns
+     * appropriately. This bot will be consulted every move after . If the move it
+     * returns is a pass it will override the move your bot has made (unless
+     * your bot is resigning). If the move it returns is a resign, it will
+     * count the number of successive resigns and if it is more than the number
+     * of allowed resigns you've set in this config (default of 3), it will
+     * override your bot's move with a resign.
+     *
+     * The configuration for this bot is just like the main bot, with two additional
+     * options:
+     * 
+     * `allowed_resigns`
+     * Which is the number of successive resigns allowed before the bot will resign.
+     * 
+     * `moves_to_allow_before_checking_ratio`
+     * Which is the ratio of the board size to the number of moves
+     * to allow before we will start checking the ending bot for
+     * passes and resigns. This is to prevent the bot from resigning
+     * too early in a game.
+     *
+     * The move to start consulting the ending bot is calculated by taking
+     *
+     *    ceil(board_height * board_width * ratio)
+     *
+     * @allowed 0.1 - 1.0
+     * @default 0.8
+     */
+    /*
+    ending_bot: {
+        // command: string[];
+        // instances: 1,
+        // enable_clock: true,
+        // send_chats: true,
+        // send_pv_data: true,
+        // release_delay: 100,
+        // allowed_resigns: 3,
+        // moves_to_allow_before_checking_ratio: 0.8,
+    },
+    */
+
+    /** Message to send to the player at the start of the game */
+    /*
+    greeting: {
+        en: "Hello, I am a bot. Good luck, have fun!",
+        fr: "Bonjour, je suis un bot. Bonne chance, amusez-vous bien!",
+        de: "Hallo, ich bin ein Bot. Viel Glück, viel Spaß!",
+        es: "Hola, soy un bot. ¡Buena suerte, que te diviertas!",
+        it: "Ciao, sono un bot. Buona fortuna, divertiti!",
+        ja: "こんにちは、私はボットです。 お疲れ様でした、楽しんでください！",
+        ko: "안녕하세요, 저는 봇입니다. 행운을 빕니다, 즐거운 시간 되세요!",
+        nl: "Hallo, ik ben een bot. Veel geluk, veel plezier!",
+        pl: "Cześć, jestem botem. Powodzenia, baw się dobrze!",
+        pt: "Olá, eu sou um bot. Boa sorte, divirta-se!",
+        ru: "Привет, я бот. Удачи, приятной игры!",
+        "zh-tw": "大家好，我是機器人。 祝你好運，玩得開心！",
+        "zh-cn": "大家好，我是机器人。 祝你好运，玩得开心！",
+    },
+    */
+
+    /** Message to send to the player when the game is over */
+    /*
+    farewell: {
+        en: "Thank you for the game!",
+        fr: "Merci pour la partie!",
+        de: "Danke für das Spiel!",
+        es: "¡Gracias por el juego!",
+        it: "Grazie per la partita!",
+        ja: "ゲームありがとうございました！",
+        ko: "게임 감사합니다!",
+        nl: "Bedankt voor het spel!",
+        pl: "Dziękuję za grę!",
+        pt: "Obrigado pelo jogo!",
+        ru: "Спасибо за игру!",
+        "zh-tw": "謝謝你的遊戲！",
+        "zh-cn": "谢谢你的游戏！",
+    },
+    */
+
+    /** Send a message saying what the bot thought the score was at the end of the game */
+    // farewellscore: true,
+
+    /** File to write logs to. Logs will be sent to stdout as well. */
+    // logfile: undefined,
+
+    /** Time control systems that we can work with
+     *  @default ["fischer", "byoyomi", "simple"]
+     *  @allowedValues ["fischer", "byoyomi", "simple"]
+     *  @minItems 1
+     */
+    // allowed_time_control_systems: ["fischer", "byoyomi", "simple"],
+
+    /**
+     * Allowed blitz times for the bot. Blitz is disabled by default, but you
+     * can enable it by providing accetpable time settings.
+     *
+     * @default null
+     */
+    // allowed_blitz_settings: null,
+
+    /** Allowed live game times for bot. */
+    /*
+    allowed_live_settings: {
+        per_move_time_range: [10, 300],
+        main_time_range: [0, 3600],
+        periods_range: [1, 10],
+    },
+    */
+
+    /** Allowed correspondence game times for bot.
+     *
+     *  @default {"per_move_time_range": [43200, 259200], "main_time_range": [0, 86400], "periods_range": [1, 10]}
+     */
+    /*
+    allowed_correspondence_settings: {
+        per_move_time_range: [43200, 259200],
+        main_time_range: [0, 86400],
+        periods_range: [1, 10],
+    },
+    */
+
+    /** Allowed board sizes for the bot. If there are no restrictions, you can
+     *  provide "all", or if you can play on any square board, you can provide "square".
+     *
+     *  @default [9, 13, 19]
+     */
+    // allowed_board_sizes: [9, 13, 19],
+
+    /** Allowed unranked games
+     *  @default true
+     */
+    // allow_unranked: true,
+
+    /** +- the number of ranks allowed to play against this bot. Note that
+     * ranked games are always limited to +-9. 0 to disable rank restrictions.
+     * @default 0
+     */
+    // allowed_rank_range: 0,
+
+    /** Allow handicap games
+     *  @default true
+     */
+    // allow_handicap: true,
+
+    /** Minimum rank to accept games from
+     * @default 0
+     * @minimum 0
+     * @maximum 35
+     */
+    //min_rank: 0,
+
+    /** Hide the bot from the public bot list
+     * @default false
+     */
+    //hidden: false,
+
+    /** Used for debugging, will issue a showboard command when we've loaded
+     * the board state into the bot
+     * @default false
+     */
+    //showboard: false,
+
+    /** If set, bot moves will be delayed when made before `min_move_time` ms.
+     * This is primarily a user experience thing as can make players feel rushed
+     * if the bots are responding too quickly.
+     *
+     * @default 1500
+     */
+    // min_move_time: 1500,
+
+    /** Enable verbose logging.
+     *  @values 0-2
+     *  @default 0
+     */
+    // verbosity: 0,
+}

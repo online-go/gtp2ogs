@@ -54,8 +54,10 @@ export interface Config {
      */
     ending_bot?: EndingBotConfig;
 
-    /** Message to send to your opponent at the start of the game */
+    /** Message to send to the player at the start of the game */
     greeting?: TranslatableString;
+
+    /** Message to send to the player when the game is over */
     farewell?: TranslatableString;
 
     /** Send a message saying what the bot thought the score was at the end of the game */

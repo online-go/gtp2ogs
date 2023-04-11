@@ -58,10 +58,11 @@
                 },
                 "greeting": {
                     "$ref": "#/definitions/TranslatableString",
-                    "description": "Message to send to your opponent at the start of the game"
+                    "description": "Message to send to the player at the start of the game"
                 },
                 "farewell": {
-                    "$ref": "#/definitions/TranslatableString"
+                    "$ref": "#/definitions/TranslatableString",
+                    "description": "Message to send to the player when the game is over"
                 },
                 "farewellscore": {
                     "type": "boolean",

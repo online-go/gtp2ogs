@@ -3,7 +3,8 @@
     "version": "7.1.0-beta.1",
     "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
     "files": [
-        "dist/*"
+        "dist/*",
+        "example_config.json5"
     ],
     "bin": "./dist/gtp2ogs.js",
     "dependencies": {
