@@ -1,4 +1,5 @@
 const path = require("path");
+var webpack = require('webpack');
 let fs = require("fs");
 
 var node_modules = fs.readdirSync("node_modules").filter(function (x) {
@@ -52,7 +53,7 @@ module.exports = (_env, _argv) => {
             ],
         },
 
-        devtool: "inline-source-map" /* inline enables sentry.io to log errors with code */,
+        devtool: "inline-source-map",
 
         performance: {
             maxAssetSize: 1024 * 1024 * 5.5,
@@ -61,7 +62,16 @@ module.exports = (_env, _argv) => {
 
         target: "node",
         externals: node_modules,
-        plugins: [],
+        plugins: [
+            new webpack.BannerPlugin({
+                banner: (banner) => {
+                    //return `#!/usr/bin/env node\nrequire("source-map-support").install({environment: 'node'});`;
+                    return `#!/usr/bin/env node\n`;
+                },
+                raw: true,
+                entryOnly: false,
+            }),
+        ],
         optimization: {
             removeAvailableModules: false,
             removeEmptyChunks: false,

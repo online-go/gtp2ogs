@@ -415,11 +415,15 @@ function load_config_or_exit(): Config {
     if (cli_bot_command) {
         if (!("bot" in with_defaults)) {
             with_defaults.bot = {
+                ...bot_config_defaults(),
                 command: cli_bot_command,
             };
         } else {
             with_defaults.bot.command = cli_bot_command;
         }
+    }
+    if (!("bot" in with_defaults)) {
+        throw new Error("No bot configuration found");
     }
 
     if (with_defaults.allowed_blitz_settings) {
