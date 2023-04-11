@@ -37,10 +37,10 @@ const console_config = {
     },
 };
 
-if (config.logfile) {
-    const orig_console = console;
-    (console_config as any).transport = (data: any) => {
-        orig_console.log(data.output);
+const orig_console = console;
+(console_config as any).transport = (data: any) => {
+    orig_console.log(data.output);
+    if (config.logfile) {
         fs.open(config.logfile, "a", parseInt("0644", 8), (_e, id) => {
             // strip color controls characters
             const stripped = data.output.replace(
@@ -54,8 +54,8 @@ if (config.logfile) {
                 });
             });
         });
-    };
-}
+    }
+};
 
 export const trace = tracer.colorConsole(console_config);
 
