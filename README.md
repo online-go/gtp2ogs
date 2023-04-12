@@ -1,73 +1,80 @@
 # gtp2ogs
 
-[![Build Status](https://travis-ci.org/online-go/gtp2ogs.svg?branch=devel)](https://travis-ci.org/online-go/gtp2ogs)
-
-Gtp2ogs is a tool allows all bots/AI that support
+Gtp2ogs is a tool allows AI Go engines (bots) that support
 [GTP (Go Text Protocol)](https://senseis.xmp.net/?GoTextProtocol)
 to communicate with [OGS (Online-Go.com Server)](https://online-go.com/)
 and play games with players or other bots.
 
-## Full tutorial
+# Quick start guide
 
-## Quick Installation Guide
+## Obtaining an API key
 
-You will need to install [Node.js](https://nodejs.org/) in order to use this tool
-
-Once installed, simply run
-
-`npm install -g gtp2ogs`
-
-You can find operating system specific instructions below:
-
--   for Windows, see [the Windows Installation Guide](/docs/INSTALLATION-WINDOWS.md)
--   for Linux, see [the Linux Installation Guide](/docs/INSTALLATION-LINUX.md)
-
-[wonderingabout](https://github.com/wonderingabout) has put together a more detailed
-tutorialw ith screenshots and examples here: https://github.com/wonderingabout/gtp2ogs-tutorial
-
-## Running a bot
-
-Before you get started you'll need to setup a bot account on online-go.com. To do that, you'll
-need to have your human account and create a new separate account for your bot account, then
-contact a moderator to request that your bot account be flagged as a bot account. Give them
-both your human account and your bot account. Once that has been done, log in with your human
-account, search for your bot account to view the bot profile, on that page you'll be able to
+Before you get started you'll need to setup a bot account on online-go.com. To
+do that, you'll need to have your human account and create a new separate
+account for your bot account, then contact a moderator to request that your bot
+account be flagged as a bot account. Give them both your human account and your
+bot account. Once that has been done, log in with your human account, search
+for your bot account to view the bot profile, on that page you'll be able to
 generate an API key which you'll use to connect the bot.
 
-Once you have your your bot account setup along with it's API key, you can connect your bot
-using the following command:
+## Downloading and running gtp2ogs
+
+### Using pre-built releases
+
+To get started quickly, you can download a pre-built executable for Windows, Mac, and Linux
+from the [releases](https:////github.com/online-go/gtp2ogs/releases) page.
+
+### Using the node.js package
+
+If you have [node.js](https://nodejs.org/) installed you can install the `gtp2ogs` package
+using npm
 
 ```
-gtp2ogs --username <yourusername> --apikey <yourapikey> -- path/to/your/ai/executable [bot arguments]
+npm install -g gtp2ogs
 ```
 
-Additional options can be set before the `--` and are documented [here](/docs/OPTIONS-LIST.md):
+### Building from source
 
-## Beta OGS
+To build from source you will need to have `node.js` installed on your system.
+You will also need to have the `yarn` and `gulp` npm packages installed. Once
+you have the prerequisites you can run `yarn` to install the package dependencies,
+and
+
+```
+gulp
+```
+
+to run the build process. The resulting compiled javascript file will be located
+in `dist/gtp2ogs.js` which you can then run with
+
+```
+node dist/gtp2ogs.js
+```
+
+## Running your bot
+
+Once you have your API Key and `gtp2ogs` installed, you can connect your bot to OGS
+like so:
+
+```
+gtp2ogs --apikey YOURKEYHERE -- /path/to/your/bot --arguments --to your bot
+```
+
+Note that everything after the `--` will be considered a command used to run your
+bot, so any gtp2ogs arguments you use needs to come before the `--`.
+
+For more advanced configuration, see the `example_config.json5` for a configuration
+template, and pass in the `--config yourconfig.json5` argument to `gtp2ogs`.
+
+## Connecting to the beta server
 
 If you'd like to connect your bot to the beta.online-go.com site simply follow all of the
 previous steps for setting up a bot account on the beta site and use the `--beta` command
 line argument.
 
-## Show winrate and variations in games
+# Community Involvement
 
-gtp2ogs has native support for showing ingame winrate and variations for some AI,
-see: [--ogspv](/docs/OPTIONS-LIST.md/#ogspv)
-
-## Community Involvement
-
--   You may also use [Issues](https://github.com/online-go/gtp2ogs/issues)
-    to report issues.
--   Contributing is most welcome, if you want to add features or submit fixes
-    we'd be glad to review them with you and make gtp2ogs more awesome!
--   You may also be interested in joining the Discord chat:
-    in leela zero's [#bots channel](https://discord.gg/HZ23Cp9)
-
-This discord can also be useful if you want to have fast and quick,
-interactive chat, or ask simple and quick questions, however github issues
-are preferred for long problems because they leave a track that can be useful
-later)
-
-## Developer Notes
-
-You can find notes for developers [here](/docs/DEV.md).
+-   Use [Issues](https://github.com/online-go/gtp2ogs/issues) to report issues.
+-   You may be interested in the [Computer Go Community discord server](https://discord.gg/HZ23Cp9).
+    Here you will find many people interested in developing bots, as well as
+    the `gtp2ogs-dev` discord channel specifically for this project.

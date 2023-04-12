@@ -1,0 +1,11 @@
+{
+    "entryPoints": {
+        "goban": "src/Settings.ts"
+    },
+    "out": "docs/docs",
+    "tsconfig": "tsconfig.docs.json",
+    "excludeExternals": true,
+    "exclude": [
+        "**/node_modules/**"
+    ]
+}

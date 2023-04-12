@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as tracer from "tracer";
-import { config } from "./constants";
+import { config } from "./config";
 
 const console_fmt =
     "{{timestamp}} {{title}} " +
-    (config.DEBUG ? "{{file}}:{{line}}{{space}} " : "") +
+    (config.verbosity > 0 ? "{{file}}:{{line}}{{space}} " : "") +
     "{{message}}";
 
 const console_config = {
@@ -12,6 +12,9 @@ const console_config = {
     dateformat: "mmm dd HH:MM:ss",
     preprocess: (data) => {
         switch (data.title) {
+            case "trace":
+                data.title = " ";
+                break;
             case "debug":
                 data.title = " ";
                 break;
@@ -22,29 +25,52 @@ const console_config = {
                 data.title = " ";
                 break;
             case "warn":
-                data.title = "!";
+                data.title = " ";
                 break;
             case "error":
-                data.title = "!!!!!";
+                data.title = "!";
                 break;
         }
-        if (config.DEBUG) {
-            data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
+        if (config.verbosity > 0) {
+            data.space = " ".repeat(Math.max(0, 20 - `${data.file}:${data.line}`.length));
         }
     },
 };
 
-if (config.logfile) {
-    (console_config as any).transport = (data: any) => {
-        console.log(data.output);
+const orig_console = console;
+(console_config as any).transport = (data: any) => {
+    orig_console.log(data.output);
+    if (config.logfile) {
         fs.open(config.logfile, "a", parseInt("0644", 8), (_e, id) => {
-            fs.write(id, data.output + "\n", null, "utf8", () => {
+            // strip color controls characters
+            const stripped = data.output.replace(
+                // eslint-disable-next-line no-control-regex
+                /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+                "",
+            );
+            fs.write(id, stripped + "\n", null, "utf8", () => {
                 fs.close(id, () => {
                     // noop
                 });
             });
         });
-    };
-}
+    }
+};
 
 export const trace = tracer.colorConsole(console_config);
+
+(global as any).console = trace;
+
+if (config.verbosity <= 1) {
+    trace.trace = (..._args: any[]) => {
+        return null;
+    };
+}
+if (config.verbosity <= 0) {
+    trace.debug = (..._args: any[]) => {
+        return null;
+    };
+    trace.verbose = (..._args: any[]) => {
+        return null;
+    };
+}

@@ -40,3 +40,16 @@ nosetests.xml
 node_modules
 *.tgz
 *.log
+src/Settings.schema.json
+
+docs/docs
+*.json5
+Makefile
+botr
+archive
+packaged
+
+# Don't put anything in docs, the docs are generated from the source code
+docs
+
+

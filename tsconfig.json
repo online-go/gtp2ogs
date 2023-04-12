@@ -9,7 +9,8 @@
         "removeComments": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "lib": ["es2021"],
+        "resolveJsonModule": true,
+        "lib": ["es2021", "dom"],
         "baseUrl": ".",
         "paths": {
             "*": ["*", "src/*"]
@@ -27,7 +28,7 @@
         "noUnusedLocals": false,
 
         "sourceMap": true,
-        "inlineSources": true
+        "inlineSources": false
     },
     "exclude": ["node_modules"],
     "include": ["./src/**/*.ts"]
