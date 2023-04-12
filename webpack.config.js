@@ -42,6 +42,7 @@ module.exports = (_env, _argv) => {
                             options: {
                                 transpileOnly: false,
                                 happyPackMode: false,
+                                allowTsInNodeModules: true,
                             },
                         },
                     ],
