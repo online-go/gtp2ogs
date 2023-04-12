@@ -48,3 +48,8 @@ Makefile
 botr
 archive
 packaged
+
+# Don't put anything in docs, the docs are generated from the source code
+docs
+
+

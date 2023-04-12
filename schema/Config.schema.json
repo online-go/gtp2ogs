@@ -80,12 +80,7 @@
                 "allowed_time_control_systems": {
                     "type": "array",
                     "items": {
-                        "type": "string",
-                        "enum": [
-                            "fischer",
-                            "byoyomi",
-                            "simple"
-                        ]
+                        "$ref": "#/definitions/BotTimeControlSystems"
                     },
                     "description": "Time control systems that we can work with",
                     "default": [
@@ -374,6 +369,14 @@
             "additionalProperties": {
                 "type": "string"
             }
+        },
+        "BotTimeControlSystems": {
+            "type": "string",
+            "enum": [
+                "fischer",
+                "byoyomi",
+                "simple"
+            ]
         },
         "TimeControlRanges": {
             "type": "object",

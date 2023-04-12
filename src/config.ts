@@ -4,7 +4,7 @@ import * as yargs from "yargs";
 import * as ConfigSchema from "../schema/Config.schema.json";
 import { Validator } from "jsonschema";
 
-type BotTimeControlSystems = "fischer" | "byoyomi" | "simple";
+export type BotTimeControlSystems = "fischer" | "byoyomi" | "simple";
 
 /** Bot config */
 export interface Config {
