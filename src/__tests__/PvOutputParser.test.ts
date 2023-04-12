@@ -1,5 +1,7 @@
 (global as any).WebSocket = undefined;
 
+process.argv.push("--", "dummybot");
+
 import * as fs from "fs";
 import { PvOutputParser } from "../PvOutputParser";
 //import * as sinon from "sinon";
