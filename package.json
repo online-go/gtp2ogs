@@ -1,11 +1,49 @@
 {
     "name": "gtp2ogs",
-    "version": "8.0.0-beta.3",
+    "version": "8.0.0-beta.5",
+    "homepage": "https://github.com/online-go/gtp2ogs",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/online-go/gtp2ogs.git"
+    },
+    "author": "Akita Noek <anoek@online-go.com> (https://online-go.com/)",
     "description": "Wrapper to allow Gnu Go Text Protocol speaking Go engines to connect to Online-Go.com and play games",
     "files": [
         "dist/*",
         "example_config.json5"
     ],
+    "scripts": {
+        "gulp": "gulp",
+        "webpack-watch": "webpack --watch --progress --color",
+        "test": "jest",
+        "lint": "eslint src/ --ext=.ts",
+        "lint:fix": "eslint --fix src/ --ext=.ts",
+        "prettier": "prettier --write \"src/**/*.{ts}\"",
+        "prettier:check": "prettier --check \"src/**/*.{ts,}\"",
+        "typedoc": "typedoc src/config.ts"
+    },
+    "pkg": {
+        "scripts": [
+            "dist/*.js"
+        ],
+        "targets": [
+            "node18-linux-x64",
+            "node18-macos-x64",
+            "node18-win-x64"
+        ],
+        "outputPath": "packaged"
+    },
+    "keywords": [
+        "gtp",
+        "ogs",
+        "online-go.com",
+        "go",
+        "baduk"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/online-go/gtp2ogs/issues"
+    },
     "bin": "./dist/gtp2ogs.js",
     "dependencies": {
         "split2": "^4.1.0",
@@ -42,6 +80,7 @@
         "jest-environment-jsdom": "^28.1.3",
         "jest-transform-stub": "^2.0.0",
         "jest-websocket-mock": "^2.4.0",
+        "pkg": "^5.8.1",
         "prettier": "2.8.2",
         "prettier-eslint": "^15.0.1",
         "sinon": "^9.0.2",
@@ -54,32 +93,5 @@
         "typescript": "^5.0.2",
         "webpack": "^5.76.3",
         "webpack-cli": "^5.0.1"
-    },
-    "scripts": {
-        "gulp": "gulp",
-        "webpack-watch": "webpack --watch --progress --color",
-        "test": "jest",
-        "lint": "eslint src/ --ext=.ts",
-        "lint:fix": "eslint --fix src/ --ext=.ts",
-        "prettier": "prettier --write \"src/**/*.{ts}\"",
-        "prettier:check": "prettier --check \"src/**/*.{ts,}\"",
-        "typedoc": "typedoc src/config.ts"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/online-go/gtp2ogs.git"
-    },
-    "keywords": [
-        "gtp",
-        "ogs",
-        "online-go.com",
-        "go",
-        "baduk"
-    ],
-    "author": "Akita Noek <anoek@online-go.com> (https://online-go.com/)",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/online-go/gtp2ogs/issues"
-    },
-    "homepage": "https://github.com/online-go/gtp2ogs"
+    }
 }
