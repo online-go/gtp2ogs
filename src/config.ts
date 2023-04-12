@@ -17,6 +17,11 @@ export interface Config {
      */
     verbosity?: number;
 
+    /** Disable the periodic status update lines printed to the console and log file
+     * @default false
+     */
+    disable_status_updates?: boolean;
+
     /**
      * Server URL to connect to, defaults to online-go.com
      * @default https://online-go.com
@@ -379,6 +384,11 @@ function load_config_or_exit(): Config {
         )
         .describe("config", "Path to configuration file")
         .alias("config", "c")
+        .describe(
+            "disable-status-updates",
+            "Disable the status update lines printed to the console",
+        )
+        .alias("disable-status-updates", "q")
         .describe("apikey", "API key for the bot")
         .describe("v", "Increase level (use multiple times for more logs)")
         .count("v")
@@ -395,6 +405,7 @@ function load_config_or_exit(): Config {
         server: args.server,
         apikey: args.apikey,
         verbosity: args.v || undefined,
+        disable_status_updates: args.q || false,
     };
 
     let cli_bot_command = args._.length > 0 ? args._ : undefined;

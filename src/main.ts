@@ -74,7 +74,9 @@ class Main {
         //this.games_by_player = {}; // Keep track of connected games per player
         this.connected = false;
 
-        setInterval(this.dumpStatus.bind(this), 1 * 60 * 1000);
+        if (!config.disable_status_updates) {
+            setInterval(this.dumpStatus.bind(this), 1 * 60 * 1000);
+        }
         setInterval(this.sendStatusUpdate.bind(this), 100);
 
         socket.on("connect", async () => {

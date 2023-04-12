@@ -14,6 +14,11 @@
                     "description": "Enable verbose logging.",
                     "default": 0
                 },
+                "disable_status_updates": {
+                    "type": "boolean",
+                    "description": "Disable the periodic status update lines printed to the console and log file",
+                    "default": false
+                },
                 "server": {
                     "type": "string",
                     "description": "Server URL to connect to, defaults to online-go.com",
