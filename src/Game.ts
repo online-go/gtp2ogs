@@ -404,7 +404,6 @@ export class Game extends EventEmitter<Events> {
         //this.bot.verbose(`[game ${this.game_id}] State loaded successfully`);
 
         if (config.ending_bot?.command) {
-            trace.info("Acquiring ending bot");
             const move_to_start_checking_ending_bot = Math.ceil(
                 this.state.width *
                     this.state.height *
@@ -413,7 +412,7 @@ export class Game extends EventEmitter<Events> {
 
             if (this.state.moves.length >= move_to_start_checking_ending_bot) {
                 this.verbose(
-                    `[game ${this.game_id}] Consulting ending bot ${this.state.moves.length} moves played, looking for ${move_to_start_checking_ending_bot}`,
+                    `[game ${this.game_id}] Acquiring ending bot: ${this.state.moves.length} moves played out of ${move_to_start_checking_ending_bot} necessary to begin consulting ending bot`,
                 );
 
                 this.ending_bot = await bot_pools.ending.acquire(this.state.time_control.speed);
