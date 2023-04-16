@@ -66,8 +66,8 @@ module.exports = (_env, _argv) => {
         plugins: [
             new webpack.BannerPlugin({
                 banner: (banner) => {
-                    //return `#!/usr/bin/env node\nrequire("source-map-support").install({environment: 'node'});`;
-                    return `#!/usr/bin/env node\n`;
+                    return `#!/usr/bin/env node\nrequire("source-map-support/register");\n`;
+                    //return `#!/usr/bin/env node\n`;
                 },
                 raw: true,
                 entryOnly: false,
