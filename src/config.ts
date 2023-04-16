@@ -110,23 +110,24 @@ export interface Config {
      */
     allow_unranked?: boolean;
 
-    /** +- the number of ranks allowed to play against this bot. Note that
-     * ranked games are always limited to +-9. 0 to disable rank restrictions.
-     * @default 0
+    /** Allowed range for ranked games
+     * Ranks are encoded as a number starting at 0 which represents 30k and
+     * counting up. For example:
+     *   30k = 0
+     *   29k = 1
+     *   20k = 10
+     *   10k = 20
+     *   1k = 29
+     *   1d = 30
+     *   9d = 38
+     * @default [0, 99]
      */
-    allowed_rank_range?: number;
+    allowed_rank_range?: [number, number];
 
     /** Allow handicap games
      *  @default true
      */
     allow_handicap?: boolean;
-
-    /** Minimum rank to accept games from
-     * @default 0
-     * @minimum 0
-     * @maximum 35
-     */
-    min_rank?: number;
 
     /** Hide the bot from the public bot list
      * @default false
@@ -277,7 +278,6 @@ function defaults(): Config {
     return {
         apikey: "",
         server: "https://online-go.com",
-        min_rank: 0,
         verbosity: 1,
         max_pause_time: 300,
         allowed_time_control_systems: ["fischer", "byoyomi", "simple"],
@@ -297,7 +297,7 @@ function defaults(): Config {
 
         allowed_board_sizes: [9, 13, 19],
         allow_unranked: true,
-        allowed_rank_range: 0,
+        allowed_rank_range: [0, 99],
         allow_handicap: true,
         hidden: false,
         min_move_time: 1500,

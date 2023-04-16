@@ -185,21 +185,22 @@
                     "default": true
                 },
                 "allowed_rank_range": {
-                    "type": "number",
-                    "description": "+- the number of ranks allowed to play against this bot. Note that ranked games are always limited to +-9. 0 to disable rank restrictions.",
-                    "default": 0
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Allowed range for ranked games Ranks are encoded as a number starting at 0 which represents 30k and counting up. For example:  30k = 0  29k = 1  20k = 10  10k = 20  1k = 29  1d = 30  9d = 38",
+                    "default": [
+                        0,
+                        99
+                    ]
                 },
                 "allow_handicap": {
                     "type": "boolean",
                     "description": "Allow handicap games",
                     "default": true
-                },
-                "min_rank": {
-                    "type": "number",
-                    "description": "Minimum rank to accept games from",
-                    "default": 0,
-                    "minimum": 0,
-                    "maximum": 35
                 },
                 "hidden": {
                     "type": "boolean",

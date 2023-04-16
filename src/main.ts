@@ -47,7 +47,8 @@ interface RejectionDetails {
         | "period_time_out_of_range"
         | "periods_out_of_range"
         | "main_time_out_of_range"
-        | "per_move_time_out_of_range";
+        | "per_move_time_out_of_range"
+        | "player_rank_out_of_range";
     details: {
         [key: string]: any;
     };
@@ -274,7 +275,9 @@ class Main {
                         this.checkConcurrentGames(notification.time_control.speed) ||
                         this.checkBoardSize(notification.width, notification.height) ||
                         this.checkHandicap(notification.handicap) ||
-                        this.checkRanked(notification.ranked);
+                        this.checkRanked(notification.ranked) ||
+                        this.checkAllowedRank(notification.ranked, notification.min_ranking) ||
+                        undefined;
 
                     if (this.checkWhitelist(notification.user)) {
                         reject = undefined;
@@ -597,6 +600,26 @@ class Main {
         }
 
         return undefined;
+    }
+    checkAllowedRank(game_is_ranked: boolean, player_rank: number): RejectionDetails | undefined {
+        if (!game_is_ranked) {
+            return;
+        }
+        if (
+            player_rank < config.allowed_rank_range[0] ||
+            player_rank > config.allowed_rank_range[1]
+        ) {
+            return {
+                rejection_code: "player_rank_out_of_range",
+                details: {
+                    allowed_rank_range: config.allowed_rank_range,
+                },
+                message:
+                    player_rank < config.allowed_rank_range[0]
+                        ? `Your rank is too low to play against this bot.`
+                        : `Your rank is too high to play against this bot.`,
+            };
+        }
     }
 
     terminate() {
