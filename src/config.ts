@@ -230,8 +230,6 @@ export interface BotConfig {
     /** Send the principal variation (PV) values. Note that your bot must output this
      * data in a way that can be parsed.
      *
-     * See `pv_format` for more details on formatting and parsing PV values .
-     *
      * @default true
      */
     send_pv_data?: boolean;
