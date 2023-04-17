@@ -60,6 +60,11 @@ export class Bot extends EventEmitter<Events> {
     /** True if we are available for use by a Game. This flag is managed by the pool. */
     available: boolean = true;
 
+    /* These are afinity fields used by our pool to try and select good bots to use */
+    last_game_id: number = -1;
+    last_width: number = -1;
+    last_height: number = -1;
+
     log: (...arr: any[]) => any;
     info: (...arr: any[]) => any;
     trace: (...arr: any[]) => any;
@@ -560,6 +565,11 @@ export class Bot extends EventEmitter<Events> {
         } else {
             this.katafischer = false;
         }
+
+        // Update our afinity fields
+        this.last_game_id = state.game_id;
+        this.last_width = state.width;
+        this.last_height = state.height;
 
         if (state.width === state.height) {
             await this.command(`boardsize ${state.width}`);

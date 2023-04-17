@@ -386,11 +386,21 @@ export class Game extends EventEmitter<Events> {
             config.opening_bot.number_of_opening_moves_to_play >= this.state.moves.length
         ) {
             this.verbose("Acquiring opening bot instance");
-            this.bot = await bot_pools.opening.acquire(this.state.time_control.speed);
+            this.bot = await bot_pools.opening.acquire(
+                this.state.time_control.speed,
+                parseInt(this.state.width.toString()),
+                parseInt(this.state.height.toString()),
+                parseInt(this.state.game_id.toString()),
+            );
             this.using_opening_bot = true;
         } else {
             this.verbose("Acquiring main bot instance");
-            this.bot = await bot_pools.main.acquire(this.state.time_control.speed);
+            this.bot = await bot_pools.main.acquire(
+                this.state.time_control.speed,
+                parseInt(this.state.width.toString()),
+                parseInt(this.state.height.toString()),
+                parseInt(this.state.game_id.toString()),
+            );
             this.using_opening_bot = false;
         }
         this.bot.setGame(this);
@@ -415,7 +425,12 @@ export class Game extends EventEmitter<Events> {
                     `[game ${this.game_id}] Acquiring ending bot: ${this.state.moves.length} moves played out of ${move_to_start_checking_ending_bot} necessary to begin consulting ending bot`,
                 );
 
-                this.ending_bot = await bot_pools.ending.acquire(this.state.time_control.speed);
+                this.ending_bot = await bot_pools.ending.acquire(
+                    this.state.time_control.speed,
+                    parseInt(this.state.width.toString()),
+                    parseInt(this.state.height.toString()),
+                    parseInt(this.state.game_id.toString()),
+                );
                 this.ending_bot.verbose(`[game ${this.game_id}] Acquired resign bot instance`);
                 this.ending_bot.setGame(this);
 

@@ -13,7 +13,7 @@ export class BotPool extends EventEmitter<Events> {
     pool_name: string;
     bot_config: BotConfig;
     instances: Bot[] = [];
-    queue: [Speed, (bot: Bot) => void][] = [];
+    queue: [Speed, number, number, (bot: Bot) => void][] = [];
     ready: Promise<string[]>;
     log: (...arr: any[]) => any;
     verbose: (...arr: any[]) => any;
@@ -70,18 +70,32 @@ export class BotPool extends EventEmitter<Events> {
         });
     }
 
-    async acquire(speed: Speed): Promise<Bot> {
+    async acquire(speed: Speed, width: number, height: number, game_id: number): Promise<Bot> {
         trace.info(`Acquiring bot for ${speed} game`);
         await this.ready;
-        for (let i = 0; i < this.instances.length; i++) {
-            const bot = this.instances[i];
-            if (bot.available) {
-                bot.available = false;
-                return bot;
+        for (const pass of ["game_id", "board_size", "any"]) {
+            for (let i = 0; i < this.instances.length; i++) {
+                const bot = this.instances[i];
+
+                /* We prioritize instances that have been playing this game, are already
+                 * setup to play on this board size, or finally any that are available.
+                 */
+                const pass_check =
+                    (pass === "game_id" && bot.last_game_id === game_id) ||
+                    (pass === "board_size" &&
+                        bot.last_width === width &&
+                        bot.last_height === height) ||
+                    pass === "any";
+
+                if (bot.available && pass_check) {
+                    bot.available = false;
+                    trace.info("Picked bot in " + pass + " pass");
+                    return bot;
+                }
             }
         }
         return new Promise((resolve) => {
-            this.queue.push([speed, resolve]);
+            this.queue.push([speed, width, height, resolve]);
         });
     }
 
@@ -92,13 +106,22 @@ export class BotPool extends EventEmitter<Events> {
     release(bot: Bot): void {
         bot.setGame(null);
         if (this.queue.length > 0) {
-            for (const target_speed of ["blitz", "live", "correspondence"]) {
-                for (let i = 0; i < this.queue.length; i++) {
-                    const [speed, resolve] = this.queue[i];
-                    if (speed === target_speed) {
-                        this.queue.splice(i, 1);
-                        resolve(bot);
-                        return;
+            for (const pass of ["board_size", "any"]) {
+                for (const target_speed of ["blitz", "live", "correspondence"]) {
+                    for (let i = 0; i < this.queue.length; i++) {
+                        const [speed, width, height, resolve] = this.queue[i];
+
+                        const pass_check =
+                            (pass === "board_size" &&
+                                bot.last_width === width &&
+                                bot.last_height === height) ||
+                            pass === "any";
+
+                        if (speed === target_speed && pass_check) {
+                            this.queue.splice(i, 1);
+                            resolve(bot);
+                            return;
+                        }
                     }
                 }
             }
