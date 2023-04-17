@@ -204,8 +204,26 @@
                 },
                 "allow_handicap": {
                     "type": "boolean",
-                    "description": "Allow handicap games",
+                    "description": "Allow handicap games for ranked games",
                     "default": true
+                },
+                "allow_unranked_handicap": {
+                    "type": "boolean",
+                    "description": "Allow handicap games for unranked games",
+                    "default": true
+                },
+                "allowed_komi_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Allowed komi range. Negative numbers indicate reverse Komi.",
+                    "default": [
+                        -99,
+                        99
+                    ]
                 },
                 "hidden": {
                     "type": "boolean",
@@ -397,38 +415,101 @@
         "TimeControlRanges": {
             "type": "object",
             "properties": {
-                "per_move_time_range": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
+                "simple": {
+                    "type": "object",
+                    "properties": {
+                        "per_move_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable times per period in seconds",
+                            "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                        }
                     },
-                    "minItems": 2,
-                    "maxItems": 2,
-                    "description": "Range of acceptable times per move. This is:   - The period time in byo-yomi   - The time increment and minimum move time in Fischer   - The time per move in simple time",
-                    "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                    "required": [
+                        "per_move_time_range"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Time control settings for Simple clocks"
                 },
-                "main_time_range": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
+                "byoyomi": {
+                    "type": "object",
+                    "properties": {
+                        "main_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable main times in seconds.",
+                            "default": "[0, 3600] for live games, [0, 259200] for correspondence games"
+                        },
+                        "period_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable times per period in seconds",
+                            "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                        },
+                        "periods_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable number of periods.",
+                            "default": [
+                                1,
+                                10
+                            ]
+                        }
                     },
-                    "minItems": 2,
-                    "maxItems": 2,
-                    "description": "Range of acceptable main times in seconds. This is only applicable for byo-yomi",
-                    "default": "[0, 3600] for live games, [0, 86400] for correspondence games"
+                    "required": [
+                        "main_time_range",
+                        "period_time_range",
+                        "periods_range"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Time control settings for byo-yomi clocks"
                 },
-                "periods_range": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
+                "fischer": {
+                    "type": "object",
+                    "properties": {
+                        "max_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable main times in seconds.",
+                            "default": "[30, 600] for live games, [86400, 604800] for correspondence games"
+                        },
+                        "time_increment_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "range of acceptable times for the time increment",
+                            "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                        }
                     },
-                    "minItems": 2,
-                    "maxItems": 2,
-                    "description": "Range of acceptable number of periods. This is only applicable for byo-yomi",
-                    "default": [
-                        1,
-                        10
-                    ]
+                    "required": [
+                        "max_time_range",
+                        "time_increment_range"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Time control settings for fischer clocks"
                 },
                 "concurrent_games": {
                     "type": "number",
@@ -437,9 +518,6 @@
                 }
             },
             "required": [
-                "per_move_time_range",
-                "main_time_range",
-                "periods_range",
                 "concurrent_games"
             ],
             "additionalProperties": false

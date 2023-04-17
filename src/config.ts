@@ -135,10 +135,20 @@ export interface Config {
      */
     allowed_rank_range?: [number, number];
 
-    /** Allow handicap games
+    /** Allow handicap games for ranked games
      *  @default true
      */
     allow_handicap?: boolean;
+
+    /** Allow handicap games for unranked games
+     *  @default true
+     */
+    allow_unranked_handicap?: boolean;
+
+    /** Allowed komi range. Negative numbers indicate reverse Komi.
+     *  @default [-99, 99]
+     */
+    allowed_komi_range?: [number, number];
 
     /** Hide the bot from the public bot list
      * @default false
@@ -189,24 +199,44 @@ export interface Config {
 }
 
 export interface TimeControlRanges {
-    /** Range of acceptable times per move. This is:
-     *    - The period time in byo-yomi
-     *    - The time increment and minimum move time in Fischer
-     *    - The time per move in simple time
-     *
-     * @default [10, 300] for live, [43200, 259200] for correspondence
-     */
-    per_move_time_range: [number, number];
+    /** Time control settings for Simple clocks */
+    simple?: {
+        /** Range of acceptable times per period in seconds
+         * @default [10, 300] for live, [43200, 259200] for correspondence
+         */
+        per_move_time_range: [number, number];
+    };
 
-    /** Range of acceptable main times in seconds. This is only applicable for byo-yomi
-     * @default [0, 3600] for live games, [0, 86400] for correspondence games
-     */
-    main_time_range: [number, number];
+    /** Time control settings for byo-yomi clocks */
+    byoyomi?: {
+        /** Range of acceptable main times in seconds.
+         * @default [0, 3600] for live games, [0, 259200] for correspondence games
+         */
+        main_time_range: [number, number];
 
-    /** Range of acceptable number of periods. This is only applicable for byo-yomi
-     *  @default [1, 10]
-     */
-    periods_range: [number, number];
+        /** Range of acceptable times per period in seconds
+         * @default [10, 300] for live, [43200, 259200] for correspondence
+         */
+        period_time_range: [number, number];
+
+        /** Range of acceptable number of periods.
+         *  @default [1, 10]
+         */
+        periods_range: [number, number];
+    };
+
+    /** Time control settings for fischer clocks */
+    fischer?: {
+        /** Range of acceptable main times in seconds.
+         * @default [30, 600] for live games, [86400, 604800] for correspondence games
+         */
+        max_time_range: [number, number];
+
+        /** range of acceptable times for the time increment
+         * @default [10, 300] for live, [43200, 259200] for correspondence
+         */
+        time_increment_range: [number, number];
+    };
 
     /** Concurrent games to allow for this speed bracket
      * @default 1, 3, 500 for blitz, live, correspondence respectively
@@ -304,15 +334,38 @@ function defaults(): Config {
         allowed_time_control_systems: ["fischer", "byoyomi", "simple"],
         allowed_blitz_settings: null,
         allowed_live_settings: {
-            per_move_time_range: [10, 300],
-            main_time_range: [0, 3600],
-            periods_range: [1, 10],
+            simple: {
+                per_move_time_range: [10, 300],
+            },
+
+            byoyomi: {
+                main_time_range: [0, 3600],
+                period_time_range: [10, 300],
+                periods_range: [1, 10],
+            },
+
+            fischer: {
+                max_time_range: [30, 600],
+                time_increment_range: [10, 300],
+            },
+
             concurrent_games: 3,
         },
         allowed_correspondence_settings: {
-            per_move_time_range: [43200, 259200],
-            main_time_range: [0, 86400 * 30],
-            periods_range: [1, 10],
+            simple: {
+                per_move_time_range: [43200, 604800],
+            },
+
+            byoyomi: {
+                main_time_range: [0, 604800],
+                period_time_range: [43200, 604800],
+                periods_range: [1, 10],
+            },
+
+            fischer: {
+                max_time_range: [86400, 604800],
+                time_increment_range: [43200, 604800],
+            },
             concurrent_games: 500,
         },
 
@@ -321,6 +374,8 @@ function defaults(): Config {
         allow_unranked: true,
         allowed_rank_range: [0, 99],
         allow_handicap: true,
+        allow_unranked_handicap: true,
+        allowed_komi_range: [-99, 99],
         hidden: false,
         decline_new_challenges: false,
         min_move_time: 1500,

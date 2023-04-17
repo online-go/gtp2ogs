@@ -51,8 +51,6 @@
         /** Send the principal variation (PV) values. Note that your bot must output this
          * data in a way that can be parsed.
          *
-         * See `pv_format` for more details on formatting and parsing PV values .
-         *
          * @default true
          */
         // send_pv_data: true,
@@ -192,21 +190,43 @@
     /** Allowed live game times for bot. */
     /*
     allowed_live_settings: {
-        per_move_time_range: [10, 300],
-        main_time_range: [0, 3600],
-        periods_range: [1, 10],
+        simple: {
+            per_move_time_range: [10, 300],
+        },
+
+        byoyomi: {
+            main_time_range: [0, 3600],
+            period_time_range: [10, 300],
+            periods_range: [1, 10],
+        },
+
+        fischer: {
+            max_time_range: [30, 600],
+            time_increment_range: [10, 300],
+        },
+
+        concurrent_games: 3,
     },
     */
 
-    /** Allowed correspondence game times for bot.
-     *
-     *  @default {"per_move_time_range": [43200, 259200], "main_time_range": [0, 86400], "periods_range": [1, 10]}
-     */
+    /** Allowed correspondence game times for bot. */
     /*
     allowed_correspondence_settings: {
-        per_move_time_range: [43200, 259200],
-        main_time_range: [0, 86400],
-        periods_range: [1, 10],
+        simple: {
+            per_move_time_range: [43200, 604800],
+        },
+
+        byoyomi: {
+            main_time_range: [0, 604800],
+            period_time_range: [43200, 604800],
+            periods_range: [1, 10],
+        },
+
+        fischer: {
+            max_time_range: [86400, 604800],
+            time_increment_range: [43200, 604800],
+        },
+        concurrent_games: 500,
     },
     */
 
@@ -222,6 +242,11 @@
      */
     // allow_unranked: true,
 
+    /** Allowed ranked games
+     *  @default true
+     */
+    // allow_ranked: true,
+
     /** +- the number of ranks allowed to play against this bot. Note that
      * ranked games are always limited to +-9. 0 to disable rank restrictions.
      * @default 0
@@ -233,23 +258,43 @@
      */
     // allow_handicap: true,
 
+    /** Allow handicap games for unranked games
+     *  @default true
+     */
+    // allow_unranked_handicap: true,
+
+    /** Allowed komi range. Negative numbers indicate reverse Komi.
+     *  @default [-99, 99]
+     */
+    // allowed_komi_range: [-99, 99],
+
+    /** Allowed komi range
+     *  @default true
+     */
+    // allowed_komi_range: true,
+
     /** Minimum rank to accept games from
      * @default 0
      * @minimum 0
      * @maximum 35
      */
-    //min_rank: 0,
+    // min_rank: 0,
 
     /** Hide the bot from the public bot list
      * @default false
      */
-    //hidden: false,
+    // hidden: false,
+
+    /** Decline all new challenges. This implies hidden.
+     * @default false
+     */
+    // decline_new_challenges: false,
 
     /** Used for debugging, will issue a showboard command when we've loaded
      * the board state into the bot
      * @default false
      */
-    //showboard: false,
+    // showboard: false,
 
     /** If set, bot moves will be delayed when made before `min_move_time` ms.
      * This is primarily a user experience thing as can make players feel rushed
@@ -258,6 +303,11 @@
      * @default 1500
      */
     // min_move_time: 1500,
+
+    /** Maximum amount of ongoing games to allow concurrently by the same player
+     * @default 1
+     */
+    // max_games_per_player: 1,
 
     /** Enable verbose logging.
      *  @values 0-2

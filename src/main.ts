@@ -48,10 +48,12 @@ interface RejectionDetails {
         | "period_time_out_of_range"
         | "periods_out_of_range"
         | "main_time_out_of_range"
+        | "max_time_out_of_range"
         | "per_move_time_out_of_range"
         | "player_rank_out_of_range"
         | "not_accepting_new_challenges"
-        | "too_many_games_for_player";
+        | "too_many_games_for_player"
+        | "komi_out_of_range";
     details: {
         [key: string]: any;
     };
@@ -282,11 +284,12 @@ class Main {
                         this.checkTimeControl(notification.time_control) ||
                         this.checkConcurrentGames(notification.time_control.speed) ||
                         this.checkBoardSize(notification.width, notification.height) ||
-                        this.checkHandicap(notification.handicap) ||
+                        this.checkHandicap(notification.ranked, notification.handicap) ||
                         this.checkRanked(notification.ranked) ||
                         this.checkAllowedRank(notification.ranked, notification.min_ranking) ||
                         this.checkDeclineChallenges() ||
                         this.checkGamesPerPlayer(notification.user?.id) ||
+                        this.checkKomi(notification.komi) ||
                         undefined;
 
                     if (this.checkWhitelist(notification.user)) {
@@ -387,8 +390,8 @@ class Main {
 
         return undefined;
     }
-    checkHandicap(handicap: number): RejectionDetails | undefined {
-        if (!config.allow_handicap && handicap !== 0) {
+    checkHandicap(ranked: number, handicap: number): RejectionDetails | undefined {
+        if (!(ranked ? config.allow_handicap : config.allow_unranked_handicap) && handicap !== 0) {
             return {
                 message: `This bot only plays games with no handicap.`,
                 rejection_code: "handicap_not_allowed",
@@ -536,15 +539,28 @@ class Main {
             switch (time_control.system) {
                 case "fischer":
                     if (
-                        time_control.time_increment < settings.per_move_time_range[0] ||
-                        time_control.time_increment > settings.per_move_time_range[1]
+                        time_control.max_time < settings.fischer.max_time_range[0] ||
+                        time_control.max_time > settings.fischer.max_time_range[1]
+                    ) {
+                        return {
+                            message: `Time increment is out of acceptable range`,
+                            rejection_code: "max_time_out_of_range",
+                            details: {
+                                time_increment: time_control.time_increment,
+                                range: settings.fischer.time_increment_range,
+                            },
+                        };
+                    }
+                    if (
+                        time_control.time_increment < settings.fischer.time_increment_range[0] ||
+                        time_control.time_increment > settings.fischer.time_increment_range[1]
                     ) {
                         return {
                             message: `Time increment is out of acceptable range`,
                             rejection_code: "time_increment_out_of_range",
                             details: {
                                 time_increment: time_control.time_increment,
-                                range: settings.per_move_time_range,
+                                range: settings.fischer.time_increment_range,
                             },
                         };
                     }
@@ -552,41 +568,41 @@ class Main {
 
                 case "byoyomi":
                     if (
-                        time_control.period_time < settings.per_move_time_range[0] ||
-                        time_control.period_time > settings.per_move_time_range[1]
+                        time_control.period_time < settings.byoyomi.period_time_range[0] ||
+                        time_control.period_time > settings.byoyomi.period_time_range[1]
                     ) {
                         return {
                             message: `Period time is out of acceptable range`,
                             rejection_code: "period_time_out_of_range",
                             details: {
                                 period_time: time_control.period_time,
-                                range: settings.per_move_time_range,
+                                range: settings.byoyomi.period_time_range,
                             },
                         };
                     }
                     if (
-                        time_control.periods < settings.periods_range[0] ||
-                        time_control.periods > settings.periods_range[1]
+                        time_control.periods < settings.byoyomi.periods_range[0] ||
+                        time_control.periods > settings.byoyomi.periods_range[1]
                     ) {
                         return {
                             message: `Periods is out of acceptable range`,
                             rejection_code: "periods_out_of_range",
                             details: {
                                 periods: time_control.periods,
-                                range: settings.periods_range,
+                                range: settings.byoyomi.periods_range,
                             },
                         };
                     }
                     if (
-                        time_control.main_time < settings.main_time_range[0] ||
-                        time_control.main_time > settings.main_time_range[1]
+                        time_control.main_time < settings.byoyomi.main_time_range[0] ||
+                        time_control.main_time > settings.byoyomi.main_time_range[1]
                     ) {
                         return {
                             message: `Main time is out of acceptable range`,
                             rejection_code: "main_time_out_of_range",
                             details: {
                                 main_time: time_control.main_time,
-                                range: settings.main_time_range,
+                                range: settings.byoyomi.main_time_range,
                             },
                         };
                     }
@@ -594,15 +610,15 @@ class Main {
 
                 case "simple":
                     if (
-                        time_control.per_move < settings.per_move_time_range[0] ||
-                        time_control.per_move > settings.per_move_time_range[1]
+                        time_control.per_move < settings.simple.per_move_time_range[0] ||
+                        time_control.per_move > settings.simple.per_move_time_range[1]
                     ) {
                         return {
                             message: `Per move time is out of acceptable range`,
                             rejection_code: "per_move_time_out_of_range",
                             details: {
                                 per_move_time: time_control.per_move,
-                                range: settings.per_move_time_range,
+                                range: settings.simple.per_move_time_range,
                             },
                         };
                     }
@@ -666,6 +682,17 @@ class Main {
                     message: `You already have ${game_count} games against this bot. This bot only allows ${config.max_games_per_player} games per player, please end your other games before starting a new one.`,
                 };
             }
+        }
+    }
+    checkKomi(komi: number): RejectionDetails | undefined {
+        if (komi < config.allowed_komi_range[0] || komi > config.allowed_komi_range[1]) {
+            return {
+                rejection_code: "komi_out_of_range",
+                details: {
+                    allowed_komi_range: config.allowed_komi_range,
+                },
+                message: `Komi is out of acceptable range`,
+            };
         }
     }
 
