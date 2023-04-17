@@ -226,6 +226,11 @@
                     "type": "number",
                     "description": "If set, bot moves will be delayed when made before `min_move_time` ms. This is primarily a user experience thing as can make players feel rushed if the bots are responding too quickly.",
                     "default": 1500
+                },
+                "max_games_per_player": {
+                    "type": "number",
+                    "description": "Maximum amount of ongoing games to allow concurrently by the same player",
+                    "default": 1
                 }
             },
             "required": [

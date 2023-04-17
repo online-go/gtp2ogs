@@ -50,7 +50,8 @@ interface RejectionDetails {
         | "main_time_out_of_range"
         | "per_move_time_out_of_range"
         | "player_rank_out_of_range"
-        | "not_accepting_new_challenges";
+        | "not_accepting_new_challenges"
+        | "too_many_games_for_player";
     details: {
         [key: string]: any;
     };
@@ -281,6 +282,8 @@ class Main {
                         this.checkHandicap(notification.handicap) ||
                         this.checkRanked(notification.ranked) ||
                         this.checkAllowedRank(notification.ranked, notification.min_ranking) ||
+                        this.checkDeclineChallenges() ||
+                        this.checkGamesPerPlayer(notification.user?.id) ||
                         undefined;
 
                     if (this.checkWhitelist(notification.user)) {
@@ -640,6 +643,26 @@ class Main {
                 details: {},
                 message: "This bot is not accepting new challenges at this time.",
             };
+        }
+    }
+    checkGamesPerPlayer(player_id: number): RejectionDetails | undefined {
+        trace.log("Max games per player: ", config.max_games_per_player);
+        config;
+        if (config.max_games_per_player) {
+            const game_count = Object.keys(this.connected_games).filter((game_id) => {
+                return !!this.connected_games[game_id].state?.player_pool[player_id];
+            }).length;
+            trace.log("Game count: ", game_count, " for ", player_id);
+            if (game_count >= config.max_games_per_player) {
+                return {
+                    rejection_code: "too_many_games_for_player",
+                    details: {
+                        games_being_played: game_count,
+                        max_games_per_player: config.max_games_per_player,
+                    },
+                    message: `You already have ${game_count} games against this bot. This bot only allows ${config.max_games_per_player} games per player, please end your other games before starting a new one.`,
+                };
+            }
         }
     }
 

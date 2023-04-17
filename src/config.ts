@@ -164,6 +164,11 @@ export interface Config {
      */
     min_move_time?: number;
 
+    /** Maximum amount of ongoing games to allow concurrently by the same player
+     * @default 1
+     */
+    max_games_per_player?: number;
+
     /**********/
     /* Hidden */
     /**********/
@@ -319,6 +324,7 @@ function defaults(): Config {
         hidden: false,
         decline_new_challenges: false,
         min_move_time: 1500,
+        max_games_per_player: 1,
 
         greeting: {
             en: "Hello, I am a bot. Good luck, have fun!",
