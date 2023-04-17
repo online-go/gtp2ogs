@@ -1,6 +1,6 @@
 {
     "name": "gtp2ogs",
-    "version": "8.0.0-beta.5",
+    "version": "8.0.0-beta.6",
     "homepage": "https://github.com/online-go/gtp2ogs",
     "repository": {
         "type": "git",
@@ -50,7 +50,7 @@
         "tracer": "^1.1.6",
         "json5": "^2.2.3",
         "jsonschema": "^1.4.1",
-        "goban": "=0.7.4",
+        "goban": "=0.7.5",
         "ws": "^8.13.0",
         "bufferutil": "^4.0.7",
         "utf-8-validate": "^6.0.3",
