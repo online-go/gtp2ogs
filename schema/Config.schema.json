@@ -179,6 +179,11 @@
                         19
                     ]
                 },
+                "allow_ranked": {
+                    "type": "boolean",
+                    "description": "Allowed ranked games",
+                    "default": true
+                },
                 "allow_unranked": {
                     "type": "boolean",
                     "description": "Allowed unranked games",
@@ -205,6 +210,11 @@
                 "hidden": {
                     "type": "boolean",
                     "description": "Hide the bot from the public bot list",
+                    "default": false
+                },
+                "decline_new_challenges": {
+                    "type": "boolean",
+                    "description": "Decline all new challenges. This implies hidden.",
                     "default": false
                 },
                 "showboard": {

@@ -3,7 +3,13 @@ import * as JSON5 from "json5";
 import * as yargs from "yargs";
 import * as ConfigSchema from "../schema/Config.schema.json";
 import { Validator } from "jsonschema";
+import { EventEmitter } from "eventemitter3";
 
+interface Events {
+    reloaded: () => void;
+}
+
+export const config_event_emitter = new EventEmitter<Events>();
 export type BotTimeControlSystems = "fischer" | "byoyomi" | "simple";
 
 /** Bot config */
@@ -105,6 +111,11 @@ export interface Config {
      */
     allowed_board_sizes?: number[] | (number | "all" | "square");
 
+    /** Allowed ranked games
+     *  @default true
+     */
+    allow_ranked?: boolean;
+
     /** Allowed unranked games
      *  @default true
      */
@@ -133,6 +144,11 @@ export interface Config {
      * @default false
      */
     hidden?: boolean;
+
+    /** Decline all new challenges. This implies hidden.
+     * @default false
+     */
+    decline_new_challenges?: boolean;
 
     /** Used for debugging, will issue a showboard command when we've loaded
      * the board state into the bot
@@ -296,10 +312,12 @@ function defaults(): Config {
         },
 
         allowed_board_sizes: [9, 13, 19],
+        allow_ranked: true,
         allow_unranked: true,
         allowed_rank_range: [0, 99],
         allow_handicap: true,
         hidden: false,
+        decline_new_challenges: false,
         min_move_time: 1500,
 
         greeting: {
@@ -366,9 +384,36 @@ function opening_bot_config_defaults(): Partial<BotConfig> {
     return base;
 }
 
-export const config: Config = load_config_or_exit();
+export let config: Config = try_load_config();
 
-function load_config_or_exit(): Config {
+function try_load_config(): Config {
+    try {
+        return load_config_or_throw();
+    } catch (e) {
+        console.error("Error loading config file:", e.message);
+        process.exit(1);
+    }
+}
+
+let reload_debounce = null;
+function reload_config(config_path: string): void {
+    if (reload_debounce) {
+        return;
+    }
+    console.info("Reloading config file ", config_path);
+    reload_debounce = setTimeout(() => {
+        reload_debounce = null;
+        try {
+            config = load_config_or_throw();
+            config_event_emitter.emit("reloaded");
+        } catch (e) {
+            console.error("Error loading config file:", e.message);
+            return;
+        }
+    }, 100);
+}
+
+function load_config_or_throw(): Config {
     yargs(process.argv.slice(2))
         .usage("# Usage: $0 -c <config.json5> [options]")
         .usage("#        $0 -c <config.json5> [options] -- <bot command>")
@@ -415,6 +460,12 @@ function load_config_or_exit(): Config {
     }
 
     const filename = args.config;
+
+    if (filename) {
+        fs.watch(filename, () => {
+            reload_config(filename);
+        });
+    }
 
     /* eslint-disable-next-line @typescript-eslint/no-var-requires */
     const contents = filename ? fs.readFileSync(filename, "utf8") : "{}";
@@ -486,12 +537,21 @@ function load_config_or_exit(): Config {
         console.error(``);
         console.error(``);
 
-        process.exit(1);
+        throw new Error("Invalid config file");
     }
     //console.info(yargs.argv);
     //console.info(with_defaults);
 
     with_defaults._config_version = 1;
 
-    return with_defaults;
+    return sanity_check_and_patch_config(with_defaults);
+}
+
+function sanity_check_and_patch_config(config: Config): Config {
+    if (config.decline_new_challenges) {
+        console.warn("Declining new challenges, hiding bot");
+        config.hidden = true;
+    }
+
+    return config;
 }

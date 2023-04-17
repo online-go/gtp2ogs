@@ -2,7 +2,7 @@
 import { WebSocket } from "ws";
 (global as any).WebSocket = WebSocket;
 
-import { config, TimeControlRanges } from "./config";
+import { config, config_event_emitter, TimeControlRanges } from "./config";
 import { socket } from "./socket";
 import { trace } from "./trace";
 import { post, api1 } from "./util";
@@ -36,6 +36,7 @@ interface RejectionDetails {
         | "board_size_not_allowed"
         | "handicap_not_allowed"
         | "unranked_not_allowed"
+        | "ranked_not_allowed"
         | "blitz_not_allowed"
         | "too_many_blitz_games"
         | "live_not_allowed"
@@ -48,7 +49,8 @@ interface RejectionDetails {
         | "periods_out_of_range"
         | "main_time_out_of_range"
         | "per_move_time_out_of_range"
-        | "player_rank_out_of_range";
+        | "player_rank_out_of_range"
+        | "not_accepting_new_challenges";
     details: {
         [key: string]: any;
     };
@@ -97,7 +99,6 @@ class Main {
                     jwt: "",
                     bot_username: config.username,
                     bot_apikey: config.apikey,
-                    bot_config: config,
                 },
                 (obj) => {
                     if (!obj) {
@@ -119,12 +120,15 @@ class Main {
                     config.bot_id = this.bot_id;
                     trace.info("Bot is username: ", this.bot_username);
                     trace.info("Bot is user id: ", this.bot_id);
-                    if (config.hidden) {
-                        trace.info("Bot is hidden");
-                    }
-                    socket.send("bot/hidden", !!config.hidden);
+                    socket.send("bot/config", config);
                 },
             );
+        });
+
+        config_event_emitter.on("reloaded", () => {
+            if (socket.connected) {
+                socket.send("bot/config", config);
+            }
         });
 
         socket.on("disconnect", () => {
@@ -396,6 +400,14 @@ class Main {
             };
         }
 
+        if (ranked && !config.allow_ranked) {
+            return {
+                message: `This bot only plays unranked games.`,
+                rejection_code: "ranked_not_allowed",
+                details: { ranked },
+            };
+        }
+
         return undefined;
     }
     checkConcurrentGames(speed: Speed): RejectionDetails | undefined {
@@ -621,17 +633,20 @@ class Main {
             };
         }
     }
+    checkDeclineChallenges(): RejectionDetails | undefined {
+        if (config.decline_new_challenges) {
+            return {
+                rejection_code: "not_accepting_new_challenges",
+                details: {},
+                message: "This bot is not accepting new challenges at this time.",
+            };
+        }
+    }
 
     terminate() {
         clearTimeout(this.connect_timeout);
         clearInterval(this.ping_interval);
         clearInterval(this.notification_connect_interval);
-    }
-    hide() {
-        socket.send("bot/hidden", true);
-    }
-    unhide() {
-        socket.send("bot/hidden", false);
     }
 }
 
