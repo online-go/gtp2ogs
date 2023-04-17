@@ -127,6 +127,9 @@ class Main {
         });
 
         config_event_emitter.on("reloaded", () => {
+            config.bot_id = this.bot_id;
+            config.username = this.bot_username;
+
             if (socket.connected) {
                 socket.send("bot/config", config);
             }
