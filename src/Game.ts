@@ -742,7 +742,7 @@ export class Game extends EventEmitter<Events> {
 
             // pause_control.paused comes from the human opponent, any other keys
             // are system pauses, vacations, stone removal phase, weekend, etc.
-            if (Object.keys(pause_control).length === 1 && pause_control.paused) {
+            if (pause_control?.paused && Object.keys(pause_control).length === 1) {
                 const pause_duration_s = (Date.now() - clock.paused_since) / 1000;
                 this.log("Clock has beed paused for ", pause_duration_s, " seconds");
                 if (pause_duration_s > config.max_pause_time) {
