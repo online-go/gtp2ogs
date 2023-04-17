@@ -5,7 +5,7 @@ import * as ConfigSchema from "../schema/Config.schema.json";
 import { Validator } from "jsonschema";
 import { EventEmitter } from "eventemitter3";
 
-interface Events {
+export interface Events {
     reloaded: () => void;
 }
 
