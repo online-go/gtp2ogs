@@ -710,12 +710,23 @@ export class Bot extends EventEmitter<Events> {
         void this.command("quit");
         this.dead = true;
         if (this.proc) {
-            this.proc.kill();
             setTimeout(() => {
-                // To be 100% sure.
-                this.verbose("Killing process directly with a signal");
-                this.proc.kill(9);
-            }, 5000);
+                if (this.proc.exitCode !== null) {
+                    this.log("Bot exited with code", this.proc.exitCode);
+                    return;
+                }
+                this.warn("Bot didn't exit with `quit` message, killing with SIGTERM");
+                this.proc.kill("SIGTERM");
+
+                setTimeout(() => {
+                    if (this.proc.exitCode !== null) {
+                        this.log("Bot exited with code", this.proc.exitCode);
+                        return;
+                    }
+                    this.warn("Bot didn't die with SIGTERM, killing it with SIGKILL");
+                    this.proc.kill("SIGKILL");
+                }, this.bot_config.quit_grace_period);
+            }, this.bot_config.quit_grace_period);
         }
     }
     async sendMove(move, width, height, color): Promise<void> {

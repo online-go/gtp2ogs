@@ -64,6 +64,18 @@
          *  @default 100
          */
         // release_delay: 100,
+
+
+        /** When a bot is to shutdown we send a `quit` command to the bot.
+         *  This grace period is the number of milliseconds to wait for the bot to
+         *  quit gracefully before sending a `SIGTERM` to the bot. Furthermore,
+         *  if the bot doesn't terminate after the `SIGTERM` for another grace
+         *  period, we will send a `SIGKILL` to the bot.
+         *
+         *  @unit milliseconds
+         *  @default 5000
+         */
+        // quit_grace_period: 5000,
     },
 
     /** Bot to use for playing opening moves. This can be useful for ensuring

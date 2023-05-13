@@ -295,6 +295,17 @@ export interface BotConfig {
      *  @default 100
      */
     release_delay: number;
+
+    /** When a bot is to shutdown we send a `quit` command to the bot.
+     *  This grace period is the number of milliseconds to wait for the bot to
+     *  quit gracefully before sending a `SIGTERM` to the bot. Furthermore,
+     *  if the bot doesn't terminate after the `SIGTERM` for another grace
+     *  period, we will send a `SIGKILL` to the bot.
+     *
+     *  @unit milliseconds
+     *  @default 5000
+     */
+    quit_grace_period?: number;
 }
 
 export interface EndingBotConfig extends BotConfig {
@@ -421,6 +432,7 @@ function bot_config_defaults(): Partial<BotConfig> {
         send_chats: true,
         send_pv_data: true,
         release_delay: 100,
+        quit_grace_period: 5000,
     };
 
     return base;
