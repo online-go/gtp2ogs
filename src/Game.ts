@@ -502,9 +502,9 @@ export class Game extends EventEmitter<Events> {
             doneProcessing();
             void this.releaseBots();
 
+            this.error("Failed to start the bot, can not make a move, trying to restart");
             this.error(e);
-            this.log("Failed to start the bot, can not make a move, trying to restart");
-            this.sendChat("Failed to start the bot, can not make a move, trying to restart"); // we notify user of this in ingame chat
+            this.sendChat("Failed to start the bot, can not make a move, trying to restart: " + e); // we notify user of this in ingame chat
             throw e;
         }
     }
