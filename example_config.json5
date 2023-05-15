@@ -31,9 +31,9 @@
          */
         // manager: "persistent",
 
-        /** Number of instances of the bot to run in parallel. Exactly this many
-         *  instances will be run at any given time, regardless of how many ongoing
-         *  games there are.
+        /** Number of instances of the bot to run in parallel when using the pool manager.
+         *  Exactly this many instances will be run at any given time,
+         *  regardless of how many ongoing games there are.
          *
          *  @default 1
          */
