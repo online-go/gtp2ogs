@@ -626,7 +626,7 @@ export class Bot extends EventEmitter<Events> {
                     continue;
                 } // don't switch color.
             } else {
-                if (do_initial_load || (this.persistent && this.persistent_moves_sent_count < i)) {
+                if (do_initial_load || (this.persistent && this.persistent_moves_sent_count <= i)) {
                     if (this.persistent) {
                         ++this.persistent_moves_sent_count;
                     }
@@ -724,6 +724,10 @@ export class Bot extends EventEmitter<Events> {
             if (this.persistent) {
                 ++this.persistent_moves_sent_count;
             }
+        }
+
+        if (config.showboard) {
+            await this.command("showboard");
         }
 
         return moves;
