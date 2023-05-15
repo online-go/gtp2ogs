@@ -22,6 +22,15 @@
         /** The command to run the bot. You can also provide this on the command line if you would rather. */
         command: ["/path/to/binary", "arg1", "arg2"],
 
+        /** Management method for managing bot instances. `pool` starts up
+         *  a fixed `instances` number of bots and and reuses them for all
+         *  games. `persistent` starts up a single bot instance per game
+         *  and allows state re-use to allow things like pondering.
+         *
+         *  @default "persistent"
+         */
+        // manager: "persistent",
+
         /** Number of instances of the bot to run in parallel. Exactly this many
          *  instances will be run at any given time, regardless of how many ongoing
          *  games there are.
@@ -76,6 +85,15 @@
          *  @default 5000
          */
         // quit_grace_period: 5000,
+
+        /** When the manager is set to "persistent", If no moves are made within
+         *  this timeout, the bot process is terminated. If a new move is made
+         *  a new process will be started to resume playing the game.
+         *
+         *  @unit milliseconds
+         *  @default 600000
+         */
+        // persistent_idle_timeout: 600000, // 10 minutes
     },
 
     /** Bot to use for playing opening moves. This can be useful for ensuring
@@ -91,12 +109,14 @@
     /*
     opening_bot: {
         // command: string[];
+        // manager: "persistent",
         // instances: 1,
         // enable_clock: true,
         // send_chats: true,
         // send_pv_data: true,
         // release_delay: 100,
         // number_of_opening_moves_to_play: 8,
+        // persistent_idle_timeout: 600000, // 10 minutes
     },
     */
 
@@ -130,6 +150,7 @@
     /*
     ending_bot: {
         // command: string[];
+        // manager: "persistent",
         // instances: 1,
         // enable_clock: true,
         // send_chats: true,
@@ -137,6 +158,7 @@
         // release_delay: 100,
         // allowed_resigns: 3,
         // moves_to_allow_before_checking_ratio: 0.8,
+        // persistent_idle_timeout: 600000, // 10 minutes
     },
     */
 

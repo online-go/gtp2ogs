@@ -319,7 +319,7 @@ export class Game extends EventEmitter<Events> {
     // Release the bot to the pool. Because we are interested in the STDERR output
     // coming from a bot shortly after it's made a move, we don't release it right
     // away when this is called.
-    releaseBots(): Promise<void> {
+    releaseBots(final_release: boolean = false): Promise<void> {
         const promises: Promise<void>[] = [];
 
         this.verbose("Releasing bot(s)");
@@ -358,6 +358,11 @@ export class Game extends EventEmitter<Events> {
         }
 
         return Promise.all(promises).then(() => {
+            if (final_release) {
+                bot_pools.main.clearLastGameId(this.game_id);
+                bot_pools.opening?.clearLastGameId(this.game_id);
+                bot_pools.ending?.clearLastGameId(this.game_id);
+            }
             return;
         });
     }
@@ -634,7 +639,7 @@ export class Game extends EventEmitter<Events> {
             --Game.moves_processing;
         }
 
-        void this.releaseBots();
+        void this.releaseBots(true);
 
         this.log("Disconnecting from game.");
         socket.send("game/disconnect", {
@@ -678,16 +683,11 @@ export class Game extends EventEmitter<Events> {
             if (res !== "R" && res !== "Time" && res !== "Can") {
                 this.sendChat(`Final score was ${score} according to the bot.`);
             }
-            if (this.bot) {
-                // only kill the bot after it processed this
-                this.bot.gameOver();
-                this.ending_bot?.gameOver();
-                void this.releaseBots();
-            }
-        } else if (this.bot) {
-            this.bot.gameOver();
-            this.ending_bot?.gameOver();
-            void this.releaseBots();
+        }
+        if (this.bot) {
+            //this.bot.gameOver();
+            //this.ending_bot?.gameOver();
+            void this.releaseBots(true);
         }
 
         if (!this.disconnect_timeout) {

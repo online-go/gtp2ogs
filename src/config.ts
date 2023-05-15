@@ -253,9 +253,18 @@ export interface TranslatableString {
 export interface BotConfig {
     command: string[];
 
+    /** Management method for managing bot instances. `pool` starts up
+     *  a fixed `instances` number of bots and and reuses them for all
+     *  games. `persistent` starts up a single bot instance per game
+     *  and allows state re-use to allow things like pondering.
+     *
+     *  @default "persistent"
+     */
+    manager?: "pool" | "persistent";
+
     /** Number of instances of the bot to run in parallel. Exactly this many
      *  instances will be run at any given time, regardless of how many ongoing
-     *  games there are.
+     *  games there are. This is only applicable when using the pooling manager.
      *
      *  @default 1
      */
@@ -306,6 +315,15 @@ export interface BotConfig {
      *  @default 5000
      */
     quit_grace_period?: number;
+
+    /** When the manager is set to "persistent", If no moves are made within
+     *  this timeout, the bot process is terminated. If a new move is made
+     *  a new process will be started to resume playing the game.
+     *
+     *  @unit milliseconds
+     *  @default 600000   // 10 minutes
+     */
+    persistent_idle_timeout?: number;
 }
 
 export interface EndingBotConfig extends BotConfig {
@@ -428,11 +446,13 @@ function defaults(): Config {
 
 function bot_config_defaults(): Partial<BotConfig> {
     const base: Partial<BotConfig> = {
+        manager: "persistent",
         instances: 1,
         send_chats: true,
         send_pv_data: true,
         release_delay: 100,
         quit_grace_period: 5000,
+        persistent_idle_timeout: 600000,
     };
 
     return base;

@@ -8,8 +8,18 @@ interface Events {
     start: (command: string, pid: number) => void;
 }
 
+interface BotManagerInterface {
+    ready: Promise<string[]>;
+    bot_config: BotConfig;
+
+    acquire(speed: Speed, width: number, height: number, game_id: number): Promise<Bot>;
+    countAvailable(): number;
+    release(bot: Bot): void;
+    clearLastGameId(game_id: number): void;
+}
+
 /** This class manages a pool of Bots */
-export class BotPool extends EventEmitter<Events> {
+class BotPoolManager extends EventEmitter<Events> implements BotManagerInterface {
     pool_name: string;
     bot_config: BotConfig;
     instances: Bot[] = [];
@@ -103,7 +113,7 @@ export class BotPool extends EventEmitter<Events> {
         return this.instances.filter((bot) => bot.available).length;
     }
 
-    release(bot: Bot): void {
+    public release(bot: Bot): void {
         bot.setGame(null);
         if (this.queue.length > 0) {
             for (const pass of ["board_size", "any"]) {
@@ -129,10 +139,130 @@ export class BotPool extends EventEmitter<Events> {
             bot.available = true;
         }
     }
+    public clearLastGameId(game_id: number): void {
+        for (const bot of this.instances) {
+            if (bot.last_game_id === game_id) {
+                bot.last_game_id = -1;
+            }
+        }
+    }
 }
 
-export const bot_pools = {
-    main: new BotPool("Main", config.bot),
-    ending: config.ending_bot ? new BotPool("Ending", config.ending_bot) : null,
-    opening: config.opening_bot ? new BotPool("Opening", config.opening_bot) : null,
+class PersistentBotManager extends EventEmitter<Events> implements BotManagerInterface {
+    pool_name: string;
+    bot_config: BotConfig;
+    instances: Bot[] = [];
+    queue: [Speed, number, number, (bot: Bot) => void][] = [];
+    ready: Promise<string[]>;
+    log: (...arr: any[]) => any;
+    verbose: (...arr: any[]) => any;
+    error: (...arr: any[]) => any;
+    warn: (...arr: any[]) => any;
+
+    constructor(pool_name: string, bot_config: BotConfig) {
+        super();
+
+        this.log = trace.log.bind(null, `[${pool_name} bots]`);
+        this.verbose = trace.debug.bind(null, `[${pool_name} bots]`);
+        this.warn = trace.warn.bind(null, `[${pool_name} bots]`);
+        this.error = trace.error.bind(null, `[${pool_name} bots]`);
+
+        this.bot_config = bot_config;
+        this.pool_name = pool_name;
+
+        this.ready = Promise.resolve([]);
+        trace.info(`${this.pool_name} persistent bots ready`);
+    }
+
+    private addInstance(bot_config: BotConfig, game_id: number): Bot {
+        const start_time = performance.now();
+        const bot = new Bot(bot_config);
+        bot.last_game_id = game_id;
+        this.instances.push(bot);
+
+        bot.on("terminated", () => {
+            if (bot.persistent_idle_timeout) {
+                clearTimeout(bot.persistent_idle_timeout);
+            }
+            this.instances.splice(this.instances.indexOf(bot), 1);
+            if (performance.now() - start_time < 1000) {
+                trace.error(`Bot "${bot_config.command.join(" ")}" terminated too quickly`);
+                process.exit(1);
+            }
+            if (bot.last_game_id !== -1) {
+                this.addInstance(bot_config, game_id);
+            }
+        });
+        bot.on("ready", () => {
+            this.emit("start", bot_config.command.join(" "), bot.pid);
+            trace.info(
+                `Bot "${bot_config.command.join(" ")}" started with PID ${
+                    bot.pid
+                }. Ready in ${Math.round(performance.now() - start_time)}ms.`,
+            );
+        });
+
+        return bot;
+    }
+
+    async acquire(_speed: Speed, _width: number, _height: number, game_id: number): Promise<Bot> {
+        const bot =
+            this.instances.find((bot) => bot.last_game_id === game_id) ||
+            this.addInstance(this.bot_config, game_id);
+
+        if (bot.persistent_idle_timeout) {
+            clearTimeout(bot.persistent_idle_timeout);
+        }
+
+        return bot;
+    }
+
+    public countAvailable(): number {
+        return 1;
+    }
+
+    release(bot: Bot): void {
+        if (bot.persistent_idle_timeout) {
+            clearTimeout(bot.persistent_idle_timeout);
+        }
+        bot.persistent_idle_timeout = setTimeout(() => {
+            this.log(
+                `Bot has been idle for ${this.bot_config.persistent_idle_timeout}ms, terminating`,
+            );
+            bot.persistent_idle_timeout = null;
+            bot.last_game_id = -1;
+            bot.kill();
+        }, this.bot_config.persistent_idle_timeout);
+    }
+    public clearLastGameId(game_id: number): void {
+        for (const bot of this.instances) {
+            if (bot.last_game_id === game_id) {
+                bot.last_game_id = -1;
+                bot.kill();
+            }
+        }
+    }
+}
+
+export const bot_pools: {
+    main: BotManagerInterface;
+    ending: BotManagerInterface | null;
+    opening: BotManagerInterface | null;
+} = {
+    main:
+        config.bot.manager === "pool"
+            ? new BotPoolManager("Main", config.bot)
+            : new PersistentBotManager("Main", config.bot),
+    ending:
+        config.ending_bot?.manager === "pool"
+            ? new BotPoolManager("Ending", config.ending_bot)
+            : config.ending_bot?.manager === "persistent"
+            ? new PersistentBotManager("Ending", config.ending_bot)
+            : null,
+    opening:
+        config.opening_bot?.manager === "pool"
+            ? new BotPoolManager("Opening", config.opening_bot)
+            : config.opening_bot?.manager === "persistent"
+            ? new PersistentBotManager("Opening", config.opening_bot)
+            : null,
 };

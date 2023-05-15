@@ -25,7 +25,8 @@ interface Events {
 let last_bot_id = 0;
 /** Manages talking to a bot via the GTP interface */
 export class Bot extends EventEmitter<Events> {
-    id: number = ++last_bot_id;
+    readonly id: number = ++last_bot_id;
+    readonly persistent: boolean;
     game: Game | null = null;
     bot_config: BotConfig;
     commands_sent: number;
@@ -59,6 +60,9 @@ export class Bot extends EventEmitter<Events> {
     ready: Promise<string>;
     /** True if we are available for use by a Game. This flag is managed by the pool. */
     available: boolean = true;
+    persistent_state_loaded: boolean = false;
+    persistent_moves_sent_count: number = 0;
+    persistent_idle_timeout: NodeJS.Timeout | null = null;
 
     /* These are afinity fields used by our pool to try and select good bots to use */
     last_game_id: number = -1;
@@ -76,6 +80,7 @@ export class Bot extends EventEmitter<Events> {
         super();
 
         this.bot_config = bot_config;
+        this.persistent = bot_config.manager === "persistent";
 
         const cmd = bot_config.command.map((x) => x.replace(/^~[/]/g, process.env.HOME + "/"));
 
@@ -566,34 +571,38 @@ export class Bot extends EventEmitter<Events> {
             this.katafischer = false;
         }
 
-        // Update our afinity fields
-        this.last_game_id = state.game_id;
-        this.last_width = state.width;
-        this.last_height = state.height;
-
-        if (state.width === state.height) {
-            await this.command(`boardsize ${state.width}`);
-        } else {
-            await this.command(`boardsize ${state.width} ${state.height}`);
-        }
-        await this.command("clear_board");
-        await this.command(`komi ${state.komi}`);
-
+        const do_initial_load = !this.persistent || !this.persistent_state_loaded;
         let have_initial_state = false;
-        if (state.initial_state) {
-            const black = decodeMoves(state.initial_state.black, state.width, state.height);
-            const white = decodeMoves(state.initial_state.white, state.width, state.height);
-            have_initial_state = !!black.length || !!white.length;
 
-            for (let i = 0; i < black.length; ++i) {
-                await this.command(
-                    `play black ${move2gtpvertex(black[i], state.width, state.height)}`,
-                );
+        if (do_initial_load) {
+            // Update our afinity fields
+            this.last_game_id = state.game_id;
+            this.last_width = state.width;
+            this.last_height = state.height;
+
+            if (state.width === state.height) {
+                await this.command(`boardsize ${state.width}`);
+            } else {
+                await this.command(`boardsize ${state.width} ${state.height}`);
             }
-            for (let i = 0; i < white.length; ++i) {
-                await this.command(
-                    `play white ${move2gtpvertex(white[i], state.width, state.height)}`,
-                );
+            await this.command("clear_board");
+            await this.command(`komi ${state.komi}`);
+
+            if (state.initial_state) {
+                const black = decodeMoves(state.initial_state.black, state.width, state.height);
+                const white = decodeMoves(state.initial_state.white, state.width, state.height);
+                have_initial_state = !!black.length || !!white.length;
+
+                for (let i = 0; i < black.length; ++i) {
+                    await this.command(
+                        `play black ${move2gtpvertex(black[i], state.width, state.height)}`,
+                    );
+                }
+                for (let i = 0; i < white.length; ++i) {
+                    await this.command(
+                        `play white ${move2gtpvertex(white[i], state.width, state.height)}`,
+                    );
+                }
             }
         }
 
@@ -610,21 +619,34 @@ export class Bot extends EventEmitter<Events> {
             if (doing_handicap && handicap_moves.length < state.handicap) {
                 handicap_moves.push(move);
                 if (handicap_moves.length === state.handicap) {
-                    void this.sendHandicapMoves(handicap_moves, state.width, state.height);
+                    if (do_initial_load) {
+                        void this.sendHandicapMoves(handicap_moves, state.width, state.height);
+                    }
                 } else {
                     continue;
                 } // don't switch color.
             } else {
-                await this.command(
-                    `play ${color} ${move2gtpvertex(move, state.width, state.height)}`,
-                );
+                if (do_initial_load || (this.persistent && this.persistent_moves_sent_count < i)) {
+                    if (this.persistent) {
+                        ++this.persistent_moves_sent_count;
+                    }
+                    await this.command(
+                        `play ${color} ${move2gtpvertex(move, state.width, state.height)}`,
+                    );
+                }
             }
 
             color = color === "black" ? "white" : "black";
         }
+
+        if (this.persistent) {
+            this.persistent_state_loaded = true;
+        }
+
         if (config.showboard) {
             return await this.command("showboard");
         }
+
         return "";
     }
 
@@ -698,6 +720,10 @@ export class Bot extends EventEmitter<Events> {
                 }
             }
             moves.push({ x, y, text: move, resign, pass });
+
+            if (this.persistent) {
+                ++this.persistent_moves_sent_count;
+            }
         }
 
         return moves;
@@ -715,7 +741,9 @@ export class Bot extends EventEmitter<Events> {
                     this.log("Bot exited with code", this.proc.exitCode);
                     return;
                 }
-                this.warn("Bot didn't exit with `quit` message, killing with SIGTERM");
+                this.warn(
+                    `Bot didn't exit after ${this.bot_config.quit_grace_period}ms with "quit" message, killing forcefully`,
+                );
                 this.proc.kill("SIGTERM");
 
                 setTimeout(() => {
@@ -723,7 +751,6 @@ export class Bot extends EventEmitter<Events> {
                         this.log("Bot exited with code", this.proc.exitCode);
                         return;
                     }
-                    this.warn("Bot didn't die with SIGTERM, killing it with SIGKILL");
                     this.proc.kill("SIGKILL");
                 }, this.bot_config.quit_grace_period);
             }, this.bot_config.quit_grace_period);
@@ -741,9 +768,11 @@ export class Bot extends EventEmitter<Events> {
         await this.command(cmd);
     }
     // Called on game over, in case you need something special.
+    /*
     gameOver() {
         //
     }
+    */
 
     setGame(game: Game | null) {
         this.game = game;
