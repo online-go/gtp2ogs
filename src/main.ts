@@ -224,15 +224,18 @@ class Main {
         trace.info(
             `Status: playing ${blitz_count} blitz, ${live_count} live, ${corr_count} correspondence games`,
         );
-        trace.info(
-            `Available bots: ${bot_pools.main.countAvailable()}/${
-                bot_pools.main.bot_config.instances || 0
-            } main, ${bot_pools.ending?.countAvailable() || 0}/${
-                bot_pools.ending?.bot_config.instances || 0
-            } ending, ${bot_pools.opening?.countAvailable() || 0}/${
-                bot_pools.opening?.bot_config.instances || 0
-            } opening`,
-        );
+
+        let str = "Bot status: ";
+        for (const n of ["main", "ending", "opening"]) {
+            const pool = bot_pools[n];
+            if (!pool) {
+                continue;
+            }
+
+            str += pool.stateString();
+        }
+
+        trace.info(str);
     }
 
     /** Send the server our current status */

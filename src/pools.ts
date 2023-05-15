@@ -16,10 +16,11 @@ interface BotManagerInterface {
     countAvailable(): number;
     release(bot: Bot): void;
     clearLastGameId(game_id: number): void;
+    stateString(): string;
 }
 
 /** This class manages a pool of Bots */
-class BotPoolManager extends EventEmitter<Events> implements BotManagerInterface {
+export class BotPoolManager extends EventEmitter<Events> implements BotManagerInterface {
     pool_name: string;
     bot_config: BotConfig;
     instances: Bot[] = [];
@@ -146,9 +147,13 @@ class BotPoolManager extends EventEmitter<Events> implements BotManagerInterface
             }
         }
     }
+
+    public stateString(): string {
+        return `${this.pool_name}: ${this.countAvailable()}/${this.instances.length} available`;
+    }
 }
 
-class PersistentBotManager extends EventEmitter<Events> implements BotManagerInterface {
+export class PersistentBotManager extends EventEmitter<Events> implements BotManagerInterface {
     pool_name: string;
     bot_config: BotConfig;
     instances: Bot[] = [];
@@ -241,6 +246,10 @@ class PersistentBotManager extends EventEmitter<Events> implements BotManagerInt
                 bot.kill();
             }
         }
+    }
+
+    public stateString(): string {
+        return `${this.pool_name}: ${this.instances.length} bots`;
     }
 }
 
