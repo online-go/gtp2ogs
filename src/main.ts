@@ -232,7 +232,7 @@ class Main {
                 continue;
             }
 
-            str += pool.stateString();
+            str += pool.stateString() + " ";
         }
 
         trace.info(str);

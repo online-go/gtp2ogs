@@ -612,6 +612,7 @@ export class Bot extends EventEmitter<Events> {
             !have_initial_state && state.free_handicap_placement && state.handicap > 1;
         const handicap_moves = [];
         const moves = decodeMoves(state.moves, state.width, state.height);
+
         for (let i = 0; i < moves.length; ++i) {
             const move = moves[i];
 
@@ -621,6 +622,9 @@ export class Bot extends EventEmitter<Events> {
                 if (handicap_moves.length === state.handicap) {
                     if (do_initial_load) {
                         void this.sendHandicapMoves(handicap_moves, state.width, state.height);
+                        if (this.persistent) {
+                            this.persistent_moves_sent_count += handicap_moves.length;
+                        }
                     }
                 } else {
                     continue;
