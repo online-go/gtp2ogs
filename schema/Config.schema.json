@@ -170,9 +170,12 @@
                         {
                             "type": "string",
                             "const": "square"
+                        },
+                        {
+                            "$ref": "#/definitions/BoardSizeRanges"
                         }
                     ],
-                    "description": "Allowed board sizes for the bot. If there are no restrictions, you can provide \"all\", or if you can play on any square board, you can provide \"square\".",
+                    "description": "Allowed board sizes for the bot. If there are no restrictions, you can provide \"all\", or if you can play on any square board, you can provide \"square\".\n\nYou can also provide explicit width and height ranges for non square boards with `{width_range: [min, max], height_range: [min, max]}`.",
                     "default": [
                         9,
                         13,
@@ -578,6 +581,35 @@
                 "concurrent_games"
             ],
             "additionalProperties": false
+        },
+        "BoardSizeRanges": {
+            "type": "object",
+            "properties": {
+                "width_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Specify the low and high range of acceptable board widths. This value is inclusive, so [5,19] would include 5, 19, and everything inbetween."
+                },
+                "height_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Specify the low and high range of acceptable board heights. This value is inclusive, so [5,19] would include 5, 19, and everything inbetween."
+                }
+            },
+            "required": [
+                "width_range",
+                "height_range"
+            ],
+            "additionalProperties": false,
+            "description": "Range of acceptable custom board sizes"
         }
     }
 }

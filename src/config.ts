@@ -107,9 +107,12 @@ export interface Config {
     /** Allowed board sizes for the bot. If there are no restrictions, you can
      *  provide "all", or if you can play on any square board, you can provide "square".
      *
+     *  You can also provide explicit width and height ranges for non square boards
+     *  with `{width_range: [min, max], height_range: [min, max]}`.
+     *
      *  @default [9, 13, 19]
      */
-    allowed_board_sizes?: number[] | (number | "all" | "square");
+    allowed_board_sizes?: number[] | (number | "all" | "square") | BoardSizeRanges;
 
     /** Allowed ranked games
      *  @default true
@@ -242,6 +245,18 @@ export interface TimeControlRanges {
      * @default 1, 3, 500 for blitz, live, correspondence respectively
      */
     concurrent_games: number;
+}
+
+/** Range of acceptable custom board sizes */
+export interface BoardSizeRanges {
+    /** Specify the low and high range of acceptable board widths. This value
+     * is inclusive, so [5,19] would include 5, 19, and everything inbetween.
+     */
+    width_range: [number, number];
+    /** Specify the low and high range of acceptable board heights. This value
+     * is inclusive, so [5,19] would include 5, 19, and everything inbetween.
+     */
+    height_range: [number, number];
 }
 
 export interface TranslatableString {

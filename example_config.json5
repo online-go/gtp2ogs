@@ -267,6 +267,9 @@
     /** Allowed board sizes for the bot. If there are no restrictions, you can
      *  provide "all", or if you can play on any square board, you can provide "square".
      *
+     *  You can also provide explicit width and height ranges for non square boards
+     *  with `{width_range: [min, max], height_range: [min, max]}`.
+     *
      *  @default [9, 13, 19]
      */
     // allowed_board_sizes: [9, 13, 19],

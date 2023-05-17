@@ -361,6 +361,37 @@ class Main {
         return false;
     }
     checkBoardSize(width: number, height: number): RejectionDetails | undefined {
+        // handle explicit board size ranges
+        if (
+            typeof config.allowed_board_sizes === "object" &&
+            "width_range" in config.allowed_board_sizes &&
+            "height_range" in config.allowed_board_sizes
+        ) {
+            if (
+                width < config.allowed_board_sizes.width_range[0] ||
+                width > config.allowed_board_sizes.width_range[1] ||
+                height < config.allowed_board_sizes.height_range[0] ||
+                height > config.allowed_board_sizes.height_range[1]
+            ) {
+                return {
+                    message:
+                        `This bot only supports board sizes between ` +
+                        `${config.allowed_board_sizes.width_range[0]}x${config.allowed_board_sizes.height_range[0]} ` +
+                        `and ${config.allowed_board_sizes.width_range[1]}x${config.allowed_board_sizes.height_range[1]}.`,
+                    rejection_code: "board_size_not_allowed",
+                    details: {
+                        width,
+                        height,
+                        width_range: config.allowed_board_sizes.width_range,
+                        height_range: config.allowed_board_sizes.height_range,
+                    },
+                };
+            } else {
+                return undefined;
+            }
+        }
+
+        // Handle normal sizes or special "all" | "square" cases
         const allowed = Array.isArray(config.allowed_board_sizes)
             ? config.allowed_board_sizes
             : [config.allowed_board_sizes];
