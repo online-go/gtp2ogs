@@ -4,6 +4,11 @@
      *  REQUIRED*/
     apikey: "FILL ME IN",
 
+    /** Engine specifier of the bot, this is a plain text description of the
+     * bot's engine and network that will be recorded along with all games
+     * played. */
+    //engine: "";
+
     /** Maximum time to allow the game to be paused for in seconds.
      * @default 300
      * @range 300 - 172800
