@@ -141,7 +141,7 @@ export interface Config {
     /** Allow handicap games for ranked games
      *  @default true
      */
-    allow_handicap?: boolean;
+    allow_ranked_handicap?: boolean;
 
     /** Allow handicap games for unranked games
      *  @default true
@@ -417,7 +417,7 @@ function defaults(): Config {
         allow_ranked: true,
         allow_unranked: true,
         allowed_rank_range: [0, 99],
-        allow_handicap: true,
+        allow_ranked_handicap: true,
         allow_unranked_handicap: true,
         allowed_komi_range: [-99, 99],
         hidden: false,

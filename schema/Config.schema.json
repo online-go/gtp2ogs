@@ -205,7 +205,7 @@
                         99
                     ]
                 },
-                "allow_handicap": {
+                "allow_ranked_handicap": {
                     "type": "boolean",
                     "description": "Allow handicap games for ranked games",
                     "default": true

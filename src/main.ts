@@ -425,7 +425,10 @@ class Main {
         return undefined;
     }
     checkHandicap(ranked: number, handicap: number): RejectionDetails | undefined {
-        if (!(ranked ? config.allow_handicap : config.allow_unranked_handicap) && handicap !== 0) {
+        if (
+            !(ranked ? config.allow_ranked_handicap : config.allow_unranked_handicap) &&
+            handicap !== 0
+        ) {
             return {
                 message: `This bot only plays games with no handicap.`,
                 rejection_code: "handicap_not_allowed",

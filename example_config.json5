@@ -290,12 +290,12 @@
      */
     // allowed_rank_range: 0,
 
-    /** Allow handicap games
+    /** Allow handicap in ranked games
      *  @default true
      */
-    // allow_handicap: true,
+    // allow_ranked_handicap: true,
 
-    /** Allow handicap games for unranked games
+    /** Allow handicap in unranked games
      *  @default true
      */
     // allow_unranked_handicap: true,
