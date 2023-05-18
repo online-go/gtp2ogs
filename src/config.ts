@@ -17,6 +17,11 @@ export interface Config {
     /** API key for the bot. */
     apikey: string;
 
+    /** Engine specifier of the bot, this is a plain text description of the
+     * bot's engine and network that will be recorded along with all games
+     * played. */
+    engine?: string;
+
     /** Enable verbose logging.
      *  @values 0-2
      *  @default 0
@@ -532,6 +537,7 @@ function load_config_or_throw(): Config {
         )
         .alias("disable-status-updates", "q")
         .describe("apikey", "API key for the bot")
+        .describe("engine", "Version of the bot engine being used")
         .describe("v", "Increase level (use multiple times for more logs)")
         .count("v")
         .strict()
@@ -548,6 +554,7 @@ function load_config_or_throw(): Config {
         apikey: args.apikey,
         verbosity: args.v || undefined,
         disable_status_updates: args.q || false,
+        engine: args.engine,
     };
 
     let cli_bot_command = args._.length > 0 ? args._ : undefined;

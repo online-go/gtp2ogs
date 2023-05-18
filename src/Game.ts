@@ -558,6 +558,9 @@ export class Game extends EventEmitter<Events> {
             if (config.greeting?.en) {
                 this.sendChat(config.greeting);
             }
+            if (config.engine) {
+                this.sendChat({ en: `Engine: ${config.engine}`, engine: config.engine });
+            }
         }
 
         const doing_handicap =

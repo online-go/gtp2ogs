@@ -9,6 +9,10 @@
                     "type": "string",
                     "description": "API key for the bot."
                 },
+                "engine": {
+                    "type": "string",
+                    "description": "Engine specifier of the bot, this is a plain text description of the bot's engine and network that will be recorded along with all games played."
+                },
                 "verbosity": {
                     "type": "number",
                     "description": "Enable verbose logging.",
