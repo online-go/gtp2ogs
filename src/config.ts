@@ -125,18 +125,9 @@ export interface Config {
     allow_unranked?: boolean;
 
     /** Allowed range for ranked games
-     * Ranks are encoded as a number starting at 0 which represents 30k and
-     * counting up. For example:
-     *   30k = 0
-     *   29k = 1
-     *   20k = 10
-     *   10k = 20
-     *   1k = 29
-     *   1d = 30
-     *   9d = 38
-     * @default [0, 99]
+     * @default ["30k", "9p"]
      */
-    allowed_rank_range?: [number, number];
+    allowed_rank_range?: [string, string];
 
     /** Allow handicap games for ranked games
      *  @default true
@@ -416,7 +407,7 @@ function defaults(): Config {
         allowed_board_sizes: [9, 13, 19],
         allow_ranked: true,
         allow_unranked: true,
-        allowed_rank_range: [0, 99],
+        allowed_rank_range: ["30k", "9p"],
         allow_ranked_handicap: true,
         allow_unranked_handicap: true,
         allowed_komi_range: [-99, 99],

@@ -195,14 +195,14 @@
                 "allowed_rank_range": {
                     "type": "array",
                     "items": {
-                        "type": "number"
+                        "type": "string"
                     },
                     "minItems": 2,
                     "maxItems": 2,
-                    "description": "Allowed range for ranked games Ranks are encoded as a number starting at 0 which represents 30k and counting up. For example:  30k = 0  29k = 1  20k = 10  10k = 20  1k = 29  1d = 30  9d = 38",
+                    "description": "Allowed range for ranked games",
                     "default": [
-                        0,
-                        99
+                        "30k",
+                        "9p"
                     ]
                 },
                 "allow_ranked_handicap": {

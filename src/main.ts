@@ -673,20 +673,20 @@ class Main {
         return undefined;
     }
     checkAllowedRank(game_is_ranked: boolean, player_rank: number): RejectionDetails | undefined {
+        const min_rank = rankstr_to_number(config.allowed_rank_range[0]);
+        const max_rank = rankstr_to_number(config.allowed_rank_range[1]);
+
         if (!game_is_ranked) {
             return;
         }
-        if (
-            player_rank < config.allowed_rank_range[0] ||
-            player_rank > config.allowed_rank_range[1]
-        ) {
+        if (player_rank < min_rank || player_rank > max_rank) {
             return {
                 rejection_code: "player_rank_out_of_range",
                 details: {
                     allowed_rank_range: config.allowed_rank_range,
                 },
                 message:
-                    player_rank < config.allowed_rank_range[0]
+                    player_rank < min_rank
                         ? `Your rank is too low to play against this bot.`
                         : `Your rank is too high to play against this bot.`,
             };
@@ -742,6 +742,22 @@ class Main {
 
 function ignore() {
     // do nothing
+}
+
+function rankstr_to_number(rank: string): number {
+    const base = parseInt(rank);
+    const suffix = rank[rank.length - 1].toLowerCase();
+
+    switch (suffix) {
+        case "p":
+            return 999;
+        case "k":
+            return 30 - base;
+        case "d":
+            return 29 + base;
+    }
+
+    throw new Error(`Invalid rank string: ${rank}`);
 }
 
 new Main();

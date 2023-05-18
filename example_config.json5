@@ -74,7 +74,6 @@
          */
         // release_delay: 100,
 
-
         /** When a bot is to shutdown we send a `quit` command to the bot.
          *  This grace period is the number of milliseconds to wait for the bot to
          *  quit gracefully before sending a `SIGTERM` to the bot. Furthermore,
@@ -98,8 +97,8 @@
 
     /** Bot to use for playing opening moves. This can be useful for ensuring
      * your bot plays at least a few reasonable joseki moves if it is a weak
-     * bot. 
-     * 
+     * bot.
+     *
      * The config for this bot is just like the main bot, with one additional
      * option:
      *
@@ -130,10 +129,10 @@
      *
      * The configuration for this bot is just like the main bot, with two additional
      * options:
-     * 
+     *
      * `allowed_resigns`
      * Which is the number of successive resigns allowed before the bot will resign.
-     * 
+     *
      * `moves_to_allow_before_checking_ratio`
      * Which is the ratio of the board size to the number of moves
      * to allow before we will start checking the ending bot for
@@ -284,11 +283,10 @@
      */
     // allow_ranked: true,
 
-    /** +- the number of ranks allowed to play against this bot. Note that
-     * ranked games are always limited to +-9. 0 to disable rank restrictions.
-     * @default 0
+    /** Allowed range for ranked games
+     * @default ["30k", "9p"]
      */
-    // allowed_rank_range: 0,
+    //allowed_rank_range: ["30k", "9p"];
 
     /** Allow handicap in ranked games
      *  @default true
