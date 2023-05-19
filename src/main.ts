@@ -80,8 +80,8 @@ class Main {
         //this.games_by_player = {}; // Keep track of connected games per player
         this.connected = false;
 
-        if (!config.disable_status_updates) {
-            setInterval(this.dumpStatus.bind(this), 1 * 60 * 1000);
+        if (config.status_update_frequency > 0) {
+            setInterval(this.dumpStatus.bind(this), config.status_update_frequency);
         }
         setInterval(this.sendStatusUpdate.bind(this), 100);
 

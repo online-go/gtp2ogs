@@ -28,10 +28,12 @@ export interface Config {
      */
     verbosity?: number;
 
-    /** Disable the periodic status update lines printed to the console and log file
-     * @default false
+    /** Sets how often the status lines are printed to the screen. Set to 0 to
+     * disable.
+     * units: milliseconds
+     * @default 60000
      */
-    disable_status_updates?: boolean;
+    status_update_frequency?: number;
 
     /**
      * Server URL to connect to, defaults to online-go.com
@@ -371,6 +373,7 @@ function defaults(): Config {
         server: "https://online-go.com",
         verbosity: 1,
         max_pause_time: 300,
+        status_update_frequency: 60000,
         allowed_time_control_systems: ["fischer", "byoyomi", "simple"],
         allowed_blitz_settings: null,
         allowed_live_settings: {
@@ -553,7 +556,7 @@ function load_config_or_throw(): Config {
         server: args.server,
         apikey: args.apikey,
         verbosity: args.v || undefined,
-        disable_status_updates: args.q || false,
+        status_update_frequency: args.q ? 0 : undefined,
         engine: args.engine,
     };
 

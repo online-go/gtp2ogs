@@ -18,10 +18,10 @@
                     "description": "Enable verbose logging.",
                     "default": 0
                 },
-                "disable_status_updates": {
-                    "type": "boolean",
-                    "description": "Disable the periodic status update lines printed to the console and log file",
-                    "default": false
+                "status_update_frequency": {
+                    "type": "number",
+                    "description": "Sets how often the status lines are printed to the screen. Set to 0 to disable. units: milliseconds",
+                    "default": 60000
                 },
                 "server": {
                     "type": "string",

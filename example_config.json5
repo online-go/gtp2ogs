@@ -291,7 +291,7 @@
     /** Allowed range for ranked games
      * @default ["30k", "9p"]
      */
-    //allowed_rank_range: ["30k", "9p"];
+    //allowed_rank_range: ["30k", "9p"],
 
     /** Allow handicap in ranked games
      *  @default true
@@ -312,13 +312,6 @@
      *  @default true
      */
     // allowed_komi_range: true,
-
-    /** Minimum rank to accept games from
-     * @default 0
-     * @minimum 0
-     * @maximum 35
-     */
-    // min_rank: 0,
 
     /** Hide the bot from the public bot list
      * @default false
@@ -354,4 +347,11 @@
      *  @default 0
      */
     // verbosity: 0,
+
+    /** Sets how often the status lines are printed to the screen. Set to 0 to
+     * disable.
+     * units: milliseconds
+     * @default 60000
+     */
+    // status_update_frequency : 60000,
 }
