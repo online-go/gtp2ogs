@@ -163,7 +163,9 @@ export class Bot extends EventEmitter<Events> {
             this.log(`${errline}`);
 
             if (this.pv_parser) {
-                this.pv_parser.scanAndSendEngineAnalysis(this.game, errline);
+                if (this.pv_parser.scanAndSendEngineAnalysis(this.game, errline)) {
+                    return;
+                }
             }
             if (this.bot_config.send_chats) {
                 const chat_match = /(DISCUSSION|MALKOVICH|MAIN):(.*)/.exec(errline);
