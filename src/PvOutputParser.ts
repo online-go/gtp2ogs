@@ -28,14 +28,14 @@ export class PvOutputParser {
     }
 
     /** Scans the bot output for PVs and posts them to the chat. */
-    public scanAndSendEngineAnalysis(game: Game | undefined, line: string): void {
+    public scanAndSendEngineAnalysis(game: Game | undefined, line: string) {
         this.game = game;
         const engine = this.detected_engine;
         this.detectEngine(line);
         if (this.detected_engine !== engine) {
             trace.info("Detected engine: " + this.detected_engine);
         }
-        this.processLine(line);
+        return this.processLine(line);
     }
 
     private checkPondering(): boolean {
@@ -139,15 +139,15 @@ export class PvOutputParser {
             case "katago":
                 {
                     const match = line.match(
-                        /CHAT:Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/,
+                        /(CHAT|MALKOVICH):Visits (\d*) Winrate (\d+\.\d\d)% ScoreLead (-?\d+\.\d) ScoreStdev (-?\d+\.\d) (\(PDA (-?\d+.\d\d)\) )?PV (.*)/,
                     );
                     if (match) {
                         this.lookingForPv = false;
-                        const visits = match[1];
-                        const win_rate = parseFloat(match[2]).toFixed(1);
-                        const scoreLead = match[3];
-                        const PDA = match[6] ? ` PDA: ${match[6]}` : "";
-                        const pv = this.formatMove(match[7]);
+                        const visits = match[2];
+                        const win_rate = parseFloat(match[3]).toFixed(1);
+                        const scoreLead = match[4];
+                        const PDA = match[6] ? ` PDA: ${match[7]}` : "";
+                        const pv = this.formatMove(match[8]);
                         const name = `Win rate: ${win_rate}%, Score: ${scoreLead}${PDA}, Visits: ${visits}`;
 
                         message = this.createAnalysisMessage(name, pv, {
@@ -345,7 +345,9 @@ export class PvOutputParser {
 
         if (message) {
             this.game?.sendChat(message, (this.game?.state.moves.length || 0) + 1, "malkovich");
+            return true;
         }
+        return false;
     }
 }
 
