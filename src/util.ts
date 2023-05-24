@@ -105,3 +105,9 @@ export function post(path, data): Promise<any> {
 export function api1(str) {
     return `/api/v1/${str}`;
 }
+
+export function ignore_promise(promise: Promise<any>): void {
+    promise.catch((e) => {
+        trace.error(e);
+    });
+}

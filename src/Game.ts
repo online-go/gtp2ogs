@@ -1,7 +1,7 @@
 import { decodeMoves } from "goban/src/GoMath";
 import { GoEngineConfig } from "goban/src/GoEngine";
 import { GameChatAnalysisMessage } from "goban/src/protocol";
-import { move2gtpvertex } from "./util";
+import { move2gtpvertex, ignore_promise } from "./util";
 import { Move } from "./types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
@@ -92,7 +92,7 @@ export class Game extends EventEmitter<Events> {
             if (gamedata.phase === "finished") {
                 if (this.state && gamedata.phase !== this.state.phase) {
                     this.state = gamedata;
-                    void this.gameOver();
+                    ignore_promise(this.gameOver());
                 }
                 return; // ignore -- it's either handled by gameOver or we already handled it before.
             }
@@ -117,7 +117,7 @@ export class Game extends EventEmitter<Events> {
                 this.log("Killing bot because of gamedata change after bot was started");
                 this.verbose("Previously seen gamedata:", this.state);
                 this.verbose("New gamedata:", gamedata);
-                void this.releaseBots();
+                ignore_promise(this.releaseBots());
 
                 if (this.processing) {
                     this.processing = false;
@@ -156,7 +156,7 @@ export class Game extends EventEmitter<Events> {
             //
             if (this.state.phase === "play" && this.state.clock.current_player === config.bot_id) {
                 if (!this.bot || !this.processing) {
-                    void this.makeMove(this.state.moves.length);
+                    ignore_promise(this.makeMove(this.state.moves.length));
                 }
             }
 
@@ -250,21 +250,25 @@ export class Game extends EventEmitter<Events> {
                 if (this.my_color === "black") {
                     // If we are black, we make extra moves.
                     //
-                    void this.makeMove(this.state.moves.length);
+                    ignore_promise(this.makeMove(this.state.moves.length));
                 } else {
                     // If we are white, we wait for opponent to make extra moves.
                     if (this.bot) {
-                        void this.bot.sendMove(
-                            decodeMoves(move.move, this.state.width, this.state.height)[0],
-                            this.state.width,
-                            this.state.height,
-                            this.my_color === "black" ? "white" : "black",
+                        ignore_promise(
+                            this.bot.sendMove(
+                                decodeMoves(move.move, this.state.width, this.state.height)[0],
+                                this.state.width,
+                                this.state.height,
+                                this.my_color === "black" ? "white" : "black",
+                            ),
                         );
-                        void this.ending_bot?.sendMove(
-                            decodeMoves(move.move, this.state.width, this.state.height)[0],
-                            this.state.width,
-                            this.state.height,
-                            this.my_color === "black" ? "white" : "black",
+                        ignore_promise(
+                            this.ending_bot?.sendMove(
+                                decodeMoves(move.move, this.state.width, this.state.height)[0],
+                                this.state.width,
+                                this.state.height,
+                                this.my_color === "black" ? "white" : "black",
+                            ),
                         );
                     }
                     this.verbose(
@@ -282,21 +286,25 @@ export class Game extends EventEmitter<Events> {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        void this.bot.sendMove(
-                            decodeMoves(move.move, this.state.width, this.state.height)[0],
-                            this.state.width,
-                            this.state.height,
-                            this.my_color === "black" ? "white" : "black",
+                        ignore_promise(
+                            this.bot.sendMove(
+                                decodeMoves(move.move, this.state.width, this.state.height)[0],
+                                this.state.width,
+                                this.state.height,
+                                this.my_color === "black" ? "white" : "black",
+                            ),
                         );
-                        void this.ending_bot?.sendMove(
-                            decodeMoves(move.move, this.state.width, this.state.height)[0],
-                            this.state.width,
-                            this.state.height,
-                            this.my_color === "black" ? "white" : "black",
+                        ignore_promise(
+                            this.ending_bot?.sendMove(
+                                decodeMoves(move.move, this.state.width, this.state.height)[0],
+                                this.state.width,
+                                this.state.height,
+                                this.my_color === "black" ? "white" : "black",
+                            ),
                         );
                     }
 
-                    void this.makeMove(this.state.moves.length);
+                    ignore_promise(this.makeMove(this.state.moves.length));
                     //this.makeMove(this.state.moves.length);
                 } else {
                     //this.verbose("Ignoring our own move", move.move_number);
@@ -492,7 +500,7 @@ export class Game extends EventEmitter<Events> {
             }
 
             doneProcessing();
-            void this.releaseBots();
+            ignore_promise(this.releaseBots());
 
             return end_moves &&
                 (endbot_pass || this.endbot_resign_count >= config.ending_bot?.allowed_resigns)
@@ -500,7 +508,7 @@ export class Game extends EventEmitter<Events> {
                 : our_moves;
         } catch (e) {
             doneProcessing();
-            void this.releaseBots();
+            ignore_promise(this.releaseBots());
 
             this.error("Failed to start the bot, can not make a move, trying to restart");
             this.error(e);
@@ -606,7 +614,7 @@ export class Game extends EventEmitter<Events> {
 
         const warnAndResign = (msg) => {
             this.log(msg);
-            void this.releaseBots();
+            ignore_promise(this.releaseBots());
             this.uploadMove({ resign: true });
         };
 
@@ -642,7 +650,7 @@ export class Game extends EventEmitter<Events> {
             --Game.moves_processing;
         }
 
-        void this.releaseBots(true);
+        ignore_promise(this.releaseBots(true));
 
         this.log("Disconnecting from game.");
         socket.send("game/disconnect", {
@@ -690,7 +698,7 @@ export class Game extends EventEmitter<Events> {
         if (this.bot) {
             //this.bot.gameOver();
             //this.ending_bot?.gameOver();
-            void this.releaseBots(true);
+            ignore_promise(this.releaseBots(true));
         }
 
         if (!this.disconnect_timeout) {
