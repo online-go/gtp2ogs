@@ -1,5 +1,6 @@
 import { trace } from "./trace";
 import { spawn } from "child_process";
+import { ignore_promise } from "./util";
 import * as split2 from "split2";
 
 import { Move } from "./types";
@@ -355,18 +356,24 @@ export class Bot extends EventEmitter<Events> {
                     }
                 }
 
-                void this.command(
-                    `kgs-time_settings byoyomi ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.periods}`,
+                ignore_promise(
+                    this.command(
+                        `kgs-time_settings byoyomi ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.periods}`,
+                    ),
                 );
-                void this.command(
-                    `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${
-                        black_time > 0 ? "0" : black_periods
-                    }`,
+                ignore_promise(
+                    this.command(
+                        `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${
+                            black_time > 0 ? "0" : black_periods
+                        }`,
+                    ),
                 );
-                void this.command(
-                    `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${
-                        white_time > 0 ? "0" : white_periods
-                    }`,
+                ignore_promise(
+                    this.command(
+                        `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${
+                            white_time > 0 ? "0" : white_periods
+                        }`,
+                    ),
                 );
             } else {
                 /* Gtp does not support Japanese Byoyomi. We fake it as Canadian Byoyomi.
@@ -399,33 +406,43 @@ export class Bot extends EventEmitter<Events> {
                         state.clock.black_time.period_time * (black_periods - 1);
                 }
 
-                void this.command(
-                    `time_settings ${
-                        state.time_control.main_time +
-                        (state.time_control.periods - 1) * state.time_control.period_time
-                    } ${state.time_control.period_time} 1`,
+                ignore_promise(
+                    this.command(
+                        `time_settings ${
+                            state.time_control.main_time +
+                            (state.time_control.periods - 1) * state.time_control.period_time
+                        } ${state.time_control.period_time} 1`,
+                    ),
                 );
                 // If we're in the last period, tell the bot. Otherwise pretend we're in main time.
                 if (black_timeleft <= state.clock.black_time.period_time) {
-                    void this.command(
-                        `time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`,
+                    ignore_promise(
+                        this.command(
+                            `time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`,
+                        ),
                     );
                 } else {
-                    void this.command(
-                        `time_left black ${Math.floor(
-                            black_timeleft - state.clock.black_time.period_time,
-                        )} 0`,
+                    ignore_promise(
+                        this.command(
+                            `time_left black ${Math.floor(
+                                black_timeleft - state.clock.black_time.period_time,
+                            )} 0`,
+                        ),
                     );
                 }
                 if (white_timeleft <= state.clock.white_time.period_time) {
-                    void this.command(
-                        `time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`,
+                    ignore_promise(
+                        this.command(
+                            `time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`,
+                        ),
                     );
                 } else {
-                    void this.command(
-                        `time_left white ${Math.floor(
-                            white_timeleft - state.clock.white_time.period_time,
-                        )} 0`,
+                    ignore_promise(
+                        this.command(
+                            `time_left white ${Math.floor(
+                                white_timeleft - state.clock.white_time.period_time,
+                            )} 0`,
+                        ),
                     );
                 }
             }
@@ -447,30 +464,44 @@ export class Bot extends EventEmitter<Events> {
             }
 
             if (this.kgstime) {
-                void this.command(
-                    `kgs-time_settings canadian ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`,
+                ignore_promise(
+                    this.command(
+                        `kgs-time_settings canadian ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`,
+                    ),
                 );
             } else {
-                void this.command(
-                    `time_settings ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`,
+                ignore_promise(
+                    this.command(
+                        `time_settings ${state.time_control.main_time} ${state.time_control.period_time} ${state.time_control.stones_per_period}`,
+                    ),
                 );
             }
 
-            void this.command(
-                `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_stones}`,
+            ignore_promise(
+                this.command(
+                    `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_stones}`,
+                ),
             );
-            void this.command(
-                `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_stones}`,
+            ignore_promise(
+                this.command(
+                    `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_stones}`,
+                ),
             );
         } else if (state.time_control.system === "fischer") {
             if (this.katafischer) {
                 const black_timeleft = state.clock.black_time.thinking_time - black_offset;
                 const white_timeleft = state.clock.white_time.thinking_time - white_offset;
-                void this.command(
-                    `kata-time_settings fischer-capped ${state.time_control.initial_time} ${state.time_control.time_increment} ${state.time_control.max_time} -1`,
+                ignore_promise(
+                    this.command(
+                        `kata-time_settings fischer-capped ${state.time_control.initial_time} ${state.time_control.time_increment} ${state.time_control.max_time} -1`,
+                    ),
                 );
-                void this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
-                void this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
+                ignore_promise(
+                    this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`),
+                );
+                ignore_promise(
+                    this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`),
+                );
             } else {
                 /* Not supported by kgs-time_settings and I assume most bots.
                    A better way than absolute is to handle this with
@@ -489,16 +520,20 @@ export class Bot extends EventEmitter<Events> {
                 let white_periods = 0;
 
                 if (this.kgstime) {
-                    void this.command(
-                        `kgs-time_settings canadian ${
-                            state.time_control.initial_time - state.time_control.time_increment
-                        } ${state.time_control.time_increment} 1`,
+                    ignore_promise(
+                        this.command(
+                            `kgs-time_settings canadian ${
+                                state.time_control.initial_time - state.time_control.time_increment
+                            } ${state.time_control.time_increment} 1`,
+                        ),
                     );
                 } else {
-                    void this.command(
-                        `time_settings ${
-                            state.time_control.initial_time - state.time_control.time_increment
-                        } ${state.time_control.time_increment} 1`,
+                    ignore_promise(
+                        this.command(
+                            `time_settings ${
+                                state.time_control.initial_time - state.time_control.time_increment
+                            } ${state.time_control.time_increment} 1`,
+                        ),
                     );
                 }
 
@@ -515,11 +550,19 @@ export class Bot extends EventEmitter<Events> {
                   to think all of timeleft per move.
                   But subtract the increment time above to avoid timeouts.
                */
-                void this.command(
-                    `time_left black ${Math.floor(Math.max(black_timeleft, 0))} ${black_periods}`,
+                ignore_promise(
+                    this.command(
+                        `time_left black ${Math.floor(
+                            Math.max(black_timeleft, 0),
+                        )} ${black_periods}`,
+                    ),
                 );
-                void this.command(
-                    `time_left white ${Math.floor(Math.max(white_timeleft, 0))} ${white_periods}`,
+                ignore_promise(
+                    this.command(
+                        `time_left white ${Math.floor(
+                            Math.max(white_timeleft, 0),
+                        )} ${white_periods}`,
+                    ),
                 );
             }
         } else if (state.time_control.system === "simple") {
@@ -532,17 +575,25 @@ export class Bot extends EventEmitter<Events> {
             const black_timeleft = state.time_control.per_move - black_offset;
             const white_timeleft = state.time_control.per_move - white_offset;
 
-            void this.command(`time_settings 0 ${state.time_control.per_move} 1`);
+            ignore_promise(this.command(`time_settings 0 ${state.time_control.per_move} 1`));
 
-            void this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`);
-            void this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`);
+            ignore_promise(
+                this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 1`),
+            );
+            ignore_promise(
+                this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 1`),
+            );
         } else if (state.time_control.system === "absolute") {
             const black_timeleft = state.clock.black_time.thinking_time - black_offset;
             const white_timeleft = state.clock.white_time.thinking_time - white_offset;
 
-            void this.command(`time_settings ${state.time_control.total_time} 0 0`);
-            void this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`);
-            void this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`);
+            ignore_promise(this.command(`time_settings ${state.time_control.total_time} 0 0`));
+            ignore_promise(
+                this.command(`time_left black ${Math.floor(Math.max(black_timeleft, 0))} 0`),
+            );
+            ignore_promise(
+                this.command(`time_left white ${Math.floor(Math.max(white_timeleft, 0))} 0`),
+            );
         }
         /*  OGS doesn't actually send 'none' time control type
             else if (state.time_control.system === 'none') {
@@ -623,7 +674,9 @@ export class Bot extends EventEmitter<Events> {
                 handicap_moves.push(move);
                 if (handicap_moves.length === state.handicap) {
                     if (do_initial_load) {
-                        void this.sendHandicapMoves(handicap_moves, state.width, state.height);
+                        ignore_promise(
+                            this.sendHandicapMoves(handicap_moves, state.width, state.height),
+                        );
                         if (this.persistent) {
                             this.persistent_moves_sent_count += handicap_moves.length;
                         }
@@ -743,7 +796,7 @@ export class Bot extends EventEmitter<Events> {
         this.log("Stopping bot");
         this.ignore = true; // Prevent race conditions / inconsistencies. Could be in the middle of genmove ...
         // "quit" needs to be sent before we toggle this.dead since command() checks the status of this.dead
-        void this.command("quit");
+        ignore_promise(this.command("quit"));
         this.dead = true;
         if (this.proc) {
             setTimeout(() => {
