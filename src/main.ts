@@ -314,6 +314,10 @@ class Main {
                                 this.deleteNotification(notification);
                             });
                     } else {
+                        trace.info(
+                            `Rejecting challenge from ${notification.user.username} https://online-go.com/player/${notification.user.id}/anoek`,
+                            reject,
+                        );
                         post(api1(`me/challenges/${notification.challenge_id}`), {
                             delete: true,
                             message: reject.message,
