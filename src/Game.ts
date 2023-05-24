@@ -12,6 +12,7 @@ import { bot_pools } from "./pools";
 //import { PvOutputParser } from "./PvOutputParser";
 
 interface Events {
+    disconnecting: () => void;
     disconnected: (game_id: number) => void;
 }
 
@@ -70,11 +71,15 @@ export class Game extends EventEmitter<Events> {
 
         // TODO: Command line options to allow undo?
         //
-        socket.on(`game/${game_id}/undo_requested`, (undodata) => {
+        const on_undo_requested = (undodata) => {
             this.log("Undo requested", JSON.stringify(undodata, null, 4));
+        };
+        socket.on(`game/${game_id}/undo_requested`, on_undo_requested);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/undo_requested`, on_undo_requested);
         });
 
-        socket.on(`game/${game_id}/gamedata`, (gamedata) => {
+        const on_gamedata = (gamedata) => {
             if (!socket.connected) {
                 return;
             }
@@ -161,9 +166,13 @@ export class Game extends EventEmitter<Events> {
             }
 
             this.checkForPause();
-        });
+        };
 
-        socket.on(`game/${game_id}/clock`, (clock) => {
+        socket.on(`game/${game_id}/gamedata`, on_gamedata);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/gamedata`, on_gamedata);
+        });
+        const on_clock = (clock) => {
             if (!socket.connected) {
                 return;
             }
@@ -179,8 +188,13 @@ export class Game extends EventEmitter<Events> {
             }
 
             this.checkForPause();
+        };
+
+        socket.on(`game/${game_id}/clock`, on_clock);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/clock`, on_clock);
         });
-        socket.on(`game/${game_id}/phase`, (phase) => {
+        const on_phase = (phase) => {
             if (!socket.connected) {
                 return;
             }
@@ -196,8 +210,13 @@ export class Game extends EventEmitter<Events> {
             if (phase === "play") {
                 this.scheduleRetry();
             }
+        };
+
+        socket.on(`game/${game_id}/phase`, on_phase);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/phase`, on_phase);
         });
-        socket.on(`game/${game_id}/move`, (move) => {
+        const on_move = (move) => {
             if (!socket.connected) {
                 return;
             }
@@ -310,18 +329,30 @@ export class Game extends EventEmitter<Events> {
                     //this.verbose("Ignoring our own move", move.move_number);
                 }
             }
+        };
+
+        socket.on(`game/${game_id}/move`, on_move);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/move`, on_move);
         });
 
         socket.send("game/connect", {
             game_id: game_id,
         });
 
+        /*
         this.connect_timeout = setTimeout(() => {
             if (!this.state) {
                 this.log("No gamedata after 1s, reqesting again");
                 this.scheduleRetry();
             }
         }, 1000);
+        */
+        this.connect_timeout = setTimeout(() => {
+            if (!this.state) {
+                this.warn("No gamedata received after 5s, still waiting");
+            }
+        }, 5000);
     }
 
     // Release the bot to the pool. Because we are interested in the STDERR output
@@ -524,9 +555,11 @@ export class Game extends EventEmitter<Events> {
         socket.send("game/disconnect", {
             game_id: this.game_id,
         });
-        socket.send("game/connect", {
-            game_id: this.game_id,
-        });
+        setTimeout(() => {
+            socket.send("game/connect", {
+                game_id: this.game_id,
+            });
+        }, 500);
     }
     // Send move to server.
     //
@@ -656,6 +689,7 @@ export class Game extends EventEmitter<Events> {
         socket.send("game/disconnect", {
             game_id: this.game_id,
         });
+        this.emit("disconnecting");
     }
     getRes(result): string {
         const m = this.state.outcome.match(/(.*) points/);
