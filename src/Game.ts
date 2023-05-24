@@ -686,9 +686,11 @@ export class Game extends EventEmitter<Events> {
         ignore_promise(this.releaseBots(true));
 
         this.log("Disconnecting from game.");
-        socket.send("game/disconnect", {
-            game_id: this.game_id,
-        });
+        if (socket.connected) {
+            socket.send("game/disconnect", {
+                game_id: this.game_id,
+            });
+        }
         this.emit("disconnecting");
     }
     getRes(result): string {
