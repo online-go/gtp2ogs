@@ -799,19 +799,20 @@ export class Game extends EventEmitter<Events> {
             return;
         }
 
-        if (clock.paused_since) {
+        if (clock.pause?.paused && clock.paused_since) {
             const pause_control = clock.pause?.pause_control || (this.state as any).pause_control;
 
             // pause_control.paused comes from the human opponent, any other keys
             // are system pauses, vacations, stone removal phase, weekend, etc.
             if (pause_control?.paused && Object.keys(pause_control).length === 1) {
                 const pause_duration_s = (Date.now() - clock.paused_since) / 1000;
-                this.log("Clock has beed paused for ", pause_duration_s, " seconds");
+                this.log("Clock has been paused for ", pause_duration_s, " seconds");
                 if (pause_duration_s > config.max_pause_time) {
                     this.sendChat("Maximum pause time reached, unpausing clock");
                     this.resumeGame();
                 } else {
                     this.unpause_timeout = setTimeout(() => {
+                        this.unpause_timeout = undefined;
                         this.sendChat("Maximum pause time reached, unpausing clock");
                         this.resumeGame();
                     }, (config.max_pause_time - pause_duration_s) * 1000);
