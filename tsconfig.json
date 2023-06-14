@@ -3,14 +3,14 @@
     "buildOnSave": true,
     "compilerOptions": {
         "outDir": "build",
-        "target": "es2021",
+        "target": "es2015",
         "module": "commonjs",
         "moduleResolution": "node",
         "removeComments": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "resolveJsonModule": true,
-        "lib": ["es2021", "dom"],
+        "lib": ["es2015", "dom"],
         "baseUrl": ".",
         "paths": {
             "*": ["*", "src/*"]
