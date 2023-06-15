@@ -4,6 +4,8 @@ import { EventEmitter } from "eventemitter3";
 import { Speed } from "./types";
 import { trace } from "./trace";
 
+global.performance = global.performance || (Date as any);
+
 interface Events {
     start: (command: string, pid: number) => void;
 }

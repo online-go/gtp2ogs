@@ -2,6 +2,8 @@ import { config } from "./config";
 import { GobanSocket } from "goban/src/GobanSocket";
 import { trace } from "./trace";
 
+global.performance = global.performance || (Date as any);
+
 const MIN_CONNECT_TIME = 1000;
 
 export const socket = new GobanSocket(config.server);
