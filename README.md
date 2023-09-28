@@ -35,20 +35,29 @@ npm install -g gtp2ogs
 
 ### Building from source
 
-To build from source you will need to have `node.js` installed on your system.
-You will also need to have the `yarn` and `gulp` npm packages installed. Once
-you have the prerequisites you can run `yarn` to install the package dependencies,
-and
-
+To build from source you will need to have node.js installed on your system.
+You will also need to have `yarn` installed. Then, run
 ```
-gulp
+yarn install
+yarn exec -- gulp
 ```
 
 to run the build process. The resulting compiled javascript file will be located
 in `dist/gtp2ogs.js` which you can then run with
-
 ```
 node dist/gtp2ogs.js
+```
+
+To build a standalone binary that doesn't depend on node, use pkg:
+```
+yarn exec -- pkg -C brotli .
+```
+
+If you do not want to install node.js and yarn locally, another option is
+```
+docker run --rm -it -v "$PWD":/usr/src -w /usr/src node:slim yarn install
+docker run --rm -it -v "$PWD":/usr/src -w /usr/src node:slim yarn exec -- gulp
+docker run --rm -it -v "$PWD":/usr/src -w /usr/src node:slim yarn exec -- pkg -C brotli .
 ```
 
 ## Running your bot
