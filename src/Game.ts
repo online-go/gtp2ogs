@@ -278,15 +278,17 @@ export class Game extends EventEmitter<Events> {
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                "black", // we are white so we are recording black's moves
                             ),
                         );
+                    }
+                    if (this.ending_bot) {
                         ignore_promise(
-                            this.ending_bot?.sendMove(
+                            this.ending_bot.sendMove(
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                "black",
                             ),
                         );
                     }
@@ -301,6 +303,7 @@ export class Game extends EventEmitter<Events> {
                     }
                 }
             } else {
+                const opponent_color = this.my_color === "black" ? "white" : "black";
                 if (move.move_number % 2 === this.opponent_evenodd) {
                     // We just got a move from the opponent, so we can move immediately.
                     //
@@ -310,15 +313,17 @@ export class Game extends EventEmitter<Events> {
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                opponent_color,
                             ),
                         );
+                    }
+                    if (this.ending_bot) {
                         ignore_promise(
-                            this.ending_bot?.sendMove(
+                            this.ending_bot.sendMove(
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                opponent_color,
                             ),
                         );
                     }
