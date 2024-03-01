@@ -93,7 +93,7 @@ export interface Config {
 
     /**
      * Allowed blitz times for the bot. Blitz is disabled by default, but you
-     * can enable it by providing accetpable time settings.
+     * can enable it by providing acceptable time settings.
      *
      * @default null
      */
@@ -248,11 +248,11 @@ export interface TimeControlRanges {
 /** Range of acceptable custom board sizes */
 export interface BoardSizeRanges {
     /** Specify the low and high range of acceptable board widths. This value
-     * is inclusive, so [5,19] would include 5, 19, and everything inbetween.
+     * is inclusive, so [5,19] would include 5, 19, and everything in between.
      */
     width_range: [number, number];
     /** Specify the low and high range of acceptable board heights. This value
-     * is inclusive, so [5,19] would include 5, 19, and everything inbetween.
+     * is inclusive, so [5,19] would include 5, 19, and everything in between.
      */
     height_range: [number, number];
 }
@@ -426,32 +426,32 @@ function defaults(): Config {
 
         greeting: {
             en: "Hello, I am a bot. Good luck, have fun!",
-            fr: "Bonjour, je suis un bot. Bonne chance, amusez-vous bien!",
-            de: "Hallo, ich bin ein Bot. Viel Glück, viel Spaß!",
-            es: "Hola, soy un bot. ¡Buena suerte, que te diviertas!",
-            it: "Ciao, sono un bot. Buona fortuna, divertiti!",
+            fr: "Bonjour, je suis un bot. Bonne chance, amusez-vous bien!", // cspell: disable-line
+            de: "Hallo, ich bin ein Bot. Viel Glück, viel Spaß!", // cspell: disable-line
+            es: "Hola, soy un bot. ¡Buena suerte, que te diviertas!", // cspell: disable-line
+            it: "Ciao, sono un bot. Buona fortuna, divertiti!", // cspell: disable-line
             ja: "こんにちは、私はボットです。 お疲れ様でした、楽しんでください！",
             ko: "안녕하세요, 저는 봇입니다. 행운을 빕니다, 즐거운 시간 되세요!",
-            nl: "Hallo, ik ben een bot. Veel geluk, veel plezier!",
-            pl: "Cześć, jestem botem. Powodzenia, baw się dobrze!",
-            pt: "Olá, eu sou um bot. Boa sorte, divirta-se!",
-            ru: "Привет, я бот. Удачи, приятной игры!",
+            nl: "Hallo, ik ben een bot. Veel geluk, veel plezier!", // cspell: disable-line
+            pl: "Cześć, jestem botem. Powodzenia, baw się dobrze!", // cspell: disable-line
+            pt: "Olá, eu sou um bot. Boa sorte, divirta-se!", // cspell: disable-line
+            ru: "Привет, я бот. Удачи, приятной игры!", // cspell: disable-line
             "zh-tw": "大家好，我是機器人。 祝你好運，玩得開心！",
             "zh-cn": "大家好，我是机器人。 祝你好运，玩得开心！",
         },
 
         farewell: {
             en: "Thank you for the game!",
-            fr: "Merci pour la partie!",
-            de: "Danke für das Spiel!",
-            es: "¡Gracias por el juego!",
-            it: "Grazie per la partita!",
+            fr: "Merci pour la partie!", // cspell: disable-line
+            de: "Danke für das Spiel!", // cspell: disable-line
+            es: "¡Gracias por el juego!", // cspell: disable-line
+            it: "Grazie per la partita!", // cspell: disable-line
             ja: "ゲームありがとうございました！",
             ko: "게임 감사합니다!",
-            nl: "Bedankt voor het spel!",
-            pl: "Dziękuję za grę!",
-            pt: "Obrigado pelo jogo!",
-            ru: "Спасибо за игру!",
+            nl: "Bedankt voor het spel!", // cspell: disable-line
+            pl: "Dziękuję za grę!", // cspell: disable-line
+            pt: "Obrigado pelo jogo!", // cspell: disable-line
+            ru: "Спасибо за игру!", // cspell: disable-line
             "zh-tw": "謝謝你的遊戲！",
             "zh-cn": "谢谢你的游戏！",
         },

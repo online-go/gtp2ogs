@@ -71,8 +71,8 @@ export class Game extends EventEmitter<Events> {
 
         // TODO: Command line options to allow undo?
         //
-        const on_undo_requested = (undodata) => {
-            this.log("Undo requested", JSON.stringify(undodata, null, 4));
+        const on_undo_requested = (undo_data) => {
+            this.log("Undo requested", JSON.stringify(undo_data, null, 4));
         };
         socket.on(`game/${game_id}/undo_requested`, on_undo_requested);
         this.on("disconnecting", () => {
@@ -105,7 +105,7 @@ export class Game extends EventEmitter<Events> {
             const gamedataChanged = this.state
                 ? JSON.stringify(this.state) !== JSON.stringify(gamedata)
                 : false;
-            // If the gamedata is idential to current state, it's a duplicate. Ignore it and do nothing, unless
+            // If the gamedata is identical to current state, it's a duplicate. Ignore it and do nothing, unless
             // bot is not running.
             //
             if (this.state && !gamedataChanged && this.bot && !this.bot.dead) {
@@ -297,7 +297,7 @@ export class Game extends EventEmitter<Events> {
                     );
                     if (this.state.moves.length === 1) {
                         // remind once, avoid spamming the reminder
-                        this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in ingame chat
+                        this.sendChat("Waiting for opponent to place all handicap stones"); // reminding human player in in-game chat
                     }
                 }
             } else {
@@ -343,7 +343,7 @@ export class Game extends EventEmitter<Events> {
         /*
         this.connect_timeout = setTimeout(() => {
             if (!this.state) {
-                this.log("No gamedata after 1s, reqesting again");
+                this.log("No gamedata after 1s, requesting again");
                 this.scheduleRetry();
             }
         }, 1000);
@@ -418,7 +418,7 @@ export class Game extends EventEmitter<Events> {
         if (this.bot_failures >= 5) {
             // This bot keeps on failing, give up on the game.
             this.log("Bot has crashed too many times, resigning game");
-            this.sendChat("Bot has crashed too many times, resigning game"); // we notify user of this in ingame chat
+            this.sendChat("Bot has crashed too many times, resigning game"); // we notify user of this in in-game chat
             socket.send("game/resign", {
                 game_id: this.game_id,
             });
@@ -543,7 +543,7 @@ export class Game extends EventEmitter<Events> {
 
             this.error("Failed to start the bot, can not make a move, trying to restart");
             this.error(e);
-            this.sendChat("Failed to start the bot, can not make a move, trying to restart: " + e); // we notify user of this in ingame chat
+            this.sendChat("Failed to start the bot, can not make a move, trying to restart: " + e); // we notify user of this in in-game chat
             throw e;
         }
     }
@@ -751,8 +751,8 @@ export class Game extends EventEmitter<Events> {
         const botIsBlack = this.state.players.black.username === config.username;
         const color = botIsBlack ? "  B" : "W  "; // Playing black / white against ...
         const player = botIsBlack ? this.state.players.white : this.state.players.black;
-        const handi = this.state && this.state.handicap ? `H${this.state.handicap}` : "  ";
-        return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handi}`;
+        const handicap = this.state && this.state.handicap ? `H${this.state.handicap}` : "  ";
+        return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handicap}`;
     }
     sendChat(
         msg: string | TranslatableString | GameChatAnalysisMessage,
@@ -811,11 +811,14 @@ export class Game extends EventEmitter<Events> {
                     this.sendChat("Maximum pause time reached, unpausing clock");
                     this.resumeGame();
                 } else {
-                    this.unpause_timeout = setTimeout(() => {
-                        this.unpause_timeout = undefined;
-                        this.sendChat("Maximum pause time reached, unpausing clock");
-                        this.resumeGame();
-                    }, (config.max_pause_time - pause_duration_s) * 1000);
+                    this.unpause_timeout = setTimeout(
+                        () => {
+                            this.unpause_timeout = undefined;
+                            this.sendChat("Maximum pause time reached, unpausing clock");
+                            this.resumeGame();
+                        },
+                        (config.max_pause_time - pause_duration_s) * 1000,
+                    );
                 }
             }
         }

@@ -35,7 +35,6 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
-.vscode
 
 node_modules
 *.tgz
