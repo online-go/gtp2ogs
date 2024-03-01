@@ -811,14 +811,11 @@ export class Game extends EventEmitter<Events> {
                     this.sendChat("Maximum pause time reached, unpausing clock");
                     this.resumeGame();
                 } else {
-                    this.unpause_timeout = setTimeout(
-                        () => {
-                            this.unpause_timeout = undefined;
-                            this.sendChat("Maximum pause time reached, unpausing clock");
-                            this.resumeGame();
-                        },
-                        (config.max_pause_time - pause_duration_s) * 1000,
-                    );
+                    this.unpause_timeout = setTimeout(() => {
+                        this.unpause_timeout = undefined;
+                        this.sendChat("Maximum pause time reached, unpausing clock");
+                        this.resumeGame();
+                    }, (config.max_pause_time - pause_duration_s) * 1000);
                 }
             }
         }

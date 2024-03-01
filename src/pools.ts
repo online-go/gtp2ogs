@@ -268,12 +268,12 @@ export const bot_pools: {
         config.ending_bot?.manager === "pool"
             ? new BotPoolManager("Ending", config.ending_bot)
             : config.ending_bot?.manager === "persistent"
-              ? new PersistentBotManager("Ending", config.ending_bot)
-              : null,
+            ? new PersistentBotManager("Ending", config.ending_bot)
+            : null,
     opening:
         config.opening_bot?.manager === "pool"
             ? new BotPoolManager("Opening", config.opening_bot)
             : config.opening_bot?.manager === "persistent"
-              ? new PersistentBotManager("Opening", config.opening_bot)
-              : null,
+            ? new PersistentBotManager("Opening", config.opening_bot)
+            : null,
 };
