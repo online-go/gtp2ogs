@@ -103,7 +103,7 @@
                             "$ref": "#/definitions/TimeControlRanges"
                         }
                     ],
-                    "description": "Allowed blitz times for the bot. Blitz is disabled by default, but you can enable it by providing accetpable time settings.",
+                    "description": "Allowed blitz times for the bot. Blitz is disabled by default, but you can enable it by providing acceptable time settings.",
                     "default": null
                 },
                 "allowed_live_settings": {
@@ -596,7 +596,7 @@
                     },
                     "minItems": 2,
                     "maxItems": 2,
-                    "description": "Specify the low and high range of acceptable board widths. This value is inclusive, so [5,19] would include 5, 19, and everything inbetween."
+                    "description": "Specify the low and high range of acceptable board widths. This value is inclusive, so [5,19] would include 5, 19, and everything in between."
                 },
                 "height_range": {
                     "type": "array",
@@ -605,7 +605,7 @@
                     },
                     "minItems": 2,
                     "maxItems": 2,
-                    "description": "Specify the low and high range of acceptable board heights. This value is inclusive, so [5,19] would include 5, 19, and everything inbetween."
+                    "description": "Specify the low and high range of acceptable board heights. This value is inclusive, so [5,19] would include 5, 19, and everything in between."
                 }
             },
             "required": [
