@@ -62,7 +62,7 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
 
     private addInstance(bot_config: BotConfig) {
         const start_time = performance.now();
-        const bot = new Bot(bot_config);
+        const bot = new Bot(bot_config, this.pool_name === "Ending");
         this.instances.push(bot);
 
         bot.on("terminated", () => {
@@ -183,7 +183,7 @@ export class PersistentBotManager extends EventEmitter<Events> implements BotMan
 
     private addInstance(bot_config: BotConfig, game_id: number): Bot {
         const start_time = performance.now();
-        const bot = new Bot(bot_config);
+        const bot = new Bot(bot_config, this.pool_name === "Ending");
         bot.last_game_id = game_id;
         this.instances.push(bot);
 

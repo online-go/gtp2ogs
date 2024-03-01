@@ -81,7 +81,7 @@ export class Bot extends EventEmitter<Events> {
         super();
 
         this.bot_config = bot_config;
-        this.persistent = bot_config.manager === "persistent";
+        this.persistent = bot_config.manager === "persistent" && !is_ending_bot;
 
         const cmd = bot_config.command.map((x) => x.replace(/^~[/]/g, process.env.HOME + "/"));
 
