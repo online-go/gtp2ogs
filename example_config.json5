@@ -348,6 +348,11 @@
      */
     // verbosity: 0,
 
+    /** Enable logging game chat content.
+     *  @default false
+     */
+    // log_game_chat: true,
+
     /** Sets how often the status lines are printed to the screen. Set to 0 to
      * disable.
      * units: milliseconds
