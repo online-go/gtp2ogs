@@ -86,6 +86,10 @@
                     "type": "string",
                     "description": "File to write logs to. Logs will be sent to stdout as well."
                 },
+                "metricsfile": {
+                    "type": "string",
+                    "description": "File to write metrics to, in Prometheus format."
+                },
                 "allowed_time_control_systems": {
                     "type": "array",
                     "items": {

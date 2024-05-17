@@ -1,4 +1,5 @@
 import { trace } from "./trace";
+import { metrics } from "./metrics";
 import { spawn } from "child_process";
 import { ignore_promise } from "./util";
 import * as split2 from "split2";
@@ -125,6 +126,7 @@ export class Bot extends EventEmitter<Events> {
 
         this.verbose("Starting ", cmd.join(" "));
         try {
+            metrics.bot_startups.inc();
             this.proc = spawn(cmd[0], cmd.slice(1));
             this.proc.on("exit", () => {
                 this.emit("terminated");
@@ -147,6 +149,7 @@ export class Bot extends EventEmitter<Events> {
             );
         } catch (e) {
             this.log("Failed to start the bot: ", e);
+            metrics.bot_failures.inc();
             this.ignore = true;
             this.dead = true;
             this.failed = true;
@@ -212,6 +215,7 @@ export class Bot extends EventEmitter<Events> {
                         ++i;
                         this.log(lines[i]);
                     }
+                    metrics.bot_failures.inc();
                     this.failed = true;
                     this.command_callbacks.shift(); // discard;
                     const eb = this.command_error_callbacks.shift();
@@ -220,6 +224,7 @@ export class Bot extends EventEmitter<Events> {
                     }
                 } else {
                     this.error("Unexpected output: ", line);
+                    metrics.bot_failures.inc();
                     this.failed = true;
                     this.command_callbacks.shift(); // discard;
                     const eb = this.command_error_callbacks.shift();
@@ -248,6 +253,7 @@ export class Bot extends EventEmitter<Events> {
         });
         this.proc.stdin.on("error", (code) => {
             this.error("Bot stdin write error", code);
+            metrics.bot_failures.inc();
             this.command_callbacks.shift(); // discard;
             this.dead = true;
             this.failed = true;
@@ -610,6 +616,7 @@ export class Bot extends EventEmitter<Events> {
 
     async loadState(state): Promise<string> {
         if (this.dead) {
+            metrics.bot_failures.inc();
             this.failed = true;
             this.error("Attempted to load state to a dead bot");
             throw new Error("Attempting to load dead bot");
@@ -723,6 +730,7 @@ export class Bot extends EventEmitter<Events> {
         return new Promise<string>((resolve, reject) => {
             if (this.dead) {
                 this.error("Attempting to send a command to dead bot:", str);
+                metrics.bot_failures.inc();
                 this.failed = true;
                 reject(`Attempting to send a command to dead bot: ${str}`);
                 return;
@@ -739,6 +747,7 @@ export class Bot extends EventEmitter<Events> {
                 //
                 this.error("Failed to send command: ", str);
                 this.error(e);
+                metrics.bot_failures.inc();
                 this.dead = true;
                 this.failed = true;
                 // Already calling the callback!
@@ -757,7 +766,10 @@ export class Bot extends EventEmitter<Events> {
         // Must be after loadClock() since loadClock() checks this.first_move!
         this.first_move = false;
 
+        const size = `${this.last_width}x${this.last_height}`;
+        const endTimer = metrics.bot_move_duration.startTimer({ size });
         const line = await this.command(cmd, true /* final command */);
+        endTimer();
 
         const parts = line.toLowerCase().split(/ +/);
         const moves: Move[] = [];
@@ -775,6 +787,7 @@ export class Bot extends EventEmitter<Events> {
                     y = state.height - parseInt(move.substring(1));
                 } else {
                     this.log(`${cmd} failed, resigning`);
+                    metrics.bot_failure_resigns.inc();
                     resign = true;
                 }
             }
@@ -784,6 +797,8 @@ export class Bot extends EventEmitter<Events> {
                 ++this.persistent_moves_sent_count;
             }
         }
+
+        metrics.bot_moves.inc({ size }, moves.length);
 
         if (config.showboard) {
             await this.command("showboard");
