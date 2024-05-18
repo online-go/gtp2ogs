@@ -710,7 +710,11 @@ class Main {
         config;
         if (config.max_games_per_player) {
             const game_count = Object.keys(this.connected_games).filter((game_id) => {
-                return !!this.connected_games[game_id].state?.player_pool[player_id];
+                const state = this.connected_games[game_id]?.state;
+                if (state?.player_pool !== undefined) {
+                    return !!state.player_pool[player_id];
+                }
+                return state?.white_player_id === player_id || state?.black_player_id === player_id;
             }).length;
             trace.log("Game count: ", game_count, " for ", player_id);
             if (game_count >= config.max_games_per_player) {
