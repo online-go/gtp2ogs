@@ -28,6 +28,11 @@ export interface Config {
      */
     verbosity?: number;
 
+    /** Enable logging game chat.
+     *  @default false
+     */
+    log_game_chat?: boolean;
+
     /** Sets how often the status lines are printed to the screen. Set to 0 to
      * disable.
      * units: milliseconds
@@ -372,6 +377,7 @@ function defaults(): Config {
         apikey: "",
         server: "https://online-go.com",
         verbosity: 1,
+        log_game_chat: false,
         max_pause_time: 300,
         status_update_frequency: 60000,
         allowed_time_control_systems: ["fischer", "byoyomi", "simple"],

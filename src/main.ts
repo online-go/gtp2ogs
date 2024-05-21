@@ -6,7 +6,7 @@ import { config, config_event_emitter, TimeControlRanges } from "./config";
 import { socket } from "./socket";
 import { trace } from "./trace";
 import { post, api1 } from "./util";
-import { Game } from "./Game";
+import { Game, handleChatLine } from "./Game";
 import { bot_pools } from "./pools";
 import { JGOFTimeControl } from "goban/src/JGOF";
 import { Speed } from "./types";
@@ -65,6 +65,7 @@ interface RejectionDetails {
 class Main {
     notification_connect_interval: ReturnType<typeof setInterval>;
     connected_games: { [game_id: string]: Game };
+    connected_finished_games: { [game_id: string]: boolean };
 
     //games_by_player: { [player_id: string]: Game[] };
     connected: boolean;
@@ -77,6 +78,7 @@ class Main {
 
     constructor() {
         this.connected_games = {};
+        this.connected_finished_games = {};
         //this.games_by_player = {}; // Keep track of connected games per player
         this.connected = false;
 
@@ -326,6 +328,51 @@ class Main {
                             .then(ignore)
                             .catch(trace.info);
                     }
+                }
+                break;
+
+            case "lateChatReceivedInGame":
+                {
+                    this.deleteNotification(notification);
+                    if (!config.log_game_chat) {
+                        break;
+                    }
+                    const game_id = notification.game_id;
+                    if (game_id in this.connected_finished_games) {
+                        // Already connected to the finished game.
+                        break;
+                    }
+
+                    trace.debug(`Connecting to ${game_id} to receive late chats`);
+                    socket.send("chat/join", {
+                        channel: `game-${game_id}`,
+                    });
+                    const on_chat = (chat) => {
+                        handleChatLine(game_id, chat.line, notification.timestamp - 1);
+                    };
+                    socket.on(`game/${game_id}/chat`, on_chat);
+
+                    // Connecting to a game from outside Game deserves a little
+                    // bit of care, but I think it should be OK, because
+                    // lateChatReceivedInGame implies the game is over, so we
+                    // should not be getting in the way of anything here.
+                    //
+                    // We could connect to the game as we usually do, but this
+                    // would confuse the logic there that expects to handle an
+                    // unfinished game.
+                    this.connected_finished_games[game_id] = true;
+                    socket.send("game/connect", {
+                        game_id: game_id,
+                        chat: true,
+                    });
+                    setTimeout(() => {
+                        trace.debug(`Disconnecting from ${game_id} (chats)`);
+                        delete this.connected_finished_games[game_id];
+                        socket.send("game/disconnect", {
+                            game_id: game_id,
+                        });
+                        socket.off(`game/${game_id}/chat`, on_chat);
+                    }, 5000);
                 }
                 break;
 
