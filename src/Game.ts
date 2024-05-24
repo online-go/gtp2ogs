@@ -26,6 +26,7 @@ export class Game extends EventEmitter<Events> {
     state: GoEngineConfig;
     opponent_evenodd: null | number;
     greeted: boolean;
+    startup_timestamp: number;
     bot?: Bot;
     using_opening_bot: boolean = false;
     ending_bot?: Bot;
@@ -56,6 +57,7 @@ export class Game extends EventEmitter<Events> {
         this.verbose = trace.debug.bind(null, `[game ${game_id}]`);
         this.warn = trace.warn.bind(null, `[game ${game_id}]`);
         this.error = trace.error.bind(null, `[game ${game_id}]`);
+        this.startup_timestamp = Date.now() / 1000;
         this.state = null;
         this.opponent_evenodd = null;
         this.greeted = false;
@@ -226,6 +228,7 @@ export class Game extends EventEmitter<Events> {
                 // Try to connect again, to get the server to send the gamedata over.
                 socket.send("game/connect", {
                     game_id: game_id,
+                    chat: config.log_game_chat,
                 });
                 return;
             }
@@ -278,15 +281,17 @@ export class Game extends EventEmitter<Events> {
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                "black", // we are white so we are recording black's moves
                             ),
                         );
+                    }
+                    if (this.ending_bot) {
                         ignore_promise(
-                            this.ending_bot?.sendMove(
+                            this.ending_bot.sendMove(
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                "black",
                             ),
                         );
                     }
@@ -301,6 +306,7 @@ export class Game extends EventEmitter<Events> {
                     }
                 }
             } else {
+                const opponent_color = this.my_color === "black" ? "white" : "black";
                 if (move.move_number % 2 === this.opponent_evenodd) {
                     // We just got a move from the opponent, so we can move immediately.
                     //
@@ -310,15 +316,17 @@ export class Game extends EventEmitter<Events> {
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                opponent_color,
                             ),
                         );
+                    }
+                    if (this.ending_bot) {
                         ignore_promise(
-                            this.ending_bot?.sendMove(
+                            this.ending_bot.sendMove(
                                 decodeMoves(move.move, this.state.width, this.state.height)[0],
                                 this.state.width,
                                 this.state.height,
-                                this.my_color === "black" ? "white" : "black",
+                                opponent_color,
                             ),
                         );
                     }
@@ -336,8 +344,25 @@ export class Game extends EventEmitter<Events> {
             socket.off(`game/${game_id}/move`, on_move);
         });
 
+        if (config.log_game_chat) {
+            socket.send("chat/join", {
+                channel: `game-${game_id}`,
+            });
+            const on_chat = (d) => {
+                // Since there is no explicit tracking of which chats are
+                // "read", we assume anything from before we connected to the
+                // game has already been dealt with.
+                handleChatLine(game_id, d.line, this.startup_timestamp);
+            };
+            socket.on(`game/${game_id}/chat`, on_chat);
+            this.on("disconnecting", () => {
+                socket.off(`game/${game_id}/chat`, on_chat);
+            });
+        }
+
         socket.send("game/connect", {
             game_id: game_id,
+            chat: config.log_game_chat,
         });
 
         /*
@@ -820,6 +845,21 @@ export class Game extends EventEmitter<Events> {
             }
         }
     }
+}
+
+export function handleChatLine(game_id: string, line: any, cutoff_timestamp: number) {
+    if (typeof line.body !== "string") {
+        return;
+    }
+    if (line.username === config.username) {
+        return;
+    }
+    // Both are UNIX epoch times.
+    if (line.date < cutoff_timestamp) {
+        return;
+    }
+
+    trace.info(`[game ${game_id}] Game chat from ${line.username}: ${line.body}`);
 }
 
 function num2char(num: number): string {

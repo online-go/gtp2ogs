@@ -18,6 +18,11 @@
                     "description": "Enable verbose logging.",
                     "default": 0
                 },
+                "log_game_chat": {
+                    "type": "boolean",
+                    "description": "Enable logging game chat.",
+                    "default": false
+                },
                 "status_update_frequency": {
                     "type": "number",
                     "description": "Sets how often the status lines are printed to the screen. Set to 0 to disable. units: milliseconds",
