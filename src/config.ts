@@ -582,7 +582,7 @@ function load_config_or_throw(): Config {
         });
     }
 
-    /* eslint-disable-next-line @typescript-eslint/no-var-requires */
+    /* @typescript-eslint/no-var-requires */
     const contents = filename ? fs.readFileSync(filename, "utf8") : "{}";
     const raw = JSON5.parse(contents);
     const with_defaults = { ...defaults(), ...raw, ...from_cli };
