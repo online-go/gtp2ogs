@@ -9,6 +9,7 @@
         "removeComments": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+    
         "resolveJsonModule": true,
         "lib": ["es2015", "dom"],
         "baseUrl": ".",
@@ -17,6 +18,7 @@
         },
 
         "forceConsistentCasingInFileNames": true,
+        "allowSyntheticDefaultImports": true,
 
         "noImplicitAny": false,
         "noImplicitReturns": false,

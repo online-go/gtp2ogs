@@ -80,14 +80,14 @@ function build_schema(done) {
             tsconfig: "tsconfig.json",
         })
         .createSchema("Config");
-        
+
     //fs.mkdirSync("dist", { recursive: true });
     fs.writeFile("schema/Config.schema.json", JSON.stringify(schema, null, 4), done);
 }
 function eslint() {
     return gulp
         .src(ts_sources)
-        .pipe(gulpEslint())
+        .pipe(gulpEslint({ overrideConfigFile: "eslint.config.mjs" }))
         .pipe(gulpEslint.format())
         .pipe(gulpEslint.failAfterError());
 }
