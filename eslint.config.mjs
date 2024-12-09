@@ -7,13 +7,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import { FlatCompat } from "@eslint/eslintrc";
+import stylistic from "@stylistic/eslint-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
     baseDirectory: __dirname,
     recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+    allConfig: js.configs.all,
 });
 
 export default [
@@ -22,6 +23,7 @@ export default [
         plugins: {
             jsdoc,
             "@typescript-eslint": typescriptEslint,
+            "@stylistic": stylistic,
             prettier,
         },
 
@@ -43,23 +45,30 @@ export default [
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/adjacent-overload-signatures": "error",
             "@typescript-eslint/consistent-type-assertions": "error",
-            "@typescript-eslint/member-delimiter-style": "error",
+            //"@typescript-eslint/member-delimiter-style": "error",
+            "@stylistic/member-delimiter-style": "error",
             "@typescript-eslint/no-floating-promises": "error",
 
-            "@typescript-eslint/no-inferrable-types": ["error", {
-                ignoreParameters: true,
-                ignoreProperties: true,
-            }],
+            "@typescript-eslint/no-inferrable-types": [
+                "error",
+                {
+                    ignoreParameters: true,
+                    ignoreProperties: true,
+                },
+            ],
 
-            "@typescript-eslint/no-unused-vars": ["error", {
-                varsIgnorePattern: "^_[a-zA-Z_]",
-                argsIgnorePattern: "^_[a-zA-Z_]",
-            }],
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    varsIgnorePattern: "^_[a-zA-Z_]",
+                    argsIgnorePattern: "^_[a-zA-Z_]",
+                },
+            ],
 
             "@typescript-eslint/no-var-requires": "error",
             "@typescript-eslint/prefer-namespace-keyword": "error",
-            "@typescript-eslint/semi": "error",
-            "@typescript-eslint/type-annotation-spacing": "error",
+            "@stylistic/semi": "error",
+            "@stylistic/type-annotation-spacing": "error",
             "computed-property-spacing": ["error", "never"],
             curly: "error",
             "eol-last": "error",
@@ -87,15 +96,21 @@ export default [
             "no-debugger": "error",
             "no-eval": "error",
 
-            "no-fallthrough": ["error", {
-                commentPattern: "break[\\s\\w]*omitted",
-            }],
+            "no-fallthrough": [
+                "error",
+                {
+                    commentPattern: "break[\\s\\w]*omitted",
+                },
+            ],
 
             "@typescript-eslint/no-invalid-this": "error",
 
-            "no-multiple-empty-lines": ["error", {
-                max: 3,
-            }],
+            "no-multiple-empty-lines": [
+                "error",
+                {
+                    max: 3,
+                },
+            ],
 
             "no-new-wrappers": "error",
             "no-tabs": "error",
@@ -106,16 +121,22 @@ export default [
             "no-var": "error",
             "one-var": ["error", "never"],
 
-            "prefer-arrow-callback": ["error", {
-                allowNamedFunctions: true,
-            }],
+            "prefer-arrow-callback": [
+                "error",
+                {
+                    allowNamedFunctions: true,
+                },
+            ],
 
             "prettier/prettier": "error",
             "use-isnan": "error",
 
-            "prefer-const": ["error", {
-                destructuring: "all",
-            }],
+            "prefer-const": [
+                "error",
+                {
+                    destructuring: "all",
+                },
+            ],
         },
     },
     {
