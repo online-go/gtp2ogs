@@ -1,3 +1,5 @@
+import { JGOFTimeControlSpeed } from "goban-engine";
+
 export interface Move {
     x?: number;
     y?: number;
@@ -6,4 +8,4 @@ export interface Move {
     pass?: boolean;
 }
 
-export type Speed = "blitz" | "live" | "correspondence";
+export type Speed = JGOFTimeControlSpeed;

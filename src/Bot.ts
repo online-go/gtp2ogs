@@ -4,7 +4,7 @@ import { ignore_promise } from "./util";
 import * as split2 from "split2";
 
 import { Move } from "./types";
-import { decodeMoves } from "goban/src/GoMath";
+import { decodeMoves } from "goban-engine";
 import { config, BotConfig } from "./config";
 import { PvOutputParser } from "./PvOutputParser";
 import { socket } from "./socket";

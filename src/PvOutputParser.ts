@@ -1,6 +1,6 @@
-import { char2num, num2char } from "goban/src/GoMath";
+import { char2num, num2char } from "goban-engine";
 //import { gtpchar2num } from "./Bot";
-import { GameChatAnalysisMessage } from "goban/src/protocol";
+import { protocol } from "goban-engine";
 import { Game } from "./Game";
 import { trace } from "./trace";
 
@@ -50,7 +50,7 @@ export class PvOutputParser {
         name: string,
         pv_move: string,
         engine_analysis: EngineAnalysis,
-    ): GameChatAnalysisMessage {
+    ): protocol.GameChatAnalysisMessage {
         return {
             type: "analysis",
             engine_analysis: engine_analysis,
@@ -134,7 +134,7 @@ export class PvOutputParser {
             LEELA     : this.postPvToChatSingleLine,
         */
 
-        let message: GameChatAnalysisMessage = null;
+        let message: protocol.GameChatAnalysisMessage | null = null;
         switch (this.detected_engine) {
             case "katago":
                 {

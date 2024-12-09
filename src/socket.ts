@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { GobanSocket } from "goban/src/GobanSocket";
+import { GobanSocket } from "goban-engine";
 import { trace } from "./trace";
 
 global.performance = global.performance || (Date as any);

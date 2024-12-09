@@ -120,7 +120,7 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
         bot.setGame(null);
         if (this.queue.length > 0) {
             for (const pass of ["board_size", "any"]) {
-                for (const target_speed of ["blitz", "live", "correspondence"]) {
+                for (const target_speed of ["blitz", "rapid", "live", "correspondence"]) {
                     for (let i = 0; i < this.queue.length; i++) {
                         const [speed, width, height, resolve] = this.queue[i];
 
@@ -131,6 +131,9 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
                             pass === "any";
 
                         if (speed === target_speed && pass_check) {
+                            this.log(
+                                `Releasing bot back to the ${speed} pool, queue length: ${this.queue.length}`,
+                            );
                             this.queue.splice(i, 1);
                             resolve(bot);
                             return;
@@ -229,6 +232,8 @@ export class PersistentBotManager extends EventEmitter<Events> implements BotMan
     }
 
     release(bot: Bot): void {
+        trace.info("[persistent] Releasing bot, queue length: " + this.queue.length);
+
         if (bot.persistent_idle_timeout) {
             clearTimeout(bot.persistent_idle_timeout);
         }

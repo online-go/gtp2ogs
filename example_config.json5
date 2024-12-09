@@ -219,11 +219,34 @@
 
     /**
      * Allowed blitz times for the bot. Blitz is disabled by default, but you
-     * can enable it by providing accetpable time settings.
+     * can enable it by providing acceptable time settings.
      *
      * @default null
      */
     // allowed_blitz_settings: null,
+
+    /** Allowed rapid game times for bot. */
+    /*
+    allowed_rapid_settings: {
+        simple: {
+            per_move_time_range: [5, 30],
+        },
+
+        byoyomi: {
+            main_time_range: [0, 3600],
+            period_time_range: [5, 30],
+            periods_range: [1, 10],
+        },
+
+        fischer: {
+            initial_time_range: [5, 600],
+            max_time_range: [5, 7200],
+            time_increment_range: [3, 30],
+        },
+
+        concurrent_games: 3,
+    },
+    */
 
     /** Allowed live game times for bot. */
     /*
@@ -239,7 +262,8 @@
         },
 
         fischer: {
-            max_time_range: [30, 600],
+            initial_time_range: [10, 3600],
+            max_time_range: [5, 7200],
             time_increment_range: [10, 300],
         },
 
@@ -261,6 +285,7 @@
         },
 
         fischer: {
+            initial_time_range: [86400, 604800],
             max_time_range: [86400, 604800],
             time_increment_range: [43200, 604800],
         },

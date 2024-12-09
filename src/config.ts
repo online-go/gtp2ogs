@@ -104,6 +104,10 @@ export interface Config {
      */
     allowed_blitz_settings?: null | TimeControlRanges;
 
+    /** Allowed rapid game times for bot.
+     */
+    allowed_rapid_settings?: null | TimeControlRanges;
+
     /** Allowed live game times for bot.
      *
      *  @default {"per_move_time_range": [10, 300], "main_time_range": [0, 3600], "periods_range": [1, 10]}
@@ -201,7 +205,7 @@ export interface Config {
     /** Config version for internal use
      * @hidden
      */
-    _config_version?: number;
+    _config_version?: 2;
 }
 
 export interface TimeControlRanges {
@@ -233,8 +237,13 @@ export interface TimeControlRanges {
 
     /** Time control settings for fischer clocks */
     fischer?: {
-        /** Range of acceptable main times in seconds.
+        /** Range of acceptable initial times in seconds.
          * @default [30, 600] for live games, [86400, 604800] for correspondence games
+         */
+        initial_time_range: [number, number];
+
+        /** Range of acceptable max times in seconds.
+         * @default [5, 7200] for live games, [86400, 604800] for correspondence games
          */
         max_time_range: [number, number];
 
@@ -382,6 +391,26 @@ function defaults(): Config {
         status_update_frequency: 60000,
         allowed_time_control_systems: ["fischer", "byoyomi", "simple"],
         allowed_blitz_settings: null,
+
+        allowed_rapid_settings: {
+            simple: {
+                per_move_time_range: [5, 30],
+            },
+
+            byoyomi: {
+                main_time_range: [0, 3600],
+                period_time_range: [5, 30],
+                periods_range: [1, 10],
+            },
+
+            fischer: {
+                initial_time_range: [5, 600],
+                max_time_range: [5, 7200],
+                time_increment_range: [3, 30],
+            },
+
+            concurrent_games: 3,
+        },
         allowed_live_settings: {
             simple: {
                 per_move_time_range: [10, 300],
@@ -394,7 +423,8 @@ function defaults(): Config {
             },
 
             fischer: {
-                max_time_range: [30, 600],
+                initial_time_range: [10, 3600],
+                max_time_range: [5, 7200],
                 time_increment_range: [10, 300],
             },
 
@@ -412,6 +442,7 @@ function defaults(): Config {
             },
 
             fischer: {
+                initial_time_range: [86400, 604800],
                 max_time_range: [86400, 604800],
                 time_increment_range: [43200, 604800],
             },
@@ -657,7 +688,7 @@ function load_config_or_throw(): Config {
     //console.info(yargs.argv);
     //console.info(with_defaults);
 
-    with_defaults._config_version = 1;
+    with_defaults._config_version = 2;
 
     return sanity_check_and_patch_config(with_defaults);
 }

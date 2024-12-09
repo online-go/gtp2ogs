@@ -8,7 +8,7 @@ import { trace } from "./trace";
 import { post, api1 } from "./util";
 import { Game, handleChatLine } from "./Game";
 import { bot_pools } from "./pools";
-import { JGOFTimeControl } from "goban/src/JGOF";
+import { JGOFTimeControl, protocol } from "goban-engine";
 import { Speed } from "./types";
 
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
@@ -39,6 +39,8 @@ interface RejectionDetails {
         | "ranked_not_allowed"
         | "blitz_not_allowed"
         | "too_many_blitz_games"
+        | "rapid_not_allowed"
+        | "too_many_rapid_games"
         | "live_not_allowed"
         | "too_many_live_games"
         | "correspondence_not_allowed"
@@ -125,7 +127,12 @@ class Main {
                     config.bot_id = this.bot_id;
                     trace.info("Bot is username: ", this.bot_username);
                     trace.info("Bot is user id: ", this.bot_id);
-                    socket.send("bot/config", config);
+                    const config_v2: protocol.BotConfigV2 = {
+                        hidden: false,
+                        ...config,
+                        _config_version: 2,
+                    } as protocol.BotConfigV2;
+                    socket.send("bot/config", config_v2);
                 },
             );
         });
@@ -135,7 +142,11 @@ class Main {
             config.username = this.bot_username;
 
             if (socket.connected) {
-                socket.send("bot/config", config);
+                socket.send("bot/config", {
+                    hidden: false,
+                    ...config,
+                    _config_version: 2,
+                } as protocol.BotConfigV2);
             }
         });
 
@@ -220,11 +231,12 @@ class Main {
     }
     dumpStatus() {
         const blitz_count = this.countGames("blitz");
+        const rapid_count = this.countGames("rapid");
         const live_count = this.countGames("live");
         const corr_count = this.countGames("correspondence");
 
         trace.info(
-            `Status: playing ${blitz_count} blitz, ${live_count} live, ${corr_count} correspondence games`,
+            `Status: playing ${blitz_count} blitz, ${rapid_count} rapid, ${live_count} live, ${corr_count} correspondence games`,
         );
 
         let str = "Bot status: ";
@@ -244,12 +256,14 @@ class Main {
     private sendStatusUpdate() {
         const update = {
             ongoing_blitz_count: this.countGames("blitz"),
+            ongoing_rapid_count: this.countGames("rapid"),
             ongoing_live_count: this.countGames("live"),
             ongoing_correspondence_count: this.countGames("correspondence"),
         };
 
         if (
             update["ongoing_blitz_count"] !== this.last_status_update["ongoing_blitz_count"] ||
+            update["ongoing_rapid_count"] !== this.last_status_update["ongoing_rapid_count"] ||
             update["ongoing_live_count"] !== this.last_status_update["ongoing_live_count"] ||
             update["ongoing_correspondence_count"] !==
                 this.last_status_update["ongoing_correspondence_count"]
@@ -532,6 +546,28 @@ class Main {
                 }
                 break;
 
+            case "rapid":
+                if (!config.allowed_rapid_settings?.concurrent_games) {
+                    return {
+                        message: `This bot does not play rapid games.`,
+                        rejection_code: "rapid_not_allowed",
+                        details: {},
+                    };
+                }
+                if (count >= (config.allowed_rapid_settings?.concurrent_games || 0)) {
+                    return {
+                        message: `This bot is already playing ${count} of ${
+                            config.allowed_rapid_settings?.concurrent_games || 0
+                        } allowed rapid games.`,
+                        rejection_code: "too_many_rapid_games",
+                        details: {
+                            count,
+                            allowed: config.allowed_rapid_settings?.concurrent_games || 0,
+                        },
+                    };
+                }
+                break;
+
             case "live":
                 if (!config.allowed_live_settings?.concurrent_games) {
                     return {
@@ -601,6 +637,18 @@ class Main {
                 }
                 settings = config.allowed_blitz_settings;
                 break;
+
+            case "rapid":
+                if (!config.allowed_rapid_settings) {
+                    return {
+                        message: `This bot does not play rapid games.`,
+                        rejection_code: "rapid_not_allowed",
+                        details: {},
+                    };
+                }
+                settings = config.allowed_rapid_settings;
+                break;
+
             case "live":
                 if (!config.allowed_live_settings) {
                     return {
@@ -754,7 +802,7 @@ class Main {
     }
     checkGamesPerPlayer(player_id: number): RejectionDetails | undefined {
         trace.log("Max games per player: ", config.max_games_per_player);
-        config;
+        //config;
         if (config.max_games_per_player) {
             const game_count = Object.keys(this.connected_games).filter((game_id) => {
                 const state = this.connected_games[game_id]?.state;

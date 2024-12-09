@@ -1,6 +1,6 @@
-import { decodeMoves } from "goban/src/GoMath";
-import { GoEngineConfig } from "goban/src/GoEngine";
-import { GameChatAnalysisMessage } from "goban/src/protocol";
+import { decodeMoves } from "goban-engine";
+import { GobanEngineConfig } from "goban-engine";
+import { protocol } from "goban-engine";
 import { move2gtpvertex, ignore_promise } from "./util";
 import { Move } from "./types";
 import { Bot } from "./Bot";
@@ -23,7 +23,7 @@ export class Game extends EventEmitter<Events> {
     connect_timeout: ReturnType<typeof setTimeout>;
 
     game_id: number;
-    state: GoEngineConfig;
+    state: GobanEngineConfig;
     opponent_evenodd: null | number;
     greeted: boolean;
     startup_timestamp: number;
@@ -387,6 +387,7 @@ export class Game extends EventEmitter<Events> {
         const promises: Promise<void>[] = [];
 
         this.verbose("Releasing bot(s)");
+        this.verbose("Bot count available: " + bot_pools.main.countAvailable());
 
         if (this.bot) {
             const bot = this.bot;
@@ -394,14 +395,26 @@ export class Game extends EventEmitter<Events> {
             const using_opening_bot = this.using_opening_bot;
             promises.push(
                 new Promise<void>((resolve, _reject) => {
+                    console.log("Will release bots in ", bot.bot_config.release_delay, "ms");
                     setTimeout(() => {
-                        bot.off("chat");
-                        if (using_opening_bot) {
-                            bot_pools.opening.release(bot);
-                        } else {
-                            bot_pools.main.release(bot);
+                        try {
+                            console.log("Releasing bot");
+                            bot.off("chat");
+                            if (using_opening_bot) {
+                                console.log("Releasing opening bot");
+                                bot_pools.opening.release(bot);
+                            } else {
+                                console.log("Releasing main bot");
+                                bot_pools.main.release(bot);
+                                console.log(
+                                    "released, Bot count available: " +
+                                        bot_pools.main.countAvailable(),
+                                );
+                            }
+                            resolve();
+                        } catch (e) {
+                            console.error("Error releasing bot", e);
                         }
-                        resolve();
                     }, bot.bot_config.release_delay);
                 }),
             );
@@ -780,7 +793,7 @@ export class Game extends EventEmitter<Events> {
         return `${color} ${player.username}  [${this.state.width}x${this.state.height}]  ${handicap}`;
     }
     sendChat(
-        msg: string | TranslatableString | GameChatAnalysisMessage,
+        msg: string | TranslatableString | protocol.GameChatAnalysisMessage,
         move_number?: number,
         channel: "main" | "malkovich" = "main",
     ): void {
