@@ -846,13 +846,18 @@ export class Game extends EventEmitter<Events> {
     private checkForPause(): void {
         const clock = this.state?.clock;
 
+        if (!clock) {
+            return;
+        }
+
+        // clock.pause is only set when the pause state changes.
+        if (!clock.pause) {
+            return;
+        }
+
         if (this.unpause_timeout) {
             clearTimeout(this.unpause_timeout);
             this.unpause_timeout = undefined;
-        }
-
-        if (!clock) {
-            return;
         }
 
         if (clock.pause?.paused && clock.paused_since) {
