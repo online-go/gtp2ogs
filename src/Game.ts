@@ -24,6 +24,7 @@ export class Game extends EventEmitter<Events> {
 
     game_id: number;
     state: GobanEngineConfig;
+    paused: boolean = false;
     opponent_evenodd: null | number;
     greeted: boolean;
     player_chat_cutoff: number;
@@ -650,6 +651,10 @@ export class Game extends EventEmitter<Events> {
         if (this.state.phase !== "play") {
             return;
         }
+        if (this.paused) {
+            this.sendChat("Move made, unpausing clock");
+            this.resumeGame();
+        }
         if (!this.greeted && this.state.moves.length < 2 + this.state.handicap) {
             this.greeted = true;
             if (config.greeting?.en) {
@@ -854,6 +859,7 @@ export class Game extends EventEmitter<Events> {
         if (!clock.pause) {
             return;
         }
+        this.paused = clock.pause.paused;
 
         if (this.unpause_timeout) {
             clearTimeout(this.unpause_timeout);
