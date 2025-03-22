@@ -679,11 +679,11 @@ class Main {
                         time_control.max_time > settings.fischer.max_time_range[1]
                     ) {
                         return {
-                            message: `Time increment is out of acceptable range`,
+                            message: `Max time is out of acceptable range`,
                             rejection_code: "max_time_out_of_range",
                             details: {
-                                time_increment: time_control.time_increment,
-                                range: settings.fischer.time_increment_range,
+                                max_time: time_control.max_time,
+                                range: settings.fischer.max_time_range,
                             },
                         };
                     }
