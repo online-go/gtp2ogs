@@ -275,7 +275,7 @@ class Main {
 
     countGames(speed: Speed) {
         return Object.values(this.connected_games).filter(
-            (g) => g?.state?.time_control?.speed === speed,
+            (g) => g?.state?.time_control?.speed === speed && !g?.paused,
         ).length;
     }
 
