@@ -499,6 +499,7 @@ function bot_config_defaults(): Partial<BotConfig> {
     const base: Partial<BotConfig> = {
         manager: "persistent",
         instances: 1,
+        enable_clock: true,
         send_chats: true,
         send_pv_data: true,
         release_delay: 100,
