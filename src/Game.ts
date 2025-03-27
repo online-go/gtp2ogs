@@ -672,7 +672,11 @@ export class Game extends EventEmitter<Events> {
                 const moves = await this.getBotMoves(`genmove ${this.my_color}`);
                 const move_end = Date.now();
                 const move_time = move_end - move_start;
-                if (config.min_move_time && move_time < config.min_move_time) {
+                if (
+                    config.min_move_time &&
+                    move_time < config.min_move_time &&
+                    this.state.time_control?.speed !== "blitz"
+                ) {
                     this.verbose(
                         "Min move time was ",
                         config.min_move_time,
