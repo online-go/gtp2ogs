@@ -14,12 +14,13 @@
     ],
     "scripts": {
         "gulp": "gulp",
+        "build": "webpack --progress --color",
         "webpack-watch": "webpack --watch --progress --color",
         "test": "jest",
         "lint": "eslint src/",
         "lint:fix": "eslint --fix src/",
-        "prettier": "prettier --write \"src/**/*.{ts}\"",
-        "prettier:check": "prettier --check \"src/**/*.{ts,}\"",
+        "prettier": "prettier --write \"src/*.ts\"",
+        "prettier:check": "prettier --check \"src/*.ts\"",
         "typedoc": "typedoc src/config.ts"
     },
     "pkg": {
