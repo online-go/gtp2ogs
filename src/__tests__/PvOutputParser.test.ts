@@ -3,7 +3,7 @@
 process.argv.push("--", "dummybot");
 
 import * as fs from "fs";
-import { PvOutputParser } from "../PvOutputParser";
+import { PvOutputParser } from "../cli/PvOutputParser";
 //import * as sinon from "sinon";
 
 const katago_output = fs.readFileSync("src/__tests__/pv_samples/kataGoOutput.txt", "utf8");

@@ -2,7 +2,7 @@ import { decodeMoves } from "goban-engine";
 import { GobanEngineConfig } from "goban-engine";
 import { protocol } from "goban-engine";
 import { move2gtpvertex, ignore_promise } from "./util";
-import { Move } from "./types";
+import { Move } from "../types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
 import { socket } from "./socket";

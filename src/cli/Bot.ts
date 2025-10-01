@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import { ignore_promise } from "./util";
 import * as split2 from "split2";
 
-import { Move } from "./types";
+import { Move } from "../types";
 import { decodeMoves } from "goban-engine";
 import { config, BotConfig } from "./config";
 import { PvOutputParser } from "./PvOutputParser";

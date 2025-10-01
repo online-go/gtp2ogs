@@ -45,10 +45,12 @@
     "bugs": {
         "url": "https://github.com/online-go/gtp2ogs/issues"
     },
+    "main": "./dist/gtp2ogs-lib.js",
+    "types": "./dist/lib/lib/index.d.ts",
     "bin": "./dist/gtp2ogs.js",
     "dependencies": {
         "bufferutil": "^4.0.7",
-        "goban-engine": "=8.3.71",
+        "goban-engine": "=8.3.147",
         "json5": "^2.2.3",
         "jsonschema": "^1.4.1",
         "source-map-support": "^0.5.21",

@@ -1,7 +1,7 @@
 import { Bot } from "./Bot";
 import { config, BotConfig } from "./config";
 import { EventEmitter } from "eventemitter3";
-import { Speed } from "./types";
+import { Speed } from "../types";
 import { trace } from "./trace";
 
 global.performance = global.performance || (Date as any);

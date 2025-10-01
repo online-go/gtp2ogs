@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as JSON5 from "json5";
 import * as yargs from "yargs";
-import * as ConfigSchema from "../schema/Config.schema.json";
+import * as ConfigSchema from "../../schema/Config.schema.json";
 import { Validator } from "jsonschema";
 import { EventEmitter } from "eventemitter3";
 
