@@ -196,8 +196,9 @@ export class Connection extends EventEmitter<Events> {
     private disconnectFromGame(game_id: number) {
         trace.info("Disconnecting from game ", game_id);
         if (game_id in this.connected_games) {
-            this.connected_games[game_id].disconnect();
+            const game = this.connected_games[game_id];
             delete this.connected_games[game_id];
+            game.disconnect();
         }
     }
 
