@@ -222,6 +222,10 @@ export class Game extends EventEmitter<Events> {
     /** Attach a bot to this game */
     attachBot(bot: BotInterface) {
         this.bot = bot;
+        // If the bot supports setGame, provide a reference to this game
+        if (bot.setGame) {
+            bot.setGame(this);
+        }
     }
 
     /** Send a move to the server */

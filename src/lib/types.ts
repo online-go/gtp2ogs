@@ -1,6 +1,14 @@
 import { GobanEngineConfig } from "goban-engine";
 import { Move } from "../types";
 
+// Forward declaration to avoid circular dependency
+export interface GameInterface {
+    sendChat(message: string, channel?: "main" | "malkovich"): void;
+    game_id: number;
+    state: GobanEngineConfig;
+    my_color: string | null;
+}
+
 /** Bot interface for TypeScript bots to implement */
 export interface BotInterface {
     /**
@@ -31,6 +39,9 @@ export interface BotInterface {
 
     /** Optional: Called when a game ends */
     gameEnded?(result: { winner: string; outcome: string }): Promise<void>;
+
+    /** Optional: Set the game reference for bots that need to send chat messages */
+    setGame?(game: GameInterface): void;
 }
 
 /** Game state interface */
