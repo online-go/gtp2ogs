@@ -179,11 +179,14 @@ export class Game extends EventEmitter<Events> {
                 return;
             }
 
-            if (move.move_number !== this.state.moves.length + 1) {
+            const expected_move_number = this.state.moves.length + 1;
+
+            // Verify move number is correct (should be handled by undo_accepted event)
+            if (move.move_number !== expected_move_number) {
                 trace.error(
                     `Received move for ${this.game_id} but move_number is invalid. ${
                         move.move_number
-                    } !== ${this.state.moves.length + 1}`,
+                    } !== ${expected_move_number}. Undo event may not have been processed correctly.`,
                 );
                 return;
             }
@@ -209,6 +212,40 @@ export class Game extends EventEmitter<Events> {
         this.socket.on(`game/${this.game_id}/move`, on_move);
         this.on("disconnecting", () => {
             this.socket.off(`game/${this.game_id}/move`, on_move);
+        });
+
+        // Handle undo events
+        const on_undo_accepted = (data: any) => {
+            if (!this.state) {
+                return;
+            }
+
+            // Extract undo information
+            let undo_move_count = 1;
+            let move_number_before_undo = this.state.moves.length;
+
+            if (typeof data === "object") {
+                if (data.undo_move_count) {
+                    undo_move_count = data.undo_move_count;
+                }
+                if (data.move_number) {
+                    move_number_before_undo = data.move_number;
+                }
+            }
+
+            const expected_length_after = move_number_before_undo - undo_move_count;
+
+            // Remove moves to match expected state
+            while (this.state.moves.length > expected_length_after) {
+                this.state.moves.pop();
+            }
+
+            this.log(`Undo accepted: now at move ${this.state.moves.length}`);
+        };
+
+        this.socket.on(`game/${this.game_id}/undo_accepted`, on_undo_accepted);
+        this.on("disconnecting", () => {
+            this.socket.off(`game/${this.game_id}/undo_accepted`, on_undo_accepted);
         });
     }
 
@@ -270,7 +307,8 @@ export class Game extends EventEmitter<Events> {
         try {
             this.log(`Requesting move from bot (${this.my_color} to play)`);
             const move = await this.bot.genmove(this.state, this.my_color as "black" | "white");
-            const move_text = move.text || move2gtpvertex(move, this.state.width, this.state.height);
+            const move_text =
+                move.text || move2gtpvertex(move, this.state.width, this.state.height);
             this.log(`Bot returned move: ${move_text}`);
 
             // Send the move to the server
