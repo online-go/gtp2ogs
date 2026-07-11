@@ -71,6 +71,21 @@ describe("Main.evaluateChallenge", () => {
         expect(result?.rejection_code).toBe("player_rank_out_of_range");
     });
 
+    // Positive counterpart to the bug-catching test: proves that when the
+    // challenger's rank is inside allowed_rank_range the rank check accepts
+    // them. Without this, a "fix" that consulted some other unpopulated
+    // notification field would still pass the rejection tests (undefined → 0
+    // → below range → same rejection code).
+    test("accepts a ranked challenge whose challenger rank is inside allowed_rank_range", () => {
+        config.allowed_rank_range = ["5k", "9p"];
+        const notification = buildBenignNotification();
+        notification.ranked = true;
+        notification.user.ranking = 30; // 1d — inside [25, 999]
+
+        const result = main.evaluateChallenge(notification);
+        expect(result).toBeUndefined();
+    });
+
     test("rejects a challenge whose challenger rank is missing on a ranked game", () => {
         config.allowed_rank_range = ["5k", "9p"];
         const notification = buildBenignNotification();
