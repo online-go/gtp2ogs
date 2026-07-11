@@ -64,7 +64,7 @@ interface RejectionDetails {
 /** This is the main class for the connection to the server. It is responsible
  * for managing games in play, responding to challenges and notifications, and
  * that sort of stuff. */
-class Main {
+export class Main {
     notification_connect_interval: ReturnType<typeof setInterval>;
     connected_games: { [game_id: string]: Game };
     connected_finished_games: { [game_id: string]: boolean };
@@ -298,22 +298,7 @@ class Main {
 
             case "challenge":
                 {
-                    let reject: RejectionDetails | undefined =
-                        this.checkBlacklist(notification.user) ||
-                        this.checkTimeControl(notification.time_control) ||
-                        this.checkConcurrentGames(notification.time_control.speed) ||
-                        this.checkBoardSize(notification.width, notification.height) ||
-                        this.checkHandicap(notification.ranked, notification.handicap) ||
-                        this.checkRanked(notification.ranked) ||
-                        this.checkAllowedRank(notification.ranked, notification.min_ranking) ||
-                        this.checkDeclineChallenges() ||
-                        this.checkGamesPerPlayer(notification.user?.id) ||
-                        this.checkKomi(notification.komi) ||
-                        undefined;
-
-                    if (this.checkWhitelist(notification.user)) {
-                        reject = undefined;
-                    }
+                    const reject = this.evaluateChallenge(notification);
 
                     if (!reject) {
                         post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
@@ -401,6 +386,27 @@ class Main {
                 }
                 break;
         }
+    }
+
+    evaluateChallenge(notification): RejectionDetails | undefined {
+        const reject: RejectionDetails | undefined =
+            this.checkBlacklist(notification.user) ||
+            this.checkTimeControl(notification.time_control) ||
+            this.checkConcurrentGames(notification.time_control.speed) ||
+            this.checkBoardSize(notification.width, notification.height) ||
+            this.checkHandicap(notification.ranked, notification.handicap) ||
+            this.checkRanked(notification.ranked) ||
+            this.checkAllowedRank(notification.ranked, notification.user?.ranking || 0) ||
+            this.checkDeclineChallenges() ||
+            this.checkGamesPerPlayer(notification.user?.id) ||
+            this.checkKomi(notification.komi) ||
+            undefined;
+
+        if (this.checkWhitelist(notification.user)) {
+            return undefined;
+        }
+
+        return reject;
     }
 
     checkBlacklist(user: { id: number; username: string }): RejectionDetails | undefined {
