@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as JSON5 from "json5";
 import * as yargs from "yargs";
 import * as ConfigSchema from "../schema/Config.schema.json";
-import { Validator } from "jsonschema";
+import { Validator, ValidatorResult } from "jsonschema";
 import { EventEmitter } from "eventemitter3";
 
 export interface Events {
@@ -10,6 +10,17 @@ export interface Events {
 }
 
 export const config_event_emitter = new EventEmitter<Events>();
+
+/* The generated schema's root is a bare `$ref` to #/definitions/Config.
+ * jsonschema doesn't index `definitions` under a root `$ref`, so every ref
+ * lookup falls back to parsing it as a URL, which throws "Invalid URL" with
+ * jsonschema >= 1.5 on Node 26+ (see #436). Validating against the Config
+ * definition directly lets jsonschema index the definitions up front. */
+const config_schema = {
+    ...ConfigSchema.definitions.Config,
+    definitions: ConfigSchema.definitions,
+};
+
 export type BotTimeControlSystems = "fischer" | "byoyomi" | "simple";
 
 /** Bot config */
@@ -670,8 +681,7 @@ function load_config_or_throw(): Config {
         };
     }
 
-    const validator = new Validator();
-    const result = validator.validate(with_defaults, ConfigSchema);
+    const result = validate_config(with_defaults);
 
     if (!result.valid) {
         console.error(``);
@@ -692,6 +702,10 @@ function load_config_or_throw(): Config {
     with_defaults._config_version = 2;
 
     return sanity_check_and_patch_config(with_defaults);
+}
+
+export function validate_config(config: unknown): ValidatorResult {
+    return new Validator().validate(config, config_schema);
 }
 
 function sanity_check_and_patch_config(config: Config): Config {
