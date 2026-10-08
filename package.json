@@ -50,7 +50,7 @@
         "bufferutil": "^4.0.7",
         "goban-engine": "=8.3.71",
         "json5": "^2.2.3",
-        "jsonschema": "^1.4.1",
+        "jsonschema": "^1.5.0",
         "source-map-support": "^0.5.21",
         "split2": "^4.1.0",
         "tracer": "^1.1.6",
