@@ -11,6 +11,8 @@ import { bot_pools } from "./pools";
 import { JGOFTimeControl, protocol } from "goban-engine";
 import { Speed } from "./types";
 
+break the build
+
 //process.title = `gtp2ogs ${config.bot_command.join(" ")}`;
 
 const ignorable_notifications = {
@@ -31,31 +33,31 @@ interface RejectionDetails {
      * so that appropriate translated messages are displayed to the user.
      */
     rejection_code:
-        | "blacklisted"
-        | "board_size_not_square"
-        | "board_size_not_allowed"
-        | "handicap_not_allowed"
-        | "unranked_not_allowed"
-        | "ranked_not_allowed"
-        | "blitz_not_allowed"
-        | "too_many_blitz_games"
-        | "rapid_not_allowed"
-        | "too_many_rapid_games"
-        | "live_not_allowed"
-        | "too_many_live_games"
-        | "correspondence_not_allowed"
-        | "too_many_correspondence_games"
-        | "time_control_system_not_allowed"
-        | "time_increment_out_of_range"
-        | "period_time_out_of_range"
-        | "periods_out_of_range"
-        | "main_time_out_of_range"
-        | "max_time_out_of_range"
-        | "per_move_time_out_of_range"
-        | "player_rank_out_of_range"
-        | "not_accepting_new_challenges"
-        | "too_many_games_for_player"
-        | "komi_out_of_range";
+    | "blacklisted"
+    | "board_size_not_square"
+    | "board_size_not_allowed"
+    | "handicap_not_allowed"
+    | "unranked_not_allowed"
+    | "ranked_not_allowed"
+    | "blitz_not_allowed"
+    | "too_many_blitz_games"
+    | "rapid_not_allowed"
+    | "too_many_rapid_games"
+    | "live_not_allowed"
+    | "too_many_live_games"
+    | "correspondence_not_allowed"
+    | "too_many_correspondence_games"
+    | "time_control_system_not_allowed"
+    | "time_increment_out_of_range"
+    | "period_time_out_of_range"
+    | "periods_out_of_range"
+    | "main_time_out_of_range"
+    | "max_time_out_of_range"
+    | "per_move_time_out_of_range"
+    | "player_rank_out_of_range"
+    | "not_accepting_new_challenges"
+    | "too_many_games_for_player"
+    | "komi_out_of_range";
     details: {
         [key: string]: any;
     };
@@ -266,7 +268,7 @@ export class Main {
             update["ongoing_rapid_count"] !== this.last_status_update["ongoing_rapid_count"] ||
             update["ongoing_live_count"] !== this.last_status_update["ongoing_live_count"] ||
             update["ongoing_correspondence_count"] !==
-                this.last_status_update["ongoing_correspondence_count"]
+            this.last_status_update["ongoing_correspondence_count"]
         ) {
             socket.send("bot/status", update);
             this.last_status_update = update;
@@ -540,9 +542,8 @@ export class Main {
                 }
                 if (count >= (config.allowed_blitz_settings?.concurrent_games || 0)) {
                     return {
-                        message: `This bot is already playing ${count} of ${
-                            config.allowed_blitz_settings?.concurrent_games || 0
-                        } allowed blitz games.`,
+                        message: `This bot is already playing ${count} of ${config.allowed_blitz_settings?.concurrent_games || 0
+                            } allowed blitz games.`,
                         rejection_code: "too_many_blitz_games",
                         details: {
                             count,
@@ -562,9 +563,8 @@ export class Main {
                 }
                 if (count >= (config.allowed_rapid_settings?.concurrent_games || 0)) {
                     return {
-                        message: `This bot is already playing ${count} of ${
-                            config.allowed_rapid_settings?.concurrent_games || 0
-                        } allowed rapid games.`,
+                        message: `This bot is already playing ${count} of ${config.allowed_rapid_settings?.concurrent_games || 0
+                            } allowed rapid games.`,
                         rejection_code: "too_many_rapid_games",
                         details: {
                             count,
@@ -584,9 +584,8 @@ export class Main {
                 }
                 if (count >= (config.allowed_live_settings?.concurrent_games || 0)) {
                     return {
-                        message: `This bot is already playing ${count} of ${
-                            config.allowed_live_settings?.concurrent_games || 0
-                        } allowed live games.`,
+                        message: `This bot is already playing ${count} of ${config.allowed_live_settings?.concurrent_games || 0
+                            } allowed live games.`,
                         rejection_code: "too_many_live_games",
                         details: {
                             count,
@@ -606,9 +605,8 @@ export class Main {
                 }
                 if (count >= (config.allowed_correspondence_settings?.concurrent_games || 0)) {
                     return {
-                        message: `This bot is already playing ${count} of ${
-                            config.allowed_correspondence_settings?.concurrent_games || 0
-                        } allowed correspondence games.`,
+                        message: `This bot is already playing ${count} of ${config.allowed_correspondence_settings?.concurrent_games || 0
+                            } allowed correspondence games.`,
                         rejection_code: "too_many_correspondence_games",
                         details: {
                             count,
