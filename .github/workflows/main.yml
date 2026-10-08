@@ -4,11 +4,11 @@ name: CI
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the devel branch
+  # Triggers the workflow on push or pull request events for the main and devel branches
   push:
-    branches: [ devel ]
+    branches: [ main, devel ]
   pull_request:
-    branches: [ devel ]
+    branches: [ main, devel ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    strategy:
+      matrix:
+        node-version: [ '18', '26' ]
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -26,14 +30,14 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-node-modules
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-modules
 
       - name: yarn install
         uses: nick-invision/retry@v2
