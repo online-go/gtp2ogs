@@ -82,6 +82,85 @@ export class Game extends EventEmitter<Events> {
             socket.off(`game/${game_id}/undo_requested`, on_undo_requested);
         });
 
+        const processUndo = (undo_move_count: number, _source: string) => {
+            if (!this.state) {
+                return;
+            }
+
+            this.log(
+                `Processing undo: removing ${undo_move_count} move(s) from current position (move ${this.state.moves.length})`,
+            );
+
+            // Remove the undone moves from our state
+            for (let i = 0; i < undo_move_count; i++) {
+                if (this.state.moves.length > 0) {
+                    this.state.moves.pop();
+                }
+            }
+
+            // If we have a bot running, send undo commands to it
+            if (this.bot && !this.bot.dead) {
+                this.log(`Sending ${undo_move_count} undo command(s) to bot`);
+                for (let i = 0; i < undo_move_count; i++) {
+                    ignore_promise(this.bot.command("undo"));
+                }
+            }
+
+            this.log(`Undo complete, now at move ${this.state.moves.length}`);
+        };
+
+        const on_undo_accepted = (undo_data: any) => {
+            this.log("Undo accepted event received", JSON.stringify(undo_data, null, 4));
+
+            if (!this.state) {
+                this.log("No game state available, ignoring undo");
+                return;
+            }
+
+            // Extract undo information
+            let undo_move_count = 1;
+            let original_move_number = this.state.moves.length; // fallback
+
+            if (typeof undo_data === "object") {
+                if (undo_data.undo_move_count) {
+                    undo_move_count = undo_data.undo_move_count;
+                }
+                if (undo_data.move_number) {
+                    original_move_number = undo_data.move_number;
+                }
+            }
+
+            // Calculate what the state should be after the undo
+            const expected_moves_after_undo = original_move_number - undo_move_count;
+
+            // Check if the undo has already been processed (e.g., by move mismatch handler)
+            if (this.state.moves.length === expected_moves_after_undo) {
+                this.log(
+                    `Undo already processed, state is correct at ${this.state.moves.length} moves`,
+                );
+                return;
+            }
+
+            // Calculate how many moves we actually need to undo from current state
+            const actual_moves_to_undo = this.state.moves.length - expected_moves_after_undo;
+
+            if (actual_moves_to_undo <= 0) {
+                this.log(
+                    `State is already past expected position (${this.state.moves.length} vs expected ${expected_moves_after_undo}), skipping undo`,
+                );
+                return;
+            }
+
+            this.log(
+                `Processing undo: need to remove ${actual_moves_to_undo} moves to reach ${expected_moves_after_undo} moves`,
+            );
+            processUndo(actual_moves_to_undo, "undo_accepted");
+        };
+        socket.on(`game/${game_id}/undo_accepted`, on_undo_accepted);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/undo_accepted`, on_undo_accepted);
+        });
+
         const on_gamedata = (gamedata) => {
             if (!socket.connected) {
                 return;
@@ -223,6 +302,7 @@ export class Game extends EventEmitter<Events> {
             if (!socket.connected) {
                 return;
             }
+
             this.trace(`game/${game_id}/move:`, move);
             if (!this.state) {
                 trace.error(`Received move for ${this.game_id} but no state exists`);
@@ -233,13 +313,40 @@ export class Game extends EventEmitter<Events> {
                 });
                 return;
             }
-            if (move.move_number !== this.state.moves.length + 1) {
-                trace.error(
-                    `Received move for ${this.game_id} but move_number is invalid. ${
-                        move.move_number
-                    } !== ${this.state.moves.length + 1}`,
-                );
-                return;
+            // Check if move_number matches our expected state
+            const expected_move_number = this.state.moves.length + 1;
+
+            if (move.move_number !== expected_move_number) {
+                // If we're ahead of the server, an undo happened that we haven't processed yet
+                if (move.move_number < expected_move_number) {
+                    const moves_to_undo = expected_move_number - move.move_number;
+
+                    this.log(
+                        `Move number mismatch detected: received move ${move.move_number}, expected ${expected_move_number}. Auto-syncing by undoing ${moves_to_undo} move(s)`,
+                    );
+                    processUndo(moves_to_undo, "move_handler");
+
+                    // Verify the state is now correct after the undo
+                    const new_expected = this.state.moves.length + 1;
+
+                    if (move.move_number !== new_expected) {
+                        trace.error(
+                            `After undo, state is still incorrect! Received move ${move.move_number}, expected ${new_expected}. State has ${this.state.moves.length} moves.`,
+                        );
+                        return;
+                    }
+                    this.log(
+                        `State successfully synced after undo, now expecting move ${new_expected}`,
+                    );
+                } else {
+                    // We're behind the server, this is an error
+                    trace.error(
+                        `Received move for ${this.game_id} but move_number is invalid. ${
+                            move.move_number
+                        } > ${expected_move_number} (we're behind the server)`,
+                    );
+                    return;
+                }
             }
             try {
                 this.state.moves.push(move.move as any);
@@ -414,25 +521,25 @@ export class Game extends EventEmitter<Events> {
             const using_opening_bot = this.using_opening_bot;
             promises.push(
                 new Promise<void>((resolve, _reject) => {
-                    console.log("Will release bots in ", bot.bot_config.release_delay, "ms");
+                    this.verbose("Will release bots in ", bot.bot_config.release_delay, "ms");
                     setTimeout(() => {
                         try {
-                            console.log("Releasing bot");
+                            this.verbose("Releasing bot");
                             bot.off("chat");
                             if (using_opening_bot) {
-                                console.log("Releasing opening bot");
+                                this.verbose("Releasing opening bot");
                                 bot_pools.opening.release(bot);
                             } else {
-                                console.log("Releasing main bot");
+                                this.verbose("Releasing main bot");
                                 bot_pools.main.release(bot);
-                                console.log(
+                                this.verbose(
                                     "released, Bot count available: " +
                                         bot_pools.main.countAvailable(),
                                 );
                             }
                             resolve();
                         } catch (e) {
-                            console.error("Error releasing bot", e);
+                            this.error("Error releasing bot", e);
                         }
                     }, bot.bot_config.release_delay);
                 }),
