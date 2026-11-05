@@ -70,19 +70,26 @@ export class Connection extends EventEmitter<Events> {
             this.authenticate();
         });
 
-        this.socket.on("disconnect", () => {
-            if (performance.now() - this.connect_time < MIN_CONNECT_TIME) {
-                process.exit(1);
-            }
+        this.socket.on("reconnect", () => {
+            trace.info(`Reconnected to ${this.config.server}`);
+            this.connected = true;
+            this.authenticate();
+        });
 
+        this.socket.on("disconnect", () => {
             this.connected = false;
-            trace.warn("Disconnected from server");
+            trace.warn("Disconnected from server, waiting for reconnect...");
 
             for (const game_id in this.connected_games) {
                 this.disconnectFromGame(parseInt(game_id));
             }
 
             this.emit("disconnect");
+        });
+
+        this.socket.on("unrecoverable_error", (code, tag, message) => {
+            trace.error(`Unrecoverable connection error [${tag}]: ${message} (code: ${code})`);
+            process.exit(1);
         });
 
         this.socket.on("active_game", (gamedata) => {
