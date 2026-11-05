@@ -1,4 +1,4 @@
-import { GobanEngineConfig, GobanSocket, decodeMoves } from "goban-engine";
+import { GobanEngine, GobanEngineConfig, GobanSocket, decodeMoves } from "goban-engine";
 import { EventEmitter } from "eventemitter3";
 import { trace } from "./trace";
 import { BotInterface } from "./types";
@@ -14,6 +14,7 @@ interface Events {
 }
 
 const MOVE_RETRY_DELAY_MS = 30_000;
+const REJECTED_MOVE_RETRY_DELAY_MS = 2_000;
 
 /** Manages a single game connection */
 export class Game extends EventEmitter<Events> {
@@ -24,9 +25,13 @@ export class Game extends EventEmitter<Events> {
     my_color: null | string;
     protected socket: GobanSocket;
     private bot_id: number;
-    private opponent_evenodd: null | number;
     private processing: boolean;
     private game_started: boolean;
+    private disconnected: boolean;
+    /** Counts changes to the position, so a reply computed for an old one can be dropped. */
+    private position_version: number;
+    /** The position the bot has already sent a move for. */
+    private answered_version: number;
     private move_retry_timeout: ReturnType<typeof setTimeout> | undefined;
 
     log: (...arr: any[]) => any;
@@ -52,10 +57,12 @@ export class Game extends EventEmitter<Events> {
         this.error = trace.error.bind(null, `[game ${game_id}]`);
         this.state = null;
         this.my_color = null;
-        this.opponent_evenodd = null;
         this.disconnect_timeout = null;
         this.processing = false;
         this.game_started = false;
+        this.disconnected = false;
+        this.position_version = 0;
+        this.answered_version = -1;
         this.move_retry_timeout = undefined;
 
         this.log("Connecting to game.");
@@ -82,28 +89,12 @@ export class Game extends EventEmitter<Events> {
             }
 
             this.state = gamedata;
+            this.position_version++;
             this.emit("gamedata", gamedata);
 
             // Determine bot color
             this.my_color = this.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`Gamedata received, playing as ${this.my_color}`);
-
-            // Determine opponent evenodd for tracking whose turn it is
-            if (this.state.free_handicap_placement && this.state.handicap > 1) {
-                // In Chinese rules, black makes multiple free moves
-                this.opponent_evenodd = this.my_color === "black" ? 0 : 1;
-                this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
-            } else if (this.state.handicap > 1) {
-                // In Japanese rules, white makes the first move
-                this.opponent_evenodd = this.my_color === "black" ? 0 : 1;
-            } else {
-                // No handicap, alternate turns normally
-                if (this.state.clock.current_player === this.bot_id) {
-                    this.opponent_evenodd = this.state.moves.length % 2;
-                } else {
-                    this.opponent_evenodd = (this.state.moves.length + 1) % 2;
-                }
-            }
 
             // Call bot.gameStarted() on first gamedata
             if (!this.game_started && this.bot && this.bot.gameStarted) {
@@ -118,14 +109,7 @@ export class Game extends EventEmitter<Events> {
                     });
             }
 
-            // If it's our turn to move, make a move
-            if (this.state.phase === "play" && this.state.clock.current_player === this.bot_id) {
-                if (!this.processing) {
-                    this.makeMove().catch((error) => {
-                        this.error("Error making move:", error);
-                    });
-                }
-            }
+            this.tryToMove();
         };
 
         this.socket.on(`game/${this.game_id}/gamedata`, on_gamedata);
@@ -164,7 +148,11 @@ export class Game extends EventEmitter<Events> {
                 trace.error(`Received phase for ${this.game_id} but no state exists`);
             }
 
+            this.position_version++;
             this.emit("phase", phase);
+
+            // The server sends no gamedata when stone removal is rejected and play resumes.
+            this.tryToMove();
         };
 
         this.socket.on(`game/${this.game_id}/phase`, on_phase);
@@ -196,21 +184,15 @@ export class Game extends EventEmitter<Events> {
             }
 
             this.state.moves.push(move.move as any);
+            this.position_version++;
             this.emit("move", move);
 
             const m = decodeMoves(move.move, this.state.width, this.state.height)[0];
+            this.log(
+                `Move ${move.move_number}: ${move2gtpvertex(m, this.state.width, this.state.height)}`,
+            );
 
-            // Check if this is an opponent move
-            if (move.move_number % 2 === this.opponent_evenodd) {
-                this.log(`Opponent played ${move2gtpvertex(m.x, m.y, this.state.height)}`);
-
-                // It's our turn to move now
-                if (!this.processing) {
-                    this.makeMove().catch((error) => {
-                        this.error("Error making move:", error);
-                    });
-                }
-            }
+            this.tryToMove();
         };
 
         this.socket.on(`game/${this.game_id}/move`, on_move);
@@ -244,12 +226,27 @@ export class Game extends EventEmitter<Events> {
                 this.state.moves.pop();
             }
 
+            this.position_version++;
             this.log(`Undo accepted: now at move ${this.state.moves.length}`);
+
+            this.tryToMove();
         };
 
         this.socket.on(`game/${this.game_id}/undo_accepted`, on_undo_accepted);
         this.on("disconnecting", () => {
             this.socket.off(`game/${this.game_id}/undo_accepted`, on_undo_accepted);
+        });
+
+        // The server sends this when it refuses a move.
+        const on_error = (message: unknown) => {
+            this.error("Server rejected the move:", message);
+            this.answered_version = -1;
+            this.scheduleMoveRetry(REJECTED_MOVE_RETRY_DELAY_MS);
+        };
+
+        (this.socket as any).on(`game/${this.game_id}/error`, on_error);
+        this.on("disconnecting", () => {
+            (this.socket as any).off(`game/${this.game_id}/error`, on_error);
         });
     }
 
@@ -287,6 +284,29 @@ export class Game extends EventEmitter<Events> {
         });
     }
 
+    /** Whether the bot should choose a move for the current position. */
+    private shouldMove(): boolean {
+        return (
+            !this.disconnected &&
+            this.state?.phase === "play" &&
+            this.answered_version !== this.position_version &&
+            this.isMyTurn()
+        );
+    }
+
+    /** The engine knows the turn order of handicap placement and preset positions. */
+    private isMyTurn(): boolean {
+        const moves = [...this.state.moves] as any;
+        const engine = new GobanEngine({ ...this.state, moves }, undefined, true);
+        return engine.colorToMove() === this.my_color;
+    }
+
+    private tryToMove() {
+        this.makeMove().catch((error) => {
+            this.error("Error making move:", error);
+        });
+    }
+
     /** Make a move using the attached bot */
     private async makeMove(): Promise<void> {
         if (!this.bot) {
@@ -294,41 +314,43 @@ export class Game extends EventEmitter<Events> {
             return;
         }
 
-        if (!this.state || this.state.phase !== "play") {
+        if (this.processing || !this.shouldMove()) {
             return;
         }
 
-        if (this.processing) {
-            return;
-        }
-
+        clearTimeout(this.move_retry_timeout);
         this.processing = true;
+        const version = this.position_version;
 
         try {
             this.log(`Requesting move from bot (${this.my_color} to play)`);
             const move = await this.bot.genmove(this.state, this.my_color as "black" | "white");
-            const move_text =
-                move.text || move2gtpvertex(move, this.state.width, this.state.height);
-            this.log(`Bot returned move: ${move_text}`);
-
-            // Send the move to the server
-            this.sendMove(move);
+            if (version === this.position_version && !this.disconnected) {
+                const move_text =
+                    move.text || move2gtpvertex(move, this.state.width, this.state.height);
+                this.log(`Bot returned move: ${move_text}`);
+                this.answered_version = version;
+                this.sendMove(move);
+            } else {
+                this.log("Dropping the bot's move because the position changed");
+            }
         } catch (error) {
             this.error("Error getting move from bot:", error);
-            this.scheduleMoveRetry();
+            this.scheduleMoveRetry(MOVE_RETRY_DELAY_MS);
         } finally {
             this.processing = false;
         }
+
+        // Events that arrived during the query did not start a new one.
+        if (version !== this.position_version) {
+            this.tryToMove();
+        }
     }
 
-    /** Try again later, so a temporary bot failure doesn't lose the game on time. */
-    private scheduleMoveRetry() {
+    /** Try again later, so a temporary failure doesn't lose the game on time. */
+    private scheduleMoveRetry(delay_ms: number) {
         clearTimeout(this.move_retry_timeout);
-        this.move_retry_timeout = setTimeout(() => {
-            this.makeMove().catch((error) => {
-                this.error("Error making move:", error);
-            });
-        }, MOVE_RETRY_DELAY_MS);
+        this.move_retry_timeout = setTimeout(() => this.tryToMove(), delay_ms);
     }
 
     /** Send a chat message */
@@ -361,6 +383,7 @@ export class Game extends EventEmitter<Events> {
     /** Disconnect from the game */
     disconnect() {
         this.log("Disconnecting from game");
+        this.disconnected = true;
         this.emit("disconnecting");
         clearTimeout(this.move_retry_timeout);
 

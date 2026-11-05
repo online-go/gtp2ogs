@@ -30,14 +30,11 @@ interface Events {
     authenticated: (bot_id: number, bot_username: string) => void;
 }
 
-const MIN_CONNECT_TIME = 1000;
-
 /** Manages the connection to the OGS server */
 export class Connection extends EventEmitter<Events> {
     private socket: GobanSocket;
     private config: ConnectionConfig;
     private connected_games: { [game_id: string]: Game } = {};
-    private connected_finished_games: { [game_id: string]: boolean } = {};
     public connected: boolean = false;
     public bot_id: number;
     public bot_username: string;
@@ -66,12 +63,6 @@ export class Connection extends EventEmitter<Events> {
         this.socket.on("connect", () => {
             this.connect_time = performance.now() - this.connect_time;
             trace.info(`Connected to ${this.config.server} in ${this.connect_time.toFixed(0)}ms`);
-            this.connected = true;
-            this.authenticate();
-        });
-
-        this.socket.on("reconnect", () => {
-            trace.info(`Reconnected to ${this.config.server}`);
             this.connected = true;
             this.authenticate();
         });
