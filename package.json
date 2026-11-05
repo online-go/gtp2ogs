@@ -14,7 +14,7 @@
     ],
     "scripts": {
         "gulp": "gulp",
-        "build": "webpack --progress --color",
+        "build": "webpack --progress --color && tsc -p tsconfig.json --declaration --emitDeclarationOnly --noEmit false --outDir dist/types",
         "webpack-watch": "webpack --watch --progress --color",
         "test": "jest",
         "lint": "eslint src/",
@@ -46,7 +46,7 @@
         "url": "https://github.com/online-go/gtp2ogs/issues"
     },
     "main": "./dist/gtp2ogs-lib.js",
-    "types": "./dist/lib/lib/index.d.ts",
+    "types": "./dist/types/src/lib/index.d.ts",
     "bin": "./dist/gtp2ogs.js",
     "dependencies": {
         "bufferutil": "^4.0.7",
