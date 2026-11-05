@@ -13,6 +13,8 @@ interface Events {
     gamedata: (gamedata: GobanEngineConfig) => void;
 }
 
+const MOVE_RETRY_DELAY_MS = 30_000;
+
 /** Manages a single game connection */
 export class Game extends EventEmitter<Events> {
     game_id: number;
@@ -25,6 +27,7 @@ export class Game extends EventEmitter<Events> {
     private opponent_evenodd: null | number;
     private processing: boolean;
     private game_started: boolean;
+    private move_retry_timeout: ReturnType<typeof setTimeout> | undefined;
 
     log: (...arr: any[]) => any;
     trace: (...arr: any[]) => any;
@@ -53,6 +56,7 @@ export class Game extends EventEmitter<Events> {
         this.disconnect_timeout = null;
         this.processing = false;
         this.game_started = false;
+        this.move_retry_timeout = undefined;
 
         this.log("Connecting to game.");
         this.setupSocketHandlers();
@@ -311,9 +315,20 @@ export class Game extends EventEmitter<Events> {
             this.sendMove(move);
         } catch (error) {
             this.error("Error getting move from bot:", error);
+            this.scheduleMoveRetry();
         } finally {
             this.processing = false;
         }
+    }
+
+    /** Try again later, so a temporary bot failure doesn't lose the game on time. */
+    private scheduleMoveRetry() {
+        clearTimeout(this.move_retry_timeout);
+        this.move_retry_timeout = setTimeout(() => {
+            this.makeMove().catch((error) => {
+                this.error("Error making move:", error);
+            });
+        }, MOVE_RETRY_DELAY_MS);
     }
 
     /** Send a chat message */
@@ -347,6 +362,7 @@ export class Game extends EventEmitter<Events> {
     disconnect() {
         this.log("Disconnecting from game");
         this.emit("disconnecting");
+        clearTimeout(this.move_retry_timeout);
 
         if (this.disconnect_timeout) {
             clearTimeout(this.disconnect_timeout);
