@@ -25,6 +25,8 @@ export class Game extends EventEmitter<Events> {
     game_id: number;
     state: GobanEngineConfig;
     paused: boolean = false;
+    player_paused: boolean = false;
+    resume_requested: boolean = false;
     opponent_evenodd: null | number;
     greeted: boolean;
     player_chat_cutoff: number;
@@ -651,7 +653,7 @@ export class Game extends EventEmitter<Events> {
         if (this.state.phase !== "play") {
             return;
         }
-        if (this.paused) {
+        if (this.player_paused && !this.resume_requested) {
             this.sendChat("Move made, unpausing clock");
             this.resumeGame();
         }
@@ -840,6 +842,8 @@ export class Game extends EventEmitter<Events> {
         });
     }
     resumeGame(): void {
+        this.resume_requested = true;
+        this.log("Unpaused game");
         socket.send("game/resume", {
             game_id: this.game_id,
         });
@@ -854,43 +858,62 @@ export class Game extends EventEmitter<Events> {
 
     private checkForPause(): void {
         const clock = this.state?.clock;
-
         if (!clock) {
             return;
         }
 
-        // clock.pause is only set when the pause state changes.
-        if (!clock.pause) {
-            return;
+        const pause = clock.pause;
+        // `clock.pause` is only set when the pause state has just changed, so
+        // keep `state.pause_control` in sync and reset any existing pause timer.
+        if (pause) {
+            (this.state as any).pause_control = pause.pause_control;
+            this.resume_requested = false;
+
+            if (this.unpause_timeout) {
+                clearTimeout(this.unpause_timeout);
+                this.unpause_timeout = undefined;
+            }
         }
-        this.paused = clock.pause.paused;
 
-        if (this.unpause_timeout) {
-            clearTimeout(this.unpause_timeout);
-            this.unpause_timeout = undefined;
+        // Despite being undocumented, gamedata has `pause_control` on it,
+        // which lets us detect games that were already paused when we connected.
+        const pause_control = (this.state as any).pause_control;
+        const paused_since = clock.paused_since || pause?.paused_since;
+
+        this.paused = pause
+            ? pause.paused
+            : Boolean(pause_control && Object.keys(pause_control).length > 0);
+
+        // `pause_control.paused` comes from the human opponent; any other keys
+        // are system pauses, vacations, stone removal phase, weekend, etc.
+        this.player_paused =
+            this.paused &&
+            Boolean(pause_control?.paused) &&
+            Object.keys(pause_control).length === 1;
+
+        if (!this.player_paused) {
+            this.resume_requested = false;
+            if (this.unpause_timeout) {
+                clearTimeout(this.unpause_timeout);
+                this.unpause_timeout = undefined;
+            }
         }
 
-        if (clock.pause?.paused && clock.paused_since) {
-            const pause_control = clock.pause?.pause_control || (this.state as any).pause_control;
-
-            // pause_control.paused comes from the human opponent, any other keys
-            // are system pauses, vacations, stone removal phase, weekend, etc.
-            if (pause_control?.paused && Object.keys(pause_control).length === 1) {
-                const pause_duration_s = (Date.now() - clock.paused_since) / 1000;
-                this.log("Clock has been paused for ", pause_duration_s, " seconds");
-                if (pause_duration_s > config.max_pause_time) {
-                    this.sendChat("Maximum pause time reached, unpausing clock");
-                    this.resumeGame();
-                } else {
-                    this.unpause_timeout = setTimeout(
-                        () => {
-                            this.unpause_timeout = undefined;
-                            this.sendChat("Maximum pause time reached, unpausing clock");
-                            this.resumeGame();
-                        },
-                        (config.max_pause_time - pause_duration_s) * 1000,
-                    );
-                }
+        if (this.player_paused && paused_since && !this.unpause_timeout && !this.resume_requested) {
+            const pause_duration_s = (Date.now() - paused_since) / 1000;
+            this.log("Clock has been paused for ", pause_duration_s, " seconds");
+            if (pause_duration_s > config.max_pause_time) {
+                this.sendChat("Maximum pause time reached, unpausing clock");
+                this.resumeGame();
+            } else {
+                this.unpause_timeout = setTimeout(
+                    () => {
+                        this.unpause_timeout = undefined;
+                        this.sendChat("Maximum pause time reached, unpausing clock");
+                        this.resumeGame();
+                    },
+                    (config.max_pause_time - pause_duration_s) * 1000,
+                );
             }
         }
     }
