@@ -5,7 +5,7 @@ import { ignore_promise } from "./util";
 import * as split2 from "split2";
 
 import { Move } from "./types";
-import { decodeMoves } from "goban-engine";
+import { decodeMoves, GobanEngineConfig } from "goban-engine";
 import { config, BotConfig } from "./config";
 import { PvOutputParser } from "./PvOutputParser";
 import { socket } from "./socket";
@@ -67,7 +67,7 @@ export class Bot extends EventEmitter<Events> {
     persistent_idle_timeout: NodeJS.Timeout | null = null;
 
     /* These are affinity fields used by our pool to try and select good bots to use */
-    last_game_id: number = -1;
+    last_game_id: number | string = -1;
     last_width: number = -1;
     last_height: number = -1;
 
@@ -614,7 +614,7 @@ export class Bot extends EventEmitter<Events> {
         */
     }
 
-    async loadState(state): Promise<string> {
+    async loadState(state: GobanEngineConfig): Promise<string> {
         if (this.dead) {
             metrics.bot_failures.inc();
             this.failed = true;
@@ -647,6 +647,10 @@ export class Bot extends EventEmitter<Events> {
             }
             await this.command("clear_board");
             await this.command(`komi ${state.komi}`);
+
+            if (this.available_commands["ogs-game-id"]) {
+                await this.command(`ogs-game-id ${state.game_id}`);
+            }
 
             if (state.initial_state) {
                 const black = decodeMoves(state.initial_state.black, state.width, state.height);
