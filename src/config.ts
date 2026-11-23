@@ -100,6 +100,9 @@ export interface Config {
     /** File to write logs to. Logs will be sent to stdout as well. */
     logfile?: string;
 
+    /** File to write metrics to, in Prometheus format. */
+    metricsfile?: string;
+
     /** Time control systems that we can work with
      *  @default ["fischer", "byoyomi", "simple"]
      *  @allowedValues ["fischer", "byoyomi", "simple"]

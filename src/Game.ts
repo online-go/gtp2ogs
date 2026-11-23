@@ -5,6 +5,7 @@ import { move2gtpvertex, ignore_promise } from "./util";
 import { Move } from "./types";
 import { Bot } from "./Bot";
 import { trace } from "./trace";
+import { metrics } from "./metrics";
 import { socket } from "./socket";
 import { config, TranslatableString } from "./config";
 import { EventEmitter } from "eventemitter3";
@@ -95,10 +96,12 @@ export class Game extends EventEmitter<Events> {
                 const move = this.pending_move;
                 this.pending_move = null;
                 ++this.move_errors;
+                metrics.bot_failures.inc();
                 if (this.move_errors >= 3) {
                     this.error(
                         `Server rejected move ${move} (${error}) ${this.move_errors} times, resigning game`,
                     );
+                    metrics.bot_failure_resigns.inc();
                     this.sendChat(`Server rejected bot move (${error}), resigning game`);
                     socket.send("game/resign", {
                         game_id: this.game_id,
@@ -832,6 +835,19 @@ export class Game extends EventEmitter<Events> {
         const res = this.getRes(result);
         const winloss = this.state.winner === config.bot_id ? "W" : "L";
         this.log(`Game over.   Result: ${col}+${res}  ${winloss}`);
+        const metric_result =
+            this.state.winner === config.bot_id ? "win" : this.state.winner ? "loss" : "none";
+        const metric_outcome =
+            res === "R"
+                ? "resignation"
+                : res === "Time"
+                  ? "timeout"
+                  : res === "Can"
+                    ? "cancellation"
+                    : res
+                      ? "score"
+                      : "other";
+        metrics.games_finished.inc({ result: metric_result, outcome: metric_outcome });
 
         // Notify bot of end of game and send score
         if (config.farewellscore && this.bot) {
@@ -978,6 +994,7 @@ export function handleChatLine(game_id: string, line: any, cutoff_timestamp: num
         return;
     }
 
+    metrics.chat_messages_received.inc();
     trace.info(`[game ${game_id}] Game chat from ${line.username}: ${line.body}`);
 }
 

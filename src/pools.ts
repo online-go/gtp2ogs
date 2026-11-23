@@ -1,6 +1,7 @@
 import { Bot } from "./Bot";
 import { config, BotConfig } from "./config";
 import { EventEmitter } from "eventemitter3";
+import { metrics } from "./metrics";
 import { Speed } from "./types";
 import { trace } from "./trace";
 
@@ -43,6 +44,7 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
 
         this.bot_config = bot_config;
         this.pool_name = pool_name;
+        metrics.bot_pool_queue_length.set({ pool: this.pool_name.toLowerCase() }, 0);
 
         for (let i = 0; i < bot_config.instances; i++) {
             this.addInstance(bot_config);
@@ -84,6 +86,8 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
     }
 
     async acquire(speed: Speed, width: number, height: number, game_id: number): Promise<Bot> {
+        const pool = this.pool_name.toLowerCase();
+        const endTimer = metrics.bot_acquire_duration.startTimer({ pool });
         trace.info(`Acquiring bot for ${speed} game`);
         await this.ready;
         for (const pass of ["game_id", "board_size", "any"]) {
@@ -103,12 +107,22 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
                 if (bot.available && pass_check) {
                     bot.available = false;
                     trace.info("Picked bot in " + pass + " pass");
+                    endTimer();
                     return bot;
                 }
             }
         }
         return new Promise((resolve) => {
-            this.queue.push([speed, width, height, resolve]);
+            this.queue.push([
+                speed,
+                width,
+                height,
+                (bot: Bot) => {
+                    endTimer();
+                    resolve(bot);
+                },
+            ]);
+            metrics.bot_pool_queue_length.set({ pool }, this.queue.length);
         });
     }
 
@@ -135,6 +149,10 @@ export class BotPoolManager extends EventEmitter<Events> implements BotManagerIn
                                 `Releasing bot back to the ${speed} pool, queue length: ${this.queue.length}`,
                             );
                             this.queue.splice(i, 1);
+                            metrics.bot_pool_queue_length.set(
+                                { pool: this.pool_name.toLowerCase() },
+                                this.queue.length,
+                            );
                             resolve(bot);
                             return;
                         }

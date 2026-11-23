@@ -5,6 +5,7 @@ import { WebSocket } from "ws";
 import { config, config_event_emitter, TimeControlRanges } from "./config";
 import { socket } from "./socket";
 import { trace } from "./trace";
+import { metrics } from "./metrics";
 import { post, api1 } from "./util";
 import { Game, handleChatLine } from "./Game";
 import { bot_pools } from "./pools";
@@ -89,8 +90,15 @@ export class Main {
         }
         setInterval(this.sendStatusUpdate.bind(this), 100);
 
+        metrics.onCollect(() => {
+            for (const speed of ["blitz", "rapid", "live", "correspondence"] as const) {
+                metrics.active_games.set({ speed }, this.countGames(speed));
+            }
+        });
+
         socket.on("connect", async () => {
             this.connected = true;
+            metrics.server_connected.set(1);
 
             await bot_pools.main.ready;
             if (bot_pools.ending) {
@@ -152,6 +160,8 @@ export class Main {
 
         socket.on("disconnect", () => {
             this.connected = false;
+            metrics.server_connected.set(0);
+            metrics.server_disconnects.inc();
 
             trace.warn("Disconnected from server");
 
@@ -302,7 +312,9 @@ export class Main {
 
                     if (!reject) {
                         post(api1(`me/challenges/${notification.challenge_id}/accept`), {})
-                            .then(ignore)
+                            .then(() => {
+                                metrics.games_accepted.inc();
+                            })
                             .catch(() => {
                                 trace.info("Error accepting challenge, declining it");
                                 post(api1(`me/challenges/${notification.challenge_id}`), {
@@ -310,7 +322,9 @@ export class Main {
                                     message:
                                         "Error accepting game challenge, challenge has been removed.",
                                 })
-                                    .then(ignore)
+                                    .then(() => {
+                                        metrics.games_refused.inc({ reason: "accept_failure" });
+                                    })
                                     .catch(trace.info);
                                 this.deleteNotification(notification);
                             });
@@ -324,7 +338,9 @@ export class Main {
                             message: reject.message,
                             rejection_details: reject,
                         })
-                            .then(ignore)
+                            .then(() => {
+                                metrics.games_refused.inc({ reason: reject.rejection_code });
+                            })
                             .catch(trace.info);
                     }
                 }
@@ -847,10 +863,6 @@ export class Main {
         clearInterval(this.ping_interval);
         clearInterval(this.notification_connect_interval);
     }
-}
-
-function ignore() {
-    // do nothing
 }
 
 function rankstr_to_number(rank: string): number {
