@@ -350,6 +350,10 @@ export class Game extends EventEmitter<Events> {
                 channel: `game-${game_id}`,
             });
             const on_chat = (d) => {
+                if (this.state === null) {
+                    this.warn(`Unable to handle chat without players: ${JSON.stringify(d)}`);
+                    return;
+                }
                 // Player chats are potentially sent multiple times:
                 //
                 // 1. Immediately when posted
