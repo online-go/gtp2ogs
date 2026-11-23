@@ -38,6 +38,8 @@ export class Game extends EventEmitter<Events> {
     ending_bot_failures: number;
     my_color: null | string;
     processing: boolean;
+    pending_move: string | null = null;
+    move_errors: number = 0;
     handicap_moves: Move[];
     disconnect_timeout: ReturnType<typeof setTimeout>;
     unpause_timeout?: ReturnType<typeof setTimeout>;
@@ -82,6 +84,37 @@ export class Game extends EventEmitter<Events> {
         socket.on(`game/${game_id}/undo_requested`, on_undo_requested);
         this.on("disconnecting", () => {
             socket.off(`game/${game_id}/undo_requested`, on_undo_requested);
+        });
+
+        const on_error = (error: string) => {
+            if (!socket.connected) {
+                return;
+            }
+            this.error(`Game error from server: ${error}`);
+            if (this.pending_move && this.state?.phase === "play") {
+                const move = this.pending_move;
+                this.pending_move = null;
+                ++this.move_errors;
+                if (this.move_errors >= 3) {
+                    this.error(
+                        `Server rejected move ${move} (${error}) ${this.move_errors} times, resigning game`,
+                    );
+                    this.sendChat(`Server rejected bot move (${error}), resigning game`);
+                    socket.send("game/resign", {
+                        game_id: this.game_id,
+                    });
+                } else {
+                    this.warn(
+                        `Server rejected move ${move} (${error}), resyncing (attempt ${this.move_errors}/3)`,
+                    );
+                    ignore_promise(this.releaseBots(true));
+                    this.scheduleRetry();
+                }
+            }
+        };
+        socket.on(`game/${game_id}/error`, on_error);
+        this.on("disconnecting", () => {
+            socket.off(`game/${game_id}/error`, on_error);
         });
 
         const on_gamedata = (gamedata) => {
@@ -136,6 +169,10 @@ export class Game extends EventEmitter<Events> {
             }
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
+            this.pending_move = null;
+            if (gamedataChanged) {
+                this.move_errors = 0;
+            }
             this.state = gamedata;
             this.my_color = config.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`gamedata     ${this.header()}`);
@@ -244,6 +281,8 @@ export class Game extends EventEmitter<Events> {
                 return;
             }
             try {
+                this.pending_move = null;
+                this.move_errors = 0;
                 this.state.moves.push(move.move as any);
 
                 // Log opponent moves
@@ -640,6 +679,7 @@ export class Game extends EventEmitter<Events> {
         } else {
             this.log(`Playing ${move.text}`);
         }
+        this.pending_move = move.text;
         socket.send("game/move", {
             game_id: this.game_id,
             move: encodeMove(move),
@@ -749,6 +789,7 @@ export class Game extends EventEmitter<Events> {
     }
 
     disconnect(): void {
+        this.pending_move = null;
         if (this.processing) {
             this.processing = false;
             --Game.moves_processing;
