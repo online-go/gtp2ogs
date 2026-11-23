@@ -211,6 +211,49 @@ describe("Game: server rejects our move", () => {
         ]);
     });
 
+    test("starts counting from zero when re-synced gamedata shows our move was accepted", async () => {
+        await serverSendsGamedata();
+        await serverRejectsMoveAndResyncs();
+        await serverRejectsMove();
+        // We missed the move events: the gamedata already has our move and the reply
+        await serverSendsGamedata({
+            moves: [
+                [3, 3, 1000],
+                [15, 15, 1000],
+            ],
+        });
+        send.mockClear();
+
+        await serverRejectsMove();
+
+        expect(send.mock.calls.map(([event]) => event)).toEqual([
+            "game/disconnect",
+            "game/connect",
+        ]);
+    });
+
+    test("recovers from a later rejection when the fallback pass was only seen in gamedata", async () => {
+        await serverSendsGamedata();
+        await serverRejectsMoveAndResyncs();
+        await serverRejectsMoveAndResyncs();
+        await serverRejectsMove();
+        // The pass was accepted and the opponent replied, but we only learn it from gamedata
+        await serverSendsGamedata({
+            moves: [
+                [-1, -1, 1000],
+                [15, 15, 1000],
+            ],
+        });
+        send.mockClear();
+
+        await serverRejectsMove();
+
+        expect(send.mock.calls.map(([event]) => event)).toEqual([
+            "game/disconnect",
+            "game/connect",
+        ]);
+    });
+
     test("stops trying when even the fallback pass is rejected", async () => {
         await serverSendsGamedata();
         await serverRejectsMoveAndResyncs();

@@ -184,6 +184,12 @@ export class Game extends EventEmitter<Events> {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.pending_move = null;
+            // A different number of moves means the position we were rejected in is
+            // gone, even if we never saw the move events. Anything else, such as the
+            // clock, changes on every reconnect and must not reset the count.
+            if (this.state && this.state.moves.length !== gamedata.moves.length) {
+                this.move_errors = 0;
+            }
             this.state = gamedata;
             this.my_color = config.bot_id === this.state.players.black.id ? "black" : "white";
             this.log(`gamedata     ${this.header()}`);
