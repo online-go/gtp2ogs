@@ -103,7 +103,7 @@ export class Game extends EventEmitter<Events> {
             const move = this.pending_move;
             this.pending_move = null;
             ++this.move_errors;
-            metrics.bot_failures.inc();
+            metrics.move_rejections.inc();
 
             // The engine thinks it played the rejected move, so make sure it reloads
             // the position from scratch before we use it again.

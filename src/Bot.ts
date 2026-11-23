@@ -16,7 +16,10 @@ const gtpCommandEndRegex = new RegExp("(\\r?\\n){2}$");
 const gtpCommandSplitRegex = new RegExp("(\\r?\\n){2}");
 
 type cb_type = (output?: string) => void;
-type eb_type = (err?: any) => void;
+type eb_type = ((err?: any) => void) & {
+    /** Set when the engine may refuse the command without that being a bot failure */
+    refusal_ok?: boolean;
+};
 
 interface Events {
     chat: (message: string, channel: "main" | "malkovich") => void;
@@ -235,10 +238,12 @@ export class Bot extends EventEmitter<Events> {
                         ++i;
                         this.log(lines[i]);
                     }
-                    metrics.bot_failures.inc();
-                    this.failed = true;
                     this.command_callbacks.shift(); // discard;
                     const eb = this.command_error_callbacks.shift();
+                    if (!eb?.refusal_ok) {
+                        metrics.bot_failures.inc();
+                        this.failed = true;
+                    }
                     if (eb) {
                         eb(line.substring(1).trim());
                     }
@@ -257,6 +262,7 @@ export class Bot extends EventEmitter<Events> {
         this.proc.on("exit", (code) => {
             const unexpected = !this.dead;
             if (unexpected) {
+                metrics.bot_failures.inc();
                 if (code) {
                     this.log("Bot exited", code);
                 } else {
@@ -636,7 +642,6 @@ export class Bot extends EventEmitter<Events> {
 
     async loadState(state: GobanEngineConfig): Promise<string> {
         if (this.dead) {
-            metrics.bot_failures.inc();
             this.failed = true;
             this.error("Attempted to load state to a dead bot");
             throw new Error("Attempting to load dead bot");
@@ -756,16 +761,15 @@ export class Bot extends EventEmitter<Events> {
         }
 
         // Not being able to set the rules is no reason to give up on the bot
-        const failed = this.failed;
         try {
-            await this.command(cmd);
+            await this.command(cmd, false, true);
         } catch (e) {
-            this.failed = failed;
             this.warn(`Engine refused "${cmd}", playing with its own rules:`, e);
         }
     }
 
-    command(str: string, _final_command?: boolean): Promise<string> {
+    /** @param refusal_ok the engine refusing this command is not a bot failure */
+    command(str: string, _final_command?: boolean, refusal_ok?: boolean): Promise<string> {
         const arr = str.trim().split(/\s+/);
         if (arr.length > 0) {
             const cmd = arr[0];
@@ -776,10 +780,10 @@ export class Bot extends EventEmitter<Events> {
             }
         }
 
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<string>((resolve, reject: eb_type) => {
+            reject.refusal_ok = refusal_ok;
             if (this.dead) {
                 this.error("Attempting to send a command to dead bot:", str);
-                metrics.bot_failures.inc();
                 this.failed = true;
                 reject(`Attempting to send a command to dead bot: ${str}`);
                 return;

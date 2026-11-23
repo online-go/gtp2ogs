@@ -38,6 +38,11 @@ jest.mock("../pools", () => ({
 import { Game } from "../Game";
 import { socket } from "../socket";
 import { bot_pools } from "../pools";
+import { metrics } from "../metrics";
+
+async function total(counter: { get(): Promise<{ values: { value: number }[] }> }) {
+    return (await counter.get()).values.reduce((sum, v) => sum + v.value, 0);
+}
 
 const send = socket.send as unknown as jest.Mock;
 const PASS = "..";
@@ -232,6 +237,17 @@ describe("Game: server rejects our move", () => {
         await serverRejectsMove();
 
         expect(send).not.toHaveBeenCalled();
+    });
+
+    test("counts a rejected move as a move rejection, not as a bot failure", async () => {
+        await serverSendsGamedata();
+        const rejections = await total(metrics.move_rejections);
+        const failures = await total(metrics.bot_failures);
+
+        await serverRejectsMove();
+
+        expect((await total(metrics.move_rejections)) - rejections).toBe(1);
+        expect((await total(metrics.bot_failures)) - failures).toBe(0);
     });
 
     test("makes the engine reload the position after a rejection", async () => {

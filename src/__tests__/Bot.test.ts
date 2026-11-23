@@ -19,6 +19,11 @@ jest.mock("../pools", () => ({ bot_pools: {} }));
 
 import { spawn } from "child_process";
 import { Bot } from "../Bot";
+import { metrics } from "../metrics";
+
+async function botFailures(): Promise<number> {
+    return (await metrics.bot_failures.get()).values.reduce((sum, v) => sum + v.value, 0);
+}
 
 const REQUIRED_COMMANDS = ["list_commands", "boardsize", "clear_board", "komi", "play", "genmove"];
 
@@ -166,5 +171,49 @@ describe("Bot: telling the engine which rules the game uses", () => {
         await bot.loadState(gamedata("chinese"));
 
         expect(bot.failed).toBe(false);
+    });
+});
+
+describe("Bot: counting bot failures", () => {
+    test("a command the engine refuses counts as a failure", async () => {
+        const [bot, engine] = await startBot([]);
+        engine.failing_commands = ["komi"];
+        const before = await botFailures();
+
+        await expect(bot.loadState(gamedata("chinese"))).rejects.toBeDefined();
+
+        expect((await botFailures()) - before).toBe(1);
+    });
+
+    test("a refused rules command does not count as a failure", async () => {
+        const [bot, engine] = await startBot(["kata-set-rules"]);
+        engine.failing_commands = ["kata-set-rules"];
+        const before = await botFailures();
+
+        await bot.loadState(gamedata("chinese"));
+
+        expect((await botFailures()) - before).toBe(0);
+    });
+
+    test("a broken pipe to the engine is one failure, however often we then try to use it", async () => {
+        const [bot, engine] = await startBot([]);
+        const before = await botFailures();
+
+        engine.stdin.emit("error", new Error("EPIPE"));
+        await expect(bot.command("komi 7.5")).rejects.toBeDefined();
+        await expect(bot.loadState(gamedata("chinese"))).rejects.toBeDefined();
+
+        expect((await botFailures()) - before).toBe(1);
+    });
+
+    test("an engine that exits unexpectedly is one failure, however often we then try to use it", async () => {
+        const [bot, engine] = await startBot([]);
+        const before = await botFailures();
+
+        engine.emit("exit", 1);
+        await expect(bot.loadState(gamedata("chinese"))).rejects.toBeDefined();
+        await expect(bot.command("komi 7.5")).rejects.toBeDefined();
+
+        expect((await botFailures()) - before).toBe(1);
     });
 });
