@@ -24,6 +24,26 @@ interface Events {
     ready: () => void;
 }
 
+/** OGS ruleset -> the name KataGo's `kata-set-rules` knows it by. */
+const KATA_RULES = new Map([
+    // OGS enforces positional superko for Chinese rules, which is "chinese-ogs"
+    // in KataGo. Plain "chinese" only has simple ko.
+    ["chinese", "chinese-ogs"],
+    ["japanese", "japanese"],
+    ["korean", "korean"],
+    ["aga", "aga"],
+    ["ing", "ing"],
+    ["nz", "new-zealand"],
+]);
+
+/** OGS ruleset -> the name the KGS `kgs-rules` extension knows it by. */
+const KGS_RULES = new Map([
+    ["chinese", "chinese"],
+    ["japanese", "japanese"],
+    ["aga", "aga"],
+    ["nz", "new_zealand"],
+]);
+
 let last_bot_id = 0;
 /** Manages talking to a bot via the GTP interface */
 export class Bot extends EventEmitter<Events> {
@@ -646,6 +666,7 @@ export class Bot extends EventEmitter<Events> {
                 await this.command(`boardsize ${state.width} ${state.height}`);
             }
             await this.command("clear_board");
+            await this.loadRules(state.rules);
             await this.command(`komi ${state.komi}`);
 
             if (this.available_commands["ogs-game-id"]) {
@@ -718,6 +739,30 @@ export class Bot extends EventEmitter<Events> {
         }
 
         return "";
+    }
+
+    /** Tells the engine which ruleset the game uses, if it has a command for that.
+     *  Without this an engine can pick moves the server rejects, such as a superko
+     *  violation its own configured rules allow. */
+    private async loadRules(rules: string): Promise<void> {
+        let cmd: string | undefined;
+        if (this.available_commands["kata-set-rules"] && KATA_RULES.has(rules)) {
+            cmd = `kata-set-rules ${KATA_RULES.get(rules)}`;
+        } else if (this.available_commands["kgs-rules"] && KGS_RULES.has(rules)) {
+            cmd = `kgs-rules ${KGS_RULES.get(rules)}`;
+        }
+        if (!cmd) {
+            return;
+        }
+
+        // Not being able to set the rules is no reason to give up on the bot
+        const failed = this.failed;
+        try {
+            await this.command(cmd);
+        } catch (e) {
+            this.failed = failed;
+            this.warn(`Engine refused "${cmd}", playing with its own rules:`, e);
+        }
     }
 
     command(str: string, _final_command?: boolean): Promise<string> {

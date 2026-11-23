@@ -78,6 +78,7 @@ See `example_config.json5` for all available options including:
 
 The bot detects available GTP commands on initialization by sending `list_commands`. Special handling for:
 
+- **Rules**: Sends the game's ruleset on load if the bot supports `kata-set-rules` (preferred) or `kgs-rules`, so the engine does not pick moves the server rejects (e.g. superko)
 - **Clock commands**: Sends time updates if bot supports `kgs-time_settings`, `kata-time_settings`, or `gomill-cpu_time`
 - **Chat output**: Parses stderr for lines starting with `MALKOVICH:`, `DISCUSSION:`, or `MAIN:` and sends to game chat
 - **PV data**: Extracts principal variation from bot output if enabled
