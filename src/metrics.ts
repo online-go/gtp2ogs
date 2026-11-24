@@ -13,6 +13,7 @@ class Metrics {
     readonly bot_startups: Counter;
     readonly bot_failures: Counter;
     readonly bot_failure_resigns: Counter;
+    readonly move_rejections: Counter;
     readonly games_accepted: Counter;
     readonly games_refused: Counter<"reason">;
     readonly games_finished: Counter<"result" | "outcome">;
@@ -58,6 +59,11 @@ class Metrics {
         this.bot_failure_resigns = new Counter({
             name: "gtp2ogs_bot_failure_resigns_total",
             help: "Total number of games resigned due to bot failure",
+            registers,
+        });
+        this.move_rejections = new Counter({
+            name: "gtp2ogs_move_rejections_total",
+            help: "Total number of bot moves rejected by the OGS server",
             registers,
         });
         this.games_accepted = new Counter({

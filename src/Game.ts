@@ -17,6 +17,9 @@ interface Events {
     disconnected: (game_id: number) => void;
 }
 
+/** How many times in a row the server may reject our move before we pass instead */
+const MAX_MOVE_REJECTIONS = 3;
+
 /** This manages a single game */
 export class Game extends EventEmitter<Events> {
     static moves_processing: any;
@@ -92,27 +95,35 @@ export class Game extends EventEmitter<Events> {
                 return;
             }
             this.error(`Game error from server: ${error}`);
-            if (this.pending_move && this.state?.phase === "play") {
-                const move = this.pending_move;
-                this.pending_move = null;
-                ++this.move_errors;
-                metrics.bot_failures.inc();
-                if (this.move_errors >= 3) {
-                    this.error(
-                        `Server rejected move ${move} (${error}) ${this.move_errors} times, resigning game`,
-                    );
-                    metrics.bot_failure_resigns.inc();
-                    this.sendChat(`Server rejected bot move (${error}), resigning game`);
-                    socket.send("game/resign", {
-                        game_id: this.game_id,
-                    });
-                } else {
-                    this.warn(
-                        `Server rejected move ${move} (${error}), resyncing (attempt ${this.move_errors}/3)`,
-                    );
-                    ignore_promise(this.releaseBots(true));
-                    this.scheduleRetry();
-                }
+            // We only act on errors that arrive while a move of ours is waiting to be
+            // confirmed, anything else can't be a rejected move.
+            if (!this.pending_move || this.state?.phase !== "play") {
+                return;
+            }
+            const move = this.pending_move;
+            this.pending_move = null;
+            ++this.move_errors;
+            metrics.move_rejections.inc();
+
+            // The engine thinks it played the rejected move, so make sure it reloads
+            // the position from scratch before we use it again.
+            ignore_promise(this.releaseBots(true));
+
+            if (this.move_errors < MAX_MOVE_REJECTIONS) {
+                this.warn(
+                    `Server rejected move ${move}, resyncing (attempt ${this.move_errors}/${MAX_MOVE_REJECTIONS})`,
+                );
+                this.scheduleRetry();
+            } else if (this.move_errors === MAX_MOVE_REJECTIONS) {
+                // Engines tend to pick the same move again, so stop asking. A pass is
+                // always legal and keeps a possibly won game alive.
+                this.warn(`Server rejected move ${move} ${this.move_errors} times, passing`);
+                this.sendChat(
+                    `The server rejected my move ${this.move_errors} times, passing instead`,
+                );
+                this.uploadMove({ x: -1, y: -1, text: "pass", pass: true });
+            } else {
+                this.error("Server rejected our fallback pass as well, giving up on this move");
             }
         };
         socket.on(`game/${game_id}/error`, on_error);
@@ -173,7 +184,10 @@ export class Game extends EventEmitter<Events> {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.pending_move = null;
-            if (gamedataChanged) {
+            // A different number of moves means the position we were rejected in is
+            // gone, even if we never saw the move events. Anything else, such as the
+            // clock, changes on every reconnect and must not reset the count.
+            if (this.state && this.state.moves.length !== gamedata.moves.length) {
                 this.move_errors = 0;
             }
             this.state = gamedata;
